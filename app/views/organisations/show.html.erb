@@ -1,0 +1,43 @@
+<% page_title @organisation.name %>
+<div class="page-header">
+  <h1><%= @organisation.name %></h1>
+  <div class="page-actions">
+    <% if policy(@organisation).update? %>
+      <%= link_to t("actions.edit"), edit_organisation_path(@organisation), class: "btn" %>
+    <% end %>
+    <% if policy(@organisation).destroy? %>
+      <%= button_to t("actions.delete"), organisation_path(@organisation), method: :delete, class: "btn btn-danger",
+            form: { data: { turbo_confirm: t(".confirm_delete") } } %>
+    <% end %>
+  </div>
+</div>
+
+<p class="muted"><%= @organisation.human_kind %><% if @organisation.external_ref.present? %> · <span class="mono"><%= @organisation.external_ref %></span><% end %></p>
+<% if @organisation.notes.present? %><p><%= @organisation.notes %></p><% end %>
+
+<h2><%= t(".contacts") %></h2>
+<% if @contacts.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t("contacts.index.columns.name") %></th>
+          <th><%= t("contacts.index.columns.email") %></th>
+          <th><%= t("contacts.index.columns.phone") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @contacts.each do |contact| %>
+          <tr>
+            <td><%= link_to contact.name, contact_path(contact) %></td>
+            <td><%= contact.email %></td>
+            <td><%= contact.phone %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <%= render "shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "shared/empty_state", title: t(".no_contacts") %>
+<% end %>

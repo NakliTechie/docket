@@ -1,0 +1,11 @@
+# Table queues backs the CaseQueue model.
+_fixture:
+  model_class: CaseQueue
+
+pensions:
+  name: Pensions
+  slug: pensions
+
+sanitation:
+  name: Sanitation
+  slug: sanitation

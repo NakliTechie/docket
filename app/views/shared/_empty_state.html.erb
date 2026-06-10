@@ -1,0 +1,9 @@
+<div class="empty-state">
+  <p class="empty-state-title"><%= title %></p>
+  <% if defined?(hint) && hint.present? %>
+    <p class="empty-state-hint"><%= hint %></p>
+  <% end %>
+  <% if defined?(action) && action.present? %>
+    <div class="empty-state-action"><%= action %></div>
+  <% end %>
+</div>

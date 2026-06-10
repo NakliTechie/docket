@@ -1,0 +1,11 @@
+<% if pagy.pages > 1 %>
+  <nav class="pagination" aria-label="<%= t("pagination.label") %>">
+    <% if pagy.prev %>
+      <%= link_to t("pagination.prev"), pagy_url_for(pagy, pagy.prev), class: "btn btn-sm" %>
+    <% end %>
+    <span class="pagination-status"><%= t("pagination.page_of", page: pagy.page, pages: pagy.pages) %></span>
+    <% if pagy.next %>
+      <%= link_to t("pagination.next"), pagy_url_for(pagy, pagy.next), class: "btn btn-sm" %>
+    <% end %>
+  </nav>
+<% end %>

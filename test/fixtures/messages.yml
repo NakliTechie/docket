@@ -1,0 +1,6 @@
+note_on_pension:
+  case: pension_case
+  kind: internal_note
+  direction: outbound
+  author: agent_a (User)
+  body: Checking with the disbursing bank.

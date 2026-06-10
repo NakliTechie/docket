@@ -1,0 +1,6 @@
+<div class="error-page">
+  <h1><%= t("errors.forbidden.title") %></h1>
+  <p><%= t("errors.forbidden.body") %></p>
+  <p class="error-reference"><%= t("errors.reference", id: Current.request_id) %></p>
+  <%= link_to t("errors.back_home"), root_path, class: "btn" %>
+</div>

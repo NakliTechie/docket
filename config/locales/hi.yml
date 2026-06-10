@@ -1,0 +1,456 @@
+hi:
+  layout:
+    product_name: "डॉकेट"
+    skip_to_content: "मुख्य सामग्री पर जाएँ"
+    primary_navigation: "मुख्य नेविगेशन"
+    locale_switch_label: "English"
+    sign_out: "साइन आउट"
+    nav:
+      cases: "मामले"
+      contacts: "संपर्क"
+      organisations: "संगठन"
+      queues: "कतारें"
+      categories: "श्रेणियाँ"
+      sla_policies: "एसएलए नीतियाँ"
+      users: "उपयोगकर्ता"
+
+  locales:
+    en: "English"
+    hi: "हिन्दी"
+
+  actions:
+    edit: "संपादित करें"
+    delete: "हटाएँ"
+    cancel: "रद्द करें"
+
+  tables:
+    actions: "क्रियाएँ"
+
+  forms:
+    errors_title:
+      one: "1 त्रुटि के कारण सहेजा नहीं जा सका:"
+      other: "%{count} त्रुटियों के कारण सहेजा नहीं जा सका:"
+    select_prompt: "चुनें…"
+    none: "कोई नहीं"
+    default: "डिफ़ॉल्ट"
+
+  filters:
+    search: "खोजें"
+    status: "स्थिति"
+    priority: "प्राथमिकता"
+    queue: "कतार"
+    assignee: "नियुक्त व्यक्ति"
+    sort: "क्रमबद्ध करें"
+    any: "कोई भी"
+    apply: "लागू करें"
+    clear: "साफ़ करें"
+
+  pagination:
+    label: "पृष्ठांकन"
+    prev: "पिछला"
+    next: "अगला"
+    page_of: "पृष्ठ %{page} / %{pages}"
+
+  time:
+    ago: "%{time} पहले"
+    in: "%{time} में"
+
+  errors:
+    forbidden:
+      title: "आपको इस पृष्ठ तक पहुँच नहीं है"
+      body: "आपकी भूमिका इस क्रिया की अनुमति नहीं देती। यदि आपको लगता है कि यह गलती है तो अपने प्रशासक से संपर्क करें।"
+    not_found:
+      title: "पृष्ठ नहीं मिला"
+      body: "आप जिस पृष्ठ की तलाश कर रहे थे वह मौजूद नहीं है या स्थानांतरित हो गया है।"
+    internal:
+      title: "कुछ गलत हो गया"
+      body: "एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें, और सहायता से संपर्क करते समय नीचे दिया गया संदर्भ बताएँ।"
+    reference: "संदर्भ: %{id}"
+    back_home: "मुख पृष्ठ पर लौटें"
+
+  sessions:
+    rate_limited: "बहुत अधिक प्रयास। बाद में पुनः प्रयास करें।"
+    invalid_credentials: "कोई अन्य ईमेल पता या पासवर्ड आज़माएँ।"
+    new:
+      title: "साइन इन करें"
+      email: "ईमेल पता"
+      password: "पासवर्ड"
+      sign_in: "साइन इन"
+      forgot_password: "पासवर्ड भूल गए?"
+
+  passwords:
+    invalid_token: "पासवर्ड रीसेट लिंक अमान्य है या समाप्त हो गया है।"
+    new:
+      title: "पासवर्ड भूल गए?"
+      send_instructions: "रीसेट निर्देश ईमेल करें"
+      back_to_sign_in: "साइन इन पर वापस जाएँ"
+    edit:
+      title: "अपना पासवर्ड बदलें"
+      new_password: "नया पासवर्ड"
+      confirm_password: "नया पासवर्ड दोहराएँ"
+      save: "सहेजें"
+    create:
+      sent: "पासवर्ड रीसेट निर्देश भेज दिए गए हैं (यदि उस ईमेल पते वाला उपयोगकर्ता मौजूद है)।"
+    update:
+      reset: "पासवर्ड रीसेट कर दिया गया है।"
+      mismatch: "पासवर्ड मेल नहीं खाते।"
+
+  cases:
+    enum:
+      status:
+        new: "नया"
+        triaged: "वर्गीकृत"
+        in_progress: "प्रगति पर"
+        waiting_on_citizen: "नागरिक की प्रतीक्षा में"
+        resolved: "समाधानित"
+        closed: "बंद"
+        reopened: "पुनः खोला गया"
+      priority:
+        low: "निम्न"
+        normal: "सामान्य"
+        high: "उच्च"
+        urgent: "अत्यावश्यक"
+      channel:
+        web_portal: "वेब पोर्टल"
+        email: "ईमेल"
+        api: "एपीआई"
+        staff: "स्टाफ़"
+        phone: "फ़ोन"
+        walk_in: "प्रत्यक्ष आगमन"
+    sort:
+      created_at: "बनाया गया"
+      priority: "प्राथमिकता"
+      status: "स्थिति"
+      due: "नियत तिथि"
+    sla:
+      breached: "एसएलए उल्लंघन"
+      due: "नियत %{time}"
+    fields:
+      subject: "विषय"
+      contact: "संपर्क"
+      description: "विवरण"
+      priority: "प्राथमिकता"
+      queue: "कतार"
+      category: "श्रेणी"
+      assignee: "नियुक्त व्यक्ति"
+      sla_policy: "एसएलए नीति"
+    form:
+      new_contact: "पहले एक नया संपर्क बनाएँ"
+      default_sla: "डिफ़ॉल्ट नीति उपयोग करें"
+    errors:
+      invalid_transition: "मामले की वर्तमान स्थिति से यह स्थिति-परिवर्तन अनुमत नहीं है।"
+    transition_to: "%{status} चिह्नित करें"
+    no_queue: "कोई कतार नहीं"
+    unassigned: "अनियुक्त"
+    uncategorised: "अवर्गीकृत"
+    index:
+      title: "मामले"
+      new_case: "नया मामला"
+      columns:
+        tracking_id: "ट्रैकिंग आईडी"
+        subject: "विषय"
+        contact: "संपर्क"
+        status: "स्थिति"
+        priority: "प्राथमिकता"
+        queue: "कतार"
+        assignee: "नियुक्त"
+        sla: "एसएलए"
+        created: "बनाया गया"
+      empty:
+        title: "अभी तक कोई मामला नहीं"
+        hint: "अपना सार्वजनिक पोर्टल लिंक साझा करें, या नागरिक की ओर से मामला बनाएँ।"
+    show:
+      confirm_delete: "यह मामला हटाएँ? यह सभी दृश्यों से छिप जाएगा परंतु ऑडिट लॉग में सुरक्षित रहेगा।"
+      thread: "मामला थ्रेड"
+      original_request: "मूल अनुरोध"
+      no_messages: "इस मामले पर अभी कोई संदेश नहीं"
+      reply: "उत्तर दें"
+      message_body: "संदेश"
+      composer_placeholder: "सार्वजनिक उत्तर या आंतरिक टिप्पणी लिखें…"
+      message_kind: "संदेश प्रकार"
+      attachments: "संलग्नक"
+      send: "भेजें"
+      status_panel: "स्थिति"
+      assignee: "नियुक्त व्यक्ति"
+      assign: "नियुक्त करें"
+      details: "विवरण"
+      queue: "कतार"
+      category: "श्रेणी"
+      sla_policy: "एसएलए नीति"
+      first_response_due: "प्रथम उत्तर नियत"
+      resolution_due: "समाधान नियत"
+      resolved_at: "समाधान तिथि"
+      reopened_times: "पुनः खोला गया"
+      contact_360: "संपर्क 360"
+      name: "नाम"
+      email: "ईमेल"
+      phone: "फ़ोन"
+      external_id: "ग्राहक आईडी"
+      organisation: "संगठन"
+      other_cases: "अन्य मामले"
+    new:
+      title: "नया मामला"
+    edit:
+      title: "मामला %{tracking_id} संपादित करें"
+    create:
+      created: "मामला %{tracking_id} बनाया गया।"
+    update:
+      updated: "मामला अद्यतन किया गया।"
+    destroy:
+      deleted: "मामला हटाया गया।"
+    transition:
+      transitioned: "मामला %{status} चिह्नित किया गया।"
+    assign:
+      assigned: "मामला %{name} को सौंपा गया।"
+      unassigned: "मामले से नियुक्ति हटाई गई।"
+
+  messages:
+    enum:
+      kind:
+        public_reply: "सार्वजनिक उत्तर"
+        internal_note: "आंतरिक टिप्पणी"
+        agent_turn: "एआई एजेंट"
+    author:
+      system: "सिस्टम"
+    create:
+      created: "संदेश जोड़ा गया।"
+
+  contacts:
+    fields:
+      name: "नाम"
+      email: "ईमेल"
+      phone: "फ़ोन"
+      external_id: "ग्राहक आईडी"
+      organisation: "संगठन"
+      preferred_language: "पसंदीदा भाषा"
+      notes: "टिप्पणियाँ"
+    form:
+      external_id_hint: "संचालक का अपना ग्राहक पहचानकर्ता (जैसे बैंक CIF)। एकीकृत प्रणालियों द्वारा दर्ज मामलों को जोड़ने के लिए प्रयुक्त।"
+    index:
+      title: "संपर्क"
+      new_contact: "नया संपर्क"
+      columns:
+        name: "नाम"
+        email: "ईमेल"
+        phone: "फ़ोन"
+        external_id: "ग्राहक आईडी"
+        organisation: "संगठन"
+      empty:
+        title: "अभी तक कोई संपर्क नहीं"
+        hint: "नागरिकों द्वारा मामले दर्ज करने पर संपर्क स्वतः बनते हैं, या मैन्युअल रूप से जोड़ें।"
+    show:
+      new_case: "नया मामला"
+      confirm_delete: "यह संपर्क हटाएँ?"
+      case_history: "मामलों का इतिहास"
+      no_cases: "इस संपर्क का अभी कोई मामला नहीं"
+      details: "विवरण"
+    new:
+      title: "नया संपर्क"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "संपर्क बनाया गया।"
+    update:
+      updated: "संपर्क अद्यतन किया गया।"
+    destroy:
+      deleted: "संपर्क हटाया गया।"
+
+  organisations:
+    enum:
+      kind:
+        department: "विभाग"
+        branch: "शाखा"
+        company: "कंपनी"
+        other: "अन्य"
+    fields:
+      name: "नाम"
+      kind: "प्रकार"
+      external_ref: "बाह्य संदर्भ"
+      notes: "टिप्पणियाँ"
+    form:
+      external_ref_hint: "इस संगठन के लिए आपका अपना कोड (जैसे शाखा कोड)।"
+    index:
+      title: "संगठन"
+      new_organisation: "नया संगठन"
+      columns:
+        name: "नाम"
+        kind: "प्रकार"
+        external_ref: "बाह्य संदर्भ"
+      empty:
+        title: "अभी तक कोई संगठन नहीं"
+        hint: "संपर्कों को विभाग, शाखा या कंपनी के अनुसार समूहित करें।"
+    show:
+      confirm_delete: "यह संगठन हटाएँ?"
+      contacts: "संपर्क"
+      no_contacts: "इस संगठन में अभी कोई संपर्क नहीं"
+    new:
+      title: "नया संगठन"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "संगठन बनाया गया।"
+    update:
+      updated: "संगठन अद्यतन किया गया।"
+    destroy:
+      deleted: "संगठन हटाया गया।"
+
+  case_queues:
+    fields:
+      name: "नाम"
+      slug: "स्लग"
+      description: "विवरण"
+      members: "सदस्य"
+    form:
+      slug_hint: "एपीआई और कमांड पैलेट द्वारा प्रयुक्त संक्षिप्त पहचानकर्ता। नाम से बनाने के लिए खाली छोड़ें।"
+    index:
+      title: "कतारें"
+      new_queue: "नई कतार"
+      no_members: "कोई सदस्य नहीं"
+      confirm_delete: "यह कतार हटाएँ? मामलों का इतिहास बना रहेगा; इसमें रूटिंग रुक जाएगी।"
+      columns:
+        name: "नाम"
+        slug: "स्लग"
+        members: "सदस्य"
+        open_cases: "खुले मामले"
+      empty:
+        title: "अभी तक कोई कतार नहीं"
+        hint: "कतारें आने वाले मामलों के लिए रूटिंग बकेट हैं — जैसे पेंशन, स्वच्छता, कार्ड विवाद।"
+    new:
+      title: "नई कतार"
+    edit:
+      title: "कतार %{name} संपादित करें"
+    create:
+      created: "कतार बनाई गई।"
+    update:
+      updated: "कतार अद्यतन की गई।"
+    destroy:
+      deleted: "कतार हटाई गई।"
+
+  categories:
+    fields:
+      name: "नाम"
+      description: "विवरण"
+    index:
+      title: "श्रेणियाँ"
+      new_category: "नई श्रेणी"
+      auto_resolve_on: "एआई स्वतः-समाधान चालू"
+      auto_resolve_off: "बंद"
+      confirm_delete: "यह श्रेणी हटाएँ?"
+      columns:
+        name: "नाम"
+        description: "विवरण"
+        ai_auto_resolve: "एआई स्वतः-समाधान"
+      empty:
+        title: "अभी तक कोई श्रेणी नहीं"
+        hint: "श्रेणियाँ मामलों का वर्गीकरण करती हैं और विषय-वार एआई स्वतः-समाधान को नियंत्रित करती हैं।"
+    new:
+      title: "नई श्रेणी"
+    edit:
+      title: "श्रेणी %{name} संपादित करें"
+    create:
+      created: "श्रेणी बनाई गई।"
+    update:
+      updated: "श्रेणी अद्यतन की गई।"
+    destroy:
+      deleted: "श्रेणी हटाई गई।"
+
+  sla_policies:
+    fields:
+      name: "नाम"
+      description: "विवरण"
+      targets: "प्राथमिकता-वार लक्ष्य"
+      first_response_minutes: "प्रथम उत्तर (मिनट)"
+      resolution_minutes: "समाधान (मिनट)"
+    form:
+      targets_hint: "किसी प्राथमिकता का लक्ष्य न रखने के लिए उसे खाली छोड़ें।"
+    index:
+      title: "एसएलए नीतियाँ"
+      new_policy: "नई एसएलए नीति"
+      default: "डिफ़ॉल्ट"
+      target_summary: "%{response}मि / %{resolution}मि"
+      confirm_delete: "यह एसएलए नीति हटाएँ?"
+      columns:
+        name: "नाम"
+        targets: "लक्ष्य (प्रथम उत्तर / समाधान)"
+      empty:
+        title: "अभी तक कोई एसएलए नीति नहीं"
+        hint: "एसएलए नीतियाँ प्राथमिकता-वार प्रथम-उत्तर और समाधान लक्ष्य निर्धारित करती हैं।"
+    new:
+      title: "नई एसएलए नीति"
+    edit:
+      title: "एसएलए नीति %{name} संपादित करें"
+    create:
+      created: "एसएलए नीति बनाई गई।"
+    update:
+      updated: "एसएलए नीति अद्यतन की गई।"
+    destroy:
+      deleted: "एसएलए नीति हटाई गई।"
+
+  users:
+    enum:
+      role:
+        admin: "प्रशासक"
+        supervisor: "पर्यवेक्षक"
+        agent: "एजेंट"
+        readonly: "केवल-पठन"
+
+  admin:
+    users:
+      fields:
+        name: "नाम"
+        email: "ईमेल पता"
+        password: "पासवर्ड"
+        role: "भूमिका"
+        locale: "भाषा"
+        queues: "कतार सदस्यताएँ"
+      form:
+        password_hint: "वर्तमान पासवर्ड रखने के लिए खाली छोड़ें।"
+      index:
+        title: "उपयोगकर्ता"
+        new_user: "नया उपयोगकर्ता"
+        active: "सक्रिय"
+        inactive: "निष्क्रिय"
+        activate: "सक्रिय करें"
+        deactivate: "निष्क्रिय करें"
+        columns:
+          name: "नाम"
+          email: "ईमेल"
+          role: "भूमिका"
+          queues: "कतारें"
+          status: "स्थिति"
+      show:
+        recent_activity: "हाल की गतिविधि"
+        no_activity: "अभी तक कोई गतिविधि दर्ज नहीं।"
+        details: "विवरण"
+        member_since: "सदस्यता प्रारंभ"
+        columns:
+          action: "क्रिया"
+          subject: "विषय"
+          when: "कब"
+      new:
+        title: "नया उपयोगकर्ता"
+      edit:
+        title: "%{name} संपादित करें"
+      create:
+        created: "उपयोगकर्ता बनाया गया।"
+      update:
+        updated: "उपयोगकर्ता अद्यतन किया गया।"
+      destroy:
+        deleted: "उपयोगकर्ता निष्क्रिय कर हटाया गया।"
+      activate:
+        activated: "उपयोगकर्ता सक्रिय किया गया।"
+      deactivate:
+        deactivated: "उपयोगकर्ता निष्क्रिय किया गया।"
+        cannot_deactivate_self: "आप अपना ही खाता निष्क्रिय नहीं कर सकते।"
+
+  activerecord:
+    errors:
+      models:
+        case:
+          attributes:
+            status:
+              must_use_state_machine: "परिवर्तन केवल मामला स्थिति-तंत्र के माध्यम से ही हो सकते हैं"
+        contact:
+          attributes:
+            base:
+              unreachable: "ईमेल, फ़ोन या ग्राहक आईडी में से कम-से-कम एक आवश्यक है"

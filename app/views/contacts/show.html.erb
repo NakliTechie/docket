@@ -1,0 +1,77 @@
+<% page_title @contact.name %>
+<div class="page-header">
+  <h1><%= @contact.name %></h1>
+  <div class="page-actions">
+    <% if policy(Case).create? %>
+      <%= link_to t(".new_case"), new_case_path(contact_id: @contact.id), class: "btn btn-primary" %>
+    <% end %>
+    <% if policy(@contact).update? %>
+      <%= link_to t("actions.edit"), edit_contact_path(@contact), class: "btn" %>
+    <% end %>
+    <% if policy(@contact).destroy? %>
+      <%= button_to t("actions.delete"), contact_path(@contact), method: :delete, class: "btn btn-danger",
+            form: { data: { turbo_confirm: t(".confirm_delete") } } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="two-column">
+  <section aria-label="<%= t(".case_history") %>">
+    <h2 class="panel-title"><%= t(".case_history") %></h2>
+    <% if @cases.any? %>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><%= t("cases.index.columns.tracking_id") %></th>
+              <th><%= t("cases.index.columns.subject") %></th>
+              <th><%= t("cases.index.columns.status") %></th>
+              <th><%= t("cases.index.columns.queue") %></th>
+              <th><%= t("cases.index.columns.created") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @cases.each do |kase| %>
+              <tr>
+                <td class="mono"><%= link_to kase.tracking_id, case_path(kase) %></td>
+                <td><%= link_to kase.subject, case_path(kase) %></td>
+                <td><%= status_badge(kase) %></td>
+                <td><%= kase.queue&.name %></td>
+                <td class="table-meta"><%= l kase.created_at, format: :short %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <%= render "shared/pagination", pagy: @pagy %>
+    <% else %>
+      <%= render "shared/empty_state", title: t(".no_cases") %>
+    <% end %>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".details") %></h2>
+      <dl class="meta-list">
+        <% if @contact.email.present? %>
+          <dt><%= t("contacts.fields.email") %></dt><dd><%= @contact.email %></dd>
+        <% end %>
+        <% if @contact.phone.present? %>
+          <dt><%= t("contacts.fields.phone") %></dt><dd><%= @contact.phone %></dd>
+        <% end %>
+        <% if @contact.external_id.present? %>
+          <dt><%= t("contacts.fields.external_id") %></dt><dd class="mono"><%= @contact.external_id %></dd>
+        <% end %>
+        <dt><%= t("contacts.fields.preferred_language") %></dt>
+        <dd><%= t("locales.#{@contact.preferred_language}") %></dd>
+        <% if @contact.organisation %>
+          <dt><%= t("contacts.fields.organisation") %></dt>
+          <dd><%= link_to @contact.organisation.name, organisation_path(@contact.organisation) %></dd>
+        <% end %>
+        <% if @contact.notes.present? %>
+          <dt><%= t("contacts.fields.notes") %></dt><dd><%= @contact.notes %></dd>
+        <% end %>
+      </dl>
+    </div>
+  </aside>
+</div>

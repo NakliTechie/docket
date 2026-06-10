@@ -1,0 +1,56 @@
+<%= form_with model: kase, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: kase %>
+
+  <div class="form-row <%= "field-error" if kase.errors[:subject].any? %>">
+    <%= f.label :subject, t("cases.fields.subject") %>
+    <%= f.text_field :subject, required: true %>
+    <% kase.errors[:subject].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row <%= "field-error" if kase.errors[:contact].any? %>">
+    <%= f.label :contact_id, t("cases.fields.contact") %>
+    <%= f.collection_select :contact_id, Contact.order(:name), :id, :name,
+          { include_blank: t("forms.select_prompt") }, required: true %>
+    <p class="form-hint"><%= link_to t("cases.form.new_contact"), new_contact_path %></p>
+    <% kase.errors[:contact].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :description, t("cases.fields.description") %>
+    <%= f.text_area :description %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :priority, t("cases.fields.priority") %>
+    <%= f.select :priority, Case.priorities.keys.map { |p| [ t("cases.enum.priority.#{p}"), p ] } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :queue_id, t("cases.fields.queue") %>
+    <%= f.collection_select :queue_id, CaseQueue.order(:name), :id, :name,
+          include_blank: t("cases.no_queue") %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :category_id, t("cases.fields.category") %>
+    <%= f.collection_select :category_id, Category.order(:name), :id, :name,
+          include_blank: t("cases.uncategorised") %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :assignee_id, t("cases.fields.assignee") %>
+    <%= f.collection_select :assignee_id, User.active.order(:name), :id, :name,
+          include_blank: t("cases.unassigned") %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :sla_policy_id, t("cases.fields.sla_policy") %>
+    <%= f.collection_select :sla_policy_id, SlaPolicy.order(:name), :id, :name,
+          include_blank: t("cases.form.default_sla") %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), kase.persisted? ? case_path(kase) : cases_path, class: "btn" %>
+  </div>
+<% end %>

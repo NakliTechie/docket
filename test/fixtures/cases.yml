@@ -1,0 +1,38 @@
+pension_case:
+  subject: Pension not credited for May
+  description: My monthly pension was not credited this month.
+  tracking_id: DKT-TEST-0001
+  channel: web_portal
+  status: new
+  priority: normal
+  queue: pensions
+  contact: asha
+  sla_policy: standard
+
+assigned_case:
+  subject: Garbage not collected
+  tracking_id: DKT-TEST-0002
+  channel: email
+  status: in_progress
+  priority: high
+  queue: sanitation
+  contact: ravi
+  assignee: agent_a
+
+waiting_case:
+  subject: Streetlight broken
+  tracking_id: DKT-TEST-0003
+  channel: web_portal
+  status: waiting_on_citizen
+  priority: low
+  queue: sanitation
+  contact: asha
+
+resolved_case:
+  subject: Water connection request
+  tracking_id: DKT-TEST-0004
+  channel: walk_in
+  status: resolved
+  priority: normal
+  contact: ravi
+  resolved_at: <%= 2.days.ago %>

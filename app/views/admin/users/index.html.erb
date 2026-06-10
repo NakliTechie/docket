@@ -1,0 +1,52 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to new_admin_user_path, class: "btn btn-primary" do %>
+      <%= icon "plus" %><%= t(".new_user") %>
+    <% end %>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th><%= t(".columns.name") %></th>
+        <th><%= t(".columns.email") %></th>
+        <th><%= t(".columns.role") %></th>
+        <th><%= t(".columns.queues") %></th>
+        <th><%= t(".columns.status") %></th>
+        <th class="actions"><%= t("tables.actions") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr>
+          <td><%= link_to user.name, admin_user_path(user) %></td>
+          <td><%= user.email_address %></td>
+          <td><%= role_badge(user) %></td>
+          <td class="table-meta"><%= user.queues.map(&:name).join(", ") %></td>
+          <td>
+            <% if user.active? %>
+              <span class="badge badge-sla sla-ok"><%= t(".active") %></span>
+            <% else %>
+              <span class="badge badge-sla sla-breached"><%= t(".inactive") %></span>
+            <% end %>
+          </td>
+          <td class="actions">
+            <%= link_to t("actions.edit"), edit_admin_user_path(user), class: "btn btn-sm" %>
+            <% if user.active? && user != Current.user %>
+              <%= button_to t(".deactivate"), deactivate_admin_user_path(user), method: :post,
+                    class: "btn btn-sm btn-danger", form: { class: "inline-form" } %>
+            <% elsif !user.active? %>
+              <%= button_to t(".activate"), activate_admin_user_path(user), method: :post,
+                    class: "btn btn-sm", form: { class: "inline-form" } %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pagination", pagy: @pagy %>

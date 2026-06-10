@@ -9,3 +9,13 @@ One line per decision: what, why, when. Per handoff §0.2 — decisions not lock
 - Pagy for pagination — dependency-free, fastest, no view-framework coupling. 2026-06-10
 - Source planning docs (vision, handoff) vendored under `docs/` — they are inputs from the human, not new standing documents (handoff §11). 2026-06-10
 - Scaffolded with `--skip-action-text --skip-jbuilder --skip-kamal --skip-thruster` — Action Text not needed (plain-text messages), JSON via plain serializers, deploy is docker-compose not Kamal. 2026-06-10
+- Queue domain object is class `CaseQueue` (table `queues`) — `::Queue` is a Ruby core class (Thread::Queue); UI/API vocabulary stays "queues". 2026-06-10
+- Enums use `prefix: true` (`status_new?`, `role_admin?`) — bare `new`/`readonly` would collide with Class.new / AR#readonly?; stored values keep the locked names. 2026-06-10
+- Categories are a lookup table (not a free string) so the per-category AI auto-resolve gate (§4) has a place to live; `ai_auto_resolve` is excluded from normal CRUD params — flipping it is a dedicated admin action in G3. 2026-06-10
+- SLA targets are child rows (SlaTarget per priority) instead of per-priority columns — extensible and queryable. 2026-06-10
+- Soft delete = `default_scope` hiding + `destroy` override stamping `deleted_at`; `belongs_to` associations resolve `with_deleted` so history always renders; contacts with cases are delete-restricted. 2026-06-10
+- Audit chain: sha256(previous_sha + canonical JSON [action, auditable, actor, key-sorted changeset/metadata, μs UTC timestamp]); Postgres writers serialised by advisory lock, SQLite by its single-writer model; `json` column type (never jsonb) to preserve text fidelity. 2026-06-10
+- Audit actions for login/logout/password-reset are appended explicitly from controllers (sessions are not an Audited model — they'd be noise; the audit log is the durable login history). 2026-06-10
+- Secret-looking Setting keys (`*_secret`, `*_api_key`, `*_password`, `*_token`, `*_client_secret`) are value-redacted in audit changesets. 2026-06-10
+- Agent mutation scope: own/unassigned cases plus cases in their queues; all staff (incl. readonly) can view everything — single-tenant trust boundary is the deployment. 2026-06-10
+- Pundit verification: every action must authorize or policy-scope (`verify_pundit_compliance` after_action); index actions on restricted resources also `authorize` the class so scopes can't silently empty-list instead of 403ing. 2026-06-10

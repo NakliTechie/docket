@@ -1,0 +1,11 @@
+standard_normal:
+  sla_policy: standard
+  priority: normal
+  first_response_minutes: 120
+  resolution_minutes: 2880
+
+standard_high:
+  sla_policy: standard
+  priority: high
+  first_response_minutes: 30
+  resolution_minutes: 480

@@ -1,0 +1,87 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <% if policy(Case).create? %>
+      <%= link_to new_case_path, class: "btn btn-primary" do %>
+        <%= icon "plus" %><%= t(".new_case") %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%= form_with url: cases_path, method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row">
+    <%= f.label :q, t("filters.search") %>
+    <%= f.search_field :q, value: @filters[:q] %>
+  </div>
+  <div class="form-row">
+    <%= f.label :status, t("filters.status") %>
+    <%= f.select :status, Case.statuses.keys.map { |s| [ t("cases.enum.status.#{s}"), s ] },
+                 { include_blank: t("filters.any") }, selected: @filters[:status] %>
+  </div>
+  <div class="form-row">
+    <%= f.label :priority, t("filters.priority") %>
+    <%= f.select :priority, Case.priorities.keys.map { |p| [ t("cases.enum.priority.#{p}"), p ] },
+                 { include_blank: t("filters.any") }, selected: @filters[:priority] %>
+  </div>
+  <div class="form-row">
+    <%= f.label :queue_id, t("filters.queue") %>
+    <%= f.select :queue_id, CaseQueue.order(:name).pluck(:name, :id),
+                 { include_blank: t("filters.any") }, selected: @filters[:queue_id] %>
+  </div>
+  <div class="form-row">
+    <%= f.label :assignee_id, t("filters.assignee") %>
+    <%= f.select :assignee_id, User.active.order(:name).pluck(:name, :id),
+                 { include_blank: t("filters.any") }, selected: @filters[:assignee_id] %>
+  </div>
+  <div class="form-row">
+    <%= f.label :sort, t("filters.sort") %>
+    <%= f.select :sort, CasesController::SORTABLE.keys.map { |s| [ t("cases.sort.#{s}"), s ] },
+                 { selected: @filters[:sort] } %>
+  </div>
+  <%= f.hidden_field :dir, value: @filters[:dir] %>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+  <%= link_to t("filters.clear"), cases_path, class: "btn btn-ghost btn-sm" %>
+<% end %>
+
+<% if @cases.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.tracking_id") %></th>
+          <th><%= t(".columns.subject") %></th>
+          <th><%= t(".columns.contact") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th><%= t(".columns.priority") %></th>
+          <th><%= t(".columns.queue") %></th>
+          <th><%= t(".columns.assignee") %></th>
+          <th><%= t(".columns.sla") %></th>
+          <th><%= t(".columns.created") %></th>
+        </tr>
+      </thead>
+      <tbody data-keynav-target="list">
+        <% @cases.each do |kase| %>
+          <tr data-keynav-href="<%= case_path(kase) %>">
+            <td class="mono"><%= link_to kase.tracking_id, case_path(kase) %></td>
+            <td><%= link_to kase.subject, case_path(kase) %></td>
+            <td><%= kase.contact.name %></td>
+            <td><%= status_badge(kase) %></td>
+            <td><%= priority_badge(kase) %></td>
+            <td><%= kase.queue&.name || tag.span(t("cases.no_queue"), class: "muted") %></td>
+            <td><%= kase.assignee&.name || tag.span(t("cases.unassigned"), class: "muted") %></td>
+            <td><%= sla_chip(kase) %></td>
+            <td class="table-meta"><%= l kase.created_at, format: :short %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <%= render "shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "shared/empty_state",
+        title: t(".empty.title"),
+        hint: t(".empty.hint"),
+        action: policy(Case).create? ? link_to(t(".new_case"), new_case_path, class: "btn btn-primary") : nil %>
+<% end %>

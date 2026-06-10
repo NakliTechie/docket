@@ -1,31 +1,456 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
 en:
-  hello: "Hello world"
+  layout:
+    product_name: "Docket"
+    skip_to_content: "Skip to main content"
+    primary_navigation: "Primary navigation"
+    locale_switch_label: "हिन्दी"
+    sign_out: "Sign out"
+    nav:
+      cases: "Cases"
+      contacts: "Contacts"
+      organisations: "Organisations"
+      queues: "Queues"
+      categories: "Categories"
+      sla_policies: "SLA policies"
+      users: "Users"
+
+  locales:
+    en: "English"
+    hi: "Hindi"
+
+  actions:
+    edit: "Edit"
+    delete: "Delete"
+    cancel: "Cancel"
+
+  tables:
+    actions: "Actions"
+
+  forms:
+    errors_title:
+      one: "1 error prevented saving:"
+      other: "%{count} errors prevented saving:"
+    select_prompt: "Select…"
+    none: "None"
+    default: "Default"
+
+  filters:
+    search: "Search"
+    status: "Status"
+    priority: "Priority"
+    queue: "Queue"
+    assignee: "Assignee"
+    sort: "Sort by"
+    any: "Any"
+    apply: "Apply"
+    clear: "Clear"
+
+  pagination:
+    label: "Pagination"
+    prev: "Previous"
+    next: "Next"
+    page_of: "Page %{page} of %{pages}"
+
+  time:
+    ago: "%{time} ago"
+    in: "in %{time}"
+
+  errors:
+    forbidden:
+      title: "You do not have access to this page"
+      body: "Your role does not permit this action. Contact your administrator if you believe this is a mistake."
+    not_found:
+      title: "Page not found"
+      body: "The page you were looking for does not exist or may have been moved."
+    internal:
+      title: "Something went wrong"
+      body: "An unexpected error occurred. Please try again, and quote the reference below if you contact support."
+    reference: "Reference: %{id}"
+    back_home: "Back to home"
+
+  sessions:
+    rate_limited: "Too many attempts. Try again later."
+    invalid_credentials: "Try another email address or password."
+    new:
+      title: "Sign in"
+      email: "Email address"
+      password: "Password"
+      sign_in: "Sign in"
+      forgot_password: "Forgot password?"
+
+  passwords:
+    invalid_token: "Password reset link is invalid or has expired."
+    new:
+      title: "Forgot your password?"
+      send_instructions: "Email reset instructions"
+      back_to_sign_in: "Back to sign in"
+    edit:
+      title: "Update your password"
+      new_password: "New password"
+      confirm_password: "Repeat new password"
+      save: "Save"
+    create:
+      sent: "Password reset instructions sent (if a user with that email address exists)."
+    update:
+      reset: "Password has been reset."
+      mismatch: "Passwords did not match."
+
+  cases:
+    enum:
+      status:
+        new: "New"
+        triaged: "Triaged"
+        in_progress: "In progress"
+        waiting_on_citizen: "Waiting on citizen"
+        resolved: "Resolved"
+        closed: "Closed"
+        reopened: "Reopened"
+      priority:
+        low: "Low"
+        normal: "Normal"
+        high: "High"
+        urgent: "Urgent"
+      channel:
+        web_portal: "Web portal"
+        email: "Email"
+        api: "API"
+        staff: "Staff"
+        phone: "Phone"
+        walk_in: "Walk-in"
+    sort:
+      created_at: "Created"
+      priority: "Priority"
+      status: "Status"
+      due: "Due date"
+    sla:
+      breached: "SLA breached"
+      due: "Due %{time}"
+    fields:
+      subject: "Subject"
+      contact: "Contact"
+      description: "Description"
+      priority: "Priority"
+      queue: "Queue"
+      category: "Category"
+      assignee: "Assignee"
+      sla_policy: "SLA policy"
+    form:
+      new_contact: "Create a new contact first"
+      default_sla: "Use default policy"
+    errors:
+      invalid_transition: "That status change is not allowed from the case's current status."
+    transition_to: "Mark %{status}"
+    no_queue: "No queue"
+    unassigned: "Unassigned"
+    uncategorised: "Uncategorised"
+    index:
+      title: "Cases"
+      new_case: "New case"
+      columns:
+        tracking_id: "Tracking ID"
+        subject: "Subject"
+        contact: "Contact"
+        status: "Status"
+        priority: "Priority"
+        queue: "Queue"
+        assignee: "Assignee"
+        sla: "SLA"
+        created: "Created"
+      empty:
+        title: "No cases yet"
+        hint: "Share your public portal link, or create a case on behalf of a citizen."
+    show:
+      confirm_delete: "Delete this case? It will be hidden from all views but preserved in the audit log."
+      thread: "Case thread"
+      original_request: "Original request"
+      no_messages: "No messages on this case yet"
+      reply: "Reply"
+      message_body: "Message body"
+      composer_placeholder: "Write a public reply or an internal note…"
+      message_kind: "Message type"
+      attachments: "Attachments"
+      send: "Send"
+      status_panel: "Status"
+      assignee: "Assignee"
+      assign: "Assign"
+      details: "Details"
+      queue: "Queue"
+      category: "Category"
+      sla_policy: "SLA policy"
+      first_response_due: "First response due"
+      resolution_due: "Resolution due"
+      resolved_at: "Resolved at"
+      reopened_times: "Reopened"
+      contact_360: "Contact 360"
+      name: "Name"
+      email: "Email"
+      phone: "Phone"
+      external_id: "Customer ID"
+      organisation: "Organisation"
+      other_cases: "Other cases"
+    new:
+      title: "New case"
+    edit:
+      title: "Edit case %{tracking_id}"
+    create:
+      created: "Case %{tracking_id} created."
+    update:
+      updated: "Case updated."
+    destroy:
+      deleted: "Case deleted."
+    transition:
+      transitioned: "Case marked %{status}."
+    assign:
+      assigned: "Case assigned to %{name}."
+      unassigned: "Case unassigned."
+
+  messages:
+    enum:
+      kind:
+        public_reply: "Public reply"
+        internal_note: "Internal note"
+        agent_turn: "AI agent"
+    author:
+      system: "System"
+    create:
+      created: "Message added."
+
+  contacts:
+    fields:
+      name: "Name"
+      email: "Email"
+      phone: "Phone"
+      external_id: "Customer ID"
+      organisation: "Organisation"
+      preferred_language: "Preferred language"
+      notes: "Notes"
+    form:
+      external_id_hint: "The operator's own customer identifier (e.g. a bank CIF). Used to link cases filed by integrated systems."
+    index:
+      title: "Contacts"
+      new_contact: "New contact"
+      columns:
+        name: "Name"
+        email: "Email"
+        phone: "Phone"
+        external_id: "Customer ID"
+        organisation: "Organisation"
+      empty:
+        title: "No contacts yet"
+        hint: "Contacts are created automatically when citizens file cases, or add one manually."
+    show:
+      new_case: "New case"
+      confirm_delete: "Delete this contact?"
+      case_history: "Case history"
+      no_cases: "No cases for this contact yet"
+      details: "Details"
+    new:
+      title: "New contact"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Contact created."
+    update:
+      updated: "Contact updated."
+    destroy:
+      deleted: "Contact deleted."
+
+  organisations:
+    enum:
+      kind:
+        department: "Department"
+        branch: "Branch"
+        company: "Company"
+        other: "Other"
+    fields:
+      name: "Name"
+      kind: "Type"
+      external_ref: "External reference"
+      notes: "Notes"
+    form:
+      external_ref_hint: "Your own code for this organisation (e.g. branch code)."
+    index:
+      title: "Organisations"
+      new_organisation: "New organisation"
+      columns:
+        name: "Name"
+        kind: "Type"
+        external_ref: "External reference"
+      empty:
+        title: "No organisations yet"
+        hint: "Group contacts by department, branch, or company."
+    show:
+      confirm_delete: "Delete this organisation?"
+      contacts: "Contacts"
+      no_contacts: "No contacts in this organisation yet"
+    new:
+      title: "New organisation"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Organisation created."
+    update:
+      updated: "Organisation updated."
+    destroy:
+      deleted: "Organisation deleted."
+
+  case_queues:
+    fields:
+      name: "Name"
+      slug: "Slug"
+      description: "Description"
+      members: "Members"
+    form:
+      slug_hint: "Short identifier used by the API and command palette. Leave blank to derive from the name."
+    index:
+      title: "Queues"
+      new_queue: "New queue"
+      no_members: "No members"
+      confirm_delete: "Delete this queue? Cases keep their history; routing to it stops."
+      columns:
+        name: "Name"
+        slug: "Slug"
+        members: "Members"
+        open_cases: "Open cases"
+      empty:
+        title: "No queues yet"
+        hint: "Queues are routing buckets for incoming cases — for example Pensions, Sanitation, Card disputes."
+    new:
+      title: "New queue"
+    edit:
+      title: "Edit queue %{name}"
+    create:
+      created: "Queue created."
+    update:
+      updated: "Queue updated."
+    destroy:
+      deleted: "Queue deleted."
+
+  categories:
+    fields:
+      name: "Name"
+      description: "Description"
+    index:
+      title: "Categories"
+      new_category: "New category"
+      auto_resolve_on: "AI auto-resolve ON"
+      auto_resolve_off: "Off"
+      confirm_delete: "Delete this category?"
+      columns:
+        name: "Name"
+        description: "Description"
+        ai_auto_resolve: "AI auto-resolve"
+      empty:
+        title: "No categories yet"
+        hint: "Categories classify cases and gate AI auto-resolution per topic."
+    new:
+      title: "New category"
+    edit:
+      title: "Edit category %{name}"
+    create:
+      created: "Category created."
+    update:
+      updated: "Category updated."
+    destroy:
+      deleted: "Category deleted."
+
+  sla_policies:
+    fields:
+      name: "Name"
+      description: "Description"
+      targets: "Targets per priority"
+      first_response_minutes: "First response (minutes)"
+      resolution_minutes: "Resolution (minutes)"
+    form:
+      targets_hint: "Leave a priority blank to set no target for it."
+    index:
+      title: "SLA policies"
+      new_policy: "New SLA policy"
+      default: "Default"
+      target_summary: "%{response}m / %{resolution}m"
+      confirm_delete: "Delete this SLA policy?"
+      columns:
+        name: "Name"
+        targets: "Targets (first response / resolution)"
+      empty:
+        title: "No SLA policies yet"
+        hint: "SLA policies set first-response and resolution targets per priority."
+    new:
+      title: "New SLA policy"
+    edit:
+      title: "Edit SLA policy %{name}"
+    create:
+      created: "SLA policy created."
+    update:
+      updated: "SLA policy updated."
+    destroy:
+      deleted: "SLA policy deleted."
+
+  users:
+    enum:
+      role:
+        admin: "Admin"
+        supervisor: "Supervisor"
+        agent: "Agent"
+        readonly: "Read-only"
+
+  admin:
+    users:
+      fields:
+        name: "Name"
+        email: "Email address"
+        password: "Password"
+        role: "Role"
+        locale: "Language"
+        queues: "Queue memberships"
+      form:
+        password_hint: "Leave blank to keep the current password."
+      index:
+        title: "Users"
+        new_user: "New user"
+        active: "Active"
+        inactive: "Inactive"
+        activate: "Activate"
+        deactivate: "Deactivate"
+        columns:
+          name: "Name"
+          email: "Email"
+          role: "Role"
+          queues: "Queues"
+          status: "Status"
+      show:
+        recent_activity: "Recent activity"
+        no_activity: "No recorded activity yet."
+        details: "Details"
+        member_since: "Member since"
+        columns:
+          action: "Action"
+          subject: "Subject"
+          when: "When"
+      new:
+        title: "New user"
+      edit:
+        title: "Edit %{name}"
+      create:
+        created: "User created."
+      update:
+        updated: "User updated."
+      destroy:
+        deleted: "User deactivated and deleted."
+      activate:
+        activated: "User activated."
+      deactivate:
+        deactivated: "User deactivated."
+        cannot_deactivate_self: "You cannot deactivate your own account."
+
+  activerecord:
+    errors:
+      models:
+        case:
+          attributes:
+            status:
+              must_use_state_machine: "transitions must go through the case state machine"
+        contact:
+          attributes:
+            base:
+              unreachable: "needs at least one of email, phone, or customer ID"

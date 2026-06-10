@@ -1,0 +1,174 @@
+<% page_title "#{@case.tracking_id} · #{@case.subject}" %>
+<div class="page-header">
+  <div>
+    <h1><%= @case.subject %></h1>
+    <p class="muted mono"><%= @case.tracking_id %> · <%= t("cases.enum.channel.#{@case.channel}") %> · <%= l @case.created_at, format: :long %></p>
+  </div>
+  <div class="page-actions">
+    <% if policy(@case).update? %>
+      <%= link_to edit_case_path(@case), class: "btn" do %>
+        <%= icon "pencil" %><%= t("actions.edit") %>
+      <% end %>
+    <% end %>
+    <% if policy(@case).destroy? %>
+      <%= button_to case_path(@case), method: :delete, class: "btn btn-danger",
+            form: { data: { turbo_confirm: t(".confirm_delete") } } do %>
+        <%= icon "trash" %><%= t("actions.delete") %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="two-column">
+  <section aria-label="<%= t(".thread") %>">
+    <div class="case-thread">
+      <% if @case.description.present? %>
+        <article class="thread-message">
+          <div class="thread-message-head">
+            <span class="thread-message-author"><%= @case.contact.name %></span>
+            <span><%= t(".original_request") %> · <%= l @case.created_at, format: :short %></span>
+          </div>
+          <div class="thread-message-body"><%= @case.description %></div>
+        </article>
+      <% end %>
+
+      <% @messages.each do |message| %>
+        <article class="thread-message kind-<%= message.kind.dasherize %> direction-<%= message.direction %>">
+          <div class="thread-message-head">
+            <span class="thread-message-author">
+              <% if message.kind_agent_turn? %><%= icon "bot" %><% end %>
+              <%= message.author_display_name %>
+            </span>
+            <span><%= message.human_kind %> · <%= l message.created_at, format: :short %></span>
+          </div>
+          <div class="thread-message-body"><%= message.body %></div>
+          <% if message.files.attached? %>
+            <div class="thread-attachments">
+              <% message.files.each do |file| %>
+                <%= link_to rails_blob_path(file, disposition: "attachment") do %>
+                  <%= icon "paperclip" %><%= file.filename %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </article>
+      <% end %>
+
+      <% if @messages.empty? && @case.description.blank? %>
+        <%= render "shared/empty_state", title: t(".no_messages") %>
+      <% end %>
+    </div>
+
+    <% if policy(@case).update? %>
+      <div class="panel composer">
+        <h2 class="panel-title"><%= t(".reply") %></h2>
+        <%= form_with model: [ @case, @message ] do |f| %>
+          <div class="form-row">
+            <%= f.label :body, t(".message_body"), class: "visually-hidden" %>
+            <%= f.text_area :body, required: true, placeholder: t(".composer_placeholder") %>
+          </div>
+          <div class="composer-toolbar">
+            <div class="checkbox-row" role="radiogroup" aria-label="<%= t(".message_kind") %>">
+              <%= f.radio_button :kind, "public_reply", checked: @message.kind != "internal_note" %>
+              <%= f.label :kind_public_reply, t("messages.enum.kind.public_reply") %>
+              <%= f.radio_button :kind, "internal_note", checked: @message.kind == "internal_note" %>
+              <%= f.label :kind_internal_note, t("messages.enum.kind.internal_note") %>
+            </div>
+            <div>
+              <%= f.label :files, t(".attachments"), class: "visually-hidden" %>
+              <%= f.file_field :files, multiple: true %>
+            </div>
+            <%= f.submit t(".send"), class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".status_panel") %></h2>
+      <p><%= status_badge(@case) %> <%= priority_badge(@case) %> <%= sla_chip(@case) %></p>
+      <% if policy(@case).transition? %>
+        <div class="stack-sm">
+          <% Case::TRANSITIONS.fetch(@case.status, []).each do |next_status| %>
+            <%= button_to t("cases.transition_to", status: t("cases.enum.status.#{next_status}")),
+                  transition_case_path(@case, status: next_status), class: "btn btn-sm" %>
+          <% end %>
+        </div>
+      <% end %>
+      <% if policy(@case).assign? %>
+        <%= form_with url: assign_case_path(@case), method: :post, class: "form-row" do |f| %>
+          <%= f.label :assignee_id, t(".assignee") %>
+          <%= f.select :assignee_id, User.active.order(:name).pluck(:name, :id),
+                       { include_blank: t("cases.unassigned"), selected: @case.assignee_id } %>
+          <%= f.submit t(".assign"), class: "btn btn-sm" %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".details") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".queue") %></dt>
+        <dd><%= @case.queue&.name || t("cases.no_queue") %></dd>
+        <dt><%= t(".category") %></dt>
+        <dd><%= @case.category&.name || t("cases.uncategorised") %></dd>
+        <dt><%= t(".sla_policy") %></dt>
+        <dd><%= @case.sla_policy&.name || "—" %></dd>
+        <% if @case.first_response_due_at %>
+          <dt><%= t(".first_response_due") %></dt>
+          <dd><%= l @case.first_response_due_at, format: :short %></dd>
+        <% end %>
+        <% if @case.resolution_due_at %>
+          <dt><%= t(".resolution_due") %></dt>
+          <dd><%= l @case.resolution_due_at, format: :short %></dd>
+        <% end %>
+        <% if @case.resolved_at %>
+          <dt><%= t(".resolved_at") %></dt>
+          <dd><%= l @case.resolved_at, format: :short %></dd>
+        <% end %>
+        <% if @case.reopen_count.positive? %>
+          <dt><%= t(".reopened_times") %></dt>
+          <dd><%= @case.reopen_count %></dd>
+        <% end %>
+      </dl>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".contact_360") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".name") %></dt>
+        <dd><%= link_to @case.contact.name, contact_path(@case.contact) %></dd>
+        <% if @case.contact.email.present? %>
+          <dt><%= t(".email") %></dt>
+          <dd><%= @case.contact.email %></dd>
+        <% end %>
+        <% if @case.contact.phone.present? %>
+          <dt><%= t(".phone") %></dt>
+          <dd><%= @case.contact.phone %></dd>
+        <% end %>
+        <% if @case.contact.external_id.present? %>
+          <dt><%= t(".external_id") %></dt>
+          <dd class="mono"><%= @case.contact.external_id %></dd>
+        <% end %>
+        <% if @case.contact.organisation %>
+          <dt><%= t(".organisation") %></dt>
+          <dd><%= @case.contact.organisation.name %></dd>
+        <% end %>
+      </dl>
+      <% if @contact_cases.any? %>
+        <h3 class="panel-title"><%= t(".other_cases") %></h3>
+        <ul class="stack-sm">
+          <% @contact_cases.each do |other| %>
+            <li>
+              <%= link_to other.tracking_id, case_path(other), class: "mono" %>
+              <%= status_badge(other) %>
+              <span class="table-meta"><%= other.subject.truncate(40) %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  </aside>
+</div>

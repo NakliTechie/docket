@@ -1,0 +1,49 @@
+<%= form_with model: [ :admin, user ], class: "form" do |f| %>
+  <%= render "shared/form_errors", record: user %>
+
+  <div class="form-row <%= "field-error" if user.errors[:name].any? %>">
+    <%= f.label :name, t("admin.users.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% user.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row <%= "field-error" if user.errors[:email_address].any? %>">
+    <%= f.label :email_address, t("admin.users.fields.email") %>
+    <%= f.email_field :email_address, required: true %>
+    <% user.errors[:email_address].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row <%= "field-error" if user.errors[:password].any? %>">
+    <%= f.label :password, t("admin.users.fields.password") %>
+    <%= f.password_field :password, autocomplete: "new-password",
+          required: user.new_record? %>
+    <% unless user.new_record? %><p class="form-hint"><%= t("admin.users.form.password_hint") %></p><% end %>
+    <% user.errors[:password].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :role, t("admin.users.fields.role") %>
+    <%= f.select :role, User.roles.keys.map { |r| [ t("users.enum.role.#{r}"), r ] } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :locale, t("admin.users.fields.locale") %>
+    <%= f.select :locale, I18n.available_locales.map { |l| [ t("locales.#{l}"), l.to_s ] },
+          include_blank: t("forms.default") %>
+  </div>
+
+  <fieldset>
+    <legend><%= t("admin.users.fields.queues") %></legend>
+    <%= f.collection_check_boxes :queue_ids, CaseQueue.order(:name), :id, :name do |b| %>
+      <div class="checkbox-row">
+        <%= b.check_box %>
+        <%= b.label %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), admin_users_path, class: "btn" %>
+  </div>
+<% end %>

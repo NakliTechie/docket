@@ -1,0 +1,8 @@
+dpg:
+  name: Directorate of Public Grievances
+  kind: department
+
+branch:
+  name: Karol Bagh Branch
+  kind: branch
+  external_ref: KB001

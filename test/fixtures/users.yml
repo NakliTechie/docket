@@ -1,0 +1,43 @@
+<% password_digest = BCrypt::Password.create("password") %>
+
+admin:
+  name: Anita Admin
+  email_address: admin@example.com
+  password_digest: <%= password_digest %>
+  role: admin
+  active: true
+
+supervisor:
+  name: Suresh Supervisor
+  email_address: supervisor@example.com
+  password_digest: <%= password_digest %>
+  role: supervisor
+  active: true
+
+agent_a:
+  name: Asha Agent
+  email_address: agent.a@example.com
+  password_digest: <%= password_digest %>
+  role: agent
+  active: true
+
+agent_b:
+  name: Bharat Agent
+  email_address: agent.b@example.com
+  password_digest: <%= password_digest %>
+  role: agent
+  active: true
+
+readonly:
+  name: Vinod Viewer
+  email_address: readonly@example.com
+  password_digest: <%= password_digest %>
+  role: readonly
+  active: true
+
+inactive:
+  name: Iqbal Inactive
+  email_address: inactive@example.com
+  password_digest: <%= password_digest %>
+  role: agent
+  active: false

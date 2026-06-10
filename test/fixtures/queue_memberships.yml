@@ -1,0 +1,3 @@
+agent_a_pensions:
+  queue: pensions
+  user: agent_a

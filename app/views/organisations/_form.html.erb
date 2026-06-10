@@ -1,0 +1,30 @@
+<%= form_with model: organisation, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: organisation %>
+
+  <div class="form-row <%= "field-error" if organisation.errors[:name].any? %>">
+    <%= f.label :name, t("organisations.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% organisation.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :kind, t("organisations.fields.kind") %>
+    <%= f.select :kind, Organisation::KINDS.map { |k| [ t("organisations.enum.kind.#{k}"), k ] } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :external_ref, t("organisations.fields.external_ref") %>
+    <%= f.text_field :external_ref %>
+    <p class="form-hint"><%= t("organisations.form.external_ref_hint") %></p>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :notes, t("organisations.fields.notes") %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), organisations_path, class: "btn" %>
+  </div>
+<% end %>

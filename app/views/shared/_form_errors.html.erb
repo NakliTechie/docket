@@ -1,0 +1,10 @@
+<% if record.errors.any? %>
+  <div class="form-errors" role="alert">
+    <h2 class="form-errors-title"><%= t("forms.errors_title", count: record.errors.count) %></h2>
+    <ul>
+      <% record.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

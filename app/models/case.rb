@@ -1,0 +1,158 @@
+# The anchor object (handoff §2). Status transitions are enforced here
+# and only here — every status change in the app goes through
+# #transition_to!, which stamps lifecycle timestamps and validates the
+# move against TRANSITIONS.
+class Case < ApplicationRecord
+  include SoftDeletable
+  include Audited
+  include HumanEnums
+
+  humanizes_enums :status, :priority, :channel
+
+  class InvalidTransition < StandardError; end
+
+  # Citizen-friendly, unguessable: no 0/O/1/I/L/U ambiguity or lookalikes.
+  TRACKING_ALPHABET = %w[A B C D E F G H J K M N P Q R S T V W X Y Z 2 3 4 5 6 7 8 9].freeze
+
+  # Locked lifecycle: new → triaged → in_progress → waiting_on_citizen →
+  # resolved → closed, plus reopened (handoff §2).
+  TRANSITIONS = {
+    "new"                => %w[triaged in_progress],
+    "triaged"            => %w[in_progress waiting_on_citizen resolved],
+    "in_progress"        => %w[waiting_on_citizen resolved],
+    "waiting_on_citizen" => %w[in_progress resolved],
+    "resolved"           => %w[closed reopened],
+    "closed"             => %w[reopened],
+    "reopened"           => %w[in_progress waiting_on_citizen resolved]
+  }.freeze
+
+  OPEN_STATUSES = %w[new triaged in_progress waiting_on_citizen reopened].freeze
+
+  enum :status, { new: 0, triaged: 1, in_progress: 2, waiting_on_citizen: 3,
+                  resolved: 4, closed: 5, reopened: 6 }, default: :new, prefix: true
+  enum :priority, { low: 0, normal: 1, high: 2, urgent: 3 }, default: :normal, prefix: true
+  enum :channel, { web_portal: 0, email: 1, api: 2, staff: 3, phone: 4, walk_in: 5 },
+       default: :web_portal, prefix: true
+
+  belongs_to :contact, -> { with_deleted }
+  belongs_to :queue, -> { with_deleted }, class_name: "CaseQueue", optional: true
+  belongs_to :assignee, -> { with_deleted }, class_name: "User", optional: true
+  belongs_to :category, -> { with_deleted }, optional: true
+  belongs_to :sla_policy, -> { with_deleted }, optional: true
+
+  has_many :messages, dependent: nil, inverse_of: :case
+  has_many :audit_entries, as: :auditable, dependent: nil
+
+  before_validation :ensure_tracking_id, on: :create
+  before_validation :apply_default_sla_policy, on: :create
+  before_save :compute_sla_due_dates, if: :sla_inputs_changed?
+
+  validates :subject, presence: true
+  validates :tracking_id, presence: true, uniqueness: true
+  validate :status_changed_through_state_machine, on: :update
+
+  scope :open_cases, -> { where(status: OPEN_STATUSES) }
+  scope :overdue_first_response, -> {
+    open_cases.where(first_responded_at: nil, first_response_breached: false)
+              .where(first_response_due_at: ...Time.current)
+  }
+  scope :overdue_resolution, -> {
+    open_cases.where(resolution_breached: false)
+              .where(resolution_due_at: ...Time.current)
+  }
+  scope :search, ->(q) {
+    next all if q.blank?
+    term = "%#{sanitize_sql_like(q.strip.downcase)}%"
+    where("LOWER(cases.subject) LIKE :t OR LOWER(cases.tracking_id) LIKE :t OR LOWER(cases.description) LIKE :t", t: term)
+  }
+
+  def self.generate_tracking_id
+    segment = -> { Array.new(4) { TRACKING_ALPHABET[SecureRandom.random_number(TRACKING_ALPHABET.size)] }.join }
+    "DKT-#{segment.call}-#{segment.call}"
+  end
+
+  def can_transition_to?(new_status)
+    TRANSITIONS.fetch(status, []).include?(new_status.to_s)
+  end
+
+  def transition_to!(new_status, actor: nil)
+    new_status = new_status.to_s
+    return self if status == new_status
+
+    unless can_transition_to?(new_status)
+      raise InvalidTransition, "cannot transition case from #{status} to #{new_status}"
+    end
+
+    @transitioning = true
+    self.status = new_status
+    case new_status
+    when "resolved"
+      self.resolved_at = Time.current
+    when "closed"
+      self.closed_at = Time.current
+    when "reopened"
+      self.reopened_at = Time.current
+      self.reopen_count += 1
+      self.resolved_at = nil
+      self.closed_at = nil
+    end
+    save!
+    self
+  ensure
+    @transitioning = false
+  end
+
+  def transition_to(new_status, actor: nil)
+    transition_to!(new_status, actor: actor)
+  rescue InvalidTransition, ActiveRecord::RecordInvalid
+    false
+  end
+
+  def open?
+    OPEN_STATUSES.include?(status)
+  end
+
+  def record_first_response!(at: Time.current)
+    update!(first_responded_at: at) if first_responded_at.nil?
+  end
+
+  private
+
+  def ensure_tracking_id
+    return if tracking_id.present?
+    candidate = nil
+    10.times do
+      candidate = self.class.generate_tracking_id
+      break unless self.class.with_deleted.exists?(tracking_id: candidate)
+      candidate = nil
+    end
+    self.tracking_id = candidate
+  end
+
+  def apply_default_sla_policy
+    self.sla_policy ||= SlaPolicy.default
+  end
+
+  def sla_inputs_changed?
+    new_record? || will_save_change_to_priority? || will_save_change_to_sla_policy_id?
+  end
+
+  def compute_sla_due_dates
+    target = sla_policy&.target_for(priority)
+    base = created_at || Time.current
+    if target.nil?
+      self.first_response_due_at = nil unless first_responded_at
+      self.resolution_due_at = nil unless resolved_at
+      return
+    end
+    self.first_response_due_at = base + target.first_response_minutes.minutes if first_responded_at.nil?
+    self.resolution_due_at = base + target.resolution_minutes.minutes if resolved_at.nil?
+  end
+
+  # Status mutations must come through #transition_to! — the single
+  # state-machine location (handoff §2).
+  def status_changed_through_state_machine
+    return unless will_save_change_to_status?
+    errors.add(:status, :must_use_state_machine) unless @transitioning
+  end
+end

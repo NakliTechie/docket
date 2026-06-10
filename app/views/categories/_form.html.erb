@@ -1,0 +1,19 @@
+<%= form_with model: category, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: category %>
+
+  <div class="form-row <%= "field-error" if category.errors[:name].any? %>">
+    <%= f.label :name, t("categories.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% category.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :description, t("categories.fields.description") %>
+    <%= f.text_field :description %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), categories_path, class: "btn" %>
+  </div>
+<% end %>
