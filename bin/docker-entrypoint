@@ -1,8 +1,14 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
+# If running the rails server then prepare all databases (primary +
+# cache + queue + cable) and optionally load the demo seed data.
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
+  if [ "${DOCKET_SEED_DEMO}" == "true" ]; then
+    ./bin/rails db:seed demo:seed
+  else
+    ./bin/rails db:seed
+  fi
 fi
 
 exec "${@}"

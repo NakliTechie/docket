@@ -27,11 +27,10 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  config.assume_ssl = true
-
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  # SSL is on by default (sovereign posture). The compose quickstart
+  # serves plain HTTP on localhost, so it sets DOCKET_FORCE_SSL=false.
+  config.assume_ssl = ENV["DOCKET_FORCE_SSL"] != "false"
+  config.force_ssl = ENV["DOCKET_FORCE_SSL"] != "false"
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -60,8 +59,28 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
+  # Outbound mail goes only through the operator-configured SMTP
+  # gateway; with no SMTP configured, mail is silently discarded —
+  # never any other egress (handoff §8).
+  if ENV["SMTP_ADDRESS"].present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address: ENV["SMTP_ADDRESS"],
+      port: ENV.fetch("SMTP_PORT", 587).to_i,
+      user_name: ENV["SMTP_USERNAME"].presence,
+      password: ENV["SMTP_PASSWORD"].presence,
+      authentication: ENV["SMTP_USERNAME"].present? ? :login : nil,
+      enable_starttls_auto: ENV["SMTP_STARTTLS"] != "false"
+    }.compact
+  else
+    config.action_mailer.delivery_method = :test
+  end
+
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("DOCKET_HOST", "localhost"),
+    port: ENV["DOCKET_PORT"].presence
+  }.compact
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {

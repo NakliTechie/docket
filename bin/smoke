@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# Smoke test (handoff G4): boots a seeded instance, files a case via
+# the public portal, replies and resolves it via the API, registers a
+# webhook, and verifies the audit hash chain. Prints PASS/FAIL.
+#
+#   bin/smoke                      # boots its own throwaway dev server
+#   SMOKE_BASE_URL=http://localhost:3000 bin/smoke   # against compose
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+PORT="${SMOKE_PORT:-3210}"
+BASE="${SMOKE_BASE_URL:-http://localhost:$PORT}"
+BOOTED=0
+PASS=0
+FAIL=0
+declare -a RESULTS
+
+step() { # name, command result code
+  local name=$1 ok=$2
+  if [ "$ok" = "0" ]; then
+    PASS=$((PASS+1)); RESULTS+=("  ✔ $name")
+  else
+    FAIL=$((FAIL+1)); RESULTS+=("  ✘ $name")
+  fi
+}
+
+cleanup() {
+  if [ "$BOOTED" = "1" ] && [ -f tmp/pids/smoke.pid ]; then
+    kill "$(cat tmp/pids/smoke.pid)" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
+
+# --- boot ------------------------------------------------------------------
+if [ -z "${SMOKE_BASE_URL:-}" ]; then
+  echo "Booting throwaway instance on :$PORT (fresh database)…"
+  export RAILS_ENV=development
+  rm -f storage/smoke.sqlite3*
+  DATABASE_PATH=storage/smoke.sqlite3 bin/rails db:prepare db:seed demo:seed > /dev/null 2>&1 \
+    || bin/rails db:prepare db:seed demo:seed > /dev/null 2>&1
+  bin/rails server -p "$PORT" -P tmp/pids/smoke.pid -d > /dev/null 2>&1
+  BOOTED=1
+  for _ in $(seq 1 30); do
+    curl -fs "$BASE/up" > /dev/null 2>&1 && break
+    sleep 1
+  done
+fi
+
+echo "Smoke-testing $BASE"
+UA="Mozilla/5.0 (SmokeTest)"
+JAR="$(mktemp)"
+
+# --- 1. health + portal up ---------------------------------------------------
+curl -fs "$BASE/up" > /dev/null 2>&1; step "app boots (/up)" $?
+curl -fs -A "$UA" -c "$JAR" "$BASE/portal" -o /tmp/smoke_portal.html; step "portal reachable" $?
+
+# --- 2. citizen files a case via the portal ---------------------------------
+TOKEN=$(grep -o 'name="authenticity_token" value="[^"]*' /tmp/smoke_portal.html | tail -1 | sed 's/.*value="//')
+HTTP=$(curl -s -A "$UA" -b "$JAR" -o /tmp/smoke_conf.html -w "%{http_code}" -X POST "$BASE/portal/cases" \
+  --data-urlencode "authenticity_token=$TOKEN" \
+  --data-urlencode "portal_submission[name]=Smoke Tester" \
+  --data-urlencode "portal_submission[email]=smoke@example.com" \
+  --data-urlencode "portal_submission[subject]=Smoke test grievance" \
+  --data-urlencode "portal_submission[description]=Automated smoke submission.")
+TRACKING=$(grep -o "DKT-[A-Z2-9]\{4\}-[A-Z2-9]\{4\}" /tmp/smoke_conf.html | head -1)
+[ "$HTTP" = "201" ] && [ -n "$TRACKING" ]; step "portal case filed (tracking $TRACKING)" $?
+
+# --- 3. citizen checks status with the verification challenge ----------------
+curl -fs -A "$UA" -b "$JAR" "$BASE/portal/track" -o /tmp/smoke_track.html
+TOKEN=$(grep -o 'name="authenticity_token" value="[^"]*' /tmp/smoke_track.html | tail -1 | sed 's/.*value="//')
+HTTP=$(curl -s -A "$UA" -b "$JAR" -o /tmp/smoke_status.html -w "%{http_code}" -X POST "$BASE/portal/track" \
+  --data-urlencode "authenticity_token=$TOKEN" \
+  --data-urlencode "tracking_id=$TRACKING" \
+  --data-urlencode "contact_email=smoke@example.com")
+[ "$HTTP" = "200" ] && grep -q "Smoke test grievance" /tmp/smoke_status.html; step "status check verified" $?
+
+# --- 4. staff API: token, reply, transition ----------------------------------
+API_TOKEN=$(bin/rails runner 'admin = User.where(role: :admin).order(:id).first; print ApiToken.create!(user: admin, name: "smoke-#{Time.now.to_i}").raw_token' 2>/dev/null)
+[ -n "$API_TOKEN" ]; step "api token issued" $?
+
+HTTP=$(curl -s -o /tmp/smoke_api.json -w "%{http_code}" -X POST "$BASE/api/v1/cases/$TRACKING/messages" \
+  -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"message": {"body": "Replying via the API.", "kind": "public_reply"}}')
+[ "$HTTP" = "201" ]; step "reply via API" $?
+
+for STATUS in triaged in_progress resolved; do
+  HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/cases/$TRACKING/transition" \
+    -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+    -d "{\"status\": \"$STATUS\"}")
+  [ "$HTTP" = "200" ]; step "transition → $STATUS" $?
+done
+
+# --- 5. webhook endpoint + delivery log ---------------------------------------
+HTTP=$(curl -s -o /tmp/smoke_hook.json -w "%{http_code}" -X POST "$BASE/api/v1/webhook_endpoints" \
+  -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"webhook_endpoint": {"name": "Smoke receiver", "url": "http://localhost:9/sink", "events": ["case.created"]}}')
+HOOK_ID=$(python3 -c "import json; print(json.load(open('/tmp/smoke_hook.json'))['data']['id'])" 2>/dev/null)
+[ "$HTTP" = "201" ]; step "webhook endpoint registered" $?
+
+curl -s -X POST "$BASE/api/v1/cases" \
+  -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"case": {"subject": "Webhook smoke", "contact_id": 1}}' > /dev/null
+sleep 1
+DELIVERIES=$(curl -s "$BASE/api/v1/webhook_endpoints/$HOOK_ID/deliveries" -H "Authorization: Bearer $API_TOKEN" \
+  | python3 -c "import json,sys; print(len(json.load(sys.stdin)['data']))" 2>/dev/null)
+[ "${DELIVERIES:-0}" -ge 1 ]; step "webhook delivery recorded" $?
+
+# --- 6. audit chain ------------------------------------------------------------
+VERIFY=$(curl -s "$BASE/api/v1/audit/verification" -H "Authorization: Bearer $API_TOKEN" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin)['data']; print('ok' if d['ok'] else 'broken')" 2>/dev/null)
+[ "$VERIFY" = "ok" ]; step "audit hash chain verifies end-to-end" $?
+
+# --- summary --------------------------------------------------------------------
+echo
+echo "Smoke results:"
+printf '%s\n' "${RESULTS[@]}"
+echo
+if [ "$FAIL" = "0" ]; then
+  echo "PASS ($PASS checks)"
+  exit 0
+else
+  echo "FAIL ($FAIL of $((PASS+FAIL)) checks failed)"
+  exit 1
+fi

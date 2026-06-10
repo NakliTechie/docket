@@ -1,0 +1,52 @@
+# One-command sovereign deployment: app + Postgres on your own
+# hardware. Quickstart:
+#
+#   docker compose up --build
+#
+# then open http://localhost:3000 (staff console) and
+# http://localhost:3000/portal (citizen portal).
+# Demo logins are printed in the app logs on first boot
+# (arjun@docket.local / docket-demo). Set DOCKET_SEED_DEMO=false for a
+# clean production instance.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: docket
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-docket}
+      POSTGRES_DB: docket_production
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init/create-databases.sql:/docker-entrypoint-initdb.d/10-create-databases.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U docket -d docket_production" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${DOCKET_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://docket:${POSTGRES_PASSWORD:-docket}@db/docket_production
+      # Generate your own for real deployments: bin/rails secret
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-demo-secret-key-base-change-me-for-any-real-deployment-0000}
+      DOCKET_FORCE_SSL: "${DOCKET_FORCE_SSL:-false}"
+      DOCKET_SEED_DEMO: "${DOCKET_SEED_DEMO:-true}"
+      DOCKET_HOST: ${DOCKET_HOST:-localhost}
+      DOCKET_PORT: ${DOCKET_PORT:-3000}
+      # Outbound mail stays off unless you configure your gateway:
+      # SMTP_ADDRESS, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD
+      SOLID_QUEUE_IN_PUMA: "true"
+    volumes:
+      - app-storage:/rails/storage
+
+volumes:
+  postgres-data:
+  app-storage:

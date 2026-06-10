@@ -40,3 +40,8 @@ One line per decision: what, why, when. Per handoff §0.2 — decisions not lock
 - OmniAuth providers use setup-phase lambdas reading Settings/ENV so SSO config changes apply without restart; unconfigured providers fail to the friendly failure handler. 2026-06-10
 - SSO test strategy: app logic covered by OmniAuth test-mode integration tests in the default suite; live Keycloak OIDC flows (staff role-mapping + customer CIF claim) run as a dedicated CI job / bin/keycloak-test (no Docker daemon in the build container). 2026-06-10
 - NakliPoster collection uses the Postman v2.1 collection schema (importable in compatible tools), including the OBO flow and a signed webhook-receiver test request. 2026-06-10
+- Compose runs one app container with Solid Queue inside Puma (SOLID_QUEUE_IN_PUMA) — fewest moving parts; operators can split a dedicated `bin/jobs` worker without config changes. 2026-06-10
+- Production mail: SMTP only when SMTP_ADDRESS is set, otherwise delivery_method :test (silent discard) — no accidental egress in demo deployments. 2026-06-10
+- Production profile (PG multi-db prepare, advisory-lock audit chain, json round-trip, full smoke) was verified against a real Postgres 16 in the build environment — compose itself couldn't run (no Docker daemon), see KNOWN-GAPS. 2026-06-10
+- Activity & Usage parity via API = raw data endpoints (/audit/entries with filters + /cases filters), not a dedicated aggregate endpoint — the UI aggregation is derivable client-side; revisit if operators ask. 2026-06-10
+- Demo seeds are deterministic-ish (seeded RNG), idempotent via a `demo_seeded` Setting marker, and run the real state machine + FakeLlmClient showcase so the demo exercises production code paths. 2026-06-10
