@@ -18,6 +18,8 @@ class CasesController < ApplicationController
     @messages = @case.messages.with_attached_files.includes(:author).order(:created_at)
     @message = Message.new(kind: params[:note] ? :internal_note : :public_reply)
     @contact_cases = @case.contact.cases.where.not(id: @case.id).order(created_at: :desc).limit(10)
+    @macros = Macro.order(:name)
+    @next_case = next_open_case
   end
 
   def new
@@ -72,6 +74,14 @@ class CasesController < ApplicationController
   end
 
   private
+
+  # Next-case hotkey target: oldest open case in the same queue, else
+  # oldest open case anywhere.
+  def next_open_case
+    base = Case.open_cases.where.not(id: @case.id)
+    (@case.queue_id && base.where(queue_id: @case.queue_id).order(:created_at).first) ||
+      base.order(:created_at).first
+  end
 
   def set_case
     @case = Case.find(params[:id])

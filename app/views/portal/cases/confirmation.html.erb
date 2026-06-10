@@ -1,0 +1,14 @@
+<% page_title t(".title") %>
+<div class="portal-card portal-confirmation">
+  <h1><%= t(".title") %></h1>
+  <p><%= t(".body") %></p>
+  <p class="tracking-id-display mono" data-test-id="tracking-id"><%= kase.tracking_id %></p>
+  <p class="muted"><%= t(".keep_safe") %></p>
+  <% if kase.contact.email.present? %>
+    <p class="muted"><%= t(".emailed", email: kase.contact.email) %></p>
+  <% end %>
+  <div class="form-actions">
+    <%= link_to t(".track_now"), portal_track_path, class: "btn btn-primary" %>
+    <%= link_to t(".file_another"), portal_root_path, class: "btn" %>
+  </div>
+</div>

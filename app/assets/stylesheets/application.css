@@ -324,6 +324,51 @@ legend { font-weight: 600; padding: 0 var(--space-1); }
 .auth-page { max-width: 24rem; margin: var(--space-7) auto; }
 .auth-brand { text-align: center; font-size: var(--text-xl); font-weight: 700; color: var(--color-primary-dark); margin-bottom: var(--space-4); }
 
+/* Dialogs: help modal + command palette */
+.modal { border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0; max-width: 34rem; width: 90vw; }
+.modal::backdrop { background: rgba(27, 27, 27, 0.5); }
+.modal-content { padding: var(--space-4); max-height: 80vh; overflow-y: auto; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
+.modal-head h2 { margin: 0; }
+.bindings-table { margin-bottom: var(--space-4); }
+.bindings-table td { border: none; padding: var(--space-1) var(--space-3) var(--space-1) 0; }
+kbd {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--color-paper-deep);
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 0 var(--space-1);
+}
+.palette .modal-content { padding: var(--space-2); }
+.palette input { margin-bottom: var(--space-2); }
+.palette-list { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; }
+.palette-list li { padding: var(--space-2) var(--space-3); border-radius: var(--radius); cursor: pointer; }
+.palette-list li:hover, .palette-list li.palette-active { background: var(--color-primary-soft); }
+
+/* Portal */
+.portal-main { max-width: 44rem; }
+.portal-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-5);
+}
+.portal-confirmation { text-align: center; }
+.tracking-id-display {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  margin: var(--space-4) 0;
+}
+.portal-footer { text-align: center; padding: var(--space-5); }
+
 /* Utility */
 .icon { vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .muted { color: var(--color-ink-faint); }

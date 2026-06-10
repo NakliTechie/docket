@@ -1,0 +1,80 @@
+# Form object for the anonymous portal: validates citizen input,
+# upserts the Contact by email/phone, creates the Case and its initial
+# inbound message (which carries any attachments).
+class PortalSubmission
+  include ActiveModel::Model
+  include ActiveModel::Attributes
+
+  attribute :name, :string
+  attribute :email, :string
+  attribute :phone, :string
+  attribute :subject, :string
+  attribute :description, :string
+  attribute :preferred_language, :string, default: "en"
+  attr_accessor :files
+
+  validates :name, :subject, :description, presence: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validate :reachable_somehow
+
+  def save
+    return false unless valid?
+
+    kase = nil
+    ActiveRecord::Base.transaction do
+      contact = resolve_contact
+      kase = Case.create!(
+        subject: subject,
+        contact: contact,
+        channel: :web_portal,
+        queue_id: Setting.get("default_queue_id")
+      )
+      message = kase.messages.create!(
+        kind: :public_reply,
+        direction: :inbound,
+        author: contact,
+        body: description,
+        files: files.presence || []
+      )
+      message
+    end
+    kase
+  rescue ActiveRecord::RecordInvalid => e
+    promote_errors(e.record)
+    false
+  end
+
+  private
+
+  def normalized_email
+    email.to_s.strip.downcase.presence
+  end
+
+  def normalized_phone
+    phone.to_s.gsub(/[^\d+]/, "").presence
+  end
+
+  def resolve_contact
+    existing = normalized_email && Contact.find_by(email: normalized_email)
+    existing ||= normalized_phone && Contact.find_by(phone: normalized_phone)
+    return existing if existing
+
+    Contact.create!(
+      name: name,
+      email: normalized_email,
+      phone: normalized_phone,
+      preferred_language: preferred_language.presence_in(Contact::LANGUAGES) || "en"
+    )
+  end
+
+  def reachable_somehow
+    return if normalized_email || normalized_phone
+    errors.add(:base, :unreachable)
+  end
+
+  def promote_errors(record)
+    record.errors.each do |error|
+      errors.add(:base, error.full_message)
+    end
+  end
+end

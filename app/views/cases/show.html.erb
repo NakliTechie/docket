@@ -5,6 +5,11 @@
     <p class="muted mono"><%= @case.tracking_id %> · <%= t("cases.enum.channel.#{@case.channel}") %> · <%= l @case.created_at, format: :long %></p>
   </div>
   <div class="page-actions">
+    <% if @next_case %>
+      <%= link_to case_path(@next_case), class: "btn", data: { shortcut: "n" } do %>
+        <%= t(".next_case") %><%= icon "arrow-right" %>
+      <% end %>
+    <% end %>
     <% if policy(@case).update? %>
       <%= link_to edit_case_path(@case), class: "btn" do %>
         <%= icon "pencil" %><%= t("actions.edit") %>
@@ -19,7 +24,7 @@
   </div>
 </div>
 
-<div class="two-column">
+<div class="two-column" data-controller="shortcuts">
   <section aria-label="<%= t(".thread") %>">
     <div class="case-thread">
       <% if @case.description.present? %>
@@ -60,18 +65,32 @@
     </div>
 
     <% if policy(@case).update? %>
-      <div class="panel composer">
+      <div class="panel composer" data-controller="macro">
         <h2 class="panel-title"><%= t(".reply") %></h2>
         <%= form_with model: [ @case, @message ] do |f| %>
+          <% if @macros.any? %>
+            <div class="form-row">
+              <label for="macro-select" class="visually-hidden"><%= t(".macro_label") %></label>
+              <select id="macro-select" data-macro-target="select" data-action="change->macro#insert">
+                <option value=""><%= t(".macro_prompt") %></option>
+                <% @macros.each do |macro| %>
+                  <option value="<%= macro.id %>" data-body="<%= macro.render_for(@case, agent: Current.user) %>"><%= macro.name %></option>
+                <% end %>
+              </select>
+            </div>
+          <% end %>
+          <%= hidden_field_tag :macro_id, nil, data: { macro_target: "macroId" }, id: "composer-macro-id" %>
           <div class="form-row">
             <%= f.label :body, t(".message_body"), class: "visually-hidden" %>
-            <%= f.text_area :body, required: true, placeholder: t(".composer_placeholder") %>
+            <%= f.text_area :body, required: true, placeholder: t(".composer_placeholder"),
+                  data: { macro_target: "body", shortcut: "m" } %>
           </div>
           <div class="composer-toolbar">
             <div class="checkbox-row" role="radiogroup" aria-label="<%= t(".message_kind") %>">
               <%= f.radio_button :kind, "public_reply", checked: @message.kind != "internal_note" %>
               <%= f.label :kind_public_reply, t("messages.enum.kind.public_reply") %>
-              <%= f.radio_button :kind, "internal_note", checked: @message.kind == "internal_note" %>
+              <%= f.radio_button :kind, "internal_note", checked: @message.kind == "internal_note",
+                    data: { shortcut: "i" } %>
               <%= f.label :kind_internal_note, t("messages.enum.kind.internal_note") %>
             </div>
             <div>
@@ -93,11 +112,16 @@
         <div class="stack-sm">
           <% Case::TRANSITIONS.fetch(@case.status, []).each do |next_status| %>
             <%= button_to t("cases.transition_to", status: t("cases.enum.status.#{next_status}")),
-                  transition_case_path(@case, status: next_status), class: "btn btn-sm" %>
+                  transition_case_path(@case, status: next_status), class: "btn btn-sm",
+                  form: { class: "inline-form" }, data: { shortcut: transition_shortcut(next_status) } %>
           <% end %>
         </div>
       <% end %>
       <% if policy(@case).assign? %>
+        <% unless @case.assignee_id == Current.user.id %>
+          <%= button_to t(".assign_to_me"), assign_case_path(@case, assignee_id: Current.user.id),
+                class: "btn btn-sm", form: { class: "inline-form" }, data: { shortcut: "a" } %>
+        <% end %>
         <%= form_with url: assign_case_path(@case), method: :post, class: "form-row" do |f| %>
           <%= f.label :assignee_id, t(".assignee") %>
           <%= f.select :assignee_id, User.active.order(:name).pluck(:name, :id),

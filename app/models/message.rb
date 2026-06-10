@@ -15,11 +15,13 @@ class Message < ApplicationRecord
   belongs_to :author, -> { with_deleted }, polymorphic: true, optional: true
 
   has_many_attached :files
+  include AttachableValidation
 
   validates :body, presence: true
 
   after_create :stamp_first_response
   after_create :reopen_conversation_on_citizen_reply
+  after_create_commit :notify_contact_by_email
 
   def author_display_name
     return I18n.t("messages.author.system") if author.nil?
@@ -43,5 +45,12 @@ class Message < ApplicationRecord
   def reopen_conversation_on_citizen_reply
     return unless direction_inbound? && from_citizen? && self.case.status_waiting_on_citizen?
     self.case.transition_to!(:in_progress)
+  end
+
+  # Outbound public answers (human or AI) are mailed to the contact.
+  def notify_contact_by_email
+    return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
+    return if self.case.contact.email.blank?
+    CaseMailer.public_reply(self).deliver_later
   end
 end

@@ -1,0 +1,11 @@
+<%= t("case_mailer.public_reply.greeting", name: @case.contact.name) %>
+
+<%= t("case_mailer.public_reply.body", tracking_id: @case.tracking_id) %>
+
+----------------------------------------
+<%= @message.body %>
+----------------------------------------
+
+<%= t("case_mailer.public_reply.instructions") %>
+
+<%= t("case_mailer.signature") %>

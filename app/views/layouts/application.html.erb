@@ -10,7 +10,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body <%= "data-controller=hotkeys" if authenticated? %>>
     <a class="skip-link" href="#main"><%= t("layout.skip_to_content") %></a>
 
     <% if authenticated? %>
@@ -24,12 +24,19 @@
             <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
             <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
             <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
+            <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
           <% end %>
           <% if policy(User).index? %>
             <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
+            <%= nav_link t("layout.nav.activity"), admin_activity_path, active: controller_name == "activity" %>
+            <%= nav_link t("layout.nav.audit"), admin_audit_path, active: controller_name == "audit" %>
           <% end %>
         </nav>
         <div class="app-header-right">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="hotkeys#openHelp"
+                  aria-haspopup="dialog" aria-controls="help-modal">
+            <%= icon "help" %><span class="visually-hidden"><%= t("help.title") %></span>
+          </button>
           <%= button_to t("layout.locale_switch_label"), locale_path(locale: I18n.locale == :en ? "hi" : "en"),
                         class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
           <span class="current-user"><%= Current.user.name %> · <%= role_badge(Current.user) %></span>
@@ -43,5 +50,10 @@
       <%= render "shared/flash" %>
       <%= yield %>
     </main>
+
+    <% if authenticated? %>
+      <%= render "shared/help_modal" %>
+      <%= render "shared/command_palette" %>
+    <% end %>
   </body>
 </html>

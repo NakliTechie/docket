@@ -12,7 +12,10 @@ hi:
       queues: "कतारें"
       categories: "श्रेणियाँ"
       sla_policies: "एसएलए नीतियाँ"
+      macros: "मैक्रो"
       users: "उपयोगकर्ता"
+      activity: "गतिविधि"
+      audit: "ऑडिट"
 
   locales:
     en: "English"
@@ -159,8 +162,14 @@ hi:
       empty:
         title: "अभी तक कोई मामला नहीं"
         hint: "अपना सार्वजनिक पोर्टल लिंक साझा करें, या नागरिक की ओर से मामला बनाएँ।"
+    email_intake:
+      no_subject: "(कोई विषय नहीं)"
     show:
       confirm_delete: "यह मामला हटाएँ? यह सभी दृश्यों से छिप जाएगा परंतु ऑडिट लॉग में सुरक्षित रहेगा।"
+      next_case: "अगला मामला"
+      macro_label: "मैक्रो डालें"
+      macro_prompt: "मैक्रो डालें…"
+      assign_to_me: "मुझे सौंपें"
       thread: "मामला थ्रेड"
       original_request: "मूल अनुरोध"
       no_messages: "इस मामले पर अभी कोई संदेश नहीं"
@@ -443,6 +452,168 @@ hi:
         deactivated: "उपयोगकर्ता निष्क्रिय किया गया।"
         cannot_deactivate_self: "आप अपना ही खाता निष्क्रिय नहीं कर सकते।"
 
+  macros:
+    fields:
+      name: "नाम"
+      body: "पाठ"
+    form:
+      variables_hint: "उपलब्ध चर: %{variables}"
+    index:
+      title: "मैक्रो"
+      new_macro: "नया मैक्रो"
+      confirm_delete: "यह मैक्रो हटाएँ?"
+      columns:
+        name: "नाम"
+        body: "पाठ"
+      empty:
+        title: "अभी तक कोई मैक्रो नहीं"
+        hint: "मैक्रो तैयार उत्तर हैं जिन्हें आपकी टीम जवाबों में डालती है, {{contact_name}} और {{tracking_id}} जैसे चरों के साथ।"
+    new:
+      title: "नया मैक्रो"
+    edit:
+      title: "मैक्रो %{name} संपादित करें"
+    create:
+      created: "मैक्रो बनाया गया।"
+    update:
+      updated: "मैक्रो अद्यतन किया गया।"
+    destroy:
+      deleted: "मैक्रो हटाया गया।"
+
+  help:
+    title: "कीबोर्ड शॉर्टकट"
+    close: "बंद करें"
+    note: "फ़ील्ड में टाइप करते समय शॉर्टकट कभी सक्रिय नहीं होते। ये सामान्य सूची-नेविगेशन परिपाटियों का पालन करते हैं और ब्राउज़र व स्क्रीन-रीडर बाइंडिंग से नहीं टकराते।"
+    sections:
+      global: "कहीं भी"
+      lists: "मामला सूची"
+      case: "मामले पर"
+    bindings:
+      help: "यह सहायता खोलें"
+      palette: "कमांड पैलेट (कतारें, नेविगेशन)"
+      search: "खोज पर फ़ोकस करें"
+      move: "चयन नीचे / ऊपर ले जाएँ"
+      open: "चयनित मामला खोलें"
+      compose: "संदेश-लेखक पर फ़ोकस करें"
+      internal_note: "संदेश-लेखक को आंतरिक टिप्पणी पर बदलें"
+      assign_me: "मामला मुझे सौंपें"
+      next_case: "अगले खुले मामले पर जाएँ"
+      mark_triaged: "वर्गीकृत चिह्नित करें"
+      mark_in_progress: "प्रगति पर चिह्नित करें"
+      mark_waiting: "नागरिक की प्रतीक्षा में चिह्नित करें"
+      mark_resolved: "समाधानित चिह्नित करें"
+      mark_closed: "बंद चिह्नित करें"
+      mark_reopened: "मामला पुनः खोलें"
+
+  palette:
+    label: "कमांड पैलेट"
+    placeholder: "किसी कतार या पृष्ठ पर जाएँ…"
+    queue_prefix: "कतार:"
+
+  portal:
+    brand: "सार्वजनिक शिकायत पोर्टल"
+    footer: "डॉकेट द्वारा संचालित — जनसेवा के लिए सार्वजनिक कोड।"
+    nav:
+      new_case: "शिकायत दर्ज करें"
+      track: "मामला ट्रैक करें"
+    cases:
+      new:
+        title: "शिकायत या सेवा अनुरोध दर्ज करें"
+        intro: "किसी खाते की आवश्यकता नहीं। प्रगति देखने के लिए आपको एक ट्रैकिंग आईडी मिलेगी। ईमेल या फ़ोन से ही हम आप तक पहुँचते हैं — कम-से-कम एक अवश्य दें।"
+        your_name: "आपका नाम"
+        your_email: "ईमेल"
+        your_phone: "फ़ोन"
+        contact_hint: "ईमेल या फ़ोन (कम-से-कम एक) दें ताकि स्थिति जाँचते समय हम आपका सत्यापन कर सकें।"
+        subject: "विषय"
+        description: "अपनी शिकायत का विवरण दें"
+        attachments: "संलग्नक (वैकल्पिक)"
+        attachments_hint: "अधिकतम 5 फ़ाइलें: चित्र, पीडीएफ़ या टेक्स्ट। प्रत्येक 10 MB तक।"
+        submit: "जमा करें"
+      confirmation:
+        title: "आपका मामला दर्ज हो गया है"
+        body: "किसी भी अनुवर्ती कार्रवाई में यह ट्रैकिंग आईडी बताएँ:"
+        keep_safe: "यह आईडी सुरक्षित रखें — आपके ईमेल या फ़ोन के साथ इसी से आप अपने मामले की स्थिति देख सकते हैं।"
+        emailed: "हमने इसे %{email} पर ईमेल भी कर दिया है।"
+        track_now: "अपना मामला ट्रैक करें"
+        file_another: "एक और दर्ज करें"
+    tracking:
+      not_found: "उस ट्रैकिंग आईडी और संपर्क विवरण से कोई मामला नहीं मिला। दोनों जाँचें और पुनः प्रयास करें।"
+      closed_no_reply: "यह मामला बंद है। आगे सहायता चाहिए तो नया मामला दर्ज करें।"
+      reply_sent: "आपका उत्तर मामले में जोड़ दिया गया है।"
+      new:
+        title: "अपना मामला ट्रैक करें"
+        intro: "अपनी ट्रैकिंग आईडी और दर्ज करते समय उपयोग किया गया ईमेल या फ़ोन भरें।"
+        tracking_id: "ट्रैकिंग आईडी"
+        email: "ईमेल"
+        phone: "फ़ोन"
+        challenge_hint: "मामले पर दर्ज संपर्क विवरण से मेल खाना चाहिए।"
+        check: "स्थिति देखें"
+      show:
+        filed_on: "%{date} को दर्ज"
+        updates: "अद्यतन"
+        no_updates: "अभी कोई अद्यतन नहीं। हमारी टीम शीघ्र उत्तर देगी।"
+        you: "आप"
+        staff_label: "सहायता टीम"
+        reply: "उत्तर दें"
+        reply_body: "आपका उत्तर"
+        reply_placeholder: "जानकारी जोड़ें या टीम को उत्तर दें…"
+        send_reply: "उत्तर भेजें"
+
+  case_mailer:
+    signature: "— सेवा टीम"
+    confirmation:
+      subject: "आपका मामला %{tracking_id}: %{subject}"
+      greeting: "प्रिय %{name},"
+      body: "आपकी शिकायत \"%{subject}\" पंजीकृत हो गई है।"
+      tracking_label: "ट्रैकिंग आईडी"
+      instructions: "इस आईडी और अपने ईमेल या फ़ोन से पोर्टल पर कभी भी स्थिति देखें। जानकारी जोड़ने के लिए आप इस ईमेल का उत्तर भी दे सकते हैं।"
+    public_reply:
+      subject: "आपके मामले %{tracking_id} पर अद्यतन: %{subject}"
+      greeting: "प्रिय %{name},"
+      body: "आपके मामले %{tracking_id} पर एक नया अद्यतन है:"
+      instructions: "इस ईमेल का उत्तर दें (विषय में ट्रैकिंग आईडी बनाए रखें) या पोर्टल से जवाब दें।"
+
+  admin:
+    activity:
+      index:
+        title: "गतिविधि और उपयोग"
+        export_csv: "CSV निर्यात करें"
+        sovereignty_note: "यह दृश्य इसी परिनियोजन के अपने ऑडिट लॉग और सत्रों से तैयार होता है। यहाँ से कुछ भी कहीं नहीं भेजा जाता — किसी प्रकार की विक्रेता टेलीमेट्री नहीं है।"
+        from: "से"
+        to: "तक"
+        summary: "सारांश"
+        cases_created: "बनाए गए मामले"
+        cases_resolved: "समाधानित मामले"
+        agent_vs_human: "एआई बनाम मानव उत्तर"
+        agent_vs_human_value: "%{agent} एआई · %{human} मानव"
+        per_user_actions: "प्रति उपयोगकर्ता क्रियाएँ"
+        login_history: "लॉगिन इतिहास"
+        volume_by_queue: "कतार-वार मामले"
+        volume_by_staff: "नियुक्ति-वार मामले"
+        no_activity: "इस अवधि में कोई गतिविधि नहीं।"
+        no_logins: "इस अवधि में कोई लॉगिन नहीं।"
+        deleted_user: "(हटाया गया उपयोगकर्ता)"
+        columns:
+          user: "उपयोगकर्ता"
+          action: "क्रिया"
+          count: "संख्या"
+          method: "विधि"
+          ip: "आईपी"
+          when: "कब"
+    audit:
+      show:
+        title: "ऑडिट शृंखला"
+        chain_status: "शृंखला सत्यापन"
+        intact: "शृंखला अक्षुण्ण"
+        intact_detail: "सभी %{count} प्रविष्टियाँ आद्योपांत सत्यापित।"
+        broken: "शृंखला टूटी हुई"
+        broken_detail: "पहली टूट प्रविष्टि #%{entry_id} पर (%{reason})। तुरंत जाँच करें — यह छेड़छाड़ या भ्रष्ट डेटा का संकेत है।"
+        expected: "अपेक्षित"
+        stored: "संग्रहीत"
+        log_summary: "लॉग सारांश"
+        entries: "प्रविष्टियाँ"
+        latest: "नवीनतम प्रविष्टि"
+        cli_hint: "सीएलआई: bin/rails audit:verify"
+
   activerecord:
     errors:
       models:
@@ -454,3 +625,17 @@ hi:
           attributes:
             base:
               unreachable: "ईमेल, फ़ोन या ग्राहक आईडी में से कम-से-कम एक आवश्यक है"
+        message:
+          attributes:
+            files:
+              too_many: "बहुत अधिक फ़ाइलें (अधिकतम %{count})"
+              unsupported_type: "%{filename} अनुमत फ़ाइल प्रकार नहीं है"
+              too_large: "%{filename} %{max} MB सीमा से अधिक है"
+
+  activemodel:
+    errors:
+      models:
+        portal_submission:
+          attributes:
+            base:
+              unreachable: "सत्यापन के लिए ईमेल या फ़ोन में से कम-से-कम एक दें"

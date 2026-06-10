@@ -1,7 +1,7 @@
 pension_case:
   subject: Pension not credited for May
   description: My monthly pension was not credited this month.
-  tracking_id: DKT-TEST-0001
+  tracking_id: DKT-TEST-2345
   channel: web_portal
   status: new
   priority: normal
@@ -11,7 +11,7 @@ pension_case:
 
 assigned_case:
   subject: Garbage not collected
-  tracking_id: DKT-TEST-0002
+  tracking_id: DKT-TEST-3456
   channel: email
   status: in_progress
   priority: high
@@ -21,7 +21,7 @@ assigned_case:
 
 waiting_case:
   subject: Streetlight broken
-  tracking_id: DKT-TEST-0003
+  tracking_id: DKT-TEST-4567
   channel: web_portal
   status: waiting_on_citizen
   priority: low
@@ -30,7 +30,7 @@ waiting_case:
 
 resolved_case:
   subject: Water connection request
-  tracking_id: DKT-TEST-0004
+  tracking_id: DKT-TEST-5678
   channel: walk_in
   status: resolved
   priority: normal

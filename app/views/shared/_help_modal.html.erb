@@ -1,0 +1,45 @@
+<dialog id="help-modal" class="modal" data-controller="dialog"
+        data-action="click->dialog#backdropClose" aria-labelledby="help-modal-title">
+  <div class="modal-content">
+    <div class="modal-head">
+      <h2 id="help-modal-title"><%= t("help.title") %></h2>
+      <button type="button" class="btn btn-ghost btn-sm" data-action="dialog#close" aria-label="<%= t("help.close") %>">
+        <%= icon "x" %>
+      </button>
+    </div>
+
+    <h3><%= t("help.sections.global") %></h3>
+    <table class="bindings-table">
+      <tbody>
+        <tr><td><kbd>?</kbd></td><td><%= t("help.bindings.help") %></td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>K</kbd></td><td><%= t("help.bindings.palette") %></td></tr>
+        <tr><td><kbd>/</kbd></td><td><%= t("help.bindings.search") %></td></tr>
+      </tbody>
+    </table>
+
+    <h3><%= t("help.sections.lists") %></h3>
+    <table class="bindings-table">
+      <tbody>
+        <tr><td><kbd>j</kbd> / <kbd>k</kbd></td><td><%= t("help.bindings.move") %></td></tr>
+        <tr><td><kbd>Enter</kbd> / <kbd>o</kbd></td><td><%= t("help.bindings.open") %></td></tr>
+      </tbody>
+    </table>
+
+    <h3><%= t("help.sections.case") %></h3>
+    <table class="bindings-table">
+      <tbody>
+        <tr><td><kbd>m</kbd></td><td><%= t("help.bindings.compose") %></td></tr>
+        <tr><td><kbd>i</kbd></td><td><%= t("help.bindings.internal_note") %></td></tr>
+        <tr><td><kbd>a</kbd></td><td><%= t("help.bindings.assign_me") %></td></tr>
+        <tr><td><kbd>n</kbd></td><td><%= t("help.bindings.next_case") %></td></tr>
+        <tr><td><kbd>t</kbd></td><td><%= t("help.bindings.mark_triaged") %></td></tr>
+        <tr><td><kbd>s</kbd></td><td><%= t("help.bindings.mark_in_progress") %></td></tr>
+        <tr><td><kbd>w</kbd></td><td><%= t("help.bindings.mark_waiting") %></td></tr>
+        <tr><td><kbd>r</kbd></td><td><%= t("help.bindings.mark_resolved") %></td></tr>
+        <tr><td><kbd>c</kbd></td><td><%= t("help.bindings.mark_closed") %></td></tr>
+        <tr><td><kbd>o</kbd></td><td><%= t("help.bindings.mark_reopened") %></td></tr>
+      </tbody>
+    </table>
+    <p class="muted"><%= t("help.note") %></p>
+  </div>
+</dialog>

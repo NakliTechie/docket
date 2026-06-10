@@ -84,7 +84,7 @@ class CaseTest < ActiveSupport::TestCase
 
   test "search matches subject and tracking id case-insensitively" do
     assert_includes Case.search("PENSION"), cases(:pension_case)
-    assert_includes Case.search("dkt-test-0001"), cases(:pension_case)
+    assert_includes Case.search("dkt-test-2345"), cases(:pension_case)
     refute_includes Case.search("zzzznothing"), cases(:pension_case)
   end
 end

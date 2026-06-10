@@ -12,7 +12,10 @@ en:
       queues: "Queues"
       categories: "Categories"
       sla_policies: "SLA policies"
+      macros: "Macros"
       users: "Users"
+      activity: "Activity"
+      audit: "Audit"
 
   locales:
     en: "English"
@@ -159,8 +162,14 @@ en:
       empty:
         title: "No cases yet"
         hint: "Share your public portal link, or create a case on behalf of a citizen."
+    email_intake:
+      no_subject: "(no subject)"
     show:
       confirm_delete: "Delete this case? It will be hidden from all views but preserved in the audit log."
+      next_case: "Next case"
+      macro_label: "Insert macro"
+      macro_prompt: "Insert macro…"
+      assign_to_me: "Assign to me"
       thread: "Case thread"
       original_request: "Original request"
       no_messages: "No messages on this case yet"
@@ -443,6 +452,168 @@ en:
         deactivated: "User deactivated."
         cannot_deactivate_self: "You cannot deactivate your own account."
 
+  macros:
+    fields:
+      name: "Name"
+      body: "Body"
+    form:
+      variables_hint: "Available variables: %{variables}"
+    index:
+      title: "Macros"
+      new_macro: "New macro"
+      confirm_delete: "Delete this macro?"
+      columns:
+        name: "Name"
+        body: "Body"
+      empty:
+        title: "No macros yet"
+        hint: "Macros are canned responses your team inserts into replies, with variables like {{contact_name}} and {{tracking_id}}."
+    new:
+      title: "New macro"
+    edit:
+      title: "Edit macro %{name}"
+    create:
+      created: "Macro created."
+    update:
+      updated: "Macro updated."
+    destroy:
+      deleted: "Macro deleted."
+
+  help:
+    title: "Keyboard shortcuts"
+    close: "Close"
+    note: "Shortcuts never fire while you are typing in a field. They follow common list-navigation conventions and avoid browser and screen-reader bindings."
+    sections:
+      global: "Anywhere"
+      lists: "Case list"
+      case: "On a case"
+    bindings:
+      help: "Open this help"
+      palette: "Command palette (queues, navigation)"
+      search: "Focus search"
+      move: "Move selection down / up"
+      open: "Open selected case"
+      compose: "Focus the composer"
+      internal_note: "Switch composer to internal note"
+      assign_me: "Assign case to me"
+      next_case: "Go to next open case"
+      mark_triaged: "Mark triaged"
+      mark_in_progress: "Mark in progress"
+      mark_waiting: "Mark waiting on citizen"
+      mark_resolved: "Mark resolved"
+      mark_closed: "Mark closed"
+      mark_reopened: "Reopen case"
+
+  palette:
+    label: "Command palette"
+    placeholder: "Jump to a queue or page…"
+    queue_prefix: "Queue:"
+
+  portal:
+    brand: "Public Grievance Portal"
+    footer: "Powered by Docket — public code for public service."
+    nav:
+      new_case: "File a grievance"
+      track: "Track a case"
+    cases:
+      new:
+        title: "File a grievance or service request"
+        intro: "No account needed. You will receive a tracking ID to check progress. Fields marked with email or phone are how we reach you — provide at least one."
+        your_name: "Your name"
+        your_email: "Email"
+        your_phone: "Phone"
+        contact_hint: "Provide email or phone (at least one) so we can verify you when you check status."
+        subject: "Subject"
+        description: "Describe your grievance"
+        attachments: "Attachments (optional)"
+        attachments_hint: "Up to 5 files: images, PDF, or text. 10 MB each."
+        submit: "Submit"
+      confirmation:
+        title: "Your case has been filed"
+        body: "Quote this tracking ID in any follow-up:"
+        keep_safe: "Keep this ID safe — together with your email or phone it is how you check the status of your case."
+        emailed: "We have also emailed it to %{email}."
+        track_now: "Track your case"
+        file_another: "File another"
+    tracking:
+      not_found: "We could not find a case with that tracking ID and contact detail. Check both and try again."
+      closed_no_reply: "This case is closed. File a new case if you need further help."
+      reply_sent: "Your reply has been added to the case."
+      new:
+        title: "Track your case"
+        intro: "Enter your tracking ID and the email or phone you used when filing."
+        tracking_id: "Tracking ID"
+        email: "Email"
+        phone: "Phone"
+        challenge_hint: "Must match the contact detail on the case."
+        check: "Check status"
+      show:
+        filed_on: "Filed on %{date}"
+        updates: "Updates"
+        no_updates: "No updates yet. Our team will respond soon."
+        you: "You"
+        staff_label: "Support team"
+        reply: "Reply"
+        reply_body: "Your reply"
+        reply_placeholder: "Add information or reply to the team…"
+        send_reply: "Send reply"
+
+  case_mailer:
+    signature: "— The service team"
+    confirmation:
+      subject: "Your case %{tracking_id}: %{subject}"
+      greeting: "Dear %{name},"
+      body: "Your grievance \"%{subject}\" has been registered."
+      tracking_label: "Tracking ID"
+      instructions: "Check status anytime on the portal with this ID and your email or phone. You can also reply to this email to add information."
+    public_reply:
+      subject: "Update on your case %{tracking_id}: %{subject}"
+      greeting: "Dear %{name},"
+      body: "There is a new update on your case %{tracking_id}:"
+      instructions: "Reply to this email (keep the tracking ID in the subject) or use the portal to respond."
+
+  admin:
+    activity:
+      index:
+        title: "Activity & Usage"
+        export_csv: "Export CSV"
+        sovereignty_note: "This view is computed from this deployment's own audit log and sessions. Nothing here is transmitted anywhere — there is no vendor telemetry of any kind."
+        from: "From"
+        to: "To"
+        summary: "Summary"
+        cases_created: "Cases created"
+        cases_resolved: "Cases resolved"
+        agent_vs_human: "AI vs human replies"
+        agent_vs_human_value: "%{agent} AI · %{human} human"
+        per_user_actions: "Actions per user"
+        login_history: "Login history"
+        volume_by_queue: "Case volume by queue"
+        volume_by_staff: "Case volume by assignee"
+        no_activity: "No activity in this period."
+        no_logins: "No logins in this period."
+        deleted_user: "(deleted user)"
+        columns:
+          user: "User"
+          action: "Action"
+          count: "Count"
+          method: "Method"
+          ip: "IP"
+          when: "When"
+    audit:
+      show:
+        title: "Audit chain"
+        chain_status: "Chain verification"
+        intact: "Chain intact"
+        intact_detail: "All %{count} entries verify end-to-end."
+        broken: "Chain broken"
+        broken_detail: "First break at entry #%{entry_id} (%{reason}). Investigate immediately — this indicates tampering or corruption."
+        expected: "Expected"
+        stored: "Stored"
+        log_summary: "Log summary"
+        entries: "Entries"
+        latest: "Latest entry"
+        cli_hint: "CLI: bin/rails audit:verify"
+
   activerecord:
     errors:
       models:
@@ -454,3 +625,17 @@ en:
           attributes:
             base:
               unreachable: "needs at least one of email, phone, or customer ID"
+        message:
+          attributes:
+            files:
+              too_many: "too many files (maximum %{count})"
+              unsupported_type: "%{filename} is not an allowed file type"
+              too_large: "%{filename} exceeds the %{max} MB limit"
+
+  activemodel:
+    errors:
+      models:
+        portal_submission:
+          attributes:
+            base:
+              unreachable: "Provide at least one of email or phone so we can verify you"

@@ -1,0 +1,25 @@
+<% page_title t(".title") %>
+<div class="portal-card">
+  <h1><%= t(".title") %></h1>
+  <p class="muted"><%= t(".intro") %></p>
+
+  <%= form_with url: portal_track_lookup_path, class: "form" do |f| %>
+    <div class="form-row">
+      <%= f.label :tracking_id, t(".tracking_id") %>
+      <%= f.text_field :tracking_id, required: true, value: params[:tracking_id],
+            placeholder: "DKT-XXXX-XXXX", class: "mono" %>
+    </div>
+    <div class="form-row">
+      <%= f.label :contact_email, t(".email") %>
+      <%= f.email_field :contact_email, value: params[:contact_email] %>
+      <p class="form-hint"><%= t(".challenge_hint") %></p>
+    </div>
+    <div class="form-row">
+      <%= f.label :contact_phone, t(".phone") %>
+      <%= f.telephone_field :contact_phone, value: params[:contact_phone] %>
+    </div>
+    <div class="form-actions">
+      <%= f.submit t(".check"), class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

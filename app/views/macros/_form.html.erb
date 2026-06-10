@@ -1,0 +1,21 @@
+<%= form_with model: macro, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: macro %>
+
+  <div class="form-row <%= "field-error" if macro.errors[:name].any? %>">
+    <%= f.label :name, t("macros.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% macro.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row <%= "field-error" if macro.errors[:body].any? %>">
+    <%= f.label :body, t("macros.fields.body") %>
+    <%= f.text_area :body, required: true, rows: 8 %>
+    <p class="form-hint"><%= t("macros.form.variables_hint", variables: Macro::VARIABLES.map { |v| "{{#{v}}}" }.join(" ")) %></p>
+    <% macro.errors[:body].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), macros_path, class: "btn" %>
+  </div>
+<% end %>

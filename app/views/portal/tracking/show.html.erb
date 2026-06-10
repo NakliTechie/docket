@@ -1,0 +1,59 @@
+<% page_title "#{@case.tracking_id}" %>
+<div class="portal-card">
+  <h1><%= @case.subject %></h1>
+  <p class="muted mono"><%= @case.tracking_id %></p>
+  <p>
+    <%= status_badge(@case) %>
+    <span class="muted"><%= t(".filed_on", date: l(@case.created_at, format: :long)) %></span>
+  </p>
+
+  <h2><%= t(".updates") %></h2>
+  <div class="case-thread">
+    <% if @messages.any? %>
+      <% @messages.each do |message| %>
+        <article class="thread-message direction-<%= message.direction %>">
+          <div class="thread-message-head">
+            <span class="thread-message-author">
+              <%= message.direction_inbound? ? t(".you") : t(".staff_label") %>
+            </span>
+            <span><%= l message.created_at, format: :short %></span>
+          </div>
+          <div class="thread-message-body"><%= message.body %></div>
+          <% if message.files.attached? %>
+            <div class="thread-attachments">
+              <% message.files.each do |file| %>
+                <%= link_to rails_blob_path(file, disposition: "attachment") do %>
+                  <%= icon "paperclip" %><%= file.filename %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </article>
+      <% end %>
+    <% else %>
+      <p class="muted"><%= t(".no_updates") %></p>
+    <% end %>
+  </div>
+
+  <% unless @case.status_closed? %>
+    <div class="panel composer">
+      <h2 class="panel-title"><%= t(".reply") %></h2>
+      <%= form_with url: portal_track_reply_path, class: "form" do |f| %>
+        <%= f.hidden_field :tracking_id, value: @case.tracking_id %>
+        <%= f.hidden_field :contact_email, value: params[:contact_email] %>
+        <%= f.hidden_field :contact_phone, value: params[:contact_phone] %>
+        <div class="form-row">
+          <%= f.label :body, t(".reply_body"), class: "visually-hidden" %>
+          <%= f.text_area :body, required: true, placeholder: t(".reply_placeholder") %>
+        </div>
+        <div class="composer-toolbar">
+          <div>
+            <%= f.label :files, t("portal.cases.new.attachments"), class: "visually-hidden" %>
+            <%= f.file_field :files, multiple: true %>
+          </div>
+          <%= f.submit t(".send_reply"), class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

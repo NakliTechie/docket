@@ -39,7 +39,13 @@ class ApplicationController < ActionController::Base
   # Every action must either authorize a record or use a policy scope —
   # forgetting is a test failure, not a silent hole.
   def verify_pundit_compliance
-    action_name == "index" ? verify_policy_scoped : verify_authorized
+    if action_name == "index"
+      unless pundit_policy_scoped? || pundit_policy_authorized?
+        raise Pundit::AuthorizationNotPerformedError, self.class.name
+      end
+    else
+      verify_authorized
+    end
   end
 
   # Auth endpoints (sessions, passwords) sit outside policy land.

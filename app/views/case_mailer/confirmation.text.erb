@@ -1,0 +1,9 @@
+<%= t("case_mailer.confirmation.greeting", name: @case.contact.name) %>
+
+<%= t("case_mailer.confirmation.body", subject: @case.subject) %>
+
+<%= t("case_mailer.confirmation.tracking_label") %>: <%= @case.tracking_id %>
+
+<%= t("case_mailer.confirmation.instructions") %>
+
+<%= t("case_mailer.signature") %>

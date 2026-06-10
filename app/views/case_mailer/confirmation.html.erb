@@ -1,0 +1,5 @@
+<p><%= t("case_mailer.confirmation.greeting", name: @case.contact.name) %></p>
+<p><%= t("case_mailer.confirmation.body", subject: @case.subject) %></p>
+<p><strong><%= t("case_mailer.confirmation.tracking_label") %>:</strong> <code><%= @case.tracking_id %></code></p>
+<p><%= t("case_mailer.confirmation.instructions") %></p>
+<p><%= t("case_mailer.signature") %></p>

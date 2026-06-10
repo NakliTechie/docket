@@ -10,7 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_10_133111) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_141124) do
+  create_table "action_mailbox_inbound_emails", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "message_checksum", null: false
+    t.string "message_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["message_id", "message_checksum"], name: "index_action_mailbox_inbound_emails_uniqueness", unique: true
+  end
+
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -123,6 +132,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_133111) do
     t.index ["external_id"], name: "index_contacts_on_external_id", unique: true, where: "external_id IS NOT NULL AND deleted_at IS NULL"
     t.index ["organisation_id"], name: "index_contacts_on_organisation_id"
     t.index ["phone"], name: "index_contacts_on_phone"
+  end
+
+  create_table "macros", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_macros_on_deleted_at"
+    t.index ["name"], name: "index_macros_on_name", unique: true, where: "deleted_at IS NULL"
   end
 
   create_table "messages", force: :cascade do |t|

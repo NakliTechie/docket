@@ -31,6 +31,9 @@ gem "pagy", "~> 9.4"
 # Locale data (Hindi base translations for AR errors, dates, numbers)
 gem "rails-i18n", "~> 8.0"
 
+# Stdlib gem from Ruby 3.4 (activity CSV export)
+gem "csv"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
@@ -67,5 +70,6 @@ end
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
-  gem "selenium-webdriver"
+  # CDP driver — no chromedriver binary needed, just a Chrome/Chromium
+  gem "cuprite"
 end

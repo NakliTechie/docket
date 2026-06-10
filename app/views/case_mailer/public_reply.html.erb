@@ -1,0 +1,5 @@
+<p><%= t("case_mailer.public_reply.greeting", name: @case.contact.name) %></p>
+<p><%= t("case_mailer.public_reply.body", tracking_id: @case.tracking_id) %></p>
+<blockquote style="border-left: 3px solid #1a4480; padding-left: 12px; white-space: pre-wrap;"><%= @message.body %></blockquote>
+<p><%= t("case_mailer.public_reply.instructions") %></p>
+<p><%= t("case_mailer.signature") %></p>

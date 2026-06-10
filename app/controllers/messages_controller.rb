@@ -4,6 +4,9 @@ class MessagesController < ApplicationController
     @message = @case.messages.build(message_params)
     @message.author = Current.user
     @message.direction = :outbound
+    if (macro = Macro.find_by(id: params[:macro_id]))
+      @message.metadata = { "macro_id" => macro.id, "macro_name" => macro.name }
+    end
     authorize @message
 
     if @message.save

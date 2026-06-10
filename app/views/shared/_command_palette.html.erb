@@ -1,0 +1,25 @@
+<dialog id="command-palette" class="modal palette" data-controller="palette"
+        data-action="click->palette#close:self keydown->palette#onKeydown"
+        aria-label="<%= t("palette.label") %>">
+  <div class="modal-content">
+    <input type="search" data-palette-target="input" data-action="input->palette#filter"
+           placeholder="<%= t("palette.placeholder") %>" aria-label="<%= t("palette.placeholder") %>">
+    <ul class="palette-list" data-palette-target="list">
+      <li data-palette-href="<%= cases_path %>" data-palette-label="<%= t("layout.nav.cases") %>"
+          data-action="click->palette#go"><%= icon "inbox" %> <%= t("layout.nav.cases") %></li>
+      <% if policy(Case).create? %>
+        <li data-palette-href="<%= new_case_path %>" data-palette-label="<%= t("cases.index.new_case") %>"
+            data-action="click->palette#go"><%= icon "plus" %> <%= t("cases.index.new_case") %></li>
+      <% end %>
+      <li data-palette-href="<%= contacts_path %>" data-palette-label="<%= t("layout.nav.contacts") %>"
+          data-action="click->palette#go"><%= icon "user" %> <%= t("layout.nav.contacts") %></li>
+      <li data-palette-href="<%= organisations_path %>" data-palette-label="<%= t("layout.nav.organisations") %>"
+          data-action="click->palette#go"><%= icon "building" %> <%= t("layout.nav.organisations") %></li>
+      <% CaseQueue.order(:name).each do |queue| %>
+        <li data-palette-href="<%= cases_path(queue_id: queue.id) %>"
+            data-palette-label="<%= "#{t("palette.queue_prefix")} #{queue.name}" %>"
+            data-action="click->palette#go"><%= icon "layers" %> <%= t("palette.queue_prefix") %> <%= queue.name %></li>
+      <% end %>
+    </ul>
+  </div>
+</dialog>

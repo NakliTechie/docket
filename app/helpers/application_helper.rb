@@ -44,4 +44,15 @@ module ApplicationHelper
     link_to label, path, class: class_names("nav-link", active: active),
             aria: { current: active ? "page" : nil }
   end
+
+  # Single-key status shortcuts on the case view; documented in the
+  # in-app help modal.
+  TRANSITION_SHORTCUTS = {
+    "triaged" => "t", "in_progress" => "s", "waiting_on_citizen" => "w",
+    "resolved" => "r", "closed" => "c", "reopened" => "o"
+  }.freeze
+
+  def transition_shortcut(status)
+    TRANSITION_SHORTCUTS[status.to_s]
+  end
 end

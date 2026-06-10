@@ -19,3 +19,11 @@ One line per decision: what, why, when. Per handoff §0.2 — decisions not lock
 - Secret-looking Setting keys (`*_secret`, `*_api_key`, `*_password`, `*_token`, `*_client_secret`) are value-redacted in audit changesets. 2026-06-10
 - Agent mutation scope: own/unassigned cases plus cases in their queues; all staff (incl. readonly) can view everything — single-tenant trust boundary is the deployment. 2026-06-10
 - Pundit verification: every action must authorize or policy-scope (`verify_pundit_compliance` after_action); index actions on restricted resources also `authorize` the class so scopes can't silently empty-list instead of 403ing. 2026-06-10
+- Portal tracking is stateless: every status view/reply re-submits tracking ID + matching email/phone (no session grants to fixate); failures are one generic message. 2026-06-10
+- Portal submissions and email intake create the case + an initial inbound Message (body + attachments live on the message; staff-created cases use Case#description) — one consistent thread model. 2026-06-10
+- Cuprite (CDP) for JS system tests instead of selenium-webdriver — container ships Chromium 141 vs chromedriver 147 (incompatible majors); Cuprite needs no chromedriver. BROWSER_PATH env overrides binary discovery. 2026-06-10
+- Rack::Attack uses an in-process MemoryStore — limits are per-worker (≤4× nominal), zero dependencies, no Redis; acceptable for portal abuse posture. 2026-06-10
+- Macros interpolate server-side into the composer select options (per-case values), insert client-side at cursor; macro usage recorded in message metadata for audit. 2026-06-10
+- Keyboard map: j/k/Enter lists, m compose, i internal note, a assign-to-me, n next case, t/s/w/r/c/o transitions, ? help, Ctrl+K palette, / search — all suppressed while typing; documented in the in-app help modal. 2026-06-10
+- SLA breach flags are sticky history (not cleared on later response); sweep job runs every 5 min via Solid Queue recurring; each flip is one audited case update. 2026-06-10
+- Outbound citizen mail (confirmation, public-reply notification) localised to contact.preferred_language; subjects embed the tracking ID for reply threading. 2026-06-10
