@@ -23,10 +23,15 @@
 <div class="panel">
   <h2 class="panel-title"><%= t(".summary") %></h2>
   <dl class="meta-list">
-    <dt><%= t(".cases_created") %></dt><dd><%= @stats[:cases_created] %></dd>
-    <dt><%= t(".cases_resolved") %></dt><dd><%= @stats[:cases_resolved] %></dd>
+    <dt><%= t(".cases_created") %></dt><dd><%= @report.stats[:cases_created] %></dd>
+    <dt><%= t(".cases_resolved") %></dt><dd><%= @report.stats[:cases_resolved] %></dd>
+    <dt><%= t(".resolution_rate") %></dt>
+    <dd><%= @report.stats[:resolution_rate] ? t(".percent", value: @report.stats[:resolution_rate]) : "—" %></dd>
+    <dt><%= t(".sla_breaches") %></dt><dd><%= @report.stats[:sla_breaches] %></dd>
+    <dt><%= t(".sla_compliance") %></dt>
+    <dd><%= @report.stats[:sla_compliance] ? t(".percent", value: @report.stats[:sla_compliance]) : "—" %></dd>
     <dt><%= t(".agent_vs_human") %></dt>
-    <dd><%= t(".agent_vs_human_value", agent: @stats[:agent_turns], human: @stats[:human_replies]) %></dd>
+    <dd><%= t(".agent_vs_human_value", agent: @report.stats[:agent_turns], human: @report.stats[:human_replies]) %></dd>
   </dl>
 </div>
 
@@ -34,7 +39,7 @@
   <section>
     <div class="panel">
       <h2 class="panel-title"><%= t(".per_user_actions") %></h2>
-      <% if @actions_by_user.any? %>
+      <% if @report.actions_by_user.any? %>
         <div class="table-wrap">
           <table>
             <thead>
@@ -45,10 +50,10 @@
               </tr>
             </thead>
             <tbody>
-              <% @actions_by_user.each do |user_id, actions| %>
+              <% @report.actions_by_user.each do |user_id, actions| %>
                 <% actions.sort_by { |_, c| -c }.each_with_index do |(action, count), i| %>
                   <tr>
-                    <td><%= i.zero? ? (@users[user_id]&.name || t(".deleted_user")) : "" %></td>
+                    <td><%= i.zero? ? (@report.users[user_id]&.name || t(".deleted_user")) : "" %></td>
                     <td class="mono"><%= action %></td>
                     <td><%= count %></td>
                   </tr>
@@ -64,7 +69,7 @@
 
     <div class="panel">
       <h2 class="panel-title"><%= t(".login_history") %></h2>
-      <% if @logins.any? %>
+      <% if @report.logins.any? %>
         <div class="table-wrap">
           <table>
             <thead>
@@ -76,7 +81,7 @@
               </tr>
             </thead>
             <tbody>
-              <% @logins.each do |entry| %>
+              <% @report.logins.each do |entry| %>
                 <tr>
                   <td><%= entry.actor.respond_to?(:name) ? entry.actor.name : t(".deleted_user") %></td>
                   <td class="mono"><%= entry.action %></td>
@@ -96,9 +101,9 @@
   <aside>
     <div class="panel">
       <h2 class="panel-title"><%= t(".volume_by_queue") %></h2>
-      <% if @volume_by_queue.any? %>
+      <% if @report.volume_by_queue.any? %>
         <dl class="meta-list">
-          <% @volume_by_queue.sort_by { |_, c| -c }.each do |queue, count| %>
+          <% @report.volume_by_queue.sort_by { |_, c| -c }.each do |queue, count| %>
             <dt><%= queue&.name || t("cases.no_queue") %></dt><dd><%= count %></dd>
           <% end %>
         </dl>
@@ -109,9 +114,9 @@
 
     <div class="panel">
       <h2 class="panel-title"><%= t(".volume_by_staff") %></h2>
-      <% if @volume_by_staff.any? %>
+      <% if @report.volume_by_staff.any? %>
         <dl class="meta-list">
-          <% @volume_by_staff.sort_by { |_, c| -c }.each do |user, count| %>
+          <% @report.volume_by_staff.sort_by { |_, c| -c }.each do |user, count| %>
             <dt><%= user&.name || t(".deleted_user") %></dt><dd><%= count %></dd>
           <% end %>
         </dl>

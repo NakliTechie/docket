@@ -101,7 +101,7 @@ module Docket
 
       crud(result, "cases", "Case",
            extra_params: %w[q status priority queue_id assignee_id contact_id contact_external_id],
-           create_note: "Service accounts may pass on_behalf_of (contact external_id) plus an optional contact{} for upsert, and message_body for the initial citizen message. Cases are addressable by numeric id or tracking ID.")
+           create_note: "Service accounts may pass on_behalf_of (contact external_id) plus an optional contact{} for upsert, and message_body for the initial citizen message. case[attachments]/case[files] attach to that initial message. Cases are addressable by numeric id or tracking ID.")
       result["/cases/{id}/transition"] = { post: op("Transition case status through the state machine",
         params: [ id_param ], request: { status: enum(Case.statuses.keys) },
         responses: { "200" => "Transitioned", "422" => "Illegal transition" }) }
@@ -109,7 +109,9 @@ module Docket
         params: [ id_param ], request: { assignee_id: :integer }) }
       result["/cases/{case_id}/messages"] = {
         get: op("List messages on a case", params: [ case_id_param ]),
-        post: op("Add a message (public_reply or internal_note). Service accounts may pass on_behalf_of to author as the contact.",
+        post: op("Add a message (public_reply or internal_note). Service accounts may pass on_behalf_of to author as the contact. " \
+                 "Attachments: multipart message[files][], or JSON message[attachments] = [{filename, content_type, data(base64)}] — " \
+                 "same type allowlist and 10MB/5-file limits as every surface.",
                  params: [ case_id_param ], request: { message: :object })
       }
       result["/cases/{case_id}/assist/summarise"] = { post: op("AI: summarise the case thread (404 when AI is off)", params: [ case_id_param ]) }
@@ -166,6 +168,10 @@ module Docket
         query_param("action_name"), query_param("auditable_type"), query_param("auditable_id")
       ]) }
       result["/audit/verification"] = { get: op("Verify the audit hash chain end-to-end") }
+      result["/reports/activity"] = { get: op(
+        "Activity & Usage report: per-user action counts, login history, case volume by queue/staff, " \
+        "resolution rate, SLA breach count and compliance, AI-vs-human reply split (admin or audit:read)",
+        params: [ query_param("from"), query_param("to") ]) }
 
       result["/settings"] = {
         get: op("Read deployment settings (secrets masked)"),

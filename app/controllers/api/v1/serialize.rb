@@ -47,7 +47,10 @@ module Api
           subject: m.subject,
           body: m.body,
           metadata: m.metadata,
-          attachments: m.files.map { |f| { filename: f.filename.to_s, content_type: f.content_type, byte_size: f.byte_size } },
+          attachments: m.files.map { |f|
+            { filename: f.filename.to_s, content_type: f.content_type, byte_size: f.byte_size,
+              url: Rails.application.routes.url_helpers.rails_blob_path(f, disposition: "attachment", only_path: true) }
+          },
           created_at: m.created_at
         }
       end

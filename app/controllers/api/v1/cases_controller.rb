@@ -32,12 +32,13 @@ module Api
         kase = Case.new(case_params.except(:contact_id))
         kase.contact = contact
         kase.channel = :api
-        if kase.save
+        Case.transaction do
+          kase.save!
           create_initial_message(kase)
-          render json: { data: Serialize.kase(kase.reload, include_messages: true) }, status: :created
-        else
-          render_validation_errors(kase)
         end
+        render json: { data: Serialize.kase(kase.reload, include_messages: true) }, status: :created
+      rescue ActiveRecord::RecordInvalid => e
+        render_validation_errors(e.record)
       end
 
       def update
@@ -82,13 +83,15 @@ module Api
                                      :queue_id, :assignee_id, :contact_id, :sla_policy_id)
       end
 
-      # Body on create lands as the initial inbound message, matching
-      # portal/email intake semantics.
+      # Body (and any attachments) on create land as the initial inbound
+      # message, matching portal/email intake semantics.
       def create_initial_message(kase)
         body = params.dig(:case, :message_body).presence
-        return unless body
+        attachments = extract_attachments(params[:case])
+        return if body.nil? && attachments.empty?
         kase.messages.create!(kind: :public_reply, direction: :inbound,
-                              author: kase.contact, body: body)
+                              author: kase.contact, body: body || "(attachments)",
+                              files: attachments)
       end
     end
   end

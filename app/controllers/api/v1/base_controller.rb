@@ -8,6 +8,7 @@ module Api
       include Pagy::Backend
 
       class ScopeDenied < StandardError; end
+      class AttachmentError < StandardError; end
 
       before_action :authenticate!
       before_action :set_current_context
@@ -23,6 +24,9 @@ module Api
       end
       rescue_from Case::InvalidTransition do |e|
         render_error("invalid_transition", detail: e.message, status: :unprocessable_entity)
+      end
+      rescue_from AttachmentError do |e|
+        render_error("invalid_attachment", detail: e.message, status: :unprocessable_entity)
       end
 
       private
@@ -99,6 +103,35 @@ module Api
         )
         Current.on_behalf_of = external_id
         contact
+      end
+
+      # Attachments arrive either as multipart uploads (files[]) or as
+      # base64 JSON objects (attachments: [{filename, content_type,
+      # data}]). Size/type/count limits are enforced by
+      # AttachableValidation on the model; oversized base64 is rejected
+      # before decoding.
+      MAX_ENCODED_ATTACHMENT_BYTES = (AttachableValidation::MAX_FILE_SIZE * 4 / 3) + 8
+
+      def extract_attachments(container)
+        return [] if container.blank?
+
+        uploads = Array(container[:files]).select { |f| f.respond_to?(:original_filename) }
+        encoded = Array(container[:attachments]).map do |attachment|
+          attachment = attachment.permit(:filename, :content_type, :data) if attachment.respond_to?(:permit)
+          data = attachment[:data].to_s
+          raise AttachmentError, "attachment too large" if data.bytesize > MAX_ENCODED_ATTACHMENT_BYTES
+          begin
+            io = StringIO.new(Base64.strict_decode64(data))
+          rescue ArgumentError
+            raise AttachmentError, "attachment data must be base64"
+          end
+          {
+            io: io,
+            filename: attachment[:filename].to_s.presence || "attachment",
+            content_type: attachment[:content_type].to_s.presence || "application/octet-stream"
+          }
+        end
+        uploads + encoded
       end
 
       def render_error(code, status:, detail: nil)

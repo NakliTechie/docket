@@ -5,17 +5,52 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:3000" },
-    { "key": "user_token", "value": "dkt_PASTE_YOUR_TOKEN" },
-    { "key": "client_id", "value": "svc_PASTE_CLIENT_ID" },
-    { "key": "client_secret", "value": "PASTE_CLIENT_SECRET" },
-    { "key": "access_token", "value": "" },
-    { "key": "case_id", "value": "1" },
-    { "key": "tracking_id", "value": "DKT-XXXX-XXXX" },
-    { "key": "external_id", "value": "CIF447192" },
-    { "key": "webhook_secret", "value": "whsec_PASTE_ENDPOINT_SECRET" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "user_token",
+      "value": "dkt_PASTE_YOUR_TOKEN"
+    },
+    {
+      "key": "client_id",
+      "value": "svc_PASTE_CLIENT_ID"
+    },
+    {
+      "key": "client_secret",
+      "value": "PASTE_CLIENT_SECRET"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "case_id",
+      "value": "1"
+    },
+    {
+      "key": "tracking_id",
+      "value": "DKT-XXXX-XXXX"
+    },
+    {
+      "key": "external_id",
+      "value": "CIF447192"
+    },
+    {
+      "key": "webhook_secret",
+      "value": "whsec_PASTE_ENDPOINT_SECRET"
+    }
   ],
-  "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{user_token}}" } ] },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{user_token}}"
+      }
+    ]
+  },
   "item": [
     {
       "name": "Auth",
@@ -36,37 +71,74 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "url": "{{base_url}}/api/v1/oauth/token",
             "body": {
               "mode": "urlencoded",
               "urlencoded": [
-                { "key": "grant_type", "value": "client_credentials" },
-                { "key": "client_id", "value": "{{client_id}}" },
-                { "key": "client_secret", "value": "{{client_secret}}" }
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                }
               ]
             }
           }
         },
         {
           "name": "OpenAPI spec",
-          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{base_url}}/api/v1/openapi.json" }
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/openapi.json"
+          }
         }
       ]
     },
     {
       "name": "Cases",
       "item": [
-        { "name": "List cases (filters: q, status, priority, queue_id, assignee_id, contact_external_id)", "request": { "method": "GET", "url": "{{base_url}}/api/v1/cases?status=in_progress&page=1" } },
-        { "name": "Show case (by id or tracking ID, include=messages)", "request": { "method": "GET", "url": "{{base_url}}/api/v1/cases/{{tracking_id}}?include=messages" } },
+        {
+          "name": "List cases (filters: q, status, priority, queue_id, assignee_id, contact_external_id)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/cases?status=in_progress&page=1"
+          }
+        },
+        {
+          "name": "Show case (by id or tracking ID, include=messages)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/cases/{{tracking_id}}?include=messages"
+          }
+        },
         {
           "name": "Create case (staff/user token)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/api/v1/cases",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"case\": {\n    \"subject\": \"Pension not credited\",\n    \"contact_id\": 1,\n    \"priority\": \"high\",\n    \"queue_id\": 1,\n    \"message_body\": \"Citizen reports missing pension credit for May.\"\n  }\n}" }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"case\": {\n    \"subject\": \"Pension not credited\",\n    \"contact_id\": 1,\n    \"priority\": \"high\",\n    \"queue_id\": 1,\n    \"message_body\": \"Citizen reports missing pension credit for May.\"\n  }\n}"
+            }
           }
         },
         {
@@ -74,8 +146,16 @@
           "request": {
             "method": "PATCH",
             "url": "{{base_url}}/api/v1/cases/{{case_id}}",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"case\": { \"priority\": \"urgent\", \"queue_id\": 2 }\n}" }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"case\": { \"priority\": \"urgent\", \"queue_id\": 2 }\n}"
+            }
           }
         },
         {
@@ -83,8 +163,16 @@
           "request": {
             "method": "POST",
             "url": "{{base_url}}/api/v1/cases/{{case_id}}/transition",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{ \"status\": \"triaged\" }" }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"status\": \"triaged\" }"
+            }
           }
         },
         {
@@ -92,23 +180,80 @@
           "request": {
             "method": "POST",
             "url": "{{base_url}}/api/v1/cases/{{case_id}}/assign",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{ \"assignee_id\": 2 }" }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"assignee_id\": 2 }"
+            }
           }
         },
-        { "name": "List messages", "request": { "method": "GET", "url": "{{base_url}}/api/v1/cases/{{case_id}}/messages" } },
+        {
+          "name": "List messages",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/cases/{{case_id}}/messages"
+          }
+        },
         {
           "name": "Add message (public_reply | internal_note)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/api/v1/cases/{{case_id}}/messages",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"message\": { \"body\": \"We are looking into this.\", \"kind\": \"public_reply\" }\n}" }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": { \"body\": \"We are looking into this.\", \"kind\": \"public_reply\" }\n}"
+            }
           }
         },
-        { "name": "Delete case (soft)", "request": { "method": "DELETE", "url": "{{base_url}}/api/v1/cases/{{case_id}}" } },
-        { "name": "AI · summarise thread", "request": { "method": "POST", "url": "{{base_url}}/api/v1/cases/{{case_id}}/assist/summarise" } },
-        { "name": "AI · suggest reply", "request": { "method": "POST", "url": "{{base_url}}/api/v1/cases/{{case_id}}/assist/suggest_reply" } }
+        {
+          "name": "Add message with base64 attachment",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/cases/{{case_id}}/messages",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": {\n    \"body\": \"Photo of the issue attached.\",\n    \"kind\": \"public_reply\",\n    \"attachments\": [\n      {\n        \"filename\": \"evidence.png\",\n        \"content_type\": \"image/png\",\n        \"data\": \"<base64-encoded file bytes>\"\n      }\n    ]\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete case (soft)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/v1/cases/{{case_id}}"
+          }
+        },
+        {
+          "name": "AI · summarise thread",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/cases/{{case_id}}/assist/summarise"
+          }
+        },
+        {
+          "name": "AI · suggest reply",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/cases/{{case_id}}/assist/suggest_reply"
+          }
+        }
       ]
     },
     {
@@ -118,17 +263,41 @@
         {
           "name": "1 · File case on behalf of CIF",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}"
+                }
+              ]
+            },
             "method": "POST",
             "url": "{{base_url}}/api/v1/cases",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"on_behalf_of\": \"{{external_id}}\",\n  \"contact\": { \"name\": \"Ravi Kumar\", \"email\": \"ravi@example.com\", \"phone\": \"+919876543210\" },\n  \"case\": {\n    \"subject\": \"Card blocked after 3 wrong PINs\",\n    \"message_body\": \"Filed from netbanking: customer requests unblock.\"\n  }\n}" }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"on_behalf_of\": \"{{external_id}}\",\n  \"contact\": { \"name\": \"Ravi Kumar\", \"email\": \"ravi@example.com\", \"phone\": \"+919876543210\" },\n  \"case\": {\n    \"subject\": \"Card blocked after 3 wrong PINs\",\n    \"message_body\": \"Filed from netbanking: customer requests unblock.\"\n  }\n}"
+            }
           }
         },
         {
           "name": "2 · Customer's case list by CIF",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}"
+                }
+              ]
+            },
             "method": "GET",
             "url": "{{base_url}}/api/v1/cases?contact_external_id={{external_id}}"
           }
@@ -136,17 +305,41 @@
         {
           "name": "3 · Customer replies via your app",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}"
+                }
+              ]
+            },
             "method": "POST",
             "url": "{{base_url}}/api/v1/cases/{{case_id}}/messages",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"on_behalf_of\": \"{{external_id}}\",\n  \"message\": { \"body\": \"Sent from the mobile app: please expedite.\" }\n}" }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"on_behalf_of\": \"{{external_id}}\",\n  \"message\": { \"body\": \"Sent from the mobile app: please expedite.\" }\n}"
+            }
           }
         },
         {
           "name": "4 · Contact 360 by CIF",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}"
+                }
+              ]
+            },
             "method": "GET",
             "url": "{{base_url}}/api/v1/contacts/ext:{{external_id}}"
           }
@@ -156,23 +349,59 @@
     {
       "name": "Contacts & Organisations",
       "item": [
-        { "name": "List/search contacts", "request": { "method": "GET", "url": "{{base_url}}/api/v1/contacts?q=ravi" } },
+        {
+          "name": "List/search contacts",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/contacts?q=ravi"
+          }
+        },
         {
           "name": "Create contact",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/contacts",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"contact\": { \"name\": \"Asha Rao\", \"email\": \"asha@example.com\", \"external_id\": \"CIF000111\" }\n}" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/contacts",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contact\": { \"name\": \"Asha Rao\", \"email\": \"asha@example.com\", \"external_id\": \"CIF000111\" }\n}"
+            }
           }
         },
-        { "name": "Show contact by external id", "request": { "method": "GET", "url": "{{base_url}}/api/v1/contacts/ext:{{external_id}}" } },
-        { "name": "List organisations", "request": { "method": "GET", "url": "{{base_url}}/api/v1/organisations" } },
+        {
+          "name": "Show contact by external id",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/contacts/ext:{{external_id}}"
+          }
+        },
+        {
+          "name": "List organisations",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/organisations"
+          }
+        },
         {
           "name": "Create organisation",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/organisations",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"organisation\": { \"name\": \"Karol Bagh Branch\", \"kind\": \"branch\", \"external_ref\": \"KB001\" }\n}" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/organisations",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organisation\": { \"name\": \"Karol Bagh Branch\", \"kind\": \"branch\", \"external_ref\": \"KB001\" }\n}"
+            }
           }
         }
       ]
@@ -180,35 +409,104 @@
     {
       "name": "Configuration",
       "item": [
-        { "name": "List queues", "request": { "method": "GET", "url": "{{base_url}}/api/v1/queues" } },
+        {
+          "name": "List queues",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/queues"
+          }
+        },
         {
           "name": "Create queue",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/queues",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{ \"queue\": { \"name\": \"Card disputes\" } }" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/queues",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"queue\": { \"name\": \"Card disputes\" } }"
+            }
           }
         },
-        { "name": "List categories", "request": { "method": "GET", "url": "{{base_url}}/api/v1/categories" } },
-        { "name": "Toggle AI auto-resolve (admin user token)", "request": { "method": "POST", "url": "{{base_url}}/api/v1/categories/1/toggle_auto_resolve" } },
-        { "name": "List SLA policies", "request": { "method": "GET", "url": "{{base_url}}/api/v1/sla_policies" } },
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/categories"
+          }
+        },
+        {
+          "name": "Toggle AI auto-resolve (admin user token)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/categories/1/toggle_auto_resolve"
+          }
+        },
+        {
+          "name": "List SLA policies",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/sla_policies"
+          }
+        },
         {
           "name": "Create SLA policy with targets",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/sla_policies",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"sla_policy\": {\n    \"name\": \"Standard service\",\n    \"sla_targets_attributes\": [\n      { \"priority\": \"normal\", \"first_response_minutes\": 120, \"resolution_minutes\": 2880 },\n      { \"priority\": \"urgent\", \"first_response_minutes\": 15, \"resolution_minutes\": 240 }\n    ]\n  }\n}" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/sla_policies",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sla_policy\": {\n    \"name\": \"Standard service\",\n    \"sla_targets_attributes\": [\n      { \"priority\": \"normal\", \"first_response_minutes\": 120, \"resolution_minutes\": 2880 },\n      { \"priority\": \"urgent\", \"first_response_minutes\": 15, \"resolution_minutes\": 240 }\n    ]\n  }\n}"
+            }
           }
         },
-        { "name": "List macros", "request": { "method": "GET", "url": "{{base_url}}/api/v1/macros" } },
-        { "name": "List reference docs (AI grounding)", "request": { "method": "GET", "url": "{{base_url}}/api/v1/reference_docs" } },
-        { "name": "Read settings (secrets masked)", "request": { "method": "GET", "url": "{{base_url}}/api/v1/settings" } },
+        {
+          "name": "List macros",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/macros"
+          }
+        },
+        {
+          "name": "List reference docs (AI grounding)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reference_docs"
+          }
+        },
+        {
+          "name": "Read settings (secrets masked)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/settings"
+          }
+        },
         {
           "name": "Update settings",
           "request": {
-            "method": "PATCH", "url": "{{base_url}}/api/v1/settings",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{ \"llm_provider\": \"in_deployment\", \"llm_endpoint_url\": \"http://ollama:11434/v1\", \"llm_model\": \"llama3\" }" }
+            "method": "PATCH",
+            "url": "{{base_url}}/api/v1/settings",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"llm_provider\": \"in_deployment\", \"llm_endpoint_url\": \"http://ollama:11434/v1\", \"llm_model\": \"llama3\" }"
+            }
           }
         }
       ]
@@ -216,57 +514,154 @@
     {
       "name": "Admin · identity",
       "item": [
-        { "name": "List users", "request": { "method": "GET", "url": "{{base_url}}/api/v1/users" } },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/users"
+          }
+        },
         {
           "name": "Create user",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/users",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"user\": { \"name\": \"New Agent\", \"email_address\": \"agent@example.gov.in\", \"password\": \"a-long-password\", \"role\": \"agent\" }\n}" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/users",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": { \"name\": \"New Agent\", \"email_address\": \"agent@example.gov.in\", \"password\": \"a-long-password\", \"role\": \"agent\" }\n}"
+            }
           }
         },
-        { "name": "List API tokens", "request": { "method": "GET", "url": "{{base_url}}/api/v1/api_tokens" } },
+        {
+          "name": "List API tokens",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/api_tokens"
+          }
+        },
         {
           "name": "Issue API token (raw value shown once)",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/api_tokens",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{ \"api_token\": { \"user_id\": 1, \"name\": \"CLI token\" } }" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/api_tokens",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"api_token\": { \"user_id\": 1, \"name\": \"CLI token\" } }"
+            }
           }
         },
-        { "name": "Revoke API token", "request": { "method": "DELETE", "url": "{{base_url}}/api/v1/api_tokens/1" } },
-        { "name": "List service accounts", "request": { "method": "GET", "url": "{{base_url}}/api/v1/service_accounts" } },
+        {
+          "name": "Revoke API token",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/v1/api_tokens/1"
+          }
+        },
+        {
+          "name": "List service accounts",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/service_accounts"
+          }
+        },
         {
           "name": "Create service account (secret shown once)",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/service_accounts",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"service_account\": {\n    \"name\": \"Netbanking backend\",\n    \"scopes\": [\"cases:read\", \"cases:write\", \"contacts:write\"]\n  }\n}" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/service_accounts",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_account\": {\n    \"name\": \"Netbanking backend\",\n    \"scopes\": [\"cases:read\", \"cases:write\", \"contacts:write\"]\n  }\n}"
+            }
           }
         },
-        { "name": "Rotate service account secret", "request": { "method": "POST", "url": "{{base_url}}/api/v1/service_accounts/1/rotate_secret" } }
+        {
+          "name": "Rotate service account secret",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/service_accounts/1/rotate_secret"
+          }
+        }
       ]
     },
     {
       "name": "Audit",
       "item": [
-        { "name": "List audit entries", "request": { "method": "GET", "url": "{{base_url}}/api/v1/audit/entries?auditable_type=Case" } },
-        { "name": "Verify hash chain", "request": { "method": "GET", "url": "{{base_url}}/api/v1/audit/verification" } }
+        {
+          "name": "List audit entries",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/audit/entries?auditable_type=Case"
+          }
+        },
+        {
+          "name": "Verify hash chain",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/audit/verification"
+          }
+        },
+        {
+          "name": "Activity & Usage report",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reports/activity?from=2026-05-01&to=2026-06-10"
+          }
+        }
       ]
     },
     {
       "name": "Webhooks",
       "item": [
-        { "name": "List endpoints", "request": { "method": "GET", "url": "{{base_url}}/api/v1/webhook_endpoints" } },
+        {
+          "name": "List endpoints",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/webhook_endpoints"
+          }
+        },
         {
           "name": "Create endpoint (signing secret shown once)",
           "request": {
-            "method": "POST", "url": "{{base_url}}/api/v1/webhook_endpoints",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "body": { "mode": "raw", "raw": "{\n  \"webhook_endpoint\": {\n    \"name\": \"Branch CRM\",\n    \"url\": \"https://crm.example.in/hooks/docket\",\n    \"events\": [\"case.created\", \"case.status_changed\", \"case.message_added\", \"case.sla_breached\", \"case.resolved\"]\n  }\n}" }
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/webhook_endpoints",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"webhook_endpoint\": {\n    \"name\": \"Branch CRM\",\n    \"url\": \"https://crm.example.in/hooks/docket\",\n    \"events\": [\"case.created\", \"case.status_changed\", \"case.message_added\", \"case.sla_breached\", \"case.resolved\"]\n  }\n}"
+            }
           }
         },
-        { "name": "Delivery log", "request": { "method": "GET", "url": "{{base_url}}/api/v1/webhook_endpoints/1/deliveries" } }
+        {
+          "name": "Delivery log",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/webhook_endpoints/1/deliveries"
+          }
+        }
       ]
     },
     {
@@ -304,17 +699,37 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "url": "{{receiver_url}}",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "User-Agent", "value": "Docket-Webhook" },
-              { "key": "X-Docket-Event", "value": "case.created" },
-              { "key": "X-Docket-Delivery", "value": "sample-1" },
-              { "key": "X-Docket-Signature", "value": "{{webhook_signature}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "User-Agent",
+                "value": "Docket-Webhook"
+              },
+              {
+                "key": "X-Docket-Event",
+                "value": "case.created"
+              },
+              {
+                "key": "X-Docket-Delivery",
+                "value": "sample-1"
+              },
+              {
+                "key": "X-Docket-Signature",
+                "value": "{{webhook_signature}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{{webhook_sample_body}}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{{webhook_sample_body}}"
+            }
           }
         }
       ]

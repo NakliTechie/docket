@@ -110,6 +110,7 @@ Rails.application.routes.draw do
       end
       get "audit/entries", to: "audit#entries"
       get "audit/verification", to: "audit#verification"
+      get "reports/activity", to: "reports#activity"
       resource :settings, only: %i[show update]
     end
   end

@@ -164,6 +164,10 @@ curl -H "Authorization: Bearer dkts_…" \
 
 The audit log records `service account X on behalf of contact CIF447192` for every such action. Identity management (users, tokens, service accounts) is deliberately *not* reachable with service-account credentials — admin user tokens only.
 
+**Attachments** ride along on case create and message create — multipart (`message[files][]`) or pure JSON (`message[attachments]: [{filename, content_type, data}]` with base64 data), under the same type allowlist and 10 MB / 5-file limits as every other surface. Message responses include signed download URLs.
+
+**Reports**: `GET /api/v1/reports/activity?from=&to=` returns the same aggregates as the admin Activity view — per-user action counts, login history, volume by queue/staff, resolution rate, SLA breaches and compliance, AI-vs-human reply split (admin token or `audit:read` scope).
+
 ### NakliPoster collection
 
 Import `docs/docket-api.nakliposter.json` (Postman v2.1 collection schema — works in compatible clients). It covers the full surface, the on-behalf-of flow, and a signed webhook-receiver test; fill in `base_url` and credentials in the collection variables.

@@ -22,6 +22,7 @@ module Api
           message.direction = message.author ? :inbound : :outbound
         end
         message.direction = :outbound if current_user
+        message.files = extract_attachments(params[:message])
 
         if message.save
           render json: { data: Serialize.message(message) }, status: :created
