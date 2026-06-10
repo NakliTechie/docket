@@ -4,9 +4,13 @@ class MessagesController < ApplicationController
     @message = @case.messages.build(message_params)
     @message.author = Current.user
     @message.direction = :outbound
+    metadata = {}
     if (macro = Macro.find_by(id: params[:macro_id]))
-      @message.metadata = { "macro_id" => macro.id, "macro_name" => macro.name }
+      metadata.merge!("macro_id" => macro.id, "macro_name" => macro.name)
     end
+    # Suggested-reply usage is noted for audit (handoff §4).
+    metadata["ai_suggested"] = true if params[:ai_suggested] == "true"
+    @message.metadata = metadata.presence
     authorize @message
 
     if @message.save

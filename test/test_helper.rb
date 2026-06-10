@@ -1,7 +1,11 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "webmock/minitest"
 require_relative "test_helpers/session_test_helper"
+require_relative "test_helpers/api_test_helper"
+
+WebMock.disable_net_connect!(allow_localhost: true)
 
 module ActiveSupport
   class TestCase

@@ -20,8 +20,19 @@
               active: controller_name == "cases" %>
         <%= nav_link t("portal.nav.track"), portal_track_path,
               active: controller_name == "tracking" %>
+        <% if session[:portal_contact_id] %>
+          <%= nav_link t("portal.nav.my_cases"), portal_my_cases_path,
+                active: controller_name == "my_cases" %>
+        <% end %>
       </nav>
       <div class="app-header-right">
+        <% if session[:portal_contact_id] %>
+          <%= button_to t("portal.nav.sign_out"), portal_customer_session_path, method: :delete,
+                class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
+        <% elsif Sso.customer_oidc_enabled? %>
+          <%= button_to t("portal.nav.customer_sign_in"), "/auth/customer_oidc",
+                class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
+        <% end %>
         <%= button_to t("layout.locale_switch_label"), locale_path(locale: I18n.locale == :en ? "hi" : "en"),
               class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
       </div>

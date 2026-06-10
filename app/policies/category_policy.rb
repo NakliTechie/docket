@@ -5,6 +5,9 @@ class CategoryPolicy < ApplicationPolicy
   def update?  = admin? || supervisor?
   def destroy? = admin? || supervisor?
 
+  # Granting the AI autonomous resolution is admin-only.
+  def toggle_auto_resolve? = admin?
+
   class Scope < Scope
     def resolve
       user.present? ? scope.all : scope.none

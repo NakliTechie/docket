@@ -39,6 +39,16 @@ class CategoriesController < ApplicationController
     redirect_to categories_path, notice: t(".deleted"), status: :see_other
   end
 
+  # Flipping autonomous resolution is a deliberate, admin-only act with
+  # its own audit trail entry (handoff §4) — not a form field.
+  def toggle_auto_resolve
+    @category = Category.find(params[:id])
+    authorize @category, :toggle_auto_resolve?
+    @category.update!(ai_auto_resolve: !@category.ai_auto_resolve)
+    notice = @category.ai_auto_resolve ? t(".enabled", name: @category.name) : t(".disabled", name: @category.name)
+    redirect_to categories_path, notice: notice
+  end
+
   private
 
   def set_category

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Boots a disposable Keycloak with the docket-test realm and runs the
+# live SSO system tests against it (handoff §5A / G3 artifact).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+KEYCLOAK_PORT="${KEYCLOAK_PORT:-8080}"
+CONTAINER=docket-keycloak-test
+
+cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+
+docker run -d --name "$CONTAINER" \
+  -p "$KEYCLOAK_PORT:8080" \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+  -v "$(pwd)/test/keycloak/realm-docket-test.json:/opt/keycloak/data/import/realm.json:ro" \
+  quay.io/keycloak/keycloak:26.0 start-dev --import-realm
+
+echo "Waiting for Keycloak…"
+for _ in $(seq 1 60); do
+  if curl -fs "http://localhost:$KEYCLOAK_PORT/realms/docket-test/.well-known/openid-configuration" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 2
+done
+
+KEYCLOAK_URL="http://localhost:$KEYCLOAK_PORT" bin/rails test test/system/sso_keycloak_live_test.rb

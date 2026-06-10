@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_10_141124) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_153002) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -46,6 +46,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_141124) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_used_at"
+    t.string "name", null: false
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_api_tokens_on_user_id"
   end
 
   create_table "audit_entries", force: :cascade do |t|
@@ -164,6 +176,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_141124) do
     t.index ["email_message_id"], name: "index_messages_on_email_message_id"
   end
 
+  create_table "oauth_access_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.json "scopes", null: false
+    t.integer "service_account_id", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_oauth_access_tokens_on_expires_at"
+    t.index ["service_account_id"], name: "index_oauth_access_tokens_on_service_account_id"
+    t.index ["token_digest"], name: "index_oauth_access_tokens_on_token_digest", unique: true
+  end
+
   create_table "organisations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
@@ -197,6 +222,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_141124) do
     t.index ["deleted_at"], name: "index_queues_on_deleted_at"
     t.index ["name"], name: "index_queues_on_name", unique: true, where: "deleted_at IS NULL"
     t.index ["slug"], name: "index_queues_on_slug", unique: true, where: "deleted_at IS NULL"
+  end
+
+  create_table "reference_docs", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_reference_docs_on_deleted_at"
+    t.index ["title"], name: "index_reference_docs_on_title", unique: true, where: "deleted_at IS NULL"
+  end
+
+  create_table "service_accounts", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "client_id", null: false
+    t.string "client_secret_digest", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "description"
+    t.string "name", null: false
+    t.json "scopes", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_service_accounts_on_client_id", unique: true
+    t.index ["deleted_at"], name: "index_service_accounts_on_deleted_at"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -252,8 +301,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_141124) do
     t.index ["role"], name: "index_users_on_role"
   end
 
+  create_table "webhook_deliveries", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "delivered_at"
+    t.string "event", null: false
+    t.string "last_error"
+    t.json "payload", null: false
+    t.integer "response_code"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "webhook_endpoint_id", null: false
+    t.index ["status"], name: "index_webhook_deliveries_on_status"
+    t.index ["webhook_endpoint_id", "created_at"], name: "index_webhook_deliveries_on_webhook_endpoint_id_and_created_at"
+    t.index ["webhook_endpoint_id"], name: "index_webhook_deliveries_on_webhook_endpoint_id"
+  end
+
+  create_table "webhook_endpoints", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.json "events", null: false
+    t.string "name", null: false
+    t.string "secret", null: false
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.index ["deleted_at"], name: "index_webhook_endpoints_on_deleted_at"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "api_tokens", "users"
   add_foreign_key "cases", "categories"
   add_foreign_key "cases", "contacts"
   add_foreign_key "cases", "queues"
@@ -261,8 +339,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_141124) do
   add_foreign_key "cases", "users", column: "assignee_id"
   add_foreign_key "contacts", "organisations"
   add_foreign_key "messages", "cases"
+  add_foreign_key "oauth_access_tokens", "service_accounts"
   add_foreign_key "queue_memberships", "queues"
   add_foreign_key "queue_memberships", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "sla_targets", "sla_policies"
+  add_foreign_key "webhook_deliveries", "webhook_endpoints"
 end

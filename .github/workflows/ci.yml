@@ -19,10 +19,10 @@ jobs:
           bundler-cache: true
 
       - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
-      
+        run: bin/brakeman --no-pager -i config/brakeman.ignore
+
       - name: Scan for known security vulnerabilities in gems used
-        run: bin/bundler-audit
+        run: bin/bundler-audit check --update
       
   scan_js:
     runs-on: ubuntu-latest
@@ -96,12 +96,6 @@ jobs:
   system-test:
     runs-on: ubuntu-latest
 
-    # services:
-    #  redis:
-    #    image: valkey/valkey:8
-    #    ports:
-    #      - 6379:6379
-    #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips
@@ -114,11 +108,14 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        id: chrome
+
       - name: Run System Tests
         env:
           RAILS_ENV: test
-          # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-          # REDIS_URL: redis://localhost:6379/0
+          BROWSER_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: bin/rails db:test:prepare test:system
 
       - name: Keep screenshots from failed system tests
@@ -128,3 +125,42 @@ jobs:
           name: screenshots
           path: ${{ github.workspace }}/tmp/screenshots
           if-no-files-found: ignore
+
+  # Live OIDC (staff + customer planes) against containerised Keycloak
+  # (handoff §5A / G3 artifact).
+  keycloak-sso:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        id: chrome
+
+      - name: Boot Keycloak with the docket-test realm
+        run: |
+          docker run -d --name keycloak -p 8080:8080 \
+            -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+            -v $PWD/test/keycloak/realm-docket-test.json:/opt/keycloak/data/import/realm.json:ro \
+            quay.io/keycloak/keycloak:26.0 start-dev --import-realm
+          for i in $(seq 1 90); do
+            curl -fs http://localhost:8080/realms/docket-test/.well-known/openid-configuration >/dev/null && exit 0
+            sleep 2
+          done
+          echo "Keycloak did not become ready" && docker logs keycloak && exit 1
+
+      - name: Run live SSO tests
+        env:
+          RAILS_ENV: test
+          KEYCLOAK_URL: http://localhost:8080
+          BROWSER_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: |
+          bin/rails db:test:prepare
+          bin/rails test test/system/sso_keycloak_live_test.rb

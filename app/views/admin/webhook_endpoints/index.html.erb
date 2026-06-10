@@ -1,0 +1,60 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to new_admin_webhook_endpoint_path, class: "btn btn-primary" do %>
+      <%= icon "plus" %><%= t(".new_endpoint") %>
+    <% end %>
+  </div>
+</div>
+<p class="muted"><%= t(".intro") %></p>
+
+<% if flash[:webhook_secret] %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t(".secret_title") %></h2>
+    <p class="tracking-id-display mono"><%= flash[:webhook_secret] %></p>
+    <p class="muted"><%= t(".shown_once") %></p>
+  </div>
+<% end %>
+
+<% if @endpoints.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.url") %></th>
+          <th><%= t(".columns.events") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @endpoints.each do |endpoint| %>
+          <tr>
+            <td><%= endpoint.name %></td>
+            <td class="mono table-meta"><%= endpoint.url %></td>
+            <td><% endpoint.events.each do |event| %><span class="badge badge-role mono"><%= event %></span> <% end %></td>
+            <td>
+              <% if endpoint.active %>
+                <span class="badge badge-sla sla-ok"><%= t(".active_badge") %></span>
+              <% else %>
+                <span class="badge badge-sla sla-breached"><%= t(".inactive_badge") %></span>
+              <% end %>
+            </td>
+            <td class="actions">
+              <%= link_to t(".deliveries"), deliveries_admin_webhook_endpoint_path(endpoint), class: "btn btn-sm" %>
+              <%= link_to t("actions.edit"), edit_admin_webhook_endpoint_path(endpoint), class: "btn btn-sm" %>
+              <%= button_to t("actions.delete"), admin_webhook_endpoint_path(endpoint), method: :delete,
+                    class: "btn btn-sm btn-danger", form: { class: "inline-form",
+                      data: { turbo_confirm: t(".confirm_delete") } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+        action: link_to(t(".new_endpoint"), new_admin_webhook_endpoint_path, class: "btn btn-primary") %>
+<% end %>

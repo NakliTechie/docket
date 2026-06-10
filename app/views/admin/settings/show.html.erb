@@ -1,0 +1,151 @@
+<% page_title t(".title") %>
+<div class="page-header"><h1><%= t(".title") %></h1></div>
+
+<%= form_with url: admin_settings_path, method: :patch, class: "form" do |f| %>
+  <fieldset>
+    <legend><%= t(".sections.ai") %></legend>
+    <p class="form-hint"><%= t(".ai_intro") %></p>
+
+    <div class="form-row">
+      <%= label_tag :llm_provider, t(".fields.llm_provider") %>
+      <%= select_tag :llm_provider,
+            options_for_select(Llm::PROVIDERS.map { |p| [ t(".providers.#{p}"), p ] }, Llm.provider) %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :llm_endpoint_url, t(".fields.llm_endpoint_url") %>
+      <%= text_field_tag :llm_endpoint_url, Setting.get("llm_endpoint_url"), placeholder: "http://ollama:11434/v1" %>
+      <p class="form-hint"><%= t(".fields.llm_endpoint_hint") %></p>
+    </div>
+    <div class="form-row">
+      <%= label_tag :llm_model, t(".fields.llm_model") %>
+      <%= text_field_tag :llm_model, Setting.get("llm_model"), placeholder: "llama3" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :llm_api_key, t(".fields.llm_api_key") %>
+      <%= password_field_tag :llm_api_key, nil, autocomplete: "off",
+            placeholder: Setting.get("llm_api_key").present? ? t(".fields.secret_set") : "" %>
+      <p class="form-hint"><%= t(".fields.llm_api_key_hint") %></p>
+    </div>
+    <div class="checkbox-row form-row">
+      <%= check_box_tag :llm_byok_enabled, "1", Setting.get("llm_byok_enabled") == true %>
+      <%= label_tag :llm_byok_enabled, t(".fields.llm_byok_enabled") %>
+    </div>
+    <p class="flash flash-alert"><%= t(".byok_warning") %></p>
+
+    <div class="checkbox-row form-row">
+      <%= check_box_tag :ai_draft_enabled, "1", Setting.get("ai_draft_enabled", true) != false %>
+      <%= label_tag :ai_draft_enabled, t(".fields.ai_draft_enabled") %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :ai_route_confidence, t(".fields.ai_route_confidence") %>
+      <%= number_field_tag :ai_route_confidence, Setting.get("ai_route_confidence", CaseAgent::ROUTE_CONFIDENCE_DEFAULT), step: 0.05, min: 0, max: 1 %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :ai_resolve_confidence, t(".fields.ai_resolve_confidence") %>
+      <%= number_field_tag :ai_resolve_confidence, Setting.get("ai_resolve_confidence", CaseAgent::RESOLVE_CONFIDENCE_DEFAULT), step: 0.05, min: 0, max: 1 %>
+      <p class="form-hint"><%= t(".fields.ai_resolve_confidence_hint") %></p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t(".sections.intake") %></legend>
+    <div class="form-row">
+      <%= label_tag :default_queue_id, t(".fields.default_queue") %>
+      <%= select_tag :default_queue_id,
+            options_from_collection_for_select(CaseQueue.order(:name), :id, :name, Setting.get("default_queue_id")),
+            include_blank: t("forms.none") %>
+      <p class="form-hint"><%= t(".fields.default_queue_hint") %></p>
+    </div>
+    <div class="form-row">
+      <%= label_tag :default_sla_policy_id, t(".fields.default_sla_policy") %>
+      <%= select_tag :default_sla_policy_id,
+            options_from_collection_for_select(SlaPolicy.order(:name), :id, :name, Setting.get("default_sla_policy_id")),
+            include_blank: t("forms.none") %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :outbound_email_from, t(".fields.outbound_email_from") %>
+      <%= text_field_tag :outbound_email_from, Setting.get("outbound_email_from"), placeholder: "grievances@example.gov.in" %>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t(".sections.api") %></legend>
+    <div class="form-row">
+      <%= label_tag :cors_allowed_origins, t(".fields.cors_allowed_origins") %>
+      <%= text_field_tag :cors_allowed_origins, Setting.get("cors_allowed_origins"), placeholder: "https://netbanking.example.in, https://crm.example.in" %>
+      <p class="form-hint"><%= t(".fields.cors_hint") %></p>
+    </div>
+    <div class="form-row">
+      <%= label_tag :app_base_url, t(".fields.app_base_url") %>
+      <%= text_field_tag :app_base_url, Setting.get("app_base_url"), placeholder: "https://grievances.example.gov.in" %>
+      <p class="form-hint"><%= t(".fields.app_base_url_hint") %></p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t(".sections.staff_sso") %></legend>
+    <p class="form-hint"><%= t(".staff_sso_intro") %></p>
+    <div class="form-row">
+      <%= label_tag :sso_staff_oidc_issuer, t(".fields.oidc_issuer") %>
+      <%= text_field_tag :sso_staff_oidc_issuer, Setting.get("sso_staff_oidc_issuer"), placeholder: "https://idp.example.in/realms/corp" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_oidc_client_id, t(".fields.oidc_client_id") %>
+      <%= text_field_tag :sso_staff_oidc_client_id, Setting.get("sso_staff_oidc_client_id") %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_oidc_client_secret, t(".fields.oidc_client_secret") %>
+      <%= password_field_tag :sso_staff_oidc_client_secret, nil, autocomplete: "off",
+            placeholder: Setting.get("sso_staff_oidc_client_secret").present? ? t(".fields.secret_set") : "" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_role_claim, t(".fields.role_claim") %>
+      <%= text_field_tag :sso_staff_role_claim, Setting.get("sso_staff_role_claim"), placeholder: "groups" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_role_mapping, t(".fields.role_mapping") %>
+      <%= text_field_tag :sso_staff_role_mapping, Setting.get("sso_staff_role_mapping"),
+            placeholder: '{"docket-admins": "admin", "grievance-leads": "supervisor"}' %>
+      <p class="form-hint"><%= t(".fields.role_mapping_hint") %></p>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_saml_idp_sso_url, t(".fields.saml_sso_url") %>
+      <%= text_field_tag :sso_staff_saml_idp_sso_url, Setting.get("sso_staff_saml_idp_sso_url"), placeholder: "https://adfs.example.in/adfs/ls" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_saml_idp_cert, t(".fields.saml_cert") %>
+      <%= text_area_tag :sso_staff_saml_idp_cert, Setting.get("sso_staff_saml_idp_cert"), rows: 4 %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_saml_sp_entity_id, t(".fields.saml_sp_entity_id") %>
+      <%= text_field_tag :sso_staff_saml_sp_entity_id, Setting.get("sso_staff_saml_sp_entity_id") %>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t(".sections.customer_sso") %></legend>
+    <p class="form-hint"><%= t(".customer_sso_intro") %></p>
+    <div class="form-row">
+      <%= label_tag :sso_customer_oidc_issuer, t(".fields.oidc_issuer") %>
+      <%= text_field_tag :sso_customer_oidc_issuer, Setting.get("sso_customer_oidc_issuer"), placeholder: "https://identity.bank.example.in/realms/customers" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_customer_oidc_client_id, t(".fields.oidc_client_id") %>
+      <%= text_field_tag :sso_customer_oidc_client_id, Setting.get("sso_customer_oidc_client_id") %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_customer_oidc_client_secret, t(".fields.oidc_client_secret") %>
+      <%= password_field_tag :sso_customer_oidc_client_secret, nil, autocomplete: "off",
+            placeholder: Setting.get("sso_customer_oidc_client_secret").present? ? t(".fields.secret_set") : "" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_customer_external_id_claim, t(".fields.external_id_claim") %>
+      <%= text_field_tag :sso_customer_external_id_claim, Setting.get("sso_customer_external_id_claim"), placeholder: "sub" %>
+      <p class="form-hint"><%= t(".fields.external_id_claim_hint") %></p>
+    </div>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit t(".save"), class: "btn btn-primary" %>
+  </div>
+<% end %>

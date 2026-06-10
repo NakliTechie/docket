@@ -1,0 +1,28 @@
+<%= form_with model: [ :admin, reference_doc ], class: "form" do |f| %>
+  <%= render "shared/form_errors", record: reference_doc %>
+
+  <div class="form-row <%= "field-error" if reference_doc.errors[:title].any? %>">
+    <%= f.label :title, t("admin.reference_docs.fields.title") %>
+    <%= f.text_field :title, required: true %>
+    <% reference_doc.errors[:title].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row <%= "field-error" if reference_doc.errors[:file].any? %>">
+    <%= f.label :file, t("admin.reference_docs.fields.file") %>
+    <%= f.file_field :file, accept: ReferenceDoc::EXTRACTABLE_TYPES.join(",") %>
+    <p class="form-hint"><%= t("admin.reference_docs.form.file_hint") %></p>
+    <% reference_doc.errors[:file].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row <%= "field-error" if reference_doc.errors[:body].any? %>">
+    <%= f.label :body, t("admin.reference_docs.fields.body") %>
+    <%= f.text_area :body, rows: 12 %>
+    <p class="form-hint"><%= t("admin.reference_docs.form.body_hint") %></p>
+    <% reference_doc.errors[:body].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), admin_reference_docs_path, class: "btn" %>
+  </div>
+<% end %>

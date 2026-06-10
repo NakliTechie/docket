@@ -1,0 +1,42 @@
+<% page_title t(".title", name: @endpoint.name) %>
+<div class="page-header">
+  <h1><%= t(".title", name: @endpoint.name) %></h1>
+  <div class="page-actions">
+    <%= link_to t(".back"), admin_webhook_endpoints_path, class: "btn" %>
+  </div>
+</div>
+
+<% if @deliveries.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.event") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th><%= t(".columns.attempts") %></th>
+          <th><%= t(".columns.response") %></th>
+          <th><%= t(".columns.when") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @deliveries.each do |delivery| %>
+          <tr>
+            <td class="mono"><%= delivery.event %></td>
+            <td>
+              <span class="badge badge-sla <%= delivery.status_delivered? ? "sla-ok" : (delivery.status_failed? ? "sla-breached" : "") %>">
+                <%= t(".statuses.#{delivery.status}") %>
+              </span>
+              <% if delivery.last_error %><div class="table-meta"><%= delivery.last_error %></div><% end %>
+            </td>
+            <td><%= delivery.attempts %></td>
+            <td class="mono"><%= delivery.response_code %></td>
+            <td class="table-meta"><%= l delivery.created_at, format: :short %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <%= render "shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title") %>
+<% end %>

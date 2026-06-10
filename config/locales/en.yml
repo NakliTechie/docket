@@ -16,6 +16,9 @@ en:
       users: "Users"
       activity: "Activity"
       audit: "Audit"
+      settings: "Settings"
+      reference_docs: "Knowledge"
+      integrations: "Integrations"
 
   locales:
     en: "English"
@@ -74,12 +77,15 @@ en:
   sessions:
     rate_limited: "Too many attempts. Try again later."
     invalid_credentials: "Try another email address or password."
+    sso_failed: "Single sign-on failed. Try again or use your password."
     new:
       title: "Sign in"
       email: "Email address"
       password: "Password"
       sign_in: "Sign in"
       forgot_password: "Forgot password?"
+      sso_oidc: "Sign in with corporate SSO"
+      sso_saml: "Sign in with SAML (ADFS)"
 
   passwords:
     invalid_token: "Password reset link is invalid or has expired."
@@ -164,6 +170,10 @@ en:
         hint: "Share your public portal link, or create a case on behalf of a citizen."
     email_intake:
       no_subject: "(no subject)"
+    agent:
+      turn_note: "AI %{action} step completed (details in metadata)."
+      failed: "AI processing failed for this case; it remains in the human workflow."
+      human_handoff_footer: "If anything here is not fully resolved, just reply to this message and a staff member will personally take over your case."
     show:
       confirm_delete: "Delete this case? It will be hidden from all views but preserved in the audit log."
       next_case: "Next case"
@@ -344,6 +354,9 @@ en:
       new_category: "New category"
       auto_resolve_on: "AI auto-resolve ON"
       auto_resolve_off: "Off"
+      turn_on: "Enable auto-resolve"
+      turn_off: "Disable"
+      enable_warning: "Allow the AI to autonomously reply and resolve cases in this category? The AI will only act above the confidence threshold, always offers a human handoff, and every action is audited. Enable only once you trust its drafts here."
       confirm_delete: "Delete this category?"
       columns:
         name: "Name"
@@ -356,6 +369,9 @@ en:
       title: "New category"
     edit:
       title: "Edit category %{name}"
+    toggle_auto_resolve:
+      enabled: "AI auto-resolve enabled for %{name}."
+      disabled: "AI auto-resolve disabled for %{name}."
     create:
       created: "Category created."
     update:
@@ -509,12 +525,51 @@ en:
     placeholder: "Jump to a queue or page…"
     queue_prefix: "Queue:"
 
+  assist:
+    panel_title: "AI assist"
+    summarise: "Summarise thread"
+    suggest_reply: "Suggest a reply"
+    summary_title: "Thread summary"
+    suggestion_title: "Suggested reply"
+    insert_suggestion: "Insert into composer"
+    use_draft: "Use this draft"
+    ephemeral_note: "Generated on demand; not stored."
+    review_note: "Review and edit before sending — never auto-sent."
+    failed: "The AI assistant could not complete this request."
+    ai_action_label: "AI: %{action}"
+    sentiment:
+      positive: "Positive"
+      neutral: "Neutral"
+      negative: "Negative"
+
   portal:
     brand: "Public Grievance Portal"
     footer: "Powered by Docket — public code for public service."
     nav:
       new_case: "File a grievance"
       track: "Track a case"
+      my_cases: "My cases"
+      sign_out: "Sign out"
+      customer_sign_in: "Log in with your account"
+    customer:
+      sso_failed: "Sign-in failed. Please try again."
+      signed_in: "Welcome, %{name}."
+      signed_out: "You have been signed out."
+      sign_in_required: "Please sign in to see your cases."
+    my_cases:
+      description_required: "Please describe your grievance."
+      created: "Case %{tracking_id} filed."
+      index:
+        title: "My cases"
+        new_case: "File a new case"
+        empty:
+          title: "No cases yet"
+          hint: "File a case and it will appear here, linked to your account."
+      show:
+        back: "Back to my cases"
+      new:
+        title: "File a new case"
+        intro: "This case will be linked to your account — no tracking ID needed."
     cases:
       new:
         title: "File a grievance or service request"
@@ -573,6 +628,207 @@ en:
       instructions: "Reply to this email (keep the tracking ID in the subject) or use the portal to respond."
 
   admin:
+    api_tokens:
+      index:
+        title: "API tokens"
+        new_token_title: "Token created — copy it now"
+        shown_once: "This value is shown exactly once. Store it securely."
+        issue: "Issue a token"
+        user: "User"
+        name: "Token name"
+        name_placeholder: "e.g. CLI on Suresh's laptop"
+        create: "Issue token"
+        never: "Never"
+        revoke: "Revoke"
+        confirm_revoke: "Revoke this token? Clients using it stop working immediately."
+        active_badge: "Active"
+        revoked_badge: "Revoked"
+        columns:
+          name: "Name"
+          user: "User"
+          last_used: "Last used"
+          status: "Status"
+        empty:
+          title: "No API tokens yet"
+          hint: "Issue per-user tokens for staff tooling. Tokens carry the user's own permissions."
+      create:
+        created: "Token issued. Copy it now — it will not be shown again."
+      destroy:
+        revoked: "Token revoked."
+    service_accounts:
+      fields:
+        name: "Name"
+        name_placeholder: "e.g. Netbanking backend"
+        description: "Description"
+        scopes: "Scopes"
+        scopes_hint: "Grant only what the integration needs. cases:write + contacts:write enables filing cases on behalf of customers."
+        active: "Active"
+      index:
+        title: "Service accounts"
+        new_account: "New service account"
+        intro: "Machine-to-machine credentials for your own systems (netbanking, CRM, IVR). They exchange client credentials at /api/v1/oauth/token for a scoped bearer token."
+        secret_title: "Client secret — copy it now"
+        shown_once: "This value is shown exactly once. Store it securely."
+        rotate: "Rotate secret"
+        confirm_rotate: "Rotate the client secret? All live tokens for this account are revoked."
+        confirm_delete: "Delete this service account? Its credentials stop working immediately."
+        active_badge: "Active"
+        inactive_badge: "Inactive"
+        columns:
+          name: "Name"
+          client_id: "Client ID"
+          scopes: "Scopes"
+          status: "Status"
+        empty:
+          title: "No service accounts yet"
+          hint: "Create one to let your own systems file and read cases headlessly."
+      new:
+        title: "New service account"
+      edit:
+        title: "Edit %{name}"
+      create:
+        created: "Service account created. Copy the client secret now."
+      update:
+        updated: "Service account updated."
+      destroy:
+        deleted: "Service account deleted."
+      rotate_secret:
+        rotated: "Secret rotated. Copy the new value now."
+    webhook_endpoints:
+      fields:
+        name: "Name"
+        url: "Delivery URL"
+        url_hint: "Docket POSTs signed JSON here. Verify the X-Docket-Signature header (HMAC-SHA256 of the raw body with your endpoint secret)."
+        events: "Subscribed events"
+        active: "Active"
+      index:
+        title: "Webhooks"
+        new_endpoint: "New endpoint"
+        intro: "Signed POSTs on case lifecycle events let your systems react without polling."
+        secret_title: "Signing secret — copy it now"
+        shown_once: "This value is shown exactly once. Store it securely."
+        deliveries: "Deliveries"
+        active_badge: "Active"
+        inactive_badge: "Inactive"
+        confirm_delete: "Delete this endpoint? Pending deliveries are dropped."
+        columns:
+          name: "Name"
+          url: "URL"
+          events: "Events"
+          status: "Status"
+        empty:
+          title: "No webhook endpoints yet"
+          hint: "Add one to push case events to your own systems."
+      new:
+        title: "New webhook endpoint"
+      edit:
+        title: "Edit %{name}"
+      create:
+        created: "Endpoint created. Copy the signing secret now."
+      update:
+        updated: "Endpoint updated."
+      destroy:
+        deleted: "Endpoint deleted."
+      deliveries:
+        title: "Deliveries — %{name}"
+        back: "All endpoints"
+        statuses:
+          pending: "Pending"
+          delivered: "Delivered"
+          failed: "Failed"
+        columns:
+          event: "Event"
+          status: "Status"
+          attempts: "Attempts"
+          response: "Response"
+          when: "When"
+        empty:
+          title: "No deliveries yet"
+    settings:
+      show:
+        title: "Settings"
+        save: "Save settings"
+        sections:
+          ai: "AI / agentic resolution"
+          intake: "Intake defaults"
+          api: "API & integrations"
+          staff_sso: "Staff SSO (internal IdP)"
+          customer_sso: "Customer SSO (portal IdP)"
+        staff_sso_intro: "Bank employees sign into the console via your corporate IdP — OIDC preferred, SAML 2.0 for ADFS. First SSO login provisions the user as an agent; an admin promotes, or configure the role claim mapping. Local password login always remains as break-glass."
+        customer_sso_intro: "The public portal trusts your customer identity provider (the login behind netbanking). The configured claim maps to the contact's customer ID; signed-in customers see their own cases without the tracking-ID flow. Customer sessions can never reach the staff console. The anonymous flow always remains available."
+        ai_intro: "Docket is fully usable without AI. Configure an in-deployment model endpoint (Ollama/vLLM, OpenAI-compatible) to enable routing, drafting, and staff assist."
+        byok_warning: "Bring-your-own-key sends case text to an external provider outside this deployment. In sovereign deployments this is a data-egress decision — leave it off unless you have explicit approval."
+        providers:
+          off: "Off — no AI"
+          in_deployment: "In-deployment endpoint (Ollama/vLLM) — recommended"
+          byok: "External provider (BYOK) — data egress"
+          fake: "Demo (canned responses, no model)"
+        fields:
+          llm_provider: "Provider mode"
+          llm_endpoint_url: "Endpoint URL"
+          llm_endpoint_hint: "OpenAI-compatible base URL, e.g. http://ollama:11434/v1"
+          llm_model: "Model name"
+          llm_api_key: "API key"
+          llm_api_key_hint: "Optional for in-deployment endpoints; required for BYOK. Stored server-side, redacted in the audit log."
+          secret_set: "(set — enter a new value to replace)"
+          llm_byok_enabled: "I understand: enable external (BYOK) provider"
+          ai_draft_enabled: "Draft replies for human review on new cases"
+          ai_route_confidence: "Routing confidence threshold"
+          ai_resolve_confidence: "Auto-resolve confidence threshold"
+          ai_resolve_confidence_hint: "Auto-resolve additionally requires the per-category opt-in."
+          default_queue: "Default intake queue"
+          default_queue_hint: "Portal and email cases land here unless the AI routes them."
+          default_sla_policy: "Default SLA policy"
+          outbound_email_from: "Outbound email From address"
+          cors_allowed_origins: "CORS allowed origins"
+          cors_hint: "Comma-separated origins permitted to call the API from a browser. Leave blank to disable cross-origin browser access."
+          app_base_url: "Public base URL"
+          app_base_url_hint: "Used to build SSO redirect URIs."
+          oidc_issuer: "OIDC issuer URL"
+          oidc_client_id: "OIDC client ID"
+          oidc_client_secret: "OIDC client secret"
+          role_claim: "Role claim (optional)"
+          role_mapping: "Role mapping (JSON, optional)"
+          role_mapping_hint: "Maps IdP claim values to docket roles, e.g. {\"docket-admins\": \"admin\"}."
+          saml_sso_url: "SAML IdP SSO URL"
+          saml_cert: "SAML IdP certificate (PEM)"
+          saml_sp_entity_id: "SAML SP entity ID (optional)"
+          external_id_claim: "Customer ID claim"
+          external_id_claim_hint: "OIDC claim that carries your customer identifier (e.g. CIF). Defaults to the subject (sub)."
+      update:
+        updated: "Settings saved."
+    reference_docs:
+      fields:
+        title: "Title"
+        body: "Text content"
+        file: "Upload file (optional)"
+      form:
+        file_hint: "PDF, text, markdown or CSV — the text is extracted into the field below for the AI to ground on."
+        body_hint: "This is what the AI retrieves and quotes. Edit freely after upload."
+      errors:
+        bad_pdf: "could not be read as a PDF"
+      index:
+        title: "Knowledge / reference docs"
+        new_doc: "New document"
+        intro: "The AI grounds its drafts on these documents plus closed resolved cases. Keep them factual and current."
+        confirm_delete: "Delete this document?"
+        columns:
+          title: "Title"
+          body: "Content"
+          file: "File"
+        empty:
+          title: "No reference documents yet"
+          hint: "Upload scheme rules, FAQs, and procedures so the AI can ground its replies."
+      new:
+        title: "New reference document"
+      edit:
+        title: "Edit %{title}"
+      create:
+        created: "Reference document created."
+      update:
+        updated: "Reference document updated."
+      destroy:
+        deleted: "Reference document deleted."
     activity:
       index:
         title: "Activity & Usage"

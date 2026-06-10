@@ -1,0 +1,37 @@
+<%= form_with model: [ :admin, service_account ], class: "form" do |f| %>
+  <%= render "shared/form_errors", record: service_account %>
+
+  <div class="form-row">
+    <%= f.label :name, t("admin.service_accounts.fields.name") %>
+    <%= f.text_field :name, required: true, placeholder: t("admin.service_accounts.fields.name_placeholder") %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :description, t("admin.service_accounts.fields.description") %>
+    <%= f.text_field :description %>
+  </div>
+
+  <fieldset>
+    <legend><%= t("admin.service_accounts.fields.scopes") %></legend>
+    <p class="form-hint"><%= t("admin.service_accounts.fields.scopes_hint") %></p>
+    <% ServiceAccount::SCOPES.each do |scope| %>
+      <div class="checkbox-row">
+        <%= check_box_tag "service_account[scopes][]", scope,
+              service_account.scopes&.include?(scope), id: "scope_#{scope.parameterize}" %>
+        <label for="scope_<%= scope.parameterize %>" class="mono"><%= scope %></label>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <% unless service_account.new_record? %>
+    <div class="checkbox-row form-row">
+      <%= f.check_box :active %>
+      <%= f.label :active, t("admin.service_accounts.fields.active") %>
+    </div>
+  <% end %>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), admin_service_accounts_path, class: "btn" %>
+  </div>
+<% end %>

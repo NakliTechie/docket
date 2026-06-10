@@ -32,6 +32,12 @@
               <% else %>
                 <span class="muted"><%= t(".auto_resolve_off") %></span>
               <% end %>
+              <% if policy(category).toggle_auto_resolve? %>
+                <%= button_to category.ai_auto_resolve ? t(".turn_off") : t(".turn_on"),
+                      toggle_auto_resolve_category_path(category), method: :post,
+                      class: "btn btn-sm", form: { class: "inline-form",
+                        data: { turbo_confirm: category.ai_auto_resolve ? nil : t(".enable_warning") } } %>
+              <% end %>
             </td>
             <td class="actions">
               <% if policy(category).update? %>

@@ -1,0 +1,37 @@
+<%= form_with model: [ :admin, endpoint ], class: "form" do |f| %>
+  <%= render "shared/form_errors", record: endpoint %>
+
+  <div class="form-row">
+    <%= f.label :name, t("admin.webhook_endpoints.fields.name") %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :url, t("admin.webhook_endpoints.fields.url") %>
+    <%= f.url_field :url, required: true, placeholder: "https://crm.example.in/hooks/docket" %>
+    <p class="form-hint"><%= t("admin.webhook_endpoints.fields.url_hint") %></p>
+  </div>
+
+  <fieldset>
+    <legend><%= t("admin.webhook_endpoints.fields.events") %></legend>
+    <% WebhookEndpoint::EVENTS.each do |event| %>
+      <div class="checkbox-row">
+        <%= check_box_tag "webhook_endpoint[events][]", event,
+              endpoint.events&.include?(event), id: "event_#{event.parameterize}" %>
+        <label for="event_<%= event.parameterize %>" class="mono"><%= event %></label>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <% unless endpoint.new_record? %>
+    <div class="checkbox-row form-row">
+      <%= f.check_box :active %>
+      <%= f.label :active, t("admin.webhook_endpoints.fields.active") %>
+    </div>
+  <% end %>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), admin_webhook_endpoints_path, class: "btn" %>
+  </div>
+<% end %>

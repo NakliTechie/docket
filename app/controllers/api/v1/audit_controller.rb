@@ -1,0 +1,30 @@
+module Api
+  module V1
+    class AuditController < BaseController
+      def entries
+        require_audit_access!
+        scope = AuditEntry.order(id: :desc)
+        scope = scope.where(action: params[:action_name]) if params[:action_name].present?
+        scope = scope.where(auditable_type: params[:auditable_type]) if params[:auditable_type].present?
+        scope = scope.where(auditable_id: params[:auditable_id]) if params[:auditable_id].present?
+        pagy, records = pagy(scope)
+        render json: { data: records.map { |e| Serialize.audit_entry(e) }, pagination: pagination_meta(pagy) }
+      end
+
+      def verification
+        require_audit_access!
+        render json: { data: AuditEntry.verify_chain }
+      end
+
+      private
+
+      def require_audit_access!
+        if current_user
+          raise Pundit::NotAuthorizedError unless current_user.role_admin?
+        else
+          raise ScopeDenied, "audit:read" unless current_access_token.scope?("audit:read")
+        end
+      end
+    end
+  end
+end

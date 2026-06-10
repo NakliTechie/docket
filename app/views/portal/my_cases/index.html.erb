@@ -1,0 +1,38 @@
+<% page_title t(".title") %>
+<div class="portal-card">
+  <div class="page-header">
+    <h1><%= t(".title") %></h1>
+    <div class="page-actions">
+      <%= link_to t(".new_case"), new_portal_my_case_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+
+  <% if @cases.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t("cases.index.columns.tracking_id") %></th>
+            <th><%= t("cases.index.columns.subject") %></th>
+            <th><%= t("cases.index.columns.status") %></th>
+            <th><%= t("cases.index.columns.created") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @cases.each do |kase| %>
+            <tr>
+              <td class="mono"><%= link_to kase.tracking_id, portal_my_case_path(kase) %></td>
+              <td><%= link_to kase.subject, portal_my_case_path(kase) %></td>
+              <td><%= status_badge(kase) %></td>
+              <td class="table-meta"><%= l kase.created_at, format: :short %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%= render "shared/pagination", pagy: @pagy %>
+  <% else %>
+    <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+          action: link_to(t(".new_case"), new_portal_my_case_path, class: "btn btn-primary") %>
+  <% end %>
+</div>

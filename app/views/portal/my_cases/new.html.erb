@@ -1,0 +1,30 @@
+<% page_title t(".title") %>
+<div class="portal-card">
+  <h1><%= t(".title") %></h1>
+  <p class="muted"><%= t(".intro") %></p>
+
+  <%= form_with url: portal_my_cases_path, scope: :case, class: "form" do |f| %>
+    <%= render "shared/form_errors", record: @case %>
+
+    <div class="form-row">
+      <%= f.label :subject, t("portal.cases.new.subject") %>
+      <%= f.text_field :subject, required: true %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :description, t("portal.cases.new.description") %>
+      <%= f.text_area :description, required: true, rows: 6 %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :files, t("portal.cases.new.attachments") %>
+      <%= f.file_field :files, multiple: true %>
+      <p class="form-hint"><%= t("portal.cases.new.attachments_hint") %></p>
+    </div>
+
+    <div class="form-actions">
+      <%= f.submit t("portal.cases.new.submit"), class: "btn btn-primary" %>
+      <%= link_to t("actions.cancel"), portal_my_cases_path, class: "btn" %>
+    </div>
+  <% end %>
+</div>

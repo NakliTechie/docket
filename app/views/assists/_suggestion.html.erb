@@ -1,0 +1,10 @@
+<turbo-frame id="assist-suggestion">
+  <div class="assist-output" data-controller="suggestion">
+    <p class="panel-title"><%= icon "bot" %> <%= t("assist.suggestion_title") %></p>
+    <p class="assist-suggestion-text" data-suggestion-target="text"><%= suggestion %></p>
+    <button type="button" class="btn btn-sm" data-action="suggestion#insert">
+      <%= t("assist.insert_suggestion") %>
+    </button>
+    <p class="muted text-sm"><%= t("assist.review_note") %></p>
+  </div>
+</turbo-frame>

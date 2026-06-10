@@ -22,6 +22,8 @@ class Message < ApplicationRecord
   after_create :stamp_first_response
   after_create :reopen_conversation_on_citizen_reply
   after_create_commit :notify_contact_by_email
+  after_create_commit :enqueue_sentiment_analysis
+  after_create_commit :publish_message_webhook
 
   def author_display_name
     return I18n.t("messages.author.system") if author.nil?
@@ -30,6 +32,14 @@ class Message < ApplicationRecord
 
   def from_citizen?
     author_type == "Contact"
+  end
+
+  def sentiment
+    metadata&.dig("sentiment")
+  end
+
+  def ai_action
+    metadata&.dig("ai")
   end
 
   private
@@ -52,5 +62,18 @@ class Message < ApplicationRecord
     return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
     return if self.case.contact.email.blank?
     CaseMailer.public_reply(self).deliver_later
+  end
+
+  def enqueue_sentiment_analysis
+    SentimentJob.perform_later(self) if direction_inbound? && Llm.enabled?
+  end
+
+  # Internal notes never leave the deployment — not even as webhooks.
+  def publish_message_webhook
+    return if kind_internal_note?
+    Webhooks.publish("case.message_added", Webhooks.case_payload(self.case).merge(
+      message: { id: id, kind: kind, direction: direction, author_type: author_type,
+                 body: body, created_at: created_at.utc.iso8601(3) }
+    ))
   end
 end

@@ -27,3 +27,16 @@ One line per decision: what, why, when. Per handoff §0.2 — decisions not lock
 - Keyboard map: j/k/Enter lists, m compose, i internal note, a assign-to-me, n next case, t/s/w/r/c/o transitions, ? help, Ctrl+K palette, / search — all suppressed while typing; documented in the in-app help modal. 2026-06-10
 - SLA breach flags are sticky history (not cleared on later response); sweep job runs every 5 min via Solid Queue recurring; each flip is one audited case update. 2026-06-10
 - Outbound citizen mail (confirmation, public-reply notification) localised to contact.preferred_language; subjects embed the tracking ID for reply threading. 2026-06-10
+- LLM providers: off / in_deployment (default posture) / byok (requires explicit `llm_byok_enabled` acknowledgement) / fake (demo, canned). `Llm.client` nil ⇒ whole AI layer silently off. 2026-06-10
+- Agent turn taxonomy: route/draft working turns are internal notes (staff-only) carrying full prompt+response in metadata; only auto-resolve emits a public `agent_turn` (which also emails the citizen); every agent reply appends the talk-to-a-human footer. 2026-06-10
+- Auto-resolve gate = per-category opt-in AND model `fully_resolves` AND confidence ≥ threshold (default 0.85); flipping the category gate is a dedicated admin-only action (console + API), never a form field. 2026-06-10
+- Grounding retrieval: Postgres `to_tsvector('simple')` when on PG, keyword-overlap LIKE scoring on SQLite; corpus = reference docs + closed/resolved cases with their last outbound reply. No vector DB (locked). 2026-06-10
+- API auth split: user tokens (dkt_) get console parity through the same Pundit policies; service accounts (client-credentials → dkts_ bearer, 1h TTL, digests only at rest) get explicit scopes; identity management has no scope — human admin tokens only. 2026-06-10
+- Scopes: cases:*, contacts:*, organisations:*, config:* (queues/categories/SLA/macros/reference docs/settings), audit:read, webhooks:manage. 2026-06-10
+- OpenAPI is built by `Docket::Openapi` (declarative Ruby) and served at /api/v1/openapi.json; a test fails if any /api/v1 route is undocumented (rswag skipped — minitest stack). 2026-06-10
+- Webhooks: HMAC-SHA256 (`sha256=…` over raw body, per-endpoint whsec_ secret), 6 attempts with polynomial backoff via ActiveJob retry_on, delivery rows power the admin log; internal notes never publish. 2026-06-10
+- CORS: hand-rolled 40-line middleware reading the admin allowlist — /api only, echoes exact allowed Origin, no gem. 2026-06-10
+- SSO plane separation by cookie construction: staff = signed :session_id cookie → Session row → User; customer = Rails session :portal_contact_id → Contact. Neither guard reads the other's cookie. 2026-06-10
+- OmniAuth providers use setup-phase lambdas reading Settings/ENV so SSO config changes apply without restart; unconfigured providers fail to the friendly failure handler. 2026-06-10
+- SSO test strategy: app logic covered by OmniAuth test-mode integration tests in the default suite; live Keycloak OIDC flows (staff role-mapping + customer CIF claim) run as a dedicated CI job / bin/keycloak-test (no Docker daemon in the build container). 2026-06-10
+- NakliPoster collection uses the Postman v2.1 collection schema (importable in compatible tools), including the OBO flow and a signed webhook-receiver test request. 2026-06-10

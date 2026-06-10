@@ -34,6 +34,15 @@ gem "rails-i18n", "~> 8.0"
 # Stdlib gem from Ruby 3.4 (activity CSV export)
 gem "csv"
 
+# PDF text extraction for AI grounding reference docs (pure ruby)
+gem "pdf-reader", "~> 2.12"
+
+# Dual SSO (handoff §5A): staff OIDC + SAML, customer OIDC
+gem "omniauth", "~> 2.1"
+gem "omniauth-rails_csrf_protection", "~> 1.0"
+gem "omniauth_openid_connect", "~> 0.8"
+gem "omniauth-saml", "~> 2.2"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
@@ -72,4 +81,6 @@ group :test do
   gem "capybara"
   # CDP driver — no chromedriver binary needed, just a Chrome/Chromium
   gem "cuprite"
+  # HTTP stubbing for webhook delivery tests
+  gem "webmock"
 end

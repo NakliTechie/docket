@@ -1,0 +1,46 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to new_admin_reference_doc_path, class: "btn btn-primary" do %>
+      <%= icon "plus" %><%= t(".new_doc") %>
+    <% end %>
+  </div>
+</div>
+<p class="muted"><%= t(".intro") %></p>
+
+<% if @reference_docs.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.title") %></th>
+          <th><%= t(".columns.body") %></th>
+          <th><%= t(".columns.file") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @reference_docs.each do |doc| %>
+          <tr>
+            <td><%= doc.title %></td>
+            <td class="table-meta"><%= doc.body.truncate(120) %></td>
+            <td class="table-meta">
+              <% if doc.file.attached? %>
+                <%= link_to doc.file.filename, rails_blob_path(doc.file, disposition: "attachment") %>
+              <% end %>
+            </td>
+            <td class="actions">
+              <%= link_to t("actions.edit"), edit_admin_reference_doc_path(doc), class: "btn btn-sm" %>
+              <%= button_to t("actions.delete"), admin_reference_doc_path(doc), method: :delete, class: "btn btn-sm btn-danger",
+                    form: { class: "inline-form", data: { turbo_confirm: t(".confirm_delete") } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+        action: link_to(t(".new_doc"), new_admin_reference_doc_path, class: "btn btn-primary") %>
+<% end %>

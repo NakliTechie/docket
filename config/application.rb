@@ -39,5 +39,9 @@ module Docket
     # English + Hindi at v1.0 (handoff §7); rails-i18n supplies hi base data.
     config.i18n.available_locales = [ :en, :hi ]
     config.i18n.default_locale = :en
+
+    # Admin-allowlisted CORS for /api only (handoff §5).
+    require_relative "../lib/docket/cors"
+    config.middleware.insert_before 0, Docket::Cors
   end
 end

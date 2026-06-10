@@ -38,15 +38,27 @@
       <% end %>
 
       <% @messages.each do |message| %>
-        <article class="thread-message kind-<%= message.kind.dasherize %> direction-<%= message.direction %>">
+        <article class="thread-message kind-<%= message.kind.dasherize %> direction-<%= message.direction %> <%= "ai-#{message.ai_action}" if message.ai_action %>">
           <div class="thread-message-head">
             <span class="thread-message-author">
-              <% if message.kind_agent_turn? %><%= icon "bot" %><% end %>
+              <% if message.kind_agent_turn? || message.ai_action %><%= icon "bot" %><% end %>
               <%= message.author_display_name %>
+              <% if message.ai_action %>
+                <span class="badge badge-role"><%= t("assist.ai_action_label", action: message.ai_action) %></span>
+              <% end %>
+              <% if message.sentiment %>
+                <span class="badge badge-sentiment sentiment-<%= message.sentiment %>"><%= t("assist.sentiment.#{message.sentiment}") %></span>
+              <% end %>
             </span>
             <span><%= message.human_kind %> · <%= l message.created_at, format: :short %></span>
           </div>
           <div class="thread-message-body"><%= message.body %></div>
+          <% if message.ai_action == "draft" && policy(@case).update? %>
+            <div data-controller="suggestion">
+              <span data-suggestion-target="text" hidden><%= message.body %></span>
+              <button type="button" class="btn btn-sm" data-action="suggestion#insert"><%= t("assist.use_draft") %></button>
+            </div>
+          <% end %>
           <% if message.files.attached? %>
             <div class="thread-attachments">
               <% message.files.each do |file| %>
@@ -80,6 +92,7 @@
             </div>
           <% end %>
           <%= hidden_field_tag :macro_id, nil, data: { macro_target: "macroId" }, id: "composer-macro-id" %>
+          <%= hidden_field_tag :ai_suggested, nil, id: "composer-ai-suggested" %>
           <div class="form-row">
             <%= f.label :body, t(".message_body"), class: "visually-hidden" %>
             <%= f.text_area :body, required: true, placeholder: t(".composer_placeholder"),
@@ -105,6 +118,26 @@
   </section>
 
   <aside>
+    <% if Llm.enabled? %>
+      <div class="panel">
+        <h2 class="panel-title"><%= icon "bot" %> <%= t("assist.panel_title") %></h2>
+        <div class="stack-sm">
+          <%= form_with url: case_assist_summarise_path(@case), method: :post,
+                data: { turbo_frame: "assist-summary" } do |f| %>
+            <%= f.submit t("assist.summarise"), class: "btn btn-sm" %>
+          <% end %>
+          <turbo-frame id="assist-summary"></turbo-frame>
+          <% if policy(@case).update? %>
+            <%= form_with url: case_assist_suggest_reply_path(@case), method: :post,
+                  data: { turbo_frame: "assist-suggestion" } do |f| %>
+              <%= f.submit t("assist.suggest_reply"), class: "btn btn-sm" %>
+            <% end %>
+            <turbo-frame id="assist-suggestion"></turbo-frame>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <div class="panel">
       <h2 class="panel-title"><%= t(".status_panel") %></h2>
       <p><%= status_badge(@case) %> <%= priority_badge(@case) %> <%= sla_chip(@case) %></p>

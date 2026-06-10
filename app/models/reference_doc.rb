@@ -1,0 +1,30 @@
+# Admin-uploaded grounding corpus (handoff §4): text/markdown pasted
+# directly or extracted from an uploaded PDF/text file. The AI retrieves
+# over +body+; the original file stays attached for reference.
+class ReferenceDoc < ApplicationRecord
+  include SoftDeletable
+  include Audited
+
+  EXTRACTABLE_TYPES = %w[application/pdf text/plain text/markdown text/csv].freeze
+  MAX_EXTRACT_BYTES = 20.megabytes
+
+  has_one_attached :file
+
+  validates :title, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } }
+  validates :body, presence: true
+
+  def self.extract_text(uploaded_file)
+    return nil if uploaded_file.blank?
+    raise ArgumentError, "file too large" if uploaded_file.size > MAX_EXTRACT_BYTES
+
+    case uploaded_file.content_type
+    when "application/pdf"
+      reader = PDF::Reader.new(uploaded_file.tempfile.path)
+      reader.pages.map(&:text).join("\n\n").squeeze("\n").strip
+    when "text/plain", "text/markdown", "text/csv"
+      uploaded_file.read.force_encoding("UTF-8").scrub.strip
+    else
+      raise ArgumentError, "unsupported file type #{uploaded_file.content_type}"
+    end
+  end
+end

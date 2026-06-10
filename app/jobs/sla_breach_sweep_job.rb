@@ -8,9 +8,11 @@ class SlaBreachSweepJob < ApplicationJob
     Current.set(actor: nil) do
       Case.overdue_first_response.find_each do |kase|
         kase.update!(first_response_breached: true)
+        Webhooks.publish("case.sla_breached", Webhooks.case_payload(kase).merge(breach: "first_response"))
       end
       Case.overdue_resolution.find_each do |kase|
         kase.update!(resolution_breached: true)
+        Webhooks.publish("case.sla_breached", Webhooks.case_payload(kase).merge(breach: "resolution"))
       end
     end
   end

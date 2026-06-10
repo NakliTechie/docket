@@ -46,6 +46,8 @@ class Case < ApplicationRecord
   before_validation :ensure_tracking_id, on: :create
   before_validation :apply_default_sla_policy, on: :create
   before_save :compute_sla_due_dates, if: :sla_inputs_changed?
+  after_create_commit :enqueue_agent_triage
+  after_create_commit :publish_created_webhook
 
   validates :subject, presence: true
   validates :tracking_id, presence: true, uniqueness: true
@@ -83,6 +85,7 @@ class Case < ApplicationRecord
       raise InvalidTransition, "cannot transition case from #{status} to #{new_status}"
     end
 
+    previous_status = status
     @transitioning = true
     self.status = new_status
     case new_status
@@ -97,6 +100,7 @@ class Case < ApplicationRecord
       self.closed_at = nil
     end
     save!
+    publish_status_webhooks(previous_status)
     self
   ensure
     @transitioning = false
@@ -154,5 +158,22 @@ class Case < ApplicationRecord
   def status_changed_through_state_machine
     return unless will_save_change_to_status?
     errors.add(:status, :must_use_state_machine) unless @transitioning
+  end
+
+  # Citizen-originated cases get the AI triage/draft/resolve loop when a
+  # model endpoint is configured; silently nothing otherwise.
+  def enqueue_agent_triage
+    return unless channel_web_portal? || channel_email? || channel_api?
+    CaseAgentJob.perform_later(self) if Llm.enabled?
+  end
+
+  def publish_created_webhook
+    Webhooks.publish("case.created", Webhooks.case_payload(self))
+  end
+
+  def publish_status_webhooks(previous_status)
+    payload = Webhooks.case_payload(self).merge(previous_status: previous_status)
+    Webhooks.publish("case.status_changed", payload)
+    Webhooks.publish("case.resolved", payload) if status_resolved?
   end
 end

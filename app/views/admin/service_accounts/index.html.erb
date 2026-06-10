@@ -1,0 +1,62 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to new_admin_service_account_path, class: "btn btn-primary" do %>
+      <%= icon "plus" %><%= t(".new_account") %>
+    <% end %>
+  </div>
+</div>
+<p class="muted"><%= t(".intro") %></p>
+
+<% if flash[:client_secret] %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t(".secret_title") %></h2>
+    <p class="tracking-id-display mono"><%= flash[:client_secret] %></p>
+    <p class="muted"><%= t(".shown_once") %></p>
+  </div>
+<% end %>
+
+<% if @service_accounts.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.client_id") %></th>
+          <th><%= t(".columns.scopes") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @service_accounts.each do |account| %>
+          <tr>
+            <td><%= account.name %><div class="table-meta"><%= account.description %></div></td>
+            <td class="mono"><%= account.client_id %></td>
+            <td><% account.scopes.each do |scope| %><span class="badge badge-role"><%= scope %></span> <% end %></td>
+            <td>
+              <% if account.active %>
+                <span class="badge badge-sla sla-ok"><%= t(".active_badge") %></span>
+              <% else %>
+                <span class="badge badge-sla sla-breached"><%= t(".inactive_badge") %></span>
+              <% end %>
+            </td>
+            <td class="actions">
+              <%= link_to t("actions.edit"), edit_admin_service_account_path(account), class: "btn btn-sm" %>
+              <%= button_to t(".rotate"), rotate_secret_admin_service_account_path(account), method: :post,
+                    class: "btn btn-sm", form: { class: "inline-form",
+                      data: { turbo_confirm: t(".confirm_rotate") } } %>
+              <%= button_to t("actions.delete"), admin_service_account_path(account), method: :delete,
+                    class: "btn btn-sm btn-danger", form: { class: "inline-form",
+                      data: { turbo_confirm: t(".confirm_delete") } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+        action: link_to(t(".new_account"), new_admin_service_account_path, class: "btn btn-primary") %>
+<% end %>

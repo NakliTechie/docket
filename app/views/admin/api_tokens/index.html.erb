@@ -1,0 +1,66 @@
+<% page_title t(".title") %>
+<div class="page-header"><h1><%= t(".title") %></h1></div>
+
+<% if flash[:api_token_raw] %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t(".new_token_title") %></h2>
+    <p class="tracking-id-display mono"><%= flash[:api_token_raw] %></p>
+    <p class="muted"><%= t(".shown_once") %></p>
+  </div>
+<% end %>
+
+<div class="panel">
+  <h2 class="panel-title"><%= t(".issue") %></h2>
+  <%= form_with model: @api_token, url: admin_api_tokens_path, class: "filter-bar" do |f| %>
+    <div class="form-row">
+      <%= f.label :user_id, t(".user") %>
+      <%= f.collection_select :user_id, User.active.order(:name), :id, :display_label %>
+    </div>
+    <div class="form-row">
+      <%= f.label :name, t(".name") %>
+      <%= f.text_field :name, required: true, placeholder: t(".name_placeholder") %>
+    </div>
+    <%= f.submit t(".create"), class: "btn btn-primary" %>
+  <% end %>
+</div>
+
+<% if @api_tokens.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.user") %></th>
+          <th><%= t(".columns.last_used") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @api_tokens.each do |token| %>
+          <tr>
+            <td><%= token.name %></td>
+            <td><%= token.user.display_label %></td>
+            <td class="table-meta"><%= token.last_used_at ? l(token.last_used_at, format: :short) : t(".never") %></td>
+            <td>
+              <% if token.revoked? %>
+                <span class="badge badge-sla sla-breached"><%= t(".revoked_badge") %></span>
+              <% else %>
+                <span class="badge badge-sla sla-ok"><%= t(".active_badge") %></span>
+              <% end %>
+            </td>
+            <td class="actions">
+              <% unless token.revoked? %>
+                <%= button_to t(".revoke"), admin_api_token_path(token), method: :delete,
+                      class: "btn btn-sm btn-danger", form: { class: "inline-form",
+                        data: { turbo_confirm: t(".confirm_revoke") } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+<% end %>

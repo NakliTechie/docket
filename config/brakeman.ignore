@@ -9,6 +9,16 @@
       "file": "app/controllers/admin/users_controller.rb",
       "line": 75,
       "note": "Role assignment is the purpose of this controller; access is admin-only via UserPolicy (authorize on every action, covered by integration tests)."
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 105,
+      "fingerprint": "ec756311250cbd858f80f748066f9786c7343ac4ad54031e420e95a40efd3d3b",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/api/v1/users_controller.rb",
+      "line": 52,
+      "note": "API parity for user management: every action requires an admin human token (UserPolicy authorize; service accounts hard-blocked), covered by API tests."
     }
   ],
   "brakeman_version": "7.1.1"

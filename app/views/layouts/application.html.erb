@@ -26,10 +26,16 @@
             <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
             <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
           <% end %>
+          <% if policy(ReferenceDoc).index? %>
+            <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
+          <% end %>
           <% if policy(User).index? %>
             <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
             <%= nav_link t("layout.nav.activity"), admin_activity_path, active: controller_name == "activity" %>
             <%= nav_link t("layout.nav.audit"), admin_audit_path, active: controller_name == "audit" %>
+            <%= nav_link t("layout.nav.integrations"), admin_service_accounts_path,
+                  active: %w[service_accounts api_tokens webhook_endpoints].include?(controller_name) %>
+            <%= nav_link t("layout.nav.settings"), admin_settings_path, active: controller_name == "settings" %>
           <% end %>
         </nav>
         <div class="app-header-right">

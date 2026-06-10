@@ -19,5 +19,17 @@
         <%= link_to t(".forgot_password"), new_password_path %>
       </div>
     <% end %>
+
+    <% if Sso.staff_oidc_enabled? || Sso.staff_saml_enabled? %>
+      <hr>
+      <div class="stack-sm">
+        <% if Sso.staff_oidc_enabled? %>
+          <%= button_to t(".sso_oidc"), "/auth/staff_oidc", class: "btn", form: { class: "inline-form" } %>
+        <% end %>
+        <% if Sso.staff_saml_enabled? %>
+          <%= button_to t(".sso_saml"), "/auth/staff_saml", class: "btn", form: { class: "inline-form" } %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </div>
