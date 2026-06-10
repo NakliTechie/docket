@@ -75,7 +75,18 @@ HTTP=$(curl -s -A "$UA" -b "$JAR" -o /tmp/smoke_status.html -w "%{http_code}" -X
 [ "$HTTP" = "200" ] && grep -q "Smoke test grievance" /tmp/smoke_status.html; step "status check verified" $?
 
 # --- 4. staff API: token, reply, transition ----------------------------------
-API_TOKEN=$(bin/rails runner 'admin = User.where(role: :admin).order(:id).first; print ApiToken.create!(user: admin, name: "smoke-#{Time.now.to_i}").raw_token' 2>/dev/null)
+# The token must be minted in the database the TARGET instance reads. Self-boot
+# mode shares this checkout's database; a remote target (SMOKE_BASE_URL) does not —
+# mint inside the compose app container there, or pass SMOKE_API_TOKEN explicitly.
+MINT='admin = User.where(role: :admin).order(:id).first; print ApiToken.create!(user: admin, name: "smoke-#{Time.now.to_i}").raw_token'
+if [ -n "${SMOKE_API_TOKEN:-}" ]; then
+  API_TOKEN="$SMOKE_API_TOKEN"
+elif [ -z "${SMOKE_BASE_URL:-}" ]; then
+  API_TOKEN=$(bin/rails runner "$MINT" 2>/dev/null)
+else
+  API_TOKEN=$(docker compose exec -T app bin/rails runner "$MINT" 2>/dev/null)
+  [ -n "$API_TOKEN" ] || API_TOKEN=$(bin/rails runner "$MINT" 2>/dev/null)
+fi
 [ -n "$API_TOKEN" ]; step "api token issued" $?
 
 HTTP=$(curl -s -o /tmp/smoke_api.json -w "%{http_code}" -X POST "$BASE/api/v1/cases/$TRACKING/messages" \

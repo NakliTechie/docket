@@ -24,10 +24,11 @@
       <hr>
       <div class="stack-sm">
         <% if Sso.staff_oidc_enabled? %>
-          <%= button_to t(".sso_oidc"), "/auth/staff_oidc", class: "btn", form: { class: "inline-form" } %>
+          <%# data-turbo=false: a Turbo fetch cannot follow the 302 to the cross-origin IdP %>
+          <%= button_to t(".sso_oidc"), "/auth/staff_oidc", class: "btn", form: { class: "inline-form", data: { turbo: false } } %>
         <% end %>
         <% if Sso.staff_saml_enabled? %>
-          <%= button_to t(".sso_saml"), "/auth/staff_saml", class: "btn", form: { class: "inline-form" } %>
+          <%= button_to t(".sso_saml"), "/auth/staff_saml", class: "btn", form: { class: "inline-form", data: { turbo: false } } %>
         <% end %>
       </div>
     <% end %>

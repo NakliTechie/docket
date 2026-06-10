@@ -11,8 +11,16 @@
       "lastName": "User",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [ { "type": "password", "value": "staffpass", "temporary": false } ],
-      "groups": [ "docket-admins" ]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "staffpass",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "docket-admins"
+      ]
     },
     {
       "username": "customer.user",
@@ -21,11 +29,25 @@
       "lastName": "User",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [ { "type": "password", "value": "customerpass", "temporary": false } ],
-      "attributes": { "cif": [ "CIF555123" ] }
+      "credentials": [
+        {
+          "type": "password",
+          "value": "customerpass",
+          "temporary": false
+        }
+      ],
+      "attributes": {
+        "cif": [
+          "CIF555123"
+        ]
+      }
     }
   ],
-  "groups": [ { "name": "docket-admins" } ],
+  "groups": [
+    {
+      "name": "docket-admins"
+    }
+  ],
   "clients": [
     {
       "clientId": "docket-staff",
@@ -34,8 +56,15 @@
       "protocol": "openid-connect",
       "publicClient": false,
       "standardFlowEnabled": true,
-      "redirectUris": [ "http://localhost:3001/auth/staff_oidc/callback" ],
-      "defaultClientScopes": [ "openid", "email", "profile", "groups" ]
+      "redirectUris": [
+        "http://localhost:3001/auth/staff_oidc/callback"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "email",
+        "profile",
+        "groups"
+      ]
     },
     {
       "clientId": "docket-customer",
@@ -44,11 +73,92 @@
       "protocol": "openid-connect",
       "publicClient": false,
       "standardFlowEnabled": true,
-      "redirectUris": [ "http://localhost:3001/auth/customer_oidc/callback" ],
-      "defaultClientScopes": [ "openid", "email", "profile", "cif" ]
+      "redirectUris": [
+        "http://localhost:3001/auth/customer_oidc/callback"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "email",
+        "profile",
+        "cif"
+      ]
     }
   ],
   "clientScopes": [
+    {
+      "name": "openid",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      }
+    },
+    {
+      "name": "email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
     {
       "name": "groups",
       "protocol": "openid-connect",
@@ -57,8 +167,12 @@
           "name": "groups",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-group-membership-mapper",
-          "config": { "claim.name": "groups", "full.path": "false",
-                      "id.token.claim": "true", "userinfo.token.claim": "true" }
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
         }
       ]
     },
@@ -70,8 +184,12 @@
           "name": "cif",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "config": { "user.attribute": "cif", "claim.name": "cif",
-                      "id.token.claim": "true", "userinfo.token.claim": "true" }
+          "config": {
+            "user.attribute": "cif",
+            "claim.name": "cif",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
         }
       ]
     }

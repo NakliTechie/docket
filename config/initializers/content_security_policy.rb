@@ -10,7 +10,11 @@ Rails.application.configure do
     policy.img_src     :self, :data
     policy.font_src    :self
     policy.connect_src :self
-    policy.form_action :self
+    # The IdP origins must be allowed here: browsers enforce form-action
+    # against the redirect target of the POST /auth/* form submission, so
+    # 'self' alone blocks every SSO login. Evaluated per request (lambda)
+    # so admin settings changes apply without a restart.
+    policy.form_action :self, -> { Sso.idp_form_action_origins }
     policy.frame_ancestors :none
     policy.base_uri    :self
     policy.object_src  :none

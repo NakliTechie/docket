@@ -19,6 +19,7 @@ module Sso
 
   def staff_oidc_options
     issuer = setting("sso_staff_oidc_issuer", "DOCKET_STAFF_OIDC_ISSUER")
+    allow_http_discovery_for(issuer)
     {
       name: :staff_oidc,
       issuer: issuer,
@@ -73,9 +74,11 @@ module Sso
   end
 
   def customer_oidc_options
+    issuer = setting("sso_customer_oidc_issuer", "DOCKET_CUSTOMER_OIDC_ISSUER")
+    allow_http_discovery_for(issuer)
     {
       name: :customer_oidc,
-      issuer: setting("sso_customer_oidc_issuer", "DOCKET_CUSTOMER_OIDC_ISSUER"),
+      issuer: issuer,
       discovery: true,
       scope: [ :openid, :email, :profile ],
       response_type: :code,
@@ -95,5 +98,35 @@ module Sso
 
   def base_url
     setting("app_base_url", "DOCKET_BASE_URL") || "http://localhost:3000"
+  end
+
+  # swd/webfinger build OIDC discovery URLs with URI::HTTPS regardless of
+  # the issuer's scheme, so an explicitly http:// issuer (local IdP, the CI
+  # Keycloak) can never be discovered. Process-global, but only ever relaxed
+  # for an issuer an admin deliberately configured as plain http.
+  def allow_http_discovery_for(issuer)
+    return unless issuer.to_s.start_with?("http://")
+    SWD.url_builder = URI::HTTP
+    WebFinger.url_builder = URI::HTTP
+  end
+
+  # Browsers enforce CSP form-action against the redirect target of a form
+  # submission, so `form-action 'self'` alone silently kills the POST
+  # /auth/* → IdP redirect of every SSO login. The configured IdP origins
+  # must therefore be allowed alongside 'self'.
+  def idp_form_action_origins
+    urls = []
+    urls << setting("sso_staff_oidc_issuer", "DOCKET_STAFF_OIDC_ISSUER") if staff_oidc_enabled?
+    urls << setting("sso_customer_oidc_issuer", "DOCKET_CUSTOMER_OIDC_ISSUER") if customer_oidc_enabled?
+    urls << setting("sso_staff_saml_idp_sso_url", "DOCKET_STAFF_SAML_IDP_SSO_URL") if staff_saml_enabled?
+    urls.filter_map do |url|
+      uri = URI.parse(url.to_s)
+      next unless uri.is_a?(URI::HTTP) # covers https too
+      origin = "#{uri.scheme}://#{uri.host}"
+      origin += ":#{uri.port}" unless uri.port == uri.default_port
+      origin
+    rescue URI::InvalidURIError
+      nil
+    end.uniq
   end
 end

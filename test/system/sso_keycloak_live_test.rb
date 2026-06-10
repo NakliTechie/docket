@@ -34,7 +34,7 @@ class SsoKeycloakLiveTest < ApplicationSystemTestCase
     click_button I18n.t("sessions.new.sso_oidc")
 
     # Keycloak login form
-    fill_in "username", with: "staff.user"
+    fill_in "username", with: "staff.user", wait: 10
     fill_in "password", with: "staffpass"
     click_button "Sign In"
 
@@ -47,7 +47,7 @@ class SsoKeycloakLiveTest < ApplicationSystemTestCase
     visit portal_root_path
     click_button I18n.t("portal.nav.customer_sign_in")
 
-    fill_in "username", with: "customer.user"
+    fill_in "username", with: "customer.user", wait: 10
     fill_in "password", with: "customerpass"
     click_button "Sign In"
 

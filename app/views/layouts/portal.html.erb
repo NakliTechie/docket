@@ -30,8 +30,9 @@
           <%= button_to t("portal.nav.sign_out"), portal_customer_session_path, method: :delete,
                 class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
         <% elsif Sso.customer_oidc_enabled? %>
+          <%# data-turbo=false: a Turbo fetch cannot follow the 302 to the cross-origin IdP %>
           <%= button_to t("portal.nav.customer_sign_in"), "/auth/customer_oidc",
-                class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
+                class: "btn btn-ghost btn-sm", form: { class: "inline-form", data: { turbo: false } } %>
         <% end %>
         <%= button_to t("layout.locale_switch_label"), locale_path(locale: I18n.locale == :en ? "hi" : "en"),
               class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
