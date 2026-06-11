@@ -4,6 +4,8 @@ class OauthAccessToken < ApplicationRecord
 
   belongs_to :service_account
 
+  scope :expired, -> { where(expires_at: ...Time.current) }
+
   validates :token_digest, presence: true, uniqueness: true
 
   attr_reader :raw_token

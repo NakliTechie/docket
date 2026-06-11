@@ -16,6 +16,9 @@ module Api
         token = account.issue_access_token!
         AuditEntry.append!(action: "service_account.token_issued", auditable: account, actor: account,
                            metadata: { ip: request.remote_ip })
+        # RFC 6749 §5.1 — token responses must not be cached.
+        response.set_header("Cache-Control", "no-store")
+        response.set_header("Pragma", "no-cache")
         render json: {
           access_token: token.raw_token,
           token_type: "Bearer",

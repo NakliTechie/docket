@@ -50,7 +50,9 @@ module Api
       end
 
       def bearer_token
-        request.authorization.to_s[/\ABearer (.+)\z/, 1]
+        # Scheme is case-insensitive (RFC 7235); tolerate extra whitespace
+        # and capture just the token.
+        request.authorization.to_s[/\ABearer\s+(\S+)/i, 1]
       end
 
       def current_user

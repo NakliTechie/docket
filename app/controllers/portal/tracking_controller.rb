@@ -51,9 +51,15 @@ module Portal
       phone = params[:contact_phone].to_s.gsub(/[^\d+]/, "").presence
       contact = kase.contact
 
-      matches = (email && contact.email.present? && contact.email == email) ||
-                (phone && contact.phone.present? && contact.phone == phone)
+      # Constant-time compare so the challenge can't be turned into a timing
+      # oracle to recover a citizen's email/phone character by character.
+      matches = (email && contact.email.present? && secure_match?(contact.email, email)) ||
+                (phone && contact.phone.present? && secure_match?(contact.phone, phone))
       matches ? kase : nil
+    end
+
+    def secure_match?(a, b)
+      ActiveSupport::SecurityUtils.secure_compare(a.to_s, b.to_s)
     end
 
     # Citizens see public replies and agent turns — never internal notes.

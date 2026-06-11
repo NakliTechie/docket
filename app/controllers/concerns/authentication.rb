@@ -42,7 +42,9 @@ module Authentication
     end
 
     def request_authentication
-      session[:return_to_after_authenticating] = request.url
+      # Only bounce back to a GET/HEAD url — storing a POST/PATCH/DELETE one
+      # would redirect (always GET) to a route that doesn't answer GET → 404.
+      session[:return_to_after_authenticating] = request.url if request.get? || request.head?
       redirect_to new_session_path
     end
 
@@ -51,9 +53,15 @@ module Authentication
     end
 
     def start_new_session_for(user)
-      user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
-        Current.session = session
-        cookies.signed.permanent[:session_id] = { value: session.id, httponly: true, same_site: :lax }
+      # Rotate the Rails session on privilege change to defend against
+      # session fixation, preserving the few keys that must survive login.
+      preserved = session.to_hash.slice("return_to_after_authenticating", "locale")
+      reset_session
+      preserved.each { |k, v| session[k] = v }
+
+      user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session_record|
+        Current.session = session_record
+        cookies.signed.permanent[:session_id] = { value: session_record.id, httponly: true, same_site: :lax }
       end
     end
 
