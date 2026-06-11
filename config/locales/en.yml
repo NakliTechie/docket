@@ -1105,6 +1105,12 @@ en:
           attributes:
             status:
               must_use_state_machine: "transitions must go through the case state machine"
+            assignee:
+              inactive: "must be an active user"
+        reference_doc:
+          attributes:
+            file:
+              unsupported_type: "must be a PDF, text, markdown, or CSV file"
         contact:
           attributes:
             base:

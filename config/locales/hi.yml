@@ -1105,6 +1105,12 @@ hi:
           attributes:
             status:
               must_use_state_machine: "परिवर्तन केवल मामला स्थिति-तंत्र के माध्यम से ही हो सकते हैं"
+            assignee:
+              inactive: "सक्रिय उपयोगकर्ता होना चाहिए"
+        reference_doc:
+          attributes:
+            file:
+              unsupported_type: "PDF, टेक्स्ट, मार्कडाउन या CSV फ़ाइल होनी चाहिए"
         contact:
           attributes:
             base:

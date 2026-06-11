@@ -45,7 +45,7 @@ class CasesController < ApplicationController
 
   def update
     authorize @case
-    if @case.update(case_params)
+    if @case.update(case_update_params)
       redirect_to @case, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity
@@ -91,6 +91,14 @@ class CasesController < ApplicationController
   def case_params
     params.require(:case).permit(:subject, :description, :priority, :category_id,
                                  :queue_id, :assignee_id, :contact_id, :sla_policy_id)
+  end
+
+  # contact_id is set when the case is created; repointing it via the edit
+  # form would silently move a case's whole thread/history to a different
+  # contact, so it's not mass-assignable on update.
+  def case_update_params
+    params.require(:case).permit(:subject, :description, :priority, :category_id,
+                                 :queue_id, :assignee_id, :sla_policy_id)
   end
 
   def filter_params

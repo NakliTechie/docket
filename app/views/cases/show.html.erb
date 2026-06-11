@@ -196,7 +196,14 @@
       <h2 class="panel-title"><%= t(".contact_360") %></h2>
       <dl class="meta-list">
         <dt><%= t(".name") %></dt>
-        <dd><%= link_to @case.contact.name, contact_path(@case.contact) %></dd>
+        <dd>
+          <%# A soft-deleted contact 404s on its show page — render the name plainly. %>
+          <% if @case.contact.deleted? %>
+            <%= @case.contact.name %>
+          <% else %>
+            <%= link_to @case.contact.name, contact_path(@case.contact) %>
+          <% end %>
+        </dd>
         <% if @case.contact.email.present? %>
           <dt><%= t(".email") %></dt>
           <dd><%= @case.contact.email %></dd>

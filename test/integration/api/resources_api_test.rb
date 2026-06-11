@@ -6,6 +6,17 @@ module Api
       @admin_token = api_token_for(users(:admin))
     end
 
+    test "external_id cannot be rewritten through the contacts api (L)" do
+      contact = contacts(:ravi)
+      patch "/api/v1/contacts/#{contact.id}",
+            params: { contact: { name: "Renamed", external_id: "HIJACK" } },
+            headers: auth_header(@admin_token), as: :json
+      assert_response :success
+      contact.reload
+      assert_equal "Renamed", contact.name
+      assert_equal "CIF447192", contact.external_id
+    end
+
     test "contacts crud with ext addressing" do
       post "/api/v1/contacts", params: { contact: { name: "Via API", email: "viaapi@example.com", external_id: "CIFAPI1" } },
            headers: auth_header(@admin_token), as: :json

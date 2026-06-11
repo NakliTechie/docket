@@ -91,6 +91,43 @@ class ConsoleFlowTest < ActionDispatch::IntegrationTest
     assert_equal "public_reply", Message.order(:id).last.kind
   end
 
+  test "contact_id cannot be repointed through case update (L)" do
+    sign_in_as users(:admin)
+    kase = cases(:pension_case)
+    patch case_path(kase), params: { case: { subject: "Updated", contact_id: contacts(:ravi).id } }
+    kase.reload
+    assert_equal "Updated", kase.subject
+    assert_equal contacts(:asha), kase.contact # unchanged — not repointed to ravi
+  end
+
+  test "a case cannot be assigned to an inactive user via update (L)" do
+    sign_in_as users(:admin)
+    kase = cases(:pension_case)
+    patch case_path(kase), params: { case: { assignee_id: users(:inactive).id } }
+    assert_response :unprocessable_entity
+    assert_not_equal users(:inactive), kase.reload.assignee
+  end
+
+  test "external_id cannot be rewritten through contact update (L)" do
+    sign_in_as users(:admin)
+    contact = contacts(:ravi)
+    patch contact_path(contact), params: { contact: { name: "Renamed", external_id: "HIJACK999" } }
+    contact.reload
+    assert_equal "Renamed", contact.name
+    assert_equal "CIF447192", contact.external_id # SSO-linkage key unchanged
+  end
+
+  test "a soft-deleted contact shows as plain text, not a 404-ing link (L)" do
+    sign_in_as users(:admin)
+    kase = cases(:pension_case)
+    # dependent: :restrict_with_error blocks the normal destroy while the case
+    # is live, so force the deleted_at the guard defends against directly.
+    kase.contact.update_columns(deleted_at: Time.current)
+    get case_path(kase)
+    assert_response :success
+    assert_select "a[href=?]", contact_path(kase.contact), count: 0
+  end
+
   test "case list filters by status and queue" do
     sign_in_as users(:admin)
     get cases_path, params: { status: "in_progress", queue_id: queues(:sanitation).id }
