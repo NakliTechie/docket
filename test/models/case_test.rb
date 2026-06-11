@@ -87,4 +87,17 @@ class CaseTest < ActiveSupport::TestCase
     assert_includes Case.search("dkt-test-2345"), cases(:pension_case)
     refute_includes Case.search("zzzznothing"), cases(:pension_case)
   end
+
+  test "reopening resets the resolution clock so a stale due date isn't an instant breach (M17)" do
+    kase = Case.create!(subject: "Reopen me", contact: contacts(:asha), queue: queues(:pensions),
+                        sla_policy: sla_policies(:standard), priority: :normal, channel: :web_portal)
+    kase.transition_to!(:in_progress)
+    kase.transition_to!(:resolved)
+    # The original resolution window is long gone.
+    kase.update_columns(resolution_due_at: 3.days.ago)
+
+    kase.transition_to!(:reopened)
+    assert kase.resolution_due_at > Time.current, "reopen should set a fresh future resolution due date"
+    refute_includes Case.overdue_resolution, kase
+  end
 end

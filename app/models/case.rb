@@ -54,13 +54,22 @@ class Case < ApplicationRecord
   validate :status_changed_through_state_machine, on: :update
 
   scope :open_cases, -> { where(status: OPEN_STATUSES) }
+  # A breach is also real when the case left the open set (was resolved /
+  # closed) after missing its deadline — otherwise a case resolved inside
+  # the 5-minute sweep window after going overdue is never flagged (M18).
   scope :overdue_first_response, -> {
-    open_cases.where(first_responded_at: nil, first_response_breached: false)
-              .where(first_response_due_at: ...Time.current)
+    base = where(first_response_breached: false).where.not(first_response_due_at: nil)
+    still_open = base.where(first_responded_at: nil, status: OPEN_STATUSES)
+                     .where("first_response_due_at < ?", Time.current)
+    responded_late = base.where.not(first_responded_at: nil)
+                         .where("first_responded_at > first_response_due_at")
+    still_open.or(responded_late)
   }
   scope :overdue_resolution, -> {
-    open_cases.where(resolution_breached: false)
-              .where(resolution_due_at: ...Time.current)
+    base = where(resolution_breached: false).where.not(resolution_due_at: nil)
+    still_open = base.where(status: OPEN_STATUSES).where("resolution_due_at < ?", Time.current)
+    resolved_late = base.where.not(resolved_at: nil).where("resolved_at > resolution_due_at")
+    still_open.or(resolved_late)
   }
   scope :search, ->(q) {
     next all if q.blank?
@@ -98,6 +107,7 @@ class Case < ApplicationRecord
       self.reopen_count += 1
       self.resolved_at = nil
       self.closed_at = nil
+      reset_resolution_sla_on_reopen
     end
     save!
     publish_status_webhooks(previous_status)
@@ -135,6 +145,15 @@ class Case < ApplicationRecord
 
   def apply_default_sla_policy
     self.sla_policy ||= SlaPolicy.default
+  end
+
+  # Reopening starts a fresh resolution clock from the reopen moment, so
+  # the sweep doesn't instantly mark a (possibly long-resolved) case
+  # breached against its stale original due date (M17). The sticky
+  # resolution_breached flag is left as-is — it is history.
+  def reset_resolution_sla_on_reopen
+    target = sla_policy&.target_for(priority)
+    self.resolution_due_at = target ? (reopened_at + target.resolution_minutes.minutes) : nil
   end
 
   def sla_inputs_changed?
