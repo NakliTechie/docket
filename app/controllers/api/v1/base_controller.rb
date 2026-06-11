@@ -116,7 +116,14 @@ module Api
         return [] if container.blank?
 
         uploads = Array(container[:files]).select { |f| f.respond_to?(:original_filename) }
-        encoded = Array(container[:attachments]).map do |attachment|
+        encoded_inputs = Array(container[:attachments])
+        # Reject by count BEFORE decoding so a flood of base64 blobs can't
+        # be decoded into memory — the model's MAX_FILES check runs too
+        # late (after every blob is already decoded).
+        if uploads.size + encoded_inputs.size > AttachableValidation::MAX_FILES
+          raise AttachmentError, "too many attachments (max #{AttachableValidation::MAX_FILES})"
+        end
+        encoded = encoded_inputs.map do |attachment|
           attachment = attachment.permit(:filename, :content_type, :data) if attachment.respond_to?(:permit)
           data = attachment[:data].to_s
           raise AttachmentError, "attachment too large" if data.bytesize > MAX_ENCODED_ATTACHMENT_BYTES

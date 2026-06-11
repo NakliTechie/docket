@@ -24,6 +24,10 @@ class ServiceAccount < ApplicationRecord
   attr_reader :raw_client_secret
 
   before_validation :generate_credentials, on: :create
+  # Reducing (or otherwise changing) scopes must not leave already-issued
+  # 1h access tokens carrying the old, broader scopes — revoke them so the
+  # integration re-issues at the new scope set.
+  after_update :revoke_tokens_on_scope_change
 
   scope :active, -> { where(active: true) }
 
@@ -70,6 +74,10 @@ class ServiceAccount < ApplicationRecord
   def scopes_are_known
     unknown = Array(scopes) - SCOPES
     errors.add(:scopes, :invalid) if unknown.any? || Array(scopes).empty?
+  end
+
+  def revoke_tokens_on_scope_change
+    oauth_access_tokens.delete_all if saved_change_to_scopes?
   end
 
   def audit_redacted_attributes
