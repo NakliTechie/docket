@@ -15,6 +15,11 @@ Rack::Attack.throttle("portal/general", limit: 300, period: 5.minutes) do |reque
   request.ip if request.path.start_with?("/portal")
 end
 
+# Public lead-capture form (v1.2 CRM).
+Rack::Attack.throttle("inquiry/submissions", limit: 10, period: 1.hour) do |request|
+  request.ip if request.post? && request.path == "/inquiry"
+end
+
 Rack::Attack.throttled_responder = lambda do |_request|
   [ 429, { "Content-Type" => "text/plain" }, [ "Rate limit exceeded. Please retry later.\n" ] ]
 end

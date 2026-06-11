@@ -471,6 +471,26 @@ en:
     cancel:
       cancelled: "Enrollment cancelled."
 
+  inquiries:
+    brand: "Get in touch"
+    footer: "We'll never share your details. Powered by Docket."
+    fields:
+      name: "Your name"
+      company_name: "Company"
+      email: "Email"
+      phone: "Phone"
+      message: "How can we help?"
+      reach_hint: "Provide an email or phone so we can reach you."
+      leave_blank: "Leave this field blank"
+    new:
+      title: "Request information"
+      intro: "Tell us a little about yourself and our team will be in touch."
+      submit: "Send"
+    confirmation:
+      title: "Thanks — we've got it"
+      body: "Your details have reached our team. We'll be in touch soon."
+      again: "Send another"
+
   organisations:
     enum:
       kind:
@@ -1108,3 +1128,7 @@ en:
           attributes:
             base:
               unreachable: "Provide at least one of email or phone so we can verify you"
+        lead_inquiry:
+          attributes:
+            base:
+              unreachable: "Provide at least one of email or phone"

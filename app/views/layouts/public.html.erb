@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <title><%= page_title %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="referrer" content="same-origin">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main"><%= t("layout.skip_to_content") %></a>
+
+    <header class="app-header">
+      <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
+        <span class="brand"><%= t("inquiries.brand") %></span>
+      </nav>
+      <div class="app-header-right">
+        <%= button_to t("layout.locale_switch_label"), locale_path(locale: I18n.locale == :en ? "hi" : "en"),
+              class: "btn btn-ghost btn-sm", form: { class: "inline-form" } %>
+      </div>
+    </header>
+
+    <main id="main" class="app-main portal-main">
+      <%= render "shared/flash" %>
+      <%= yield %>
+    </main>
+
+    <footer class="portal-footer">
+      <p class="muted"><%= t("inquiries.footer") %></p>
+    </footer>
+  </body>
+</html>
