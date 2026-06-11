@@ -169,5 +169,16 @@ module Api
            headers: auth_header(@admin_token), as: :json
       assert_equal "public_reply", response.parsed_body["data"]["kind"]
     end
+
+    test "an on-behalf-of contact with an invalid email is a 422, not a 500 (L)" do
+      assert_no_difference "Contact.count" do
+        post "/api/v1/cases", params: {
+          on_behalf_of: "CIF-NEW-BADMAIL",
+          contact: { name: "Bad Mail", email: "not-an-email" },
+          case: { subject: "OBO bad email" }
+        }, headers: auth_header(@admin_token), as: :json
+      end
+      assert_response :unprocessable_entity
+    end
   end
 end

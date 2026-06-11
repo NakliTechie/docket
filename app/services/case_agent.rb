@@ -49,7 +49,7 @@ class CaseAgent
       Respond with JSON: {"queue_slug": ..., "category": ..., "priority": ..., "confidence": 0.0-1.0, "rationale": ...}
     PROMPT
 
-    result = client.chat([ { role: "user", content: prompt } ], json: true)
+    result = hash_result(client.chat([ { role: "user", content: prompt } ], json: true))
     apply_routing(result) if result["confidence"].to_f >= threshold("ai_route_confidence", ROUTE_CONFIDENCE_DEFAULT)
     log_turn("route", prompt, result)
     result
@@ -86,7 +86,7 @@ class CaseAgent
       Respond with JSON: {"reply": ..., "confidence": 0.0-1.0, "fully_resolves": true/false, "rationale": ...}
     PROMPT
 
-    result = client.chat([ { role: "user", content: prompt } ], json: true)
+    result = hash_result(client.chat([ { role: "user", content: prompt } ], json: true))
     log_turn("draft", prompt, result, body: result["reply"])
     result
   end
@@ -145,5 +145,12 @@ class CaseAgent
 
   def threshold(key, default)
     Setting.get(key, default).to_f
+  end
+
+  # A model can return valid JSON that isn't an object (an array, a bare
+  # string/number). Coerce to {} so the result["confidence"]/["reply"]
+  # accessors degrade to nil instead of raising and killing the job.
+  def hash_result(result)
+    result.is_a?(Hash) ? result : {}
   end
 end

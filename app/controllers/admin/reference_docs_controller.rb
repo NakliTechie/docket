@@ -66,6 +66,10 @@ module Admin
       @reference_doc.errors.add(:file, e.message)
     rescue PDF::Reader::MalformedPDFError
       @reference_doc.errors.add(:file, t("admin.reference_docs.errors.bad_pdf"))
+    rescue StandardError
+      # Encrypted PDFs, unsupported features, decode errors etc. surface as
+      # a friendly validation error rather than 500ing the form.
+      @reference_doc.errors.add(:file, t("admin.reference_docs.errors.extraction_failed"))
     end
   end
 end

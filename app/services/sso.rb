@@ -43,7 +43,10 @@ module Sso
   def staff_role_mapping
     raw = setting("sso_staff_role_mapping", "DOCKET_STAFF_ROLE_MAPPING")
     return {} if raw.blank?
-    raw.is_a?(Hash) ? raw : JSON.parse(raw.to_s)
+    parsed = raw.is_a?(Hash) ? raw : JSON.parse(raw.to_s)
+    # Valid-but-non-object JSON (e.g. "[1,2]" or "42") would later blow up
+    # at mapping[value] — coerce anything that isn't a Hash to {}.
+    parsed.is_a?(Hash) ? parsed : {}
   rescue JSON::ParserError
     {}
   end

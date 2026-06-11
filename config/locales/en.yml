@@ -1030,6 +1030,7 @@ en:
         body_hint: "This is what the AI retrieves and quotes. Edit freely after upload."
       errors:
         bad_pdf: "could not be read as a PDF"
+        extraction_failed: "could not be read — the text could not be extracted"
       index:
         title: "Knowledge / reference docs"
         new_doc: "New document"
@@ -1135,6 +1136,8 @@ en:
           attributes:
             base:
               unreachable: "Provide at least one of email or phone so we can verify you"
+            phone:
+              implausible: "doesn't look like a valid phone number"
         lead_inquiry:
           attributes:
             base:

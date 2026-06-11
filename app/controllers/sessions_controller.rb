@@ -7,7 +7,14 @@ class SessionsController < ApplicationController
   end
 
   def create
-    user = User.authenticate_by(params.permit(:email_address, :password))
+    credentials = params.permit(:email_address, :password)
+    # authenticate_by raises ArgumentError when either key is missing/blank
+    # (e.g. a hand-crafted POST) — treat that as a failed login, not a 500.
+    if credentials[:email_address].blank? || credentials[:password].blank?
+      return redirect_to new_session_path, alert: t("sessions.invalid_credentials")
+    end
+
+    user = User.authenticate_by(credentials)
     if user&.active?
       start_new_session_for user
       AuditEntry.append!(action: "user.login", auditable: user, actor: user,

@@ -16,6 +16,10 @@ module Api
       rescue_from ActiveRecord::RecordNotFound do
         render_error("not_found", status: :not_found)
       end
+      rescue_from ActiveRecord::RecordInvalid do |e|
+        # e.g. an on-behalf-of Contact.create! with a bad email — 422, not 500.
+        render_validation_errors(e.record)
+      end
       rescue_from Pundit::NotAuthorizedError, ScopeDenied do
         render_error("forbidden", status: :forbidden)
       end
