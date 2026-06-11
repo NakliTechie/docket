@@ -18,6 +18,17 @@ require "rails/test_unit/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+# Fall back to the per-deployment SECRET_KEY_BASE persisted by the Docker
+# entrypoint when none is provided via ENV. The entrypoint exports it for
+# the server process, but `docker compose exec` sessions (migrations,
+# console, bin/smoke's token mint) bypass the entrypoint — without this
+# they'd fail to boot in production. We only ever read a file the
+# operator's own deployment generated; we never ship a key.
+if ENV["SECRET_KEY_BASE"].to_s.strip.empty?
+  secret_path = ENV.fetch("SECRET_KEY_BASE_PATH", File.expand_path("../storage/secret_key_base", __dir__))
+  ENV["SECRET_KEY_BASE"] = File.read(secret_path).strip if File.exist?(secret_path)
+end
+
 module Docket
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.

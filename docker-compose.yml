@@ -1,13 +1,17 @@
 # One-command sovereign deployment: app + Postgres on your own
-# hardware. Quickstart:
+# hardware. Defaults are production-safe: no demo accounts, SSL enforced,
+# and a unique SECRET_KEY_BASE generated on first boot.
 #
-#   docker compose up --build
+#   # Production (put a TLS-terminating proxy in front):
+#   POSTGRES_PASSWORD=$(openssl rand -hex 16) docker compose up --build -d
 #
-# then open http://localhost:3000 (staff console) and
-# http://localhost:3000/portal (citizen portal).
-# Demo logins are printed in the app logs on first boot
-# (arjun@docket.local / docket-demo). Set DOCKET_SEED_DEMO=false for a
-# clean production instance.
+#   # Try the demo on localhost (seeds fictional data, serves plain HTTP):
+#   DOCKET_SEED_DEMO=true DOCKET_FORCE_SSL=false docker compose up --build
+#
+# then open http://localhost:3000 (staff console) and /portal. In demo
+# mode the demo logins (arjun@docket.local / docket-demo) print on first
+# boot. The break-glass admin (admin@docket.local) gets a random password
+# printed once unless you set DOCKET_ADMIN_PASSWORD.
 services:
   db:
     image: postgres:16
@@ -35,10 +39,13 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://docket:${POSTGRES_PASSWORD:-docket}@db/docket_production
-      # Generate your own for real deployments: bin/rails secret
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-demo-secret-key-base-change-me-for-any-real-deployment-0000}
-      DOCKET_FORCE_SSL: "${DOCKET_FORCE_SSL:-false}"
-      DOCKET_SEED_DEMO: "${DOCKET_SEED_DEMO:-true}"
+      # Left unset, the entrypoint generates a unique key and persists it
+      # to the storage volume. Override to manage it yourself: bin/rails secret
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-}
+      # Production-safe defaults: SSL enforced, no demo accounts. The
+      # localhost demo overrides both (see the header comment).
+      DOCKET_FORCE_SSL: "${DOCKET_FORCE_SSL:-true}"
+      DOCKET_SEED_DEMO: "${DOCKET_SEED_DEMO:-false}"
       DOCKET_HOST: ${DOCKET_HOST:-localhost}
       DOCKET_PORT: ${DOCKET_PORT:-3000}
       # Outbound mail stays off unless you configure your gateway:

@@ -42,6 +42,16 @@
 # Ignore development files
 /.devcontainer
 
+# Ignore tests, planning docs, and local working notes — none are needed
+# in the runtime image, and plan/ is local-only scratch.
+/test
+/plan
+/docs
+/.rubocop.yml
+/DECISIONS.md
+/FORWARD-PASS.md
+/KNOWN-GAPS.md
+
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
