@@ -10,9 +10,14 @@ module Llm
       @model = model
     end
 
+    # Default read timeout for background work (the triage/draft job). The
+    # interactive assist path passes a shorter one so it can't pin a Puma
+    # worker for the full window (M21).
+    DEFAULT_READ_TIMEOUT = 120
+
     # messages: [{ role:, content: }]. Returns assistant content string.
     # json: true asks for a JSON object response and parses it.
-    def chat(messages, json: false, temperature: 0.2, max_tokens: 1024)
+    def chat(messages, json: false, temperature: 0.2, max_tokens: 1024, read_timeout: DEFAULT_READ_TIMEOUT)
       body = {
         model: model,
         messages: messages,
@@ -21,7 +26,7 @@ module Llm
       }
       body[:response_format] = { type: "json_object" } if json
 
-      response = post_json("#{endpoint}/chat/completions", body)
+      response = post_json("#{endpoint}/chat/completions", body, read_timeout: read_timeout)
       content = response.dig("choices", 0, "message", "content")
       raise Error, "empty completion" if content.blank?
       json ? parse_json(content) : content
@@ -29,12 +34,12 @@ module Llm
 
     private
 
-    def post_json(url, payload)
+    def post_json(url, payload, read_timeout: DEFAULT_READ_TIMEOUT)
       uri = URI.parse(url)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == "https"
       http.open_timeout = 10
-      http.read_timeout = 120
+      http.read_timeout = read_timeout
 
       request = Net::HTTP::Post.new(uri.request_uri, headers)
       request.body = JSON.generate(payload)
