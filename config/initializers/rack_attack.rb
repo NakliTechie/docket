@@ -30,6 +30,14 @@ Rack::Attack.throttle("inquiry/submissions", limit: 10, period: 1.hour) do |requ
   request.ip if request.post? && request.path == "/inquiry"
 end
 
+# General API ceiling by IP — a backstop against scraping/abuse. Generous
+# for real integrations (a busy service account stays well under), but caps
+# a runaway or hostile client. The oauth/token endpoint keeps its own
+# tighter bcrypt-protecting throttle above.
+Rack::Attack.throttle("api/general", limit: 300, period: 1.minute) do |request|
+  request.ip if request.path.start_with?("/api/") && request.path != "/api/v1/oauth/token"
+end
+
 Rack::Attack.throttled_responder = lambda do |_request|
   [ 429, { "Content-Type" => "text/plain" }, [ "Rate limit exceeded. Please retry later.\n" ] ]
 end

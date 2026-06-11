@@ -35,6 +35,22 @@ module Api
       assert_response :unauthorized
     end
 
+    test "the bearer scheme is matched case-insensitively (L)" do
+      token = ApiToken.create!(user: users(:admin), name: "t").raw_token
+      get "/api/v1/cases", headers: { "Authorization" => "bearer #{token}" }
+      assert_response :success
+    end
+
+    test "token responses are marked no-store (L, RFC 6749)" do
+      account = ServiceAccount.create!(name: "No Store", scopes: %w[cases:read])
+      post "/api/v1/oauth/token", params: {
+        grant_type: "client_credentials",
+        client_id: account.client_id, client_secret: account.raw_client_secret
+      }
+      assert_response :success
+      assert_equal "no-store", response.headers["Cache-Control"]
+    end
+
     test "client credentials grant issues scoped bearer" do
       account = ServiceAccount.create!(name: "Grant Test", scopes: %w[cases:read])
       post "/api/v1/oauth/token", params: {

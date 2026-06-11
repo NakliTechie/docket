@@ -15,6 +15,10 @@ module Portal
       end
 
       contact = Contact.find_by(external_id: external_id) || provision_contact(auth, external_id)
+      # Rotate the session on sign-in (fixation defence), keeping the locale.
+      locale = session[:locale]
+      reset_session
+      session[:locale] = locale if locale
       session[:portal_contact_id] = contact.id
       AuditEntry.append!(action: "contact.login_sso", auditable: contact, actor: contact,
                          metadata: { ip: request.remote_ip })
