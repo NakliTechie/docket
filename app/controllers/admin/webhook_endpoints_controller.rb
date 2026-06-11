@@ -54,7 +54,11 @@ module Admin
     end
 
     def endpoint_params
-      params.require(:webhook_endpoint).permit(:name, :url, :active, events: [])
+      permitted = params.require(:webhook_endpoint).permit(:name, :url, :active, events: [])
+      # Drop the empty-string companion so an all-unchecked submission
+      # becomes [] and surfaces the "at least one event" validation error.
+      permitted[:events] = Array(permitted[:events]).reject(&:blank?) if permitted.key?(:events)
+      permitted
     end
   end
 end

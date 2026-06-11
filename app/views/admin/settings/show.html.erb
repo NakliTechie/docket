@@ -27,12 +27,17 @@
       <p class="form-hint"><%= t(".fields.llm_api_key_hint") %></p>
     </div>
     <div class="checkbox-row form-row">
+      <%# hidden "0" companion: check_box_tag (unlike f.check_box) emits no %>
+      <%# fallback, so an unchecked box would submit nothing and the update %>
+      <%# would skip the key — leaving the setting stuck on. %>
+      <%= hidden_field_tag :llm_byok_enabled, "0" %>
       <%= check_box_tag :llm_byok_enabled, "1", Setting.get("llm_byok_enabled") == true %>
       <%= label_tag :llm_byok_enabled, t(".fields.llm_byok_enabled") %>
     </div>
     <p class="flash flash-alert"><%= t(".byok_warning") %></p>
 
     <div class="checkbox-row form-row">
+      <%= hidden_field_tag :ai_draft_enabled, "0" %>
       <%= check_box_tag :ai_draft_enabled, "1", Setting.get("ai_draft_enabled", true) != false %>
       <%= label_tag :ai_draft_enabled, t(".fields.ai_draft_enabled") %>
     </div>

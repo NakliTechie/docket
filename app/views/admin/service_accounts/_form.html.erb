@@ -14,6 +14,10 @@
   <fieldset>
     <legend><%= t("admin.service_accounts.fields.scopes") %></legend>
     <p class="form-hint"><%= t("admin.service_accounts.fields.scopes_hint") %></p>
+    <%# Empty-array companion: without it, unchecking every box submits no %>
+    <%# scopes[] param at all, so the update silently keeps the old scopes %>
+    <%# instead of surfacing the "at least one scope" validation error. %>
+    <%= hidden_field_tag "service_account[scopes][]", "" %>
     <% ServiceAccount::SCOPES.each do |scope| %>
       <div class="checkbox-row">
         <%= check_box_tag "service_account[scopes][]", scope,
