@@ -107,12 +107,13 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # DNS-rebinding / Host-header protection is OPT-IN: set DOCKET_ALLOWED_HOSTS
+  # (comma-separated hostnames) to restrict which Host headers are accepted.
+  # Left unset, Rails allows all hosts (its default), so existing
+  # proxy/localhost/IP deploys are unaffected. The configured app host is
+  # always allowed; /up stays reachable for health checks regardless.
+  allowed_hosts = ENV["DOCKET_ALLOWED_HOSTS"].to_s.split(",").map(&:strip).reject(&:blank?)
+  allowed_hosts << ENV["DOCKET_HOST"] if ENV["DOCKET_HOST"].present?
+  config.hosts.concat(allowed_hosts.uniq) if allowed_hosts.any?
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

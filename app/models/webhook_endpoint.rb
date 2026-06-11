@@ -34,6 +34,18 @@ class WebhookEndpoint < ApplicationRecord
     "sha256=#{OpenSSL::HMAC.hexdigest("SHA256", secret, body)}"
   end
 
+  # URL with any embedded credentials (user:pass@host) stripped, for safe
+  # display — auth belongs in the HMAC secret, not the URL.
+  def sanitized_url
+    uri = URI.parse(url.to_s)
+    return url if uri.user.nil? && uri.password.nil?
+    uri.password = nil # clear password before user (URI forbids the reverse)
+    uri.user = nil
+    uri.to_s
+  rescue URI::InvalidURIError
+    url
+  end
+
   private
 
   def generate_secret

@@ -46,13 +46,21 @@ module Api
           author_id: m.author_id,
           subject: m.subject,
           body: m.body,
-          metadata: m.metadata,
+          metadata: safe_metadata(m.metadata),
           attachments: m.files.map { |f|
             { filename: f.filename.to_s, content_type: f.content_type, byte_size: f.byte_size,
               url: Rails.application.routes.url_helpers.rails_blob_path(f, disposition: "attachment", only_path: true) }
           },
           created_at: m.created_at
         }
+      end
+
+      # The AI turn log stores the full prompt + raw model response in
+      # message metadata for the internal audit trail; don't leak those
+      # verbose internals over the API. Flags/confidence/rationale stay.
+      def safe_metadata(metadata)
+        return metadata unless metadata.is_a?(Hash)
+        metadata.except("prompt", "response")
       end
 
       def contact(c)

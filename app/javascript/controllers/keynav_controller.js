@@ -20,7 +20,9 @@ export default class extends Controller {
   }
 
   onKeydown(event) {
-    if (event.target.closest("input, textarea, select, [contenteditable]")) return
+    // Don't hijack keys (especially Enter/o) while a form field or an
+    // interactive element is focused — the link/button should win.
+    if (event.target.closest("input, textarea, select, [contenteditable], a, button, [role=button], summary")) return
     if (event.altKey || event.ctrlKey || event.metaKey) return
 
     switch (event.key) {
