@@ -4,7 +4,12 @@ class SlaPolicy < ApplicationRecord
   include SoftDeletable
   include Audited
 
-  has_many :sla_targets, dependent: :destroy
+  # dependent: nil, not :destroy — SoftDeletable#destroy runs destroy
+  # callbacks, so :destroy would HARD-delete the child targets while the
+  # policy is only soft-deleted, making a restored policy lose its
+  # targets. Leaving them intact keeps soft-delete recoverable (they're
+  # unreachable via the hidden parent until it's restored).
+  has_many :sla_targets, dependent: nil
   has_many :cases, dependent: nil
 
   accepts_nested_attributes_for :sla_targets, allow_destroy: true

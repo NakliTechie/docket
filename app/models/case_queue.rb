@@ -7,7 +7,10 @@ class CaseQueue < ApplicationRecord
 
   self.table_name = "queues"
 
-  has_many :queue_memberships, foreign_key: :queue_id, dependent: :destroy, inverse_of: :queue
+  # dependent: nil, not :destroy — soft-delete runs destroy callbacks, so
+  # :destroy would hard-delete the memberships while the queue is only
+  # soft-deleted. Preserve them so a restored queue keeps its members.
+  has_many :queue_memberships, foreign_key: :queue_id, dependent: nil, inverse_of: :queue
   has_many :members, through: :queue_memberships, source: :user
   has_many :cases, foreign_key: :queue_id, dependent: nil, inverse_of: :queue
 

@@ -7,7 +7,10 @@ class ApiToken < ApplicationRecord
 
   PREFIX = "dkt".freeze
 
-  belongs_to :user
+  # with_deleted so the admin token list still renders a token whose
+  # owner was soft-deleted (auth still rejects: a soft-deleted user is
+  # inactive, see .authenticate).
+  belongs_to :user, -> { with_deleted }
 
   validates :name, presence: true
   validates :token_digest, presence: true, uniqueness: true

@@ -5,7 +5,12 @@ class AuditEntry < ApplicationRecord
   GENESIS_SHA = ("0" * 64).freeze
   CHAIN_LOCK_KEY = 0x0D0C4E7 # arbitrary, stable advisory-lock key
 
-  belongs_to :actor, polymorphic: true, optional: true
+  # The actor is always a User or ServiceAccount (both SoftDeletable), so
+  # with_deleted keeps a soft-deleted actor's name in the history instead
+  # of rendering "deleted_user". auditable is intentionally NOT scoped:
+  # it can point at non-SoftDeletable models (Setting, SlaTarget, …) whose
+  # classes have no with_deleted scope.
+  belongs_to :actor, -> { with_deleted }, polymorphic: true, optional: true
   belongs_to :auditable, polymorphic: true
 
   validates :action, :previous_sha, :sha, presence: true
