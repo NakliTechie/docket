@@ -1,11 +1,18 @@
 module Api
   module V1
     class SettingsController < BaseController
+      # What a secret reads back as — presence only, never the value.
+      SECRET_MASK = "[SET]".freeze
+
       def show
         require_settings_access!("config:read")
-        data = Admin::SettingsController::EDITABLE.keys.index_with { |key| Setting.get(key) }
-        # Secrets never leave, even to admins — presence only.
-        data["llm_api_key"] = Setting.get("llm_api_key").present? ? "[SET]" : nil
+        # Every :secret-typed key is masked — not just llm_api_key. The
+        # SSO client secrets are secrets too and must never leave.
+        data = Admin::SettingsController::EDITABLE.to_h do |key, type|
+          value = Setting.get(key)
+          value = (value.present? ? SECRET_MASK : nil) if type == :secret
+          [ key, value ]
+        end
         render json: { data: data }
       end
 
@@ -13,7 +20,12 @@ module Api
         require_settings_access!("config:write")
         Admin::SettingsController::EDITABLE.each do |key, type|
           next unless params.key?(key)
-          value = coerce(params[key], type)
+          raw = params[key]
+          # Secrets are write-only: ignore a blank or the read mask so a
+          # read-modify-write round-trip can neither wipe a stored secret
+          # nor store the literal "[SET]" mask back over it.
+          next if type == :secret && (raw.blank? || raw == SECRET_MASK)
+          value = coerce(raw, type)
           value.nil? ? Setting.unset(key) : Setting.set(key, value)
         end
         show

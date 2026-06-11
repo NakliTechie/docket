@@ -14,6 +14,9 @@
 
   <fieldset>
     <legend><%= t("admin.webhook_endpoints.fields.events") %></legend>
+    <%# Empty-array companion (see service_accounts/_form): lets "no events" %>
+    <%# actually submit so the validation error shows instead of a no-op. %>
+    <%= hidden_field_tag "webhook_endpoint[events][]", "" %>
     <% WebhookEndpoint::EVENTS.each do |event| %>
       <div class="checkbox-row">
         <%= check_box_tag "webhook_endpoint[events][]", event,

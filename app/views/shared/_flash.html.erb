@@ -1,4 +1,9 @@
+<%# Only the standard user-facing flash types render here. Data-carrying %>
+<%# flash keys (api_token_raw, client_secret, webhook_secret) are shown %>
+<%# once by their own views — the generic loop must not double-render %>
+<%# those secrets as a banner. %>
 <% flash.each do |type, message| %>
+  <% next unless %w[notice alert].include?(type.to_s) %>
   <div class="flash flash-<%= type %>" role="<%= type == "alert" ? "alert" : "status" %>">
     <%= message %>
   </div>

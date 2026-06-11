@@ -419,55 +419,6 @@ hi:
         agent: "एजेंट"
         readonly: "केवल-पठन"
 
-  admin:
-    users:
-      fields:
-        name: "नाम"
-        email: "ईमेल पता"
-        password: "पासवर्ड"
-        role: "भूमिका"
-        locale: "भाषा"
-        queues: "कतार सदस्यताएँ"
-      form:
-        password_hint: "वर्तमान पासवर्ड रखने के लिए खाली छोड़ें।"
-      index:
-        title: "उपयोगकर्ता"
-        new_user: "नया उपयोगकर्ता"
-        active: "सक्रिय"
-        inactive: "निष्क्रिय"
-        activate: "सक्रिय करें"
-        deactivate: "निष्क्रिय करें"
-        columns:
-          name: "नाम"
-          email: "ईमेल"
-          role: "भूमिका"
-          queues: "कतारें"
-          status: "स्थिति"
-      show:
-        recent_activity: "हाल की गतिविधि"
-        no_activity: "अभी तक कोई गतिविधि दर्ज नहीं।"
-        details: "विवरण"
-        member_since: "सदस्यता प्रारंभ"
-        columns:
-          action: "क्रिया"
-          subject: "विषय"
-          when: "कब"
-      new:
-        title: "नया उपयोगकर्ता"
-      edit:
-        title: "%{name} संपादित करें"
-      create:
-        created: "उपयोगकर्ता बनाया गया।"
-      update:
-        updated: "उपयोगकर्ता अद्यतन किया गया।"
-      destroy:
-        deleted: "उपयोगकर्ता निष्क्रिय कर हटाया गया।"
-      activate:
-        activated: "उपयोगकर्ता सक्रिय किया गया।"
-      deactivate:
-        deactivated: "उपयोगकर्ता निष्क्रिय किया गया।"
-        cannot_deactivate_self: "आप अपना ही खाता निष्क्रिय नहीं कर सकते।"
-
   macros:
     fields:
       name: "नाम"
@@ -628,6 +579,54 @@ hi:
       instructions: "इस ईमेल का उत्तर दें (विषय में ट्रैकिंग आईडी बनाए रखें) या पोर्टल से जवाब दें।"
 
   admin:
+    users:
+      fields:
+        name: "नाम"
+        email: "ईमेल पता"
+        password: "पासवर्ड"
+        role: "भूमिका"
+        locale: "भाषा"
+        queues: "कतार सदस्यताएँ"
+      form:
+        password_hint: "वर्तमान पासवर्ड रखने के लिए खाली छोड़ें।"
+      index:
+        title: "उपयोगकर्ता"
+        new_user: "नया उपयोगकर्ता"
+        active: "सक्रिय"
+        inactive: "निष्क्रिय"
+        activate: "सक्रिय करें"
+        deactivate: "निष्क्रिय करें"
+        columns:
+          name: "नाम"
+          email: "ईमेल"
+          role: "भूमिका"
+          queues: "कतारें"
+          status: "स्थिति"
+      show:
+        recent_activity: "हाल की गतिविधि"
+        no_activity: "अभी तक कोई गतिविधि दर्ज नहीं।"
+        details: "विवरण"
+        member_since: "सदस्यता प्रारंभ"
+        columns:
+          action: "क्रिया"
+          subject: "विषय"
+          when: "कब"
+      new:
+        title: "नया उपयोगकर्ता"
+      edit:
+        title: "%{name} संपादित करें"
+      create:
+        created: "उपयोगकर्ता बनाया गया।"
+      update:
+        updated: "उपयोगकर्ता अद्यतन किया गया।"
+      destroy:
+        deleted: "उपयोगकर्ता निष्क्रिय कर हटाया गया।"
+      activate:
+        activated: "उपयोगकर्ता सक्रिय किया गया।"
+      deactivate:
+        deactivated: "उपयोगकर्ता निष्क्रिय किया गया।"
+        cannot_deactivate_self: "आप अपना ही खाता निष्क्रिय नहीं कर सकते।"
+
     api_tokens:
       index:
         title: "एपीआई टोकन"
@@ -759,7 +758,7 @@ hi:
         ai_intro: "डॉकेट एआई के बिना पूरी तरह उपयोग योग्य है। रूटिंग, मसौदा और स्टाफ़ सहायता सक्षम करने के लिए परिनियोजन-आंतरिक मॉडल एंडपॉइंट (Ollama/vLLM, OpenAI-संगत) कॉन्फ़िगर करें।"
         byok_warning: "अपनी-कुंजी-लाएँ (BYOK) मामले का पाठ इस परिनियोजन के बाहर किसी बाहरी प्रदाता को भेजता है। संप्रभु परिनियोजनों में यह डेटा-निर्गमन का निर्णय है — स्पष्ट अनुमोदन के बिना इसे बंद रखें।"
         providers:
-          off: "बंद — कोई एआई नहीं"
+          "off": "बंद — कोई एआई नहीं"
           in_deployment: "परिनियोजन-आंतरिक एंडपॉइंट (Ollama/vLLM) — अनुशंसित"
           byok: "बाहरी प्रदाता (BYOK) — डेटा निर्गमन"
           fake: "डेमो (पूर्वनिर्धारित उत्तर, कोई मॉडल नहीं)"

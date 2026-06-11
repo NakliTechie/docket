@@ -22,21 +22,30 @@ module Portal
       @case = Case.new(
         subject: params.dig(:case, :subject),
         contact: current_contact,
-        channel: :web_portal
+        channel: :web_portal,
+        # Apply the default queue like every other intake surface (M10).
+        queue_id: Setting.get("default_queue_id")
       )
       body = params.dig(:case, :description).to_s
       if body.blank?
         @case.errors.add(:base, t("portal.my_cases.description_required"))
         return render :new, status: :unprocessable_entity
       end
-      if @case.save
+
+      # Case + initial message are created together: if a file is rejected
+      # (disallowed type / oversize), the message raises RecordInvalid and
+      # the whole thing rolls back, so we never persist an orphaned case or
+      # 500 the citizen (H7).
+      Case.transaction do
+        @case.save!
         @case.messages.create!(kind: :public_reply, direction: :inbound,
                                author: current_contact, body: body,
                                files: params.dig(:case, :files).presence || [])
-        redirect_to portal_my_case_path(@case), notice: t("portal.my_cases.created", tracking_id: @case.tracking_id)
-      else
-        render :new, status: :unprocessable_entity
       end
+      redirect_to portal_my_case_path(@case), notice: t("portal.my_cases.created", tracking_id: @case.tracking_id)
+    rescue ActiveRecord::RecordInvalid => e
+      e.record.errors.each { |err| @case.errors.add(:base, err.full_message) } unless e.record == @case
+      render :new, status: :unprocessable_entity
     end
 
     def reply

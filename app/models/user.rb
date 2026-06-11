@@ -20,7 +20,11 @@ class User < ApplicationRecord
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
   validates :name, presence: true
-  validates :email_address, presence: true, uniqueness: true,
+  # Scope uniqueness to live rows so a soft-deleted user's email can be
+  # re-provisioned (e.g. an offboarded staffer returning via SSO). Matches
+  # every other SoftDeletable model; the DB index is partial to match.
+  validates :email_address, presence: true,
+            uniqueness: { conditions: -> { where(deleted_at: nil) } },
             format: { with: URI::MailTo::EMAIL_REGEXP }
 
   scope :active, -> { where(active: true) }

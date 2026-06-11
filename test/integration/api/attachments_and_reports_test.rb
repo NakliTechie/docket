@@ -67,6 +67,19 @@ module Api
       assert_equal "invalid_attachment", response.parsed_body["error"]
     end
 
+    test "too many base64 attachments are rejected by count before decoding (M24)" do
+      flood = Array.new(AttachableValidation::MAX_FILES + 1) do |i|
+        { filename: "f#{i}.png", content_type: "image/png", data: Base64.strict_encode64(PNG_BYTES) }
+      end
+      assert_no_difference "Message.count" do
+        post "/api/v1/cases/#{cases(:pension_case).id}/messages", params: {
+          message: { body: "flood", attachments: flood }
+        }, headers: auth_header(@admin_token), as: :json
+      end
+      assert_response :unprocessable_entity
+      assert_equal "invalid_attachment", response.parsed_body["error"]
+    end
+
     test "case create with attachments rolls back wholly on rejection" do
       assert_no_difference [ "Case.count", "Message.count" ] do
         post "/api/v1/cases", params: {

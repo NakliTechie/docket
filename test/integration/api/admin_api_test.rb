@@ -57,14 +57,29 @@ module Api
 
     test "settings read masks secrets and write works" do
       Setting.set("llm_api_key", "supersecret")
+      Setting.set("sso_staff_oidc_client_secret", "oidc-staff-secret")
+      Setting.set("sso_customer_oidc_client_secret", "oidc-customer-secret")
       get "/api/v1/settings", headers: auth_header(@admin_token)
       assert_response :success
       assert_equal "[SET]", response.parsed_body["data"]["llm_api_key"]
+      # Every secret is masked, not just the LLM key (H1).
+      assert_equal "[SET]", response.parsed_body["data"]["sso_staff_oidc_client_secret"]
+      assert_equal "[SET]", response.parsed_body["data"]["sso_customer_oidc_client_secret"]
       refute_includes response.body, "supersecret"
+      refute_includes response.body, "oidc-staff-secret"
+      refute_includes response.body, "oidc-customer-secret"
 
       patch "/api/v1/settings", params: { llm_provider: "fake" },
             headers: auth_header(@admin_token), as: :json
       assert_equal "fake", Setting.get("llm_provider")
+
+      # Writing the mask back (read-modify-write) must not corrupt or wipe
+      # the stored secrets.
+      patch "/api/v1/settings",
+            params: { sso_staff_oidc_client_secret: "[SET]", sso_customer_oidc_client_secret: "" },
+            headers: auth_header(@admin_token), as: :json
+      assert_equal "oidc-staff-secret", Setting.get("sso_staff_oidc_client_secret")
+      assert_equal "oidc-customer-secret", Setting.get("sso_customer_oidc_client_secret")
 
       config_token = service_token_for(%w[config:read])
       get "/api/v1/settings", headers: auth_header(config_token)

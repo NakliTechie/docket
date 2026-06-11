@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_10_153002) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -297,7 +297,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_153002) do
     t.integer "role", default: 2, null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
-    t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["email_address"], name: "index_users_on_email_address", unique: true, where: "deleted_at IS NULL"
     t.index ["role"], name: "index_users_on_role"
   end
 

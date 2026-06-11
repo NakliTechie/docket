@@ -419,55 +419,6 @@ en:
         agent: "Agent"
         readonly: "Read-only"
 
-  admin:
-    users:
-      fields:
-        name: "Name"
-        email: "Email address"
-        password: "Password"
-        role: "Role"
-        locale: "Language"
-        queues: "Queue memberships"
-      form:
-        password_hint: "Leave blank to keep the current password."
-      index:
-        title: "Users"
-        new_user: "New user"
-        active: "Active"
-        inactive: "Inactive"
-        activate: "Activate"
-        deactivate: "Deactivate"
-        columns:
-          name: "Name"
-          email: "Email"
-          role: "Role"
-          queues: "Queues"
-          status: "Status"
-      show:
-        recent_activity: "Recent activity"
-        no_activity: "No recorded activity yet."
-        details: "Details"
-        member_since: "Member since"
-        columns:
-          action: "Action"
-          subject: "Subject"
-          when: "When"
-      new:
-        title: "New user"
-      edit:
-        title: "Edit %{name}"
-      create:
-        created: "User created."
-      update:
-        updated: "User updated."
-      destroy:
-        deleted: "User deactivated and deleted."
-      activate:
-        activated: "User activated."
-      deactivate:
-        deactivated: "User deactivated."
-        cannot_deactivate_self: "You cannot deactivate your own account."
-
   macros:
     fields:
       name: "Name"
@@ -628,6 +579,54 @@ en:
       instructions: "Reply to this email (keep the tracking ID in the subject) or use the portal to respond."
 
   admin:
+    users:
+      fields:
+        name: "Name"
+        email: "Email address"
+        password: "Password"
+        role: "Role"
+        locale: "Language"
+        queues: "Queue memberships"
+      form:
+        password_hint: "Leave blank to keep the current password."
+      index:
+        title: "Users"
+        new_user: "New user"
+        active: "Active"
+        inactive: "Inactive"
+        activate: "Activate"
+        deactivate: "Deactivate"
+        columns:
+          name: "Name"
+          email: "Email"
+          role: "Role"
+          queues: "Queues"
+          status: "Status"
+      show:
+        recent_activity: "Recent activity"
+        no_activity: "No recorded activity yet."
+        details: "Details"
+        member_since: "Member since"
+        columns:
+          action: "Action"
+          subject: "Subject"
+          when: "When"
+      new:
+        title: "New user"
+      edit:
+        title: "Edit %{name}"
+      create:
+        created: "User created."
+      update:
+        updated: "User updated."
+      destroy:
+        deleted: "User deactivated and deleted."
+      activate:
+        activated: "User activated."
+      deactivate:
+        deactivated: "User deactivated."
+        cannot_deactivate_self: "You cannot deactivate your own account."
+
     api_tokens:
       index:
         title: "API tokens"
@@ -759,7 +758,7 @@ en:
         ai_intro: "Docket is fully usable without AI. Configure an in-deployment model endpoint (Ollama/vLLM, OpenAI-compatible) to enable routing, drafting, and staff assist."
         byok_warning: "Bring-your-own-key sends case text to an external provider outside this deployment. In sovereign deployments this is a data-egress decision — leave it off unless you have explicit approval."
         providers:
-          off: "Off — no AI"
+          "off": "Off — no AI"
           in_deployment: "In-deployment endpoint (Ollama/vLLM) — recommended"
           byok: "External provider (BYOK) — data egress"
           fake: "Demo (canned responses, no model)"

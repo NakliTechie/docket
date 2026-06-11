@@ -18,7 +18,9 @@ Requirements: Docker with the compose plugin.
 
 ```bash
 git clone <this-repo> docket && cd docket
-docker compose up --build
+
+# Try the demo on localhost (seeds fictional data, serves plain HTTP):
+DOCKET_SEED_DEMO=true DOCKET_FORCE_SSL=false docker compose up --build
 ```
 
 First boot migrates Postgres, seeds a fictional demo (a Directorate of Public Grievances and a bank branch: 8 staff, ~60 cases, knowledge docs), and serves:
@@ -32,14 +34,13 @@ First boot migrates Postgres, seeds a fictional demo (a Directorate of Public Gr
 
 Other demo logins: `sunita@docket.local` (supervisor), `priya@` / `rohan@` / `fatima@` / `deepak@docket.local` (agents), `meena@docket.local` (read-only) — all `docket-demo`.
 
-For a **clean production instance** set environment overrides before `up`:
+**Defaults are production-safe.** A plain `docker compose up --build` seeds **no** demo accounts, enforces SSL, and generates a unique `SECRET_KEY_BASE` on first boot (persisted to the storage volume). For a real deployment, just set a database password and put a TLS-terminating reverse proxy in front:
 
 ```bash
-DOCKET_SEED_DEMO=false SECRET_KEY_BASE=$(openssl rand -hex 64) \
 POSTGRES_PASSWORD=$(openssl rand -hex 16) docker compose up --build -d
 ```
 
-A break-glass admin (`admin@docket.local` / `DOCKET_ADMIN_PASSWORD`, default `docketadmin`) is always seeded — change that password immediately. Put a TLS-terminating reverse proxy in front and leave `DOCKET_FORCE_SSL` unset (defaults to on).
+A break-glass admin (`admin@docket.local`) is seeded on first boot. Set `DOCKET_ADMIN_PASSWORD` to choose its password; if you don't, a random one is generated and **printed once** in the boot logs — capture it and change it after first login. (Manage `SECRET_KEY_BASE` yourself by setting it explicitly, e.g. `SECRET_KEY_BASE=$(openssl rand -hex 64)`.)
 
 ### Smoke test
 

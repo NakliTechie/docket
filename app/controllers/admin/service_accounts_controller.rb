@@ -57,7 +57,11 @@ module Admin
     end
 
     def account_params
-      params.require(:service_account).permit(:name, :description, :active, scopes: [])
+      permitted = params.require(:service_account).permit(:name, :description, :active, scopes: [])
+      # Drop the empty-string companion (and any blanks) so an all-unchecked
+      # submission becomes [] and trips the "at least one scope" validation.
+      permitted[:scopes] = Array(permitted[:scopes]).reject(&:blank?) if permitted.key?(:scopes)
+      permitted
     end
   end
 end
