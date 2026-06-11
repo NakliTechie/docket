@@ -1,0 +1,11 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title", provider: @descriptor&.name || @connector.provider) %></h1>
+</div>
+
+<% if @descriptor %>
+  <%= render "form", connector: @connector, descriptor: @descriptor %>
+<% else %>
+  <p class="muted"><%= t(".unknown_provider") %></p>
+  <%= link_to t(".back"), admin_connectors_path, class: "btn" %>
+<% end %>

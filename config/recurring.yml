@@ -11,6 +11,10 @@ shared: &shared
     class: SessionSweepJob
     queue: default
     schedule: every hour at minute 20
+  connector_scheduler:
+    class: ConnectorSchedulerJob
+    queue: default
+    schedule: every 5 minutes
 
 development:
   <<: *shared

@@ -24,6 +24,7 @@ hi:
       settings: "सेटिंग्स"
       reference_docs: "ज्ञान-आधार"
       integrations: "एकीकरण"
+      connectors: "कनेक्टर"
 
   locales:
     en: "English"
@@ -819,6 +820,94 @@ hi:
         login_failed: "असफल लॉगिन"
         login_throttled: "सीमित"
         sso_rejected: "SSO अस्वीकृत"
+    connectors:
+      index:
+        title: "कनेक्टर"
+        intro: "अनुसूची या वेबहुक पर बाहरी सिस्टम से Docket में डेटा खींचें। एक बार कॉन्फ़िगर करें; सिंक लॉग हर रन दिखाता है।"
+        add: "कनेक्टर जोड़ें"
+        empty: "अभी तक कोई कनेक्टर नहीं — ऊपर से एक जोड़ें।"
+        never: "कभी नहीं"
+        columns:
+          name: "नाम"
+          provider: "प्रदाता"
+          target: "किसमें सिंक"
+          status: "स्थिति"
+          last_synced: "अंतिम सिंक"
+      new:
+        title: "नया %{provider} कनेक्टर"
+        unknown_provider: "अज्ञात प्रदाता।"
+        back: "कनेक्टर पर वापस"
+      edit:
+        title: "%{name} संपादित करें"
+      show:
+        sync_now: "अभी सिंक करें"
+        pause: "रोकें"
+        resume: "फिर शुरू करें"
+        edit: "संपादित करें"
+        provider: "प्रदाता"
+        target: "किसमें सिंक"
+        status: "स्थिति"
+        schedule: "अनुसूची"
+        every_minutes: "हर %{count} मिनट"
+        manual: "केवल मैनुअल / वेबहुक"
+        last_synced: "अंतिम सिंक"
+        never: "कभी नहीं"
+        webhook_url: "वेबहुक URL"
+        webhook_hint: "सिंक शुरू करने के लिए X-Docket-Signature HMAC हेडर (कनेक्टर का सीक्रेट) के साथ यहाँ POST करें।"
+        runs: "सिंक लॉग"
+        no_runs: "अभी तक कोई रन नहीं।"
+        delete: "कनेक्टर हटाएँ"
+        delete_confirm: "इस कनेक्टर और इसके सिंक इतिहास को हटाएँ?"
+        run_columns:
+          when: "कब"
+          trigger: "ट्रिगर"
+          status: "स्थिति"
+          in: "प्राप्त"
+          created: "बनाए"
+          updated: "अद्यतन"
+          error: "त्रुटि"
+      create:
+        created: "कनेक्टर बनाया गया।"
+      update:
+        updated: "कनेक्टर अद्यतन हुआ।"
+      destroy:
+        deleted: "कनेक्टर हटाया गया।"
+      sync:
+        sync_started: "सिंक शुरू हुआ — रन देखने के लिए थोड़ी देर में रिफ़्रेश करें।"
+      pause:
+        paused: "कनेक्टर रोका गया।"
+      resume:
+        resumed: "कनेक्टर फिर शुरू हुआ।"
+      fields:
+        name: "नाम"
+        api_key: "API कुंजी / टोकन"
+        schedule: "हर कितने मिनट में सिंक"
+      config_legend: "कनेक्शन"
+      config:
+        endpoint_url: "एंडपॉइंट URL"
+        records_path: "रिकॉर्ड्स पाथ (वैकल्पिक, जैसे data.items)"
+      api_key_kept: "•••••• (अपरिवर्तित)"
+      mapping_legend: "फ़ील्ड मैपिंग"
+      mapping_hint: "प्रत्येक Docket फ़ील्ड को स्रोत रिकॉर्ड के फ़ील्ड-नाम से मैप करें। कम-से-कम एक बाहरी आईडी या ईमेल दें।"
+      mapping_placeholder: "स्रोत फ़ील्ड नाम"
+      mapping:
+        external_id: "बाहरी आईडी ←"
+        email: "ईमेल ←"
+        name: "नाम ←"
+        phone: "फ़ोन ←"
+      schedule_hint: "रिक्त = केवल मैनुअल / वेबहुक"
+      status:
+        active: "सक्रिय"
+        paused: "रुका हुआ"
+        error: "त्रुटि"
+      triggers:
+        manual: "मैनुअल"
+        scheduled: "अनुसूचित"
+        webhook: "वेबहुक"
+      run_status:
+        running: "चल रहा"
+        success: "सफल"
+        failed: "असफल"
     users:
       fields:
         name: "नाम"
@@ -1127,6 +1216,12 @@ hi:
           attributes:
             file:
               unsupported_type: "PDF, टेक्स्ट, मार्कडाउन या CSV फ़ाइल होनी चाहिए"
+        connector:
+          attributes:
+            provider:
+              unknown: "ज्ञात कनेक्टर प्रकार नहीं है"
+            field_mapping:
+              needs_identity: "कम-से-कम एक बाहरी आईडी या ईमेल मैप करना आवश्यक है"
         contact:
           attributes:
             base:
