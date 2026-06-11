@@ -117,6 +117,17 @@ class ConsoleFlowTest < ActionDispatch::IntegrationTest
     assert_equal "CIF447192", contact.external_id # SSO-linkage key unchanged
   end
 
+  test "a stale case edit is rejected, not silently overwritten (optimistic lock) (L)" do
+    sign_in_as users(:admin)
+    kase = cases(:pension_case)
+    stale_version = kase.lock_version
+    kase.update!(subject: "Updated by someone else") # bumps lock_version
+
+    patch case_path(kase), params: { case: { subject: "My conflicting edit", lock_version: stale_version } }
+    assert_redirected_to case_path(kase)
+    assert_equal "Updated by someone else", kase.reload.subject # our stale edit did not win
+  end
+
   test "a soft-deleted contact shows as plain text, not a 404-ing link (L)" do
     sign_in_as users(:admin)
     kase = cases(:pension_case)

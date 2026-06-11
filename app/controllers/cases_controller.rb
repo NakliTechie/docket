@@ -1,6 +1,12 @@
 class CasesController < ApplicationController
   before_action :set_case, only: %i[show edit update destroy transition assign]
 
+  # Optimistic-locking conflict: someone else changed this case since it was
+  # loaded. Don't clobber — ask the agent to reload and retry.
+  rescue_from ActiveRecord::StaleObjectError do
+    redirect_to(@case || cases_path, alert: t("cases.stale_conflict"), status: :see_other)
+  end
+
   def index
     @filters = filter_params
     cases = policy_scope(Case)
@@ -95,10 +101,11 @@ class CasesController < ApplicationController
 
   # contact_id is set when the case is created; repointing it via the edit
   # form would silently move a case's whole thread/history to a different
-  # contact, so it's not mass-assignable on update.
+  # contact, so it's not mass-assignable on update. lock_version IS accepted
+  # so the submitted (possibly stale) value drives optimistic-lock detection.
   def case_update_params
     params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                 :queue_id, :assignee_id, :sla_policy_id)
+                                 :queue_id, :assignee_id, :sla_policy_id, :lock_version)
   end
 
   def filter_params

@@ -1,5 +1,8 @@
 <%= form_with model: kase, class: "form" do |f| %>
   <%= render "shared/form_errors", record: kase %>
+  <%# Carry the lock_version the editor saw so a concurrent edit is caught
+      as a StaleObjectError rather than silently overwritten. %>
+  <%= f.hidden_field :lock_version if kase.persisted? %>
 
   <div class="form-row <%= "field-error" if kase.errors[:subject].any? %>">
     <%= f.label :subject, t("cases.fields.subject") %>

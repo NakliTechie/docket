@@ -170,6 +170,17 @@ module Api
       assert_equal "public_reply", response.parsed_body["data"]["kind"]
     end
 
+    test "a stale case update returns 409, not a silent overwrite (optimistic lock) (L)" do
+      kase = cases(:pension_case)
+      stale = kase.lock_version
+      kase.update!(subject: "Changed elsewhere")
+
+      patch "/api/v1/cases/#{kase.id}", params: { case: { subject: "Conflicting", lock_version: stale } },
+            headers: auth_header(@admin_token), as: :json
+      assert_response :conflict
+      assert_equal "Changed elsewhere", kase.reload.subject
+    end
+
     test "an on-behalf-of contact with an invalid email is a 422, not a 500 (L)" do
       assert_no_difference "Contact.count" do
         post "/api/v1/cases", params: {

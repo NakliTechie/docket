@@ -1,15 +1,17 @@
 # Dependency-light grounding retrieval (handoff §4): Postgres full-text
-# search where available, keyword overlap scoring on SQLite. Sources:
-# (a) closed resolved cases, (b) reference docs. No vector DB.
+# search where available, keyword overlap scoring on SQLite. Source: the
+# admin-curated reference-doc knowledge base ONLY. No vector DB.
+#
+# Other citizens' resolved-case text is deliberately NOT a grounding source
+# — pulling one case's personal details into another citizen's AI draft is
+# a privacy leak. The knowledge base is the intended, reviewed source.
 module Retrieval
   Result = Struct.new(:source, :title, :text, keyword_init: true)
 
   module_function
 
   def grounding_for(query, limit: 3)
-    docs = search_reference_docs(query, limit: limit)
-    kase_results = search_closed_cases(query, limit: limit)
-    (docs + kase_results).first(limit * 2)
+    search_reference_docs(query, limit: limit * 2)
   end
 
   def search_reference_docs(query, limit: 3)
@@ -22,26 +24,6 @@ module Retrieval
         keyword_match(scope, query, %w[title body], limit: limit)
       end
     matched.map { |doc| Result.new(source: "reference_doc", title: doc.title, text: doc.body.truncate(2000)) }
-  end
-
-  def search_closed_cases(query, limit: 3)
-    scope = Case.where(status: [ :resolved, :closed ])
-    matched =
-      if postgres?
-        scope.where("to_tsvector('simple', subject || ' ' || COALESCE(description, '')) @@ plainto_tsquery('simple', ?)", query)
-             .order(resolved_at: :desc).limit(limit)
-      else
-        keyword_match(scope, query, %w[subject description], limit: limit)
-      end
-    matched.map do |kase|
-      resolution = kase.messages.where(kind: [ :public_reply, :agent_turn ], direction: :outbound)
-                       .order(:created_at).last
-      Result.new(
-        source: "closed_case",
-        title: kase.subject,
-        text: [ kase.description, resolution && "Resolution: #{resolution.body}" ].compact.join("\n").truncate(2000)
-      )
-    end
   end
 
   def keyword_match(scope, query, columns, limit:)

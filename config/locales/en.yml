@@ -109,6 +109,7 @@ en:
       mismatch: "Passwords did not match."
 
   cases:
+    stale_conflict: "Someone else updated this case while you were editing. Please reload and try again."
     enum:
       status:
         new: "New"
