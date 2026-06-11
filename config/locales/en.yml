@@ -16,6 +16,7 @@ en:
       leads: "Leads"
       deals: "Deals"
       pipelines: "Pipelines"
+      sequences: "Sequences"
       users: "Users"
       activity: "Activity"
       audit: "Audit"
@@ -319,6 +320,8 @@ en:
         hint: "Capture a prospect manually, or let your systems create leads via the API."
     show:
       details: "Details"
+      enroll_in_sequence: "Enroll in a sequence"
+      enroll: "Enroll"
       convert: "Convert to contact"
       confirm_convert: "Convert this lead to a contact?"
       mark_unqualified: "Mark unqualified"
@@ -411,6 +414,62 @@ en:
       updated: "Pipeline updated."
     destroy:
       deleted: "Pipeline deleted."
+
+  sequences:
+    inactive: "Inactive"
+    day_count:
+      zero: "Same day"
+      one: "After 1 day"
+      other: "After %{count} days"
+    fields:
+      name: "Name"
+      active: "Active"
+      steps: "Steps"
+      position: "Order"
+      delay_days: "Delay (days)"
+      subject: "Subject"
+      body: "Message"
+      remove: "Remove"
+    form:
+      steps_hint: "Each step waits its delay, then emails the target through your mail gateway."
+      body_hint: "Use {{contact_name}} and {{company_name}} for personalisation."
+    enum:
+      status:
+        active: "Active"
+        completed: "Completed"
+        cancelled: "Cancelled"
+    index:
+      title: "Sequences"
+      new_sequence: "New sequence"
+      columns:
+        name: "Name"
+        steps: "Steps"
+        active: "Active"
+      empty:
+        title: "No sequences yet"
+        hint: "A sequence sends a series of timed emails to leads or contacts."
+    show:
+      steps: "Steps"
+      enrollments: "Enrollments"
+      no_enrollments: "No one is enrolled yet."
+      confirm_delete: "Delete this sequence?"
+      cancel: "Cancel"
+    new:
+      title: "New sequence"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Sequence created."
+    update:
+      updated: "Sequence updated."
+    destroy:
+      deleted: "Sequence deleted."
+  sequence_enrollments:
+    create:
+      enrolled: "Enrolled in the sequence."
+      enroll_failed: "Could not enroll — pick a valid target."
+    cancel:
+      cancelled: "Enrollment cancelled."
 
   organisations:
     enum:

@@ -36,6 +36,10 @@ Rails.application.routes.draw do
   resources :deals do
     member { post :move }
   end
+  resources :sequences
+  resources :sequence_enrollments, only: %i[create] do
+    member { post :cancel }
+  end
 
   namespace :admin do
     resources :users do
@@ -105,6 +109,10 @@ Rails.application.routes.draw do
       resources :pipelines, only: %i[index show create update destroy]
       resources :deals, only: %i[index show create update destroy] do
         member { post :move }
+      end
+      resources :sequences, only: %i[index show create update destroy]
+      resources :sequence_enrollments, only: %i[index show create] do
+        member { post :cancel }
       end
       resources :queues, only: %i[index show create update destroy]
       resources :categories, only: %i[index show create update destroy] do

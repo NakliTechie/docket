@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_100003) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_100004) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -312,6 +312,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100003) do
     t.index ["title"], name: "index_reference_docs_on_title", unique: true, where: "deleted_at IS NULL"
   end
 
+  create_table "sequence_enrollments", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "current_step_position", default: 0, null: false
+    t.datetime "deleted_at"
+    t.integer "enrollable_id", null: false
+    t.string "enrollable_type", null: false
+    t.datetime "next_run_at"
+    t.integer "sequence_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_sequence_enrollments_on_deleted_at"
+    t.index ["enrollable_type", "enrollable_id"], name: "index_sequence_enrollments_on_enrollable"
+    t.index ["sequence_id"], name: "index_sequence_enrollments_on_sequence_id"
+    t.index ["status", "next_run_at"], name: "index_sequence_enrollments_on_status_and_next_run_at"
+  end
+
+  create_table "sequence_steps", force: :cascade do |t|
+    t.text "body"
+    t.integer "channel", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "delay_days", default: 0, null: false
+    t.datetime "deleted_at"
+    t.integer "position", default: 0, null: false
+    t.integer "sequence_id", null: false
+    t.string "subject"
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_sequence_steps_on_deleted_at"
+    t.index ["sequence_id", "position"], name: "index_sequence_steps_on_sequence_id_and_position"
+    t.index ["sequence_id"], name: "index_sequence_steps_on_sequence_id"
+  end
+
+  create_table "sequences", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_sequences_on_deleted_at"
+  end
+
   create_table "service_accounts", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "client_id", null: false
@@ -430,6 +470,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100003) do
   add_foreign_key "pipeline_stages", "pipelines"
   add_foreign_key "queue_memberships", "queues"
   add_foreign_key "queue_memberships", "users"
+  add_foreign_key "sequence_enrollments", "sequences"
+  add_foreign_key "sequence_steps", "sequences"
   add_foreign_key "sessions", "users"
   add_foreign_key "sla_targets", "sla_policies"
   add_foreign_key "webhook_deliveries", "webhook_endpoints"

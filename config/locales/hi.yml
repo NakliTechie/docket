@@ -16,6 +16,7 @@ hi:
       leads: "लीड्स"
       deals: "सौदे"
       pipelines: "पाइपलाइनें"
+      sequences: "अनुक्रम"
       users: "उपयोगकर्ता"
       activity: "गतिविधि"
       audit: "ऑडिट"
@@ -319,6 +320,8 @@ hi:
         hint: "किसी संभावित ग्राहक को मैन्युअल रूप से जोड़ें, या API के ज़रिए लीड बनाएं।"
     show:
       details: "विवरण"
+      enroll_in_sequence: "अनुक्रम में नामांकित करें"
+      enroll: "नामांकित करें"
       convert: "संपर्क में बदलें"
       confirm_convert: "इस लीड को संपर्क में बदलें?"
       mark_unqualified: "अयोग्य चिह्नित करें"
@@ -411,6 +414,62 @@ hi:
       updated: "पाइपलाइन अपडेट की गई।"
     destroy:
       deleted: "पाइपलाइन हटाई गई।"
+
+  sequences:
+    inactive: "निष्क्रिय"
+    day_count:
+      zero: "उसी दिन"
+      one: "1 दिन बाद"
+      other: "%{count} दिन बाद"
+    fields:
+      name: "नाम"
+      active: "सक्रिय"
+      steps: "चरण"
+      position: "क्रम"
+      delay_days: "देरी (दिन)"
+      subject: "विषय"
+      body: "संदेश"
+      remove: "हटाएं"
+    form:
+      steps_hint: "हर चरण अपनी देरी के बाद लक्ष्य को आपके मेल गेटवे से ईमेल भेजता है।"
+      body_hint: "व्यक्तिगत करने के लिए {{contact_name}} और {{company_name}} का उपयोग करें।"
+    enum:
+      status:
+        active: "सक्रिय"
+        completed: "पूर्ण"
+        cancelled: "रद्द"
+    index:
+      title: "अनुक्रम"
+      new_sequence: "नया अनुक्रम"
+      columns:
+        name: "नाम"
+        steps: "चरण"
+        active: "सक्रिय"
+      empty:
+        title: "अभी कोई अनुक्रम नहीं"
+        hint: "एक अनुक्रम लीड या संपर्कों को समयबद्ध ईमेल की श्रृंखला भेजता है।"
+    show:
+      steps: "चरण"
+      enrollments: "नामांकन"
+      no_enrollments: "अभी कोई नामांकित नहीं है।"
+      confirm_delete: "इस अनुक्रम को हटाएं?"
+      cancel: "रद्द करें"
+    new:
+      title: "नया अनुक्रम"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "अनुक्रम बनाया गया।"
+    update:
+      updated: "अनुक्रम अपडेट किया गया।"
+    destroy:
+      deleted: "अनुक्रम हटाया गया।"
+  sequence_enrollments:
+    create:
+      enrolled: "अनुक्रम में नामांकित किया गया।"
+      enroll_failed: "नामांकन नहीं हो सका — एक मान्य लक्ष्य चुनें।"
+    cancel:
+      cancelled: "नामांकन रद्द किया गया।"
 
   organisations:
     enum:

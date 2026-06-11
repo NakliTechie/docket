@@ -1,0 +1,67 @@
+<% page_title @sequence.name %>
+<div class="page-header">
+  <h1>
+    <%= @sequence.name %>
+    <span class="badge badge-<%= @sequence.active? ? "open" : "unqualified" %>">
+      <%= @sequence.active? ? t("sequences.fields.active") : t("sequences.inactive") %>
+    </span>
+  </h1>
+  <div class="page-actions">
+    <% if policy(@sequence).update? %>
+      <%= link_to t("actions.edit"), edit_sequence_path(@sequence), class: "btn" %>
+    <% end %>
+    <% if policy(@sequence).destroy? %>
+      <%= button_to t("actions.delete"), sequence_path(@sequence), method: :delete, class: "btn btn-danger",
+            form: { data: { turbo_confirm: t(".confirm_delete") } } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="two-column">
+  <section aria-label="<%= t(".steps") %>">
+    <h2 class="panel-title"><%= t(".steps") %></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t("sequences.fields.position") %></th>
+            <th><%= t("sequences.fields.delay_days") %></th>
+            <th><%= t("sequences.fields.subject") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @sequence.ordered_steps.each do |step| %>
+            <tr>
+              <td><%= step.position + 1 %></td>
+              <td><%= t("sequences.day_count", count: step.delay_days) %></td>
+              <td><%= step.subject.presence || "—" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".enrollments") %></h2>
+      <% if @enrollments.any? %>
+        <ul class="enrollment-list">
+          <% @enrollments.each do |enr| %>
+            <li>
+              <span><%= enr.enrollable.try(:name) || "#{enr.enrollable_type} ##{enr.enrollable_id}" %></span>
+              <span class="badge badge-<%= enr.status == "active" ? "open" : (enr.status == "completed" ? "won" : "lost") %>">
+                <%= t("sequences.enum.status.#{enr.status}") %>
+              </span>
+              <% if enr.status_active? && policy(@sequence).enroll? %>
+                <%= button_to t(".cancel"), cancel_sequence_enrollment_path(enr), class: "btn btn-ghost btn-sm" %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="form-hint"><%= t(".no_enrollments") %></p>
+      <% end %>
+    </div>
+  </aside>
+</div>

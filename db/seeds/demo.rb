@@ -258,6 +258,18 @@ Current.set(actor: nil) do
     Lead.find_or_create_by!(email: attrs[:email]) { |l| l.assign_attributes(attrs.merge(owner: sales_owner)) }
   end
 
+  # A demo outreach sequence (v1.2 CRM).
+  unless Sequence.exists?(name: "New-lead welcome")
+    welcome = Sequence.new(name: "New-lead welcome", active: true)
+    welcome.sequence_steps.build(position: 0, delay_days: 0, subject: "Thanks for reaching out, {{contact_name}}",
+      body: "Hi {{contact_name}},\n\nThanks for your interest. A member of our team will be in touch shortly.")
+    welcome.sequence_steps.build(position: 1, delay_days: 3, subject: "Following up",
+      body: "Hi {{contact_name}},\n\nJust checking in to see if you had any questions about {{company_name}}.")
+    welcome.save!
+    first_lead = Lead.where(status: %w[new working]).first
+    welcome.enroll!(first_lead) if first_lead
+  end
+
   Setting.set("demo_seeded", true)
 end
 

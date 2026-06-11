@@ -100,6 +100,26 @@ module Api
         }
       end
 
+      def sequence(s)
+        {
+          id: s.id, name: s.name, active: s.active,
+          steps: s.ordered_steps.map { |st|
+            { id: st.id, position: st.position, delay_days: st.delay_days,
+              channel: st.channel, subject: st.subject, body: st.body }
+          },
+          created_at: s.created_at, updated_at: s.updated_at
+        }
+      end
+
+      def sequence_enrollment(e)
+        {
+          id: e.id, sequence_id: e.sequence_id, enrollable_type: e.enrollable_type,
+          enrollable_id: e.enrollable_id, status: e.status,
+          current_step_position: e.current_step_position, next_run_at: e.next_run_at,
+          created_at: e.created_at, updated_at: e.updated_at
+        }
+      end
+
       def queue(q)
         { id: q.id, name: q.name, slug: q.slug, description: q.description,
           member_ids: q.member_ids, created_at: q.created_at, updated_at: q.updated_at }

@@ -45,3 +45,16 @@
     <% end %>
   </dl>
 </div>
+
+<% active_sequences = Sequence.active.order(:name) %>
+<% if active_sequences.any? && policy(Sequence).enroll? %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t("leads.show.enroll_in_sequence") %></h2>
+    <%= form_with url: sequence_enrollments_path, method: :post, class: "inline-form" do |f| %>
+      <%= hidden_field_tag :enrollable_type, "Lead" %>
+      <%= hidden_field_tag :enrollable_id, @lead.id %>
+      <%= f.select :sequence_id, active_sequences.map { |s| [ s.name, s.id ] } %>
+      <%= f.submit t("leads.show.enroll"), class: "btn" %>
+    <% end %>
+  </div>
+<% end %>
