@@ -12,6 +12,15 @@ class ReferenceDoc < ApplicationRecord
 
   validates :title, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } }
   validates :body, presence: true
+  # The attached original is only ever a source for extraction — hold it to
+  # the same allowlist as every other upload surface, not "any file".
+  validate :file_is_extractable
+
+  def file_is_extractable
+    return unless file.attached?
+    return if EXTRACTABLE_TYPES.include?(file.content_type)
+    errors.add(:file, :unsupported_type)
+  end
 
   def self.extract_text(uploaded_file)
     return nil if uploaded_file.blank?

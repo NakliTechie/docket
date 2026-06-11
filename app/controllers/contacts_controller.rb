@@ -31,7 +31,7 @@ class ContactsController < ApplicationController
 
   def update
     authorize @contact
-    if @contact.update(contact_params)
+    if @contact.update(contact_update_params)
       redirect_to @contact, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity
@@ -53,8 +53,16 @@ class ContactsController < ApplicationController
     @contact = Contact.find(params[:id])
   end
 
+  EDITABLE_ATTRS = %i[name email phone organisation_id preferred_language notes].freeze
+
   def contact_params
-    params.require(:contact).permit(:name, :email, :phone, :external_id,
-                                    :organisation_id, :preferred_language, :notes)
+    params.require(:contact).permit(*EDITABLE_ATTRS, :external_id)
+  end
+
+  # external_id is the SSO-linkage key: settable when first creating a
+  # contact, but not rewritable through the edit form (would let staff
+  # re-point a contact onto another customer's verified identity).
+  def contact_update_params
+    params.require(:contact).permit(*EDITABLE_ATTRS)
   end
 end

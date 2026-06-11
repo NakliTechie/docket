@@ -52,6 +52,9 @@ class Case < ApplicationRecord
   validates :subject, presence: true
   validates :tracking_id, presence: true, uniqueness: true
   validate :status_changed_through_state_machine, on: :update
+  # Only block ASSIGNING to an inactive user — a case keeps an assignee who
+  # later goes inactive (unchanged assignee_id) so it stays editable.
+  validate :assignee_must_be_active, if: -> { assignee_id.present? && will_save_change_to_assignee_id? }
 
   scope :open_cases, -> { where(status: OPEN_STATUSES) }
   # A breach is also real when the case left the open set (was resolved /
@@ -177,6 +180,10 @@ class Case < ApplicationRecord
   def status_changed_through_state_machine
     return unless will_save_change_to_status?
     errors.add(:status, :must_use_state_machine) unless @transitioning
+  end
+
+  def assignee_must_be_active
+    errors.add(:assignee, :inactive) unless assignee&.active?
   end
 
   # Citizen-originated cases get the AI triage/draft/resolve loop when a
