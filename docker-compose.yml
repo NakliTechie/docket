@@ -53,6 +53,15 @@ services:
       SOLID_QUEUE_IN_PUMA: "true"
     volumes:
       - app-storage:/rails/storage
+    # /up returns 200 once the app boots cleanly. assume_ssl makes Rails
+    # treat this in-container http probe as already-SSL, so force_ssl
+    # doesn't redirect it (works in both the prod and demo profiles).
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:3000/up || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
 volumes:
   postgres-data:
