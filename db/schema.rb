@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_100001) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -144,6 +144,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
     t.index ["external_id"], name: "index_contacts_on_external_id", unique: true, where: "external_id IS NOT NULL AND deleted_at IS NULL"
     t.index ["organisation_id"], name: "index_contacts_on_organisation_id"
     t.index ["phone"], name: "index_contacts_on_phone"
+  end
+
+  create_table "leads", force: :cascade do |t|
+    t.string "company_name"
+    t.integer "contact_id"
+    t.datetime "converted_at"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "email"
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "owner_id"
+    t.string "phone"
+    t.integer "source", default: 2, null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "value_estimate_cents"
+    t.index ["contact_id"], name: "index_leads_on_contact_id"
+    t.index ["deleted_at"], name: "index_leads_on_deleted_at"
+    t.index ["email"], name: "index_leads_on_email"
+    t.index ["owner_id"], name: "index_leads_on_owner_id"
+    t.index ["status"], name: "index_leads_on_status"
   end
 
   create_table "macros", force: :cascade do |t|
@@ -338,6 +360,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
   add_foreign_key "cases", "sla_policies"
   add_foreign_key "cases", "users", column: "assignee_id"
   add_foreign_key "contacts", "organisations"
+  add_foreign_key "leads", "contacts"
+  add_foreign_key "leads", "users", column: "owner_id"
   add_foreign_key "messages", "cases"
   add_foreign_key "oauth_access_tokens", "service_accounts"
   add_foreign_key "queue_memberships", "queues"

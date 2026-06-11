@@ -1,0 +1,47 @@
+<% page_title @lead.name %>
+<div class="page-header">
+  <h1><%= @lead.name %> <span class="badge badge-<%= @lead.status %>"><%= @lead.human_status %></span></h1>
+  <div class="page-actions">
+    <% if policy(@lead).convert? && !@lead.status_converted? %>
+      <%= button_to t(".convert"), convert_lead_path(@lead), class: "btn btn-primary",
+            form: { data: { turbo_confirm: t(".confirm_convert") } } %>
+    <% end %>
+    <% if policy(@lead).mark_unqualified? && Lead::OPEN_STATUSES.include?(@lead.status) %>
+      <%= button_to t(".mark_unqualified"), mark_unqualified_lead_path(@lead), class: "btn" %>
+    <% end %>
+    <% if policy(@lead).update? %>
+      <%= link_to t("actions.edit"), edit_lead_path(@lead), class: "btn" %>
+    <% end %>
+    <% if policy(@lead).destroy? %>
+      <%= button_to t("actions.delete"), lead_path(@lead), method: :delete, class: "btn btn-danger",
+            form: { data: { turbo_confirm: t(".confirm_delete") } } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 class="panel-title"><%= t(".details") %></h2>
+  <dl class="meta-list">
+    <% if @lead.company_name.present? %>
+      <dt><%= t("leads.fields.company_name") %></dt><dd><%= @lead.company_name %></dd>
+    <% end %>
+    <% if @lead.email.present? %>
+      <dt><%= t("leads.fields.email") %></dt><dd><%= @lead.email %></dd>
+    <% end %>
+    <% if @lead.phone.present? %>
+      <dt><%= t("leads.fields.phone") %></dt><dd><%= @lead.phone %></dd>
+    <% end %>
+    <dt><%= t("leads.fields.source") %></dt><dd><%= @lead.human_source %></dd>
+    <dt><%= t("leads.fields.owner") %></dt><dd><%= @lead.owner&.name || t("forms.none") %></dd>
+    <% if @lead.value_estimate_cents.present? %>
+      <dt><%= t("leads.fields.value_estimate") %></dt><dd><%= number_to_currency(@lead.value_estimate_cents / 100.0, unit: "₹") %></dd>
+    <% end %>
+    <% if @lead.contact %>
+      <dt><%= t("leads.fields.contact") %></dt>
+      <dd><%= link_to @lead.contact.name, contact_path(@lead.contact) %></dd>
+    <% end %>
+    <% if @lead.notes.present? %>
+      <dt><%= t("leads.fields.notes") %></dt><dd><%= @lead.notes %></dd>
+    <% end %>
+  </dl>
+</div>

@@ -248,6 +248,16 @@ Current.set(actor: nil) do
     body: "There has been no water in our lane since the pipeline work on Sunday. When will supply resume?")
   CaseAgentJob.perform_now(showcase)
 
+  # A few sales-funnel leads (v1.2 CRM) so the Leads list isn't empty.
+  sales_owner = User.find_by(email_address: "priya@docket.local")
+  [
+    { name: "Rohan Mehta", email: "rohan.mehta@example.com", company_name: "Mehta Textiles", source: :web_form, status: :new, value_estimate: 45_000 },
+    { name: "Anjali Rao", email: "anjali.rao@example.com", company_name: "Rao Logistics", source: :referral, status: :working, value_estimate: 120_000 },
+    { name: "Vikram Shah", email: "vikram.shah@example.com", company_name: "Shah Exports", source: :manual, status: :qualified, value_estimate: 87_500 }
+  ].each do |attrs|
+    Lead.find_or_create_by!(email: attrs[:email]) { |l| l.assign_attributes(attrs.merge(owner: sales_owner)) }
+  end
+
   Setting.set("demo_seeded", true)
 end
 

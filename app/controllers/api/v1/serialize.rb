@@ -69,6 +69,16 @@ module Api
           notes: o.notes, created_at: o.created_at, updated_at: o.updated_at }
       end
 
+      def lead(l)
+        {
+          id: l.id, name: l.name, email: l.email, phone: l.phone,
+          company_name: l.company_name, source: l.source, status: l.status,
+          owner_id: l.owner_id, contact_id: l.contact_id,
+          value_estimate_cents: l.value_estimate_cents, notes: l.notes,
+          converted_at: l.converted_at, created_at: l.created_at, updated_at: l.updated_at
+        }
+      end
+
       def queue(q)
         { id: q.id, name: q.name, slug: q.slug, description: q.description,
           member_ids: q.member_ids, created_at: q.created_at, updated_at: q.updated_at }

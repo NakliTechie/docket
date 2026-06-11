@@ -1,0 +1,59 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <% if policy(Lead).create? %>
+      <%= link_to new_lead_path, class: "btn btn-primary" do %>
+        <%= icon "plus" %><%= t(".new_lead") %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%= form_with url: leads_path, method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row">
+    <%= f.label :q, t("filters.search") %>
+    <%= f.search_field :q, value: params[:q] %>
+  </div>
+  <div class="form-row">
+    <%= f.label :status, t("leads.fields.status") %>
+    <%= f.select :status,
+          options_for_select(Lead.statuses.keys.map { |s| [ t("leads.enum.status.#{s}"), s ] }, params[:status]),
+          include_blank: t("filters.any") %>
+  </div>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+<% end %>
+
+<% if @leads.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.company") %></th>
+          <th><%= t(".columns.email") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th><%= t(".columns.owner") %></th>
+          <th><%= t(".columns.created") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @leads.each do |lead| %>
+          <tr>
+            <td><%= link_to lead.name, lead_path(lead) %></td>
+            <td><%= lead.company_name %></td>
+            <td><%= lead.email %></td>
+            <td><span class="badge badge-<%= lead.status %>"><%= lead.human_status %></span></td>
+            <td><%= lead.owner&.name %></td>
+            <td class="table-meta"><%= l lead.created_at, format: :short %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <%= render "shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "shared/empty_state",
+        title: t(".empty.title"), hint: t(".empty.hint"),
+        action: policy(Lead).create? ? link_to(t(".new_lead"), new_lead_path, class: "btn btn-primary") : nil %>
+<% end %>

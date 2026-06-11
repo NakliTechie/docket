@@ -25,6 +25,14 @@ Rails.application.routes.draw do
   resources :sla_policies, except: :show
   resources :macros, except: :show
 
+  # Sales funnel (v1.2 CRM)
+  resources :leads do
+    member do
+      post :convert
+      post :mark_unqualified
+    end
+  end
+
   namespace :admin do
     resources :users do
       member do
@@ -87,6 +95,9 @@ Rails.application.routes.draw do
       end
       resources :contacts, only: %i[index show create update destroy]
       resources :organisations, only: %i[index show create update destroy]
+      resources :leads, only: %i[index show create update destroy] do
+        member { post :convert }
+      end
       resources :queues, only: %i[index show create update destroy]
       resources :categories, only: %i[index show create update destroy] do
         member do

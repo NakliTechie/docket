@@ -13,6 +13,7 @@ hi:
       categories: "श्रेणियाँ"
       sla_policies: "एसएलए नीतियाँ"
       macros: "मैक्रो"
+      leads: "लीड्स"
       users: "उपयोगकर्ता"
       activity: "गतिविधि"
       audit: "ऑडिट"
@@ -273,6 +274,67 @@ hi:
       updated: "संपर्क अद्यतन किया गया।"
     destroy:
       deleted: "संपर्क हटाया गया।"
+
+  leads:
+    fields:
+      name: "नाम"
+      company_name: "कंपनी"
+      email: "ईमेल"
+      phone: "फ़ोन"
+      source: "स्रोत"
+      owner: "स्वामी"
+      value_estimate: "अनुमानित मूल्य (₹)"
+      contact: "संपर्क"
+      notes: "टिप्पणियाँ"
+      status: "स्थिति"
+    form:
+      value_hint: "अनुमानित सौदा मूल्य रुपयों में।"
+    enum:
+      status:
+        new: "नया"
+        working: "प्रगति पर"
+        qualified: "योग्य"
+        unqualified: "अयोग्य"
+        converted: "रूपांतरित"
+      source:
+        web_form: "वेब फ़ॉर्म"
+        api: "एपीआई"
+        manual: "मैन्युअल"
+        import: "आयात"
+        referral: "रेफरल"
+    index:
+      title: "लीड्स"
+      new_lead: "नई लीड"
+      columns:
+        name: "नाम"
+        company: "कंपनी"
+        email: "ईमेल"
+        status: "स्थिति"
+        owner: "स्वामी"
+        created: "बनाया गया"
+      empty:
+        title: "अभी कोई लीड नहीं"
+        hint: "किसी संभावित ग्राहक को मैन्युअल रूप से जोड़ें, या API के ज़रिए लीड बनाएं।"
+    show:
+      details: "विवरण"
+      convert: "संपर्क में बदलें"
+      confirm_convert: "इस लीड को संपर्क में बदलें?"
+      mark_unqualified: "अयोग्य चिह्नित करें"
+      confirm_delete: "इस लीड को हटाएं?"
+    new:
+      title: "नई लीड"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "लीड बनाई गई।"
+    update:
+      updated: "लीड अपडेट की गई।"
+    destroy:
+      deleted: "लीड हटाई गई।"
+    convert:
+      converted: "लीड को संपर्क में बदला गया।"
+    mark_unqualified:
+      unqualified: "लीड अयोग्य चिह्नित की गई।"
 
   organisations:
     enum:
@@ -884,6 +946,10 @@ hi:
           attributes:
             base:
               unreachable: "ईमेल, फ़ोन या ग्राहक आईडी में से कम-से-कम एक आवश्यक है"
+        lead:
+          attributes:
+            base:
+              unreachable: "ईमेल या फ़ोन में से कम से कम एक चाहिए"
         message:
           attributes:
             files:

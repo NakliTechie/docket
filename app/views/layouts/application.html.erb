@@ -20,6 +20,7 @@
           <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
           <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
           <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>
+          <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
           <% if policy(CaseQueue).create? %>
             <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
             <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>

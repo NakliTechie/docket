@@ -53,6 +53,10 @@ module Docket
           ),
           Organisation: object_schema(id: :integer, name: :string, kind: :string, external_ref: :string,
                                       notes: :string, created_at: :datetime, updated_at: :datetime),
+          Lead: object_schema(id: :integer, name: :string, email: :string, phone: :string,
+                              company_name: :string, source: enum(Lead.sources.keys), status: enum(Lead.statuses.keys),
+                              owner_id: :integer, contact_id: :integer, value_estimate_cents: :integer,
+                              notes: :string, converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
           Queue: object_schema(id: :integer, name: :string, slug: :string, description: :string,
                                member_ids: { type: "array", items: { type: "integer" } },
                                created_at: :datetime, updated_at: :datetime),
@@ -120,6 +124,9 @@ module Docket
       crud(result, "contacts", "Contact", extra_params: %w[q external_id organisation_id],
            create_note: "Contacts are addressable by numeric id or ext:{external_id}.")
       crud(result, "organisations", "Organisation")
+      crud(result, "leads", "Lead", extra_params: %w[q status owner_id])
+      result["/leads/{id}/convert"] = { post: op("Convert a lead — upserts/links a Contact and stamps the lead converted",
+        params: [ id_param ], responses: { "200" => "Converted" }) }
       crud(result, "queues", "Queue", create_note: "Queues are addressable by id or slug.")
       crud(result, "categories", "Category")
       result["/categories/{id}/toggle_auto_resolve"] = { post: op("Flip AI auto-resolve for the category (admin user tokens only)", params: [ id_param ]) }

@@ -13,6 +13,7 @@ en:
       categories: "Categories"
       sla_policies: "SLA policies"
       macros: "Macros"
+      leads: "Leads"
       users: "Users"
       activity: "Activity"
       audit: "Audit"
@@ -273,6 +274,67 @@ en:
       updated: "Contact updated."
     destroy:
       deleted: "Contact deleted."
+
+  leads:
+    fields:
+      name: "Name"
+      company_name: "Company"
+      email: "Email"
+      phone: "Phone"
+      source: "Source"
+      owner: "Owner"
+      value_estimate: "Estimated value (₹)"
+      contact: "Contact"
+      notes: "Notes"
+      status: "Status"
+    form:
+      value_hint: "Estimated deal value in rupees."
+    enum:
+      status:
+        new: "New"
+        working: "Working"
+        qualified: "Qualified"
+        unqualified: "Unqualified"
+        converted: "Converted"
+      source:
+        web_form: "Web form"
+        api: "API"
+        manual: "Manual"
+        import: "Import"
+        referral: "Referral"
+    index:
+      title: "Leads"
+      new_lead: "New lead"
+      columns:
+        name: "Name"
+        company: "Company"
+        email: "Email"
+        status: "Status"
+        owner: "Owner"
+        created: "Created"
+      empty:
+        title: "No leads yet"
+        hint: "Capture a prospect manually, or let your systems create leads via the API."
+    show:
+      details: "Details"
+      convert: "Convert to contact"
+      confirm_convert: "Convert this lead to a contact?"
+      mark_unqualified: "Mark unqualified"
+      confirm_delete: "Delete this lead?"
+    new:
+      title: "New lead"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Lead created."
+    update:
+      updated: "Lead updated."
+    destroy:
+      deleted: "Lead deleted."
+    convert:
+      converted: "Lead converted to a contact."
+    mark_unqualified:
+      unqualified: "Lead marked unqualified."
 
   organisations:
     enum:
@@ -884,6 +946,10 @@ en:
           attributes:
             base:
               unreachable: "needs at least one of email, phone, or customer ID"
+        lead:
+          attributes:
+            base:
+              unreachable: "needs at least one of email or phone"
         message:
           attributes:
             files:

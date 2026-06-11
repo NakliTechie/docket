@@ -1,0 +1,52 @@
+<%= form_with model: lead, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: lead %>
+
+  <div class="form-row <%= "field-error" if lead.errors[:name].any? %>">
+    <%= f.label :name, t("leads.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% lead.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :company_name, t("leads.fields.company_name") %>
+    <%= f.text_field :company_name %>
+  </div>
+
+  <div class="form-row <%= "field-error" if lead.errors[:email].any? %>">
+    <%= f.label :email, t("leads.fields.email") %>
+    <%= f.email_field :email %>
+    <% lead.errors[:email].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :phone, t("leads.fields.phone") %>
+    <%= f.telephone_field :phone %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :source, t("leads.fields.source") %>
+    <%= f.select :source, Lead.sources.keys.map { |s| [ t("leads.enum.source.#{s}"), s ] } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :owner_id, t("leads.fields.owner") %>
+    <%= f.collection_select :owner_id, User.active.staff.order(:name), :id, :name,
+          include_blank: t("forms.none") %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :value_estimate, t("leads.fields.value_estimate") %>
+    <%= f.number_field :value_estimate, step: "0.01", min: 0 %>
+    <p class="form-hint"><%= t("leads.form.value_hint") %></p>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :notes, t("leads.fields.notes") %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), leads_path, class: "btn" %>
+  </div>
+<% end %>
