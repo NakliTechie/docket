@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_100004) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_100005) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -90,6 +90,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100004) do
     t.datetime "first_responded_at"
     t.boolean "first_response_breached", default: false, null: false
     t.datetime "first_response_due_at"
+    t.integer "lock_version", default: 0, null: false
     t.integer "priority", default: 1, null: false
     t.integer "queue_id"
     t.integer "reopen_count", default: 0, null: false

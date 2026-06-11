@@ -89,7 +89,7 @@ module Api
 
       def case_params
         params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                     :queue_id, :assignee_id, :contact_id, :sla_policy_id)
+                                     :queue_id, :assignee_id, :contact_id, :sla_policy_id, :lock_version)
       end
 
       # Body (and any attachments) on create land as the initial inbound

@@ -149,10 +149,18 @@ class CaseAgentTest < ActiveSupport::TestCase
     assert_equal "negative", message.reload.sentiment
   end
 
-  test "retrieval grounds on reference docs and closed cases" do
+  test "retrieval grounds on reference docs only, never other citizens' cases (L)" do
     ReferenceDoc.create!(title: "Pension SOP", body: "Pension arrears are corrected within 3 days.")
+    # A resolved case mentioning the same terms must NOT be grounded — that
+    # would leak one citizen's case text into another's draft.
+    kase = Case.create!(subject: "Pension arrears delay", description: "pension arrears unpaid",
+                        contact: contacts(:asha), status: :resolved)
+    kase.messages.create!(kind: :public_reply, direction: :outbound, author: users(:agent_a),
+                          body: "Resolution mentions a sensitive citizen detail")
+
     results = Retrieval.grounding_for("pension arrears delay")
     assert results.any? { |r| r.source == "reference_doc" && r.title == "Pension SOP" }
+    assert results.none? { |r| r.source == "closed_case" }, "closed-case text must not be grounded"
   end
 
   test "a non-Hash model response degrades to nothing instead of crashing (L)" do

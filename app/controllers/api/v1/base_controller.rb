@@ -20,6 +20,12 @@ module Api
         # e.g. an on-behalf-of Contact.create! with a bad email — 422, not 500.
         render_validation_errors(e.record)
       end
+      rescue_from ActiveRecord::StaleObjectError do
+        # Optimistic-locking conflict on a case — the client holds a stale
+        # copy; it should re-fetch and retry.
+        render_error("conflict", detail: "the resource was modified by another request; re-fetch and retry",
+                     status: :conflict)
+      end
       rescue_from Pundit::NotAuthorizedError, ScopeDenied do
         render_error("forbidden", status: :forbidden)
       end
