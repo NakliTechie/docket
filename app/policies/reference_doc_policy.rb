@@ -1,5 +1,6 @@
 class ReferenceDocPolicy < ApplicationPolicy
   def index?   = admin? || supervisor?
+  def show?    = admin? || supervisor?
   def create?  = admin? || supervisor?
   def update?  = admin? || supervisor?
   def destroy? = admin? || supervisor?

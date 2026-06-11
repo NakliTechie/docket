@@ -781,6 +781,13 @@ en:
         reply_placeholder: "Add information or reply to the team…"
         send_reply: "Send reply"
 
+  passwords_mailer:
+    reset:
+      subject: "Reset your password"
+      intro_html: "You can reset your password on %{link}."
+      intro_text: "You can reset your password on"
+      link_text: "this password reset page"
+      expires_in: "This link will expire in %{duration}."
   case_mailer:
     signature: "— The service team"
     confirmation:

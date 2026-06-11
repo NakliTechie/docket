@@ -9,7 +9,7 @@ module Api
       end
 
       def show
-        authorize_api!(@reference_doc, :index?, scope: "config:read")
+        authorize_api!(@reference_doc, :show?, scope: "config:read")
         render json: { data: Serialize.reference_doc(@reference_doc) }
       end
 

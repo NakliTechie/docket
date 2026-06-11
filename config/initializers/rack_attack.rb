@@ -1,5 +1,7 @@
-# Public portal abuse protection (handoff §8). Backed by Rails.cache
-# (Solid Cache) — no Redis.
+# Public portal abuse protection (handoff §8). Backed by an in-process
+# MemoryStore — no Redis. Note: counters are per-process, so throttles are
+# enforced per Puma worker and reset on restart (fine for a single-node
+# deploy; swap in a shared store before scaling out).
 Rack::Attack.enabled = !Rails.env.test?
 Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
 

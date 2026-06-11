@@ -1,7 +1,6 @@
 class Organisation < ApplicationRecord
   include SoftDeletable
   include Audited
-  include HumanEnums
 
   KINDS = %w[department branch company other].freeze
 
