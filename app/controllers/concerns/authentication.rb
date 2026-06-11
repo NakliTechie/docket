@@ -28,7 +28,17 @@ module Authentication
     def find_session_by_cookie
       return unless cookies.signed[:session_id]
       session = Session.find_by(id: cookies.signed[:session_id])
-      session if session&.user&.active?
+      return unless session&.user&.active?
+
+      # Enforce the server-side TTL: an expired session is destroyed so a
+      # stale/leaked cookie can't be reused (M5).
+      if session.expired?
+        session.destroy
+        cookies.delete(:session_id)
+        return
+      end
+      session.touch_if_stale
+      session
     end
 
     def request_authentication

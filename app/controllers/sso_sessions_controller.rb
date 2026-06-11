@@ -6,10 +6,18 @@ class SsoSessionsController < ApplicationController
   allow_unauthenticated_access only: :create
   skip_before_action :verify_authenticity_token, only: :create
 
+  # Highest privilege wins when an IdP asserts multiple mapped groups.
+  ROLE_RANK = { "admin" => 3, "supervisor" => 2, "agent" => 1, "readonly" => 0 }.freeze
+  DEFAULT_SSO_ROLE = "agent".freeze
+
   def create
     auth = request.env["omniauth.auth"]
     email = auth&.info&.email.to_s.strip.downcase
-    if email.blank?
+    # Don't link/provision by an email the IdP says it hasn't verified —
+    # otherwise an account on an IdP with unverified emails could assert a
+    # victim's address (M6). Absent claim (e.g. SAML) is allowed; only an
+    # explicit false is rejected.
+    if email.blank? || email_unverified?(auth)
       return redirect_to new_session_path, alert: t("sessions.sso_failed")
     end
 
@@ -41,15 +49,27 @@ class SsoSessionsController < ApplicationController
     )
   end
 
-  # Role mapping from an IdP claim/attribute is configurable (§5A):
-  # the claim may be a string or array; first mapped value wins.
+  def email_unverified?(auth)
+    verified = auth.extra&.raw_info&.[]("email_verified")
+    verified = auth.info&.[]("email_verified") if verified.nil?
+    verified == false || verified.to_s == "false"
+  end
+
+  # Role mapping from an IdP claim/attribute is configurable (§5A). When
+  # it's set the IdP is authoritative: the HIGHEST mapped group wins (M8),
+  # and a user with no mapped group is demoted to the default rather than
+  # keeping a stale (possibly admin) role (M7). The claim may be a string
+  # or array.
   def apply_role_mapping(user, auth)
     claim = Sso.staff_role_claim
     mapping = Sso.staff_role_mapping
     return if claim.blank? || mapping.blank?
 
     values = Array(auth.extra&.raw_info&.[](claim) || auth.info&.[](claim)).flatten.map(&:to_s)
-    mapped = values.filter_map { |v| mapping[v] }.first
-    user.update!(role: mapped) if mapped.present? && User.roles.key?(mapped) && user.role != mapped
+    mapped = values.filter_map { |v| mapping[v] }
+                   .select { |r| User.roles.key?(r) }
+                   .max_by { |r| ROLE_RANK.fetch(r, -1) }
+    target = mapped || DEFAULT_SSO_ROLE
+    user.update!(role: target) if user.role != target
   end
 end
