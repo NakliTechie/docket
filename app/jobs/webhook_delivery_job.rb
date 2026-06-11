@@ -16,6 +16,15 @@ class WebhookDeliveryJob < ApplicationJob
 
     body = JSON.generate(delivery.payload)
     uri = URI.parse(endpoint.url)
+
+    # SSRF guard at the egress point too (defense in depth): never connect
+    # to a loopback / link-local / metadata target, and don't retry — it
+    # will never become a valid destination.
+    if (reason = Docket::OutboundUrl.blocked_reason(uri.host))
+      delivery.update!(status: :failed, last_error: "blocked: #{reason}".truncate(250))
+      return
+    end
+
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == "https"
     http.open_timeout = 5

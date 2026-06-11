@@ -104,7 +104,7 @@ done
 # --- 5. webhook endpoint + delivery log ---------------------------------------
 HTTP=$(curl -s -o /tmp/smoke_hook.json -w "%{http_code}" -X POST "$BASE/api/v1/webhook_endpoints" \
   -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
-  -d '{"webhook_endpoint": {"name": "Smoke receiver", "url": "http://localhost:9/sink", "events": ["case.created"]}}')
+  -d '{"webhook_endpoint": {"name": "Smoke receiver", "url": "http://192.0.2.1:9/sink", "events": ["case.created"]}}')
 HOOK_ID=$(python3 -c "import json; print(json.load(open('/tmp/smoke_hook.json'))['data']['id'])" 2>/dev/null)
 [ "$HTTP" = "201" ]; step "webhook endpoint registered" $?
 

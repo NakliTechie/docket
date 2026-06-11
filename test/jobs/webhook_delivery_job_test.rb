@@ -71,6 +71,18 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     assert delivery.last_error.present?
   end
 
+  test "delivery to a loopback/metadata host is failed without connecting (M22 SSRF)" do
+    # Bypass validation to simulate an endpoint that became internal.
+    @endpoint.update_column(:url, "http://169.254.169.254/latest/meta-data")
+    delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })
+
+    # No WebMock stub: if the job tried to connect, net-connect is disabled
+    # and it would raise — so reaching "failed/blocked" proves no request.
+    WebhookDeliveryJob.perform_now(delivery)
+    assert_equal "failed", delivery.reload.status
+    assert_match(/blocked/, delivery.last_error)
+  end
+
   test "internal notes never publish webhooks" do
     assert_no_difference "WebhookDelivery.count" do
       Message.create!(case: cases(:pension_case), kind: :internal_note,

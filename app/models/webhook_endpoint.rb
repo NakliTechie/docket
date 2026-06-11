@@ -47,7 +47,14 @@ class WebhookEndpoint < ApplicationRecord
 
   def url_is_http
     uri = URI.parse(url.to_s)
-    errors.add(:url, :invalid) unless uri.is_a?(URI::HTTP) && uri.host.present?
+    unless uri.is_a?(URI::HTTP) && uri.host.present?
+      errors.add(:url, :invalid)
+      return
+    end
+    # SSRF guard: reject loopback / link-local / metadata / localhost.
+    if (reason = Docket::OutboundUrl.blocked_reason(uri.host))
+      errors.add(:url, :blocked, default: "must not point at an internal address (#{reason})")
+    end
   rescue URI::InvalidURIError
     errors.add(:url, :invalid)
   end
