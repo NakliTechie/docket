@@ -27,25 +27,28 @@ class ActivityReport
   end
 
   def logins
-    AuditEntry.where(action: [ "user.login", "user.login_sso" ], created_at: range)
-              .order(id: :desc).limit(50).includes(:actor)
+    @logins ||= AuditEntry.where(action: [ "user.login", "user.login_sso" ], created_at: range)
+                          .order(id: :desc).limit(50).includes(:actor)
   end
 
+  # Reports measure what happened in the window, so a case/message later
+  # soft-deleted still counts — otherwise deleting a record silently
+  # rewrites past usage figures. (with_deleted throughout.)
   def volume_by_queue
-    @volume_by_queue ||= Case.where(created_at: range).group(:queue_id).count
+    @volume_by_queue ||= Case.with_deleted.where(created_at: range).group(:queue_id).count
                              .transform_keys { |id| CaseQueue.with_deleted.find_by(id: id) }
   end
 
   def volume_by_staff
-    @volume_by_staff ||= Case.where(created_at: range).where.not(assignee_id: nil)
+    @volume_by_staff ||= Case.with_deleted.where(created_at: range).where.not(assignee_id: nil)
                              .group(:assignee_id).count
                              .transform_keys { |id| User.with_deleted.find_by(id: id) }
   end
 
   def stats
     @stats ||= begin
-      created = Case.where(created_at: range).count
-      resolved_scope = Case.where(resolved_at: range)
+      created = Case.with_deleted.where(created_at: range).count
+      resolved_scope = Case.with_deleted.where(resolved_at: range)
       resolved = resolved_scope.count
       compliant = resolved_scope.where(resolution_breached: false).count
       {
@@ -54,17 +57,22 @@ class ActivityReport
         resolution_rate: created.zero? ? nil : (resolved * 100.0 / created).round(1),
         sla_breaches: breach_events,
         sla_compliance: resolved.zero? ? nil : (compliant * 100.0 / resolved).round(1),
-        agent_turns: Message.where(created_at: range, kind: :agent_turn).count,
-        human_replies: Message.where(created_at: range, kind: :public_reply, direction: :outbound).count
+        agent_turns: Message.with_deleted.where(created_at: range, kind: :agent_turn).count,
+        human_replies: Message.with_deleted.where(created_at: range, kind: :public_reply, direction: :outbound).count
       }
     end
   end
 
-  # Breach *events* in range: audited flag flips on cases.
+  # Breach *events* in range: count audited flips of a breach flag TO true.
+  # The old `changeset LIKE '%..breached%'` row-count also caught flags
+  # cleared back to false (a correction) and any incidental substring
+  # match — both inflated the figure. Parse the json changeset and count
+  # only `[_, true]` transitions (a single update flipping both flags = 2).
   def breach_events
     AuditEntry.where(created_at: range, action: "case.update", auditable_type: "Case")
               .where("changeset LIKE ? OR changeset LIKE ?",
-                     "%first_response_breached%", "%resolution_breached%").count
+                     "%first_response_breached%", "%resolution_breached%")
+              .sum { |entry| breach_flips(entry.changeset) }
   end
 
   def as_json(*)
@@ -100,6 +108,15 @@ class ActivityReport
   end
 
   private
+
+  # How many breach flags this audited changeset flipped TO true.
+  def breach_flips(changeset)
+    return 0 unless changeset.is_a?(Hash)
+    %w[first_response_breached resolution_breached].count do |flag|
+      change = changeset[flag]
+      change.is_a?(Array) && change.last == true
+    end
+  end
 
   # Spreadsheet formula-injection guard for text cells.
   def csv_safe(value)
