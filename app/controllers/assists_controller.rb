@@ -6,11 +6,17 @@ class AssistsController < ApplicationController
   before_action :set_case
   before_action :require_llm
 
+  # Bound the summarisation prompt so a very long thread can't blow the
+  # model's context window (or its cost): most-recent messages only, with a
+  # hard char cap on the joined thread.
+  MAX_SUMMARY_MESSAGES = 60
+  MAX_SUMMARY_CHARS = 16_000
+
   def summarise
     authorize @case, :show?
-    thread = @case.messages.order(:created_at).map { |m|
+    thread = @case.messages.order(:created_at).last(MAX_SUMMARY_MESSAGES).map { |m|
       "#{m.author_display_name} (#{m.kind}): #{m.body.truncate(800)}"
-    }.join("\n")
+    }.join("\n").truncate(MAX_SUMMARY_CHARS)
     prompt = <<~PROMPT
       [TASK:summarise]
       Summarise this case thread for a staff member in 3 sentences or fewer, ending with the next required action.

@@ -19,6 +19,17 @@ class AssistTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "summarise stays bounded on a very long thread (L)" do
+    sign_in_as users(:agent_a)
+    kase = cases(:pension_case)
+    80.times do |i|
+      kase.messages.create!(kind: :public_reply, direction: :inbound,
+                            author: kase.contact, body: "Citizen message #{i} " * 200)
+    end
+    post case_assist_summarise_path(kase)
+    assert_response :success # capped prompt, no context-window blow-up
+  end
+
   test "suggest reply renders insert-and-edit suggestion" do
     sign_in_as users(:agent_a)
     post case_assist_suggest_reply_path(cases(:pension_case))

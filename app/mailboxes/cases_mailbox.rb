@@ -98,7 +98,9 @@ class CasesMailbox < ApplicationMailbox
     body = body.force_encoding(part.charset.presence || "UTF-8") if body.encoding == Encoding::ASCII_8BIT
     body.encode("UTF-8", invalid: :replace, undef: :replace)
   rescue StandardError
-    part.decoded.to_s.scrub
+    # Reuse the bytes already decoded above rather than re-invoking
+    # part.decoded (which would just raise again if that was the failure).
+    body.to_s.scrub
   end
 
   # Prune (not just strip) so script/style CONTENT goes too.
