@@ -19,15 +19,28 @@ class CasesMailbox < ApplicationMailbox
   private
 
   def ensure_sender
-    bounced! if sender_email.blank?
+    # Bounce unless the From yields a genuinely valid email. A malformed
+    # header otherwise slips a garbage "address" through (e.g. "p" from
+    # "plain text"), which then fails Contact's email validation and 500s
+    # the intake job (M15).
+    bounced! unless sender_email&.match?(URI::MailTo::EMAIL_REGEXP)
   end
 
   def sender_email
-    @sender_email ||= mail.from&.first.to_s.strip.downcase.presence
+    return @sender_email if defined?(@sender_email)
+    # A malformed From header makes the mail gem raise on parse — treat it
+    # as no usable sender (→ bounced!) rather than crashing the job (M15).
+    @sender_email = begin
+      mail.from&.first.to_s.strip.downcase.presence
+    rescue StandardError
+      nil
+    end
   end
 
   def sender_name
-    mail[:from]&.display_names&.first.presence || sender_email.to_s.split("@").first
+    (mail[:from]&.display_names&.first.presence || sender_email.to_s.split("@").first)
+  rescue StandardError
+    sender_email.to_s.split("@").first
   end
 
   def existing_case

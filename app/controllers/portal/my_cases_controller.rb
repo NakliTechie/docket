@@ -40,7 +40,7 @@ module Portal
         @case.save!
         @case.messages.create!(kind: :public_reply, direction: :inbound,
                                author: current_contact, body: body,
-                               files: params.dig(:case, :files).presence || [])
+                               files: safe_files(params.dig(:case, :files)))
       end
       redirect_to portal_my_case_path(@case), notice: t("portal.my_cases.created", tracking_id: @case.tracking_id)
     rescue ActiveRecord::RecordInvalid => e
@@ -55,7 +55,7 @@ module Portal
       end
       message = @case.messages.build(kind: :public_reply, direction: :inbound,
                                      author: current_contact, body: params[:body],
-                                     files: params[:files].presence || [])
+                                     files: safe_files(params[:files]))
       if message.save
         redirect_to portal_my_case_path(@case), notice: t("portal.tracking.reply_sent")
       else

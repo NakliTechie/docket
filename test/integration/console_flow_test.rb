@@ -115,4 +115,20 @@ class ConsoleFlowTest < ActionDispatch::IntegrationTest
     refute Case.exists?(kase.id)
     assert Case.with_deleted.exists?(kase.id)
   end
+
+  test "a failed message save preserves the typed reply in the composer (M30)" do
+    sign_in_as users(:admin)
+    too_many = Array.new(6) do |i|
+      file = Tempfile.new([ "f#{i}", ".txt" ])
+      file.write("hi"); file.rewind
+      Rack::Test::UploadedFile.new(file.path, "text/plain", original_filename: "f#{i}.txt")
+    end
+
+    post case_messages_path(cases(:pension_case)), params: {
+      message: { body: "My carefully typed reply", kind: "public_reply", files: too_many }
+    }
+    assert_redirected_to case_path(cases(:pension_case))
+    follow_redirect!
+    assert_includes response.body, "My carefully typed reply"
+  end
 end

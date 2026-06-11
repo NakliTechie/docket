@@ -27,7 +27,7 @@ module Portal
 
       message = @case.messages.build(
         kind: :public_reply, direction: :inbound, author: @case.contact,
-        body: params[:body], files: params[:files].presence || []
+        body: params[:body], files: safe_files(params[:files])
       )
       if @case.status_closed?
         flash.now[:alert] = t("portal.tracking.closed_no_reply")

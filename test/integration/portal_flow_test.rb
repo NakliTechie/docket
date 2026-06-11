@@ -22,6 +22,18 @@ class PortalFlowTest < ActionDispatch::IntegrationTest
     assert_equal "inbound", kase.messages.first.direction
   end
 
+  test "string file params are ignored (no attach-by-reference or 500) (M12)" do
+    assert_difference "Case.count", 1 do
+      post portal_cases_path, params: { portal_submission: {
+        name: "Citizen", email: "filecitizen@example.com",
+        subject: "Has bad file param", description: "Body",
+        files: [ "some-active-storage-signed-id-or-garbage" ]
+      } }
+    end
+    assert_response :created # rendered confirmation, not a 500
+    assert_empty Case.order(:id).last.messages.first.files
+  end
+
   test "submission reuses an existing contact by email" do
     assert_no_difference "Contact.count" do
       post portal_cases_path, params: { portal_submission: {

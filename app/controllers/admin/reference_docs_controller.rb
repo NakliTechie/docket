@@ -16,7 +16,10 @@ module Admin
       @reference_doc = ReferenceDoc.new(doc_params)
       authorize @reference_doc
       extract_body_from_upload
-      if @reference_doc.save
+      # errors.empty? first: save re-runs validations and clears the errors
+      # extract_body_from_upload added, so a failed extraction would
+      # otherwise be wiped and report success (M33).
+      if @reference_doc.errors.empty? && @reference_doc.save
         redirect_to admin_reference_docs_path, notice: t(".created")
       else
         render :new, status: :unprocessable_entity
@@ -31,7 +34,7 @@ module Admin
       authorize @reference_doc
       @reference_doc.assign_attributes(doc_params)
       extract_body_from_upload
-      if @reference_doc.save
+      if @reference_doc.errors.empty? && @reference_doc.save
         redirect_to admin_reference_docs_path, notice: t(".updated")
       else
         render :edit, status: :unprocessable_entity
