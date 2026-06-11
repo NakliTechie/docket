@@ -36,6 +36,13 @@ class MessageTest < ActiveSupport::TestCase
     assert_equal "in_progress", kase.reload.status
   end
 
+  test "citizen reply on a resolved case reopens it (M13)" do
+    kase = cases(:resolved_case)
+    Message.create!(case: kase, kind: :public_reply, direction: :inbound,
+                    author: kase.contact, body: "This still isn't fixed.")
+    assert_equal "reopened", kase.reload.status
+  end
+
   test "system author displays i18n label" do
     message = Message.new(body: "x")
     assert_equal I18n.t("messages.author.system"), message.author_display_name
