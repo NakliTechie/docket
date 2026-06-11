@@ -1,0 +1,47 @@
+<%= form_with model: sequence, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: sequence %>
+
+  <div class="form-row <%= "field-error" if sequence.errors[:name].any? %>">
+    <%= f.label :name, t("sequences.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% sequence.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="checkbox-row form-row">
+    <%= f.hidden_field :active, value: "0" %>
+    <%= f.check_box :active %>
+    <%= f.label :active, t("sequences.fields.active") %>
+  </div>
+
+  <fieldset>
+    <legend><%= t("sequences.fields.steps") %></legend>
+    <p class="form-hint"><%= t("sequences.form.steps_hint") %></p>
+    <%= f.fields_for :sequence_steps do |sf| %>
+      <div class="sequence-step">
+        <div class="form-row">
+          <%= sf.label :position, t("sequences.fields.position") %>
+          <%= sf.number_field :position, min: 0, style: "width:4rem" %>
+          <%= sf.label :delay_days, t("sequences.fields.delay_days") %>
+          <%= sf.number_field :delay_days, min: 0, style: "width:5rem" %>
+          <% unless sequence.new_record? %>
+            <label><%= sf.check_box :_destroy %> <%= t("sequences.fields.remove") %></label>
+          <% end %>
+        </div>
+        <div class="form-row">
+          <%= sf.label :subject, t("sequences.fields.subject") %>
+          <%= sf.text_field :subject %>
+        </div>
+        <div class="form-row">
+          <%= sf.label :body, t("sequences.fields.body") %>
+          <%= sf.text_area :body, rows: 4 %>
+          <p class="form-hint"><%= t("sequences.form.body_hint") %></p>
+        </div>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), sequences_path, class: "btn" %>
+  </div>
+<% end %>

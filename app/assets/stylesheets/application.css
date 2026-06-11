@@ -396,3 +396,60 @@ kbd {
   white-space: nowrap;
   border: 0;
 }
+
+/* ── Sales kanban (v1.2 CRM) ───────────────────────────────────────── */
+.kanban {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+.kanban-column {
+  flex: 0 0 16rem;
+  background: var(--color-paper-shade);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  min-height: 8rem;
+}
+.kanban-column.is-drag-over {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.kanban-column-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-ink-soft);
+}
+.kanban-count {
+  font-size: var(--text-xs);
+  background: var(--color-paper-deep);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  color: var(--color-ink-faint);
+}
+.kanban-cards { display: flex; flex-direction: column; gap: 0.5rem; min-height: 2rem; }
+.kanban-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.7rem;
+  box-shadow: var(--shadow);
+  cursor: grab;
+}
+.kanban-card.is-dragging { opacity: 0.5; }
+.kanban-card-title { font-weight: 600; font-size: var(--text-sm); }
+.kanban-card-value { font-size: var(--text-sm); color: var(--color-success); margin-top: 0.2rem; }
+.kanban-card-meta { font-size: var(--text-xs); color: var(--color-ink-faint); margin-top: 0.15rem; }
+.stage-table td { padding: 0.2rem 0.4rem; }
+
+/* Status badge variants for leads & deals */
+.badge-new, .badge-open { background: var(--color-info-soft); color: var(--color-info); }
+.badge-working, .badge-qualified { background: var(--color-warning-soft); color: var(--color-warning); }
+.badge-converted, .badge-won { background: var(--color-success-soft); color: var(--color-success); }
+.badge-unqualified, .badge-lost { background: var(--color-danger-soft); color: var(--color-danger); }

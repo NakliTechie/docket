@@ -13,6 +13,10 @@ hi:
       categories: "श्रेणियाँ"
       sla_policies: "एसएलए नीतियाँ"
       macros: "मैक्रो"
+      leads: "लीड्स"
+      deals: "सौदे"
+      pipelines: "पाइपलाइनें"
+      sequences: "अनुक्रम"
       users: "उपयोगकर्ता"
       activity: "गतिविधि"
       audit: "ऑडिट"
@@ -273,6 +277,199 @@ hi:
       updated: "संपर्क अद्यतन किया गया।"
     destroy:
       deleted: "संपर्क हटाया गया।"
+
+  leads:
+    fields:
+      name: "नाम"
+      company_name: "कंपनी"
+      email: "ईमेल"
+      phone: "फ़ोन"
+      source: "स्रोत"
+      owner: "स्वामी"
+      value_estimate: "अनुमानित मूल्य (₹)"
+      contact: "संपर्क"
+      notes: "टिप्पणियाँ"
+      status: "स्थिति"
+    form:
+      value_hint: "अनुमानित सौदा मूल्य रुपयों में।"
+    enum:
+      status:
+        new: "नया"
+        working: "प्रगति पर"
+        qualified: "योग्य"
+        unqualified: "अयोग्य"
+        converted: "रूपांतरित"
+      source:
+        web_form: "वेब फ़ॉर्म"
+        api: "एपीआई"
+        manual: "मैन्युअल"
+        import: "आयात"
+        referral: "रेफरल"
+    index:
+      title: "लीड्स"
+      new_lead: "नई लीड"
+      columns:
+        name: "नाम"
+        company: "कंपनी"
+        email: "ईमेल"
+        status: "स्थिति"
+        owner: "स्वामी"
+        created: "बनाया गया"
+      empty:
+        title: "अभी कोई लीड नहीं"
+        hint: "किसी संभावित ग्राहक को मैन्युअल रूप से जोड़ें, या API के ज़रिए लीड बनाएं।"
+    show:
+      details: "विवरण"
+      enroll_in_sequence: "अनुक्रम में नामांकित करें"
+      enroll: "नामांकित करें"
+      convert: "संपर्क में बदलें"
+      confirm_convert: "इस लीड को संपर्क में बदलें?"
+      mark_unqualified: "अयोग्य चिह्नित करें"
+      confirm_delete: "इस लीड को हटाएं?"
+    new:
+      title: "नई लीड"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "लीड बनाई गई।"
+    update:
+      updated: "लीड अपडेट की गई।"
+    destroy:
+      deleted: "लीड हटाई गई।"
+    convert:
+      converted: "लीड को संपर्क में बदला गया।"
+    mark_unqualified:
+      unqualified: "लीड अयोग्य चिह्नित की गई।"
+
+  deals:
+    fields:
+      name: "नाम"
+      pipeline: "पाइपलाइन"
+      stage: "चरण"
+      value: "मूल्य (₹)"
+      owner: "स्वामी"
+      contact: "संपर्क"
+      organisation: "संगठन"
+      expected_close_on: "अपेक्षित समापन"
+      source_lead: "स्रोत लीड"
+      status: "स्थिति"
+    form:
+      pipeline_hint: "नए सौदे इस पाइपलाइन के पहले चरण में आते हैं।"
+    enum:
+      status:
+        open: "खुला"
+        won: "जीता"
+        lost: "हारा"
+    index:
+      title: "सौदे"
+      new_deal: "नया सौदा"
+      no_pipeline:
+        title: "अभी कोई पाइपलाइन नहीं"
+        hint: "सौदों को बोर्ड पर ट्रैक करने के लिए एक पाइपलाइन बनाएं।"
+    show:
+      details: "विवरण"
+      confirm_delete: "इस सौदे को हटाएं?"
+    new:
+      title: "नया सौदा"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "सौदा बनाया गया।"
+    update:
+      updated: "सौदा अपडेट किया गया।"
+    destroy:
+      deleted: "सौदा हटाया गया।"
+    move:
+      moved: "सौदा स्थानांतरित किया गया।"
+  pipelines:
+    fields:
+      name: "नाम"
+      active: "सक्रिय"
+      stages: "चरण"
+      stage_name: "चरण नाम"
+      position: "क्रम"
+      probability: "संभावना %"
+      is_won: "जीत"
+      is_lost: "हार"
+      remove: "हटाएं"
+    form:
+      stages_hint: "जीत/हार चरण में कार्ड आने पर सौदा बंद हो जाता है।"
+    index:
+      title: "पाइपलाइनें"
+      new_pipeline: "नई पाइपलाइन"
+      columns:
+        name: "नाम"
+        stages: "चरण"
+        active: "सक्रिय"
+      empty:
+        title: "अभी कोई पाइपलाइन नहीं"
+        hint: "पाइपलाइन उन चरणों को परिभाषित करती है जिनसे सौदे बोर्ड पर गुज़रते हैं।"
+    new:
+      title: "नई पाइपलाइन"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "पाइपलाइन बनाई गई।"
+    update:
+      updated: "पाइपलाइन अपडेट की गई।"
+    destroy:
+      deleted: "पाइपलाइन हटाई गई।"
+
+  sequences:
+    inactive: "निष्क्रिय"
+    day_count:
+      zero: "उसी दिन"
+      one: "1 दिन बाद"
+      other: "%{count} दिन बाद"
+    fields:
+      name: "नाम"
+      active: "सक्रिय"
+      steps: "चरण"
+      position: "क्रम"
+      delay_days: "देरी (दिन)"
+      subject: "विषय"
+      body: "संदेश"
+      remove: "हटाएं"
+    form:
+      steps_hint: "हर चरण अपनी देरी के बाद लक्ष्य को आपके मेल गेटवे से ईमेल भेजता है।"
+      body_hint: "व्यक्तिगत करने के लिए {{contact_name}} और {{company_name}} का उपयोग करें।"
+    enum:
+      status:
+        active: "सक्रिय"
+        completed: "पूर्ण"
+        cancelled: "रद्द"
+    index:
+      title: "अनुक्रम"
+      new_sequence: "नया अनुक्रम"
+      columns:
+        name: "नाम"
+        steps: "चरण"
+        active: "सक्रिय"
+      empty:
+        title: "अभी कोई अनुक्रम नहीं"
+        hint: "एक अनुक्रम लीड या संपर्कों को समयबद्ध ईमेल की श्रृंखला भेजता है।"
+    show:
+      steps: "चरण"
+      enrollments: "नामांकन"
+      no_enrollments: "अभी कोई नामांकित नहीं है।"
+      confirm_delete: "इस अनुक्रम को हटाएं?"
+      cancel: "रद्द करें"
+    new:
+      title: "नया अनुक्रम"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "अनुक्रम बनाया गया।"
+    update:
+      updated: "अनुक्रम अपडेट किया गया।"
+    destroy:
+      deleted: "अनुक्रम हटाया गया।"
+  sequence_enrollments:
+    create:
+      enrolled: "अनुक्रम में नामांकित किया गया।"
+      enroll_failed: "नामांकन नहीं हो सका — एक मान्य लक्ष्य चुनें।"
+    cancel:
+      cancelled: "नामांकन रद्द किया गया।"
 
   organisations:
     enum:
@@ -884,6 +1081,19 @@ hi:
           attributes:
             base:
               unreachable: "ईमेल, फ़ोन या ग्राहक आईडी में से कम-से-कम एक आवश्यक है"
+        lead:
+          attributes:
+            base:
+              unreachable: "ईमेल या फ़ोन में से कम से कम एक चाहिए"
+        pipeline:
+          attributes:
+            base:
+              no_stages: "कम से कम एक चरण चाहिए"
+              won_and_lost: "एक चरण जीत और हार दोनों नहीं हो सकता"
+        deal:
+          attributes:
+            pipeline_stage:
+              not_in_pipeline: "सौदे की पाइपलाइन से संबंधित होना चाहिए"
         message:
           attributes:
             files:

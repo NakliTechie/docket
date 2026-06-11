@@ -1,0 +1,46 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <% if @pipelines.size > 1 %>
+      <%= form_with url: deals_path, method: :get, class: "inline-form" do |f| %>
+        <%= f.select :pipeline_id, @pipelines.map { |p| [ p.name, p.id ] }, { selected: @pipeline&.id },
+              onchange: "this.form.requestSubmit()" %>
+      <% end %>
+    <% end %>
+    <% if policy(Deal).create? %>
+      <%= link_to t(".new_deal"), new_deal_path, class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+<% if @pipeline %>
+  <div class="kanban" data-controller="kanban" data-kanban-move-url-value="<%= deals_path %>">
+    <% @stages.each do |stage| %>
+      <% stage_deals = @deals_by_stage[stage.id] || [] %>
+      <section class="kanban-column" data-stage-id="<%= stage.id %>"
+               data-action="dragover->kanban#dragover drop->kanban#drop dragleave->kanban#dragleave">
+        <h2 class="kanban-column-title">
+          <%= stage.name %>
+          <span class="kanban-count"><%= stage_deals.size %></span>
+        </h2>
+        <div class="kanban-cards">
+          <% stage_deals.each do |deal| %>
+            <article class="kanban-card" draggable="true" data-deal-id="<%= deal.id %>"
+                     data-action="dragstart->kanban#dragstart dragend->kanban#dragend">
+              <%= link_to deal.name, deal_path(deal), class: "kanban-card-title" %>
+              <% if deal.value_cents %>
+                <div class="kanban-card-value"><%= number_to_currency(deal.value, unit: "₹") %></div>
+              <% end %>
+              <% if deal.contact %><div class="kanban-card-meta"><%= deal.contact.name %></div><% end %>
+              <% if deal.owner %><div class="kanban-card-meta"><%= deal.owner.name %></div><% end %>
+            </article>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".no_pipeline.title"), hint: t(".no_pipeline.hint"),
+        action: policy(Pipeline).create? ? link_to(t("pipelines.index.new_pipeline"), new_pipeline_path, class: "btn btn-primary") : nil %>
+<% end %>

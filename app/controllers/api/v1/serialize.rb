@@ -69,6 +69,57 @@ module Api
           notes: o.notes, created_at: o.created_at, updated_at: o.updated_at }
       end
 
+      def lead(l)
+        {
+          id: l.id, name: l.name, email: l.email, phone: l.phone,
+          company_name: l.company_name, source: l.source, status: l.status,
+          owner_id: l.owner_id, contact_id: l.contact_id, converted_deal_id: l.converted_deal_id,
+          value_estimate_cents: l.value_estimate_cents, notes: l.notes,
+          converted_at: l.converted_at, created_at: l.created_at, updated_at: l.updated_at
+        }
+      end
+
+      def deal(d)
+        {
+          id: d.id, name: d.name, pipeline_id: d.pipeline_id, pipeline_stage_id: d.pipeline_stage_id,
+          status: d.status, value_cents: d.value_cents, currency: d.currency,
+          owner_id: d.owner_id, contact_id: d.contact_id, organisation_id: d.organisation_id,
+          lead_id: d.lead_id, expected_close_on: d.expected_close_on, closed_at: d.closed_at,
+          created_at: d.created_at, updated_at: d.updated_at
+        }
+      end
+
+      def pipeline(p)
+        {
+          id: p.id, name: p.name, slug: p.slug, position: p.position, active: p.active,
+          stages: p.pipeline_stages.sort_by(&:position).map { |s|
+            { id: s.id, name: s.name, position: s.position, probability: s.probability,
+              is_won: s.is_won, is_lost: s.is_lost }
+          },
+          created_at: p.created_at, updated_at: p.updated_at
+        }
+      end
+
+      def sequence(s)
+        {
+          id: s.id, name: s.name, active: s.active,
+          steps: s.ordered_steps.map { |st|
+            { id: st.id, position: st.position, delay_days: st.delay_days,
+              channel: st.channel, subject: st.subject, body: st.body }
+          },
+          created_at: s.created_at, updated_at: s.updated_at
+        }
+      end
+
+      def sequence_enrollment(e)
+        {
+          id: e.id, sequence_id: e.sequence_id, enrollable_type: e.enrollable_type,
+          enrollable_id: e.enrollable_id, status: e.status,
+          current_step_position: e.current_step_position, next_run_at: e.next_run_at,
+          created_at: e.created_at, updated_at: e.updated_at
+        }
+      end
+
       def queue(q)
         { id: q.id, name: q.name, slug: q.slug, description: q.description,
           member_ids: q.member_ids, created_at: q.created_at, updated_at: q.updated_at }

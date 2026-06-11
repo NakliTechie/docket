@@ -13,6 +13,10 @@ en:
       categories: "Categories"
       sla_policies: "SLA policies"
       macros: "Macros"
+      leads: "Leads"
+      deals: "Deals"
+      pipelines: "Pipelines"
+      sequences: "Sequences"
       users: "Users"
       activity: "Activity"
       audit: "Audit"
@@ -273,6 +277,199 @@ en:
       updated: "Contact updated."
     destroy:
       deleted: "Contact deleted."
+
+  leads:
+    fields:
+      name: "Name"
+      company_name: "Company"
+      email: "Email"
+      phone: "Phone"
+      source: "Source"
+      owner: "Owner"
+      value_estimate: "Estimated value (₹)"
+      contact: "Contact"
+      notes: "Notes"
+      status: "Status"
+    form:
+      value_hint: "Estimated deal value in rupees."
+    enum:
+      status:
+        new: "New"
+        working: "Working"
+        qualified: "Qualified"
+        unqualified: "Unqualified"
+        converted: "Converted"
+      source:
+        web_form: "Web form"
+        api: "API"
+        manual: "Manual"
+        import: "Import"
+        referral: "Referral"
+    index:
+      title: "Leads"
+      new_lead: "New lead"
+      columns:
+        name: "Name"
+        company: "Company"
+        email: "Email"
+        status: "Status"
+        owner: "Owner"
+        created: "Created"
+      empty:
+        title: "No leads yet"
+        hint: "Capture a prospect manually, or let your systems create leads via the API."
+    show:
+      details: "Details"
+      enroll_in_sequence: "Enroll in a sequence"
+      enroll: "Enroll"
+      convert: "Convert to contact"
+      confirm_convert: "Convert this lead to a contact?"
+      mark_unqualified: "Mark unqualified"
+      confirm_delete: "Delete this lead?"
+    new:
+      title: "New lead"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Lead created."
+    update:
+      updated: "Lead updated."
+    destroy:
+      deleted: "Lead deleted."
+    convert:
+      converted: "Lead converted to a contact."
+    mark_unqualified:
+      unqualified: "Lead marked unqualified."
+
+  deals:
+    fields:
+      name: "Name"
+      pipeline: "Pipeline"
+      stage: "Stage"
+      value: "Value (₹)"
+      owner: "Owner"
+      contact: "Contact"
+      organisation: "Organisation"
+      expected_close_on: "Expected close"
+      source_lead: "Source lead"
+      status: "Status"
+    form:
+      pipeline_hint: "New deals land in this pipeline's first stage."
+    enum:
+      status:
+        open: "Open"
+        won: "Won"
+        lost: "Lost"
+    index:
+      title: "Deals"
+      new_deal: "New deal"
+      no_pipeline:
+        title: "No pipeline yet"
+        hint: "Create a pipeline to start tracking deals on the board."
+    show:
+      details: "Details"
+      confirm_delete: "Delete this deal?"
+    new:
+      title: "New deal"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Deal created."
+    update:
+      updated: "Deal updated."
+    destroy:
+      deleted: "Deal deleted."
+    move:
+      moved: "Deal moved."
+  pipelines:
+    fields:
+      name: "Name"
+      active: "Active"
+      stages: "Stages"
+      stage_name: "Stage name"
+      position: "Order"
+      probability: "Probability %"
+      is_won: "Won"
+      is_lost: "Lost"
+      remove: "Remove"
+    form:
+      stages_hint: "Won/Lost stages close a deal when a card lands in them."
+    index:
+      title: "Pipelines"
+      new_pipeline: "New pipeline"
+      columns:
+        name: "Name"
+        stages: "Stages"
+        active: "Active"
+      empty:
+        title: "No pipelines yet"
+        hint: "A pipeline defines the stages deals move through on the board."
+    new:
+      title: "New pipeline"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Pipeline created."
+    update:
+      updated: "Pipeline updated."
+    destroy:
+      deleted: "Pipeline deleted."
+
+  sequences:
+    inactive: "Inactive"
+    day_count:
+      zero: "Same day"
+      one: "After 1 day"
+      other: "After %{count} days"
+    fields:
+      name: "Name"
+      active: "Active"
+      steps: "Steps"
+      position: "Order"
+      delay_days: "Delay (days)"
+      subject: "Subject"
+      body: "Message"
+      remove: "Remove"
+    form:
+      steps_hint: "Each step waits its delay, then emails the target through your mail gateway."
+      body_hint: "Use {{contact_name}} and {{company_name}} for personalisation."
+    enum:
+      status:
+        active: "Active"
+        completed: "Completed"
+        cancelled: "Cancelled"
+    index:
+      title: "Sequences"
+      new_sequence: "New sequence"
+      columns:
+        name: "Name"
+        steps: "Steps"
+        active: "Active"
+      empty:
+        title: "No sequences yet"
+        hint: "A sequence sends a series of timed emails to leads or contacts."
+    show:
+      steps: "Steps"
+      enrollments: "Enrollments"
+      no_enrollments: "No one is enrolled yet."
+      confirm_delete: "Delete this sequence?"
+      cancel: "Cancel"
+    new:
+      title: "New sequence"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Sequence created."
+    update:
+      updated: "Sequence updated."
+    destroy:
+      deleted: "Sequence deleted."
+  sequence_enrollments:
+    create:
+      enrolled: "Enrolled in the sequence."
+      enroll_failed: "Could not enroll — pick a valid target."
+    cancel:
+      cancelled: "Enrollment cancelled."
 
   organisations:
     enum:
@@ -884,6 +1081,19 @@ en:
           attributes:
             base:
               unreachable: "needs at least one of email, phone, or customer ID"
+        lead:
+          attributes:
+            base:
+              unreachable: "needs at least one of email or phone"
+        pipeline:
+          attributes:
+            base:
+              no_stages: "needs at least one stage"
+              won_and_lost: "a stage cannot be both won and lost"
+        deal:
+          attributes:
+            pipeline_stage:
+              not_in_pipeline: "must belong to the deal's pipeline"
         message:
           attributes:
             files:

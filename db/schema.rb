@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_100004) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -146,6 +146,57 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
     t.index ["phone"], name: "index_contacts_on_phone"
   end
 
+  create_table "deals", force: :cascade do |t|
+    t.datetime "closed_at"
+    t.integer "contact_id"
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.datetime "deleted_at"
+    t.date "expected_close_on"
+    t.integer "lead_id"
+    t.string "name", null: false
+    t.integer "organisation_id"
+    t.integer "owner_id"
+    t.integer "pipeline_id", null: false
+    t.integer "pipeline_stage_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "value_cents"
+    t.index ["contact_id"], name: "index_deals_on_contact_id"
+    t.index ["deleted_at"], name: "index_deals_on_deleted_at"
+    t.index ["lead_id"], name: "index_deals_on_lead_id"
+    t.index ["organisation_id"], name: "index_deals_on_organisation_id"
+    t.index ["owner_id"], name: "index_deals_on_owner_id"
+    t.index ["pipeline_id", "pipeline_stage_id"], name: "index_deals_on_pipeline_id_and_pipeline_stage_id"
+    t.index ["pipeline_id"], name: "index_deals_on_pipeline_id"
+    t.index ["pipeline_stage_id"], name: "index_deals_on_pipeline_stage_id"
+    t.index ["status"], name: "index_deals_on_status"
+  end
+
+  create_table "leads", force: :cascade do |t|
+    t.string "company_name"
+    t.integer "contact_id"
+    t.datetime "converted_at"
+    t.integer "converted_deal_id"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "email"
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "owner_id"
+    t.string "phone"
+    t.integer "source", default: 2, null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "value_estimate_cents"
+    t.index ["contact_id"], name: "index_leads_on_contact_id"
+    t.index ["converted_deal_id"], name: "index_leads_on_converted_deal_id"
+    t.index ["deleted_at"], name: "index_leads_on_deleted_at"
+    t.index ["email"], name: "index_leads_on_email"
+    t.index ["owner_id"], name: "index_leads_on_owner_id"
+    t.index ["status"], name: "index_leads_on_status"
+  end
+
   create_table "macros", force: :cascade do |t|
     t.text "body", null: false
     t.datetime "created_at", null: false
@@ -202,6 +253,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
     t.index ["name"], name: "index_organisations_on_name", unique: true, where: "deleted_at IS NULL"
   end
 
+  create_table "pipeline_stages", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.boolean "is_lost", default: false, null: false
+    t.boolean "is_won", default: false, null: false
+    t.string "name", null: false
+    t.integer "pipeline_id", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "probability"
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_pipeline_stages_on_deleted_at"
+    t.index ["pipeline_id", "position"], name: "index_pipeline_stages_on_pipeline_id_and_position"
+    t.index ["pipeline_id"], name: "index_pipeline_stages_on_pipeline_id"
+  end
+
+  create_table "pipelines", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_pipelines_on_deleted_at"
+    t.index ["slug"], name: "index_pipelines_on_slug", unique: true, where: "deleted_at IS NULL"
+  end
+
   create_table "queue_memberships", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "queue_id", null: false
@@ -232,6 +310,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_reference_docs_on_deleted_at"
     t.index ["title"], name: "index_reference_docs_on_title", unique: true, where: "deleted_at IS NULL"
+  end
+
+  create_table "sequence_enrollments", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "current_step_position", default: 0, null: false
+    t.datetime "deleted_at"
+    t.integer "enrollable_id", null: false
+    t.string "enrollable_type", null: false
+    t.datetime "next_run_at"
+    t.integer "sequence_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_sequence_enrollments_on_deleted_at"
+    t.index ["enrollable_type", "enrollable_id"], name: "index_sequence_enrollments_on_enrollable"
+    t.index ["sequence_id"], name: "index_sequence_enrollments_on_sequence_id"
+    t.index ["status", "next_run_at"], name: "index_sequence_enrollments_on_status_and_next_run_at"
+  end
+
+  create_table "sequence_steps", force: :cascade do |t|
+    t.text "body"
+    t.integer "channel", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "delay_days", default: 0, null: false
+    t.datetime "deleted_at"
+    t.integer "position", default: 0, null: false
+    t.integer "sequence_id", null: false
+    t.string "subject"
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_sequence_steps_on_deleted_at"
+    t.index ["sequence_id", "position"], name: "index_sequence_steps_on_sequence_id_and_position"
+    t.index ["sequence_id"], name: "index_sequence_steps_on_sequence_id"
+  end
+
+  create_table "sequences", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_sequences_on_deleted_at"
   end
 
   create_table "service_accounts", force: :cascade do |t|
@@ -338,10 +456,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_000001) do
   add_foreign_key "cases", "sla_policies"
   add_foreign_key "cases", "users", column: "assignee_id"
   add_foreign_key "contacts", "organisations"
+  add_foreign_key "deals", "contacts"
+  add_foreign_key "deals", "leads"
+  add_foreign_key "deals", "organisations"
+  add_foreign_key "deals", "pipeline_stages"
+  add_foreign_key "deals", "pipelines"
+  add_foreign_key "deals", "users", column: "owner_id"
+  add_foreign_key "leads", "contacts"
+  add_foreign_key "leads", "deals", column: "converted_deal_id"
+  add_foreign_key "leads", "users", column: "owner_id"
   add_foreign_key "messages", "cases"
   add_foreign_key "oauth_access_tokens", "service_accounts"
+  add_foreign_key "pipeline_stages", "pipelines"
   add_foreign_key "queue_memberships", "queues"
   add_foreign_key "queue_memberships", "users"
+  add_foreign_key "sequence_enrollments", "sequences"
+  add_foreign_key "sequence_steps", "sequences"
   add_foreign_key "sessions", "users"
   add_foreign_key "sla_targets", "sla_policies"
   add_foreign_key "webhook_deliveries", "webhook_endpoints"

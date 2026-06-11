@@ -53,6 +53,24 @@ module Docket
           ),
           Organisation: object_schema(id: :integer, name: :string, kind: :string, external_ref: :string,
                                       notes: :string, created_at: :datetime, updated_at: :datetime),
+          Lead: object_schema(id: :integer, name: :string, email: :string, phone: :string,
+                              company_name: :string, source: enum(Lead.sources.keys), status: enum(Lead.statuses.keys),
+                              owner_id: :integer, contact_id: :integer, converted_deal_id: :integer, value_estimate_cents: :integer,
+                              notes: :string, converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
+          Deal: object_schema(id: :integer, name: :string, pipeline_id: :integer, pipeline_stage_id: :integer,
+                              status: enum(Deal.statuses.keys), value_cents: :integer, currency: :string,
+                              owner_id: :integer, contact_id: :integer, organisation_id: :integer, lead_id: :integer,
+                              expected_close_on: :datetime, closed_at: :datetime, created_at: :datetime, updated_at: :datetime),
+          Pipeline: object_schema(id: :integer, name: :string, slug: :string, position: :integer, active: :boolean,
+                                  stages: { type: "array", items: { type: "object" } },
+                                  created_at: :datetime, updated_at: :datetime),
+          Sequence: object_schema(id: :integer, name: :string, active: :boolean,
+                                  steps: { type: "array", items: { type: "object" } },
+                                  created_at: :datetime, updated_at: :datetime),
+          SequenceEnrollment: object_schema(id: :integer, sequence_id: :integer, enrollable_type: :string,
+                                            enrollable_id: :integer, status: enum(SequenceEnrollment.statuses.keys),
+                                            current_step_position: :integer, next_run_at: :datetime,
+                                            created_at: :datetime, updated_at: :datetime),
           Queue: object_schema(id: :integer, name: :string, slug: :string, description: :string,
                                member_ids: { type: "array", items: { type: "integer" } },
                                created_at: :datetime, updated_at: :datetime),
@@ -120,6 +138,22 @@ module Docket
       crud(result, "contacts", "Contact", extra_params: %w[q external_id organisation_id],
            create_note: "Contacts are addressable by numeric id or ext:{external_id}.")
       crud(result, "organisations", "Organisation")
+      crud(result, "leads", "Lead", extra_params: %w[q status owner_id])
+      result["/leads/{id}/convert"] = { post: op("Convert a lead — upserts/links a Contact and stamps the lead converted",
+        params: [ id_param ], responses: { "200" => "Converted" }) }
+      crud(result, "pipelines", "Pipeline")
+      crud(result, "deals", "Deal", extra_params: %w[pipeline_id status])
+      result["/deals/{id}/move"] = { post: op("Move a deal to another stage in its pipeline (the kanban drag)",
+        params: [ id_param ], request: { pipeline_stage_id: :integer }, responses: { "200" => "Moved" }) }
+      crud(result, "sequences", "Sequence")
+      result["/sequence_enrollments"] = {
+        get: op("List sequence enrollments", params: [ query_param("sequence_id") ], schema: "SequenceEnrollment"),
+        post: op("Enroll a Lead or Contact in a sequence",
+                 request: { sequence_id: :integer, enrollable_type: :string, enrollable_id: :integer },
+                 schema: "SequenceEnrollment")
+      }
+      result["/sequence_enrollments/{id}"] = { get: op("Show enrollment", params: [ id_param ], schema: "SequenceEnrollment") }
+      result["/sequence_enrollments/{id}/cancel"] = { post: op("Cancel an active enrollment", params: [ id_param ]) }
       crud(result, "queues", "Queue", create_note: "Queues are addressable by id or slug.")
       crud(result, "categories", "Category")
       result["/categories/{id}/toggle_auto_resolve"] = { post: op("Flip AI auto-resolve for the category (admin user tokens only)", params: [ id_param ]) }

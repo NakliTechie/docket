@@ -1,0 +1,25 @@
+sales_new:
+  pipeline: sales
+  name: New
+  position: 0
+  probability: 10
+
+sales_qualified:
+  pipeline: sales
+  name: Qualified
+  position: 1
+  probability: 50
+
+sales_won:
+  pipeline: sales
+  name: Won
+  position: 2
+  probability: 100
+  is_won: true
+
+sales_lost:
+  pipeline: sales
+  name: Lost
+  position: 3
+  probability: 0
+  is_lost: true

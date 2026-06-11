@@ -3,6 +3,10 @@ shared: &shared
     class: SlaBreachSweepJob
     queue: default
     schedule: every 5 minutes
+  sequence_runner:
+    class: SequenceRunnerJob
+    queue: default
+    schedule: every hour at minute 5
 
 development:
   <<: *shared

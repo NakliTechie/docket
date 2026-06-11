@@ -9,6 +9,7 @@ class ServiceAccount < ApplicationRecord
     cases:read cases:write
     contacts:read contacts:write
     organisations:read organisations:write
+    crm:read crm:write
     config:read config:write
     audit:read
     webhooks:manage

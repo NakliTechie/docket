@@ -1,0 +1,51 @@
+<%= form_with model: pipeline, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: pipeline %>
+
+  <div class="form-row <%= "field-error" if pipeline.errors[:name].any? %>">
+    <%= f.label :name, t("pipelines.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% pipeline.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="checkbox-row form-row">
+    <%= f.hidden_field :active, value: "0" %>
+    <%= f.check_box :active %>
+    <%= f.label :active, t("pipelines.fields.active") %>
+  </div>
+
+  <fieldset>
+    <legend><%= t("pipelines.fields.stages") %></legend>
+    <p class="form-hint"><%= t("pipelines.form.stages_hint") %></p>
+    <table class="stage-table">
+      <thead>
+        <tr>
+          <th><%= t("pipelines.fields.stage_name") %></th>
+          <th><%= t("pipelines.fields.position") %></th>
+          <th><%= t("pipelines.fields.probability") %></th>
+          <th><%= t("pipelines.fields.is_won") %></th>
+          <th><%= t("pipelines.fields.is_lost") %></th>
+          <% unless pipeline.new_record? %><th><%= t("pipelines.fields.remove") %></th><% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <%= f.fields_for :pipeline_stages do |sf| %>
+          <tr>
+            <td><%= sf.text_field :name %></td>
+            <td><%= sf.number_field :position, min: 0, style: "width:4rem" %></td>
+            <td><%= sf.number_field :probability, min: 0, max: 100, style: "width:5rem" %></td>
+            <td><%= sf.check_box :is_won %></td>
+            <td><%= sf.check_box :is_lost %></td>
+            <% unless pipeline.new_record? %>
+              <td><%= sf.check_box :_destroy %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), pipelines_path, class: "btn" %>
+  </div>
+<% end %>

@@ -248,6 +248,28 @@ Current.set(actor: nil) do
     body: "There has been no water in our lane since the pipeline work on Sunday. When will supply resume?")
   CaseAgentJob.perform_now(showcase)
 
+  # A few sales-funnel leads (v1.2 CRM) so the Leads list isn't empty.
+  sales_owner = User.find_by(email_address: "priya@docket.local")
+  [
+    { name: "Rohan Mehta", email: "rohan.mehta@example.com", company_name: "Mehta Textiles", source: :web_form, status: :new, value_estimate: 45_000 },
+    { name: "Anjali Rao", email: "anjali.rao@example.com", company_name: "Rao Logistics", source: :referral, status: :working, value_estimate: 120_000 },
+    { name: "Vikram Shah", email: "vikram.shah@example.com", company_name: "Shah Exports", source: :manual, status: :qualified, value_estimate: 87_500 }
+  ].each do |attrs|
+    Lead.find_or_create_by!(email: attrs[:email]) { |l| l.assign_attributes(attrs.merge(owner: sales_owner)) }
+  end
+
+  # A demo outreach sequence (v1.2 CRM).
+  unless Sequence.exists?(name: "New-lead welcome")
+    welcome = Sequence.new(name: "New-lead welcome", active: true)
+    welcome.sequence_steps.build(position: 0, delay_days: 0, subject: "Thanks for reaching out, {{contact_name}}",
+      body: "Hi {{contact_name}},\n\nThanks for your interest. A member of our team will be in touch shortly.")
+    welcome.sequence_steps.build(position: 1, delay_days: 3, subject: "Following up",
+      body: "Hi {{contact_name}},\n\nJust checking in to see if you had any questions about {{company_name}}.")
+    welcome.save!
+    first_lead = Lead.where(status: %w[new working]).first
+    welcome.enroll!(first_lead) if first_lead
+  end
+
   Setting.set("demo_seeded", true)
 end
 
