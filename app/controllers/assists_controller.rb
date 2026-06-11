@@ -14,10 +14,12 @@ class AssistsController < ApplicationController
     prompt = <<~PROMPT
       [TASK:summarise]
       Summarise this case thread for a staff member in 3 sentences or fewer, ending with the next required action.
-      Subject: #{@case.subject}
-      #{@case.description.presence&.then { |d| "Original request: #{d.truncate(800)}" }}
+      #{Llm.fence_instruction}
+      Subject:
+      #{Llm.fence(@case.subject)}
+      #{@case.description.presence&.then { |d| "Original request:\n#{Llm.fence(d.truncate(800))}" }}
       Thread:
-      #{thread.presence || "(no messages yet)"}
+      #{Llm.fence(thread.presence || "(no messages yet)")}
     PROMPT
 
     @summary = client.chat([ { role: "user", content: prompt } ])
@@ -33,9 +35,13 @@ class AssistsController < ApplicationController
     prompt = <<~PROMPT
       [TASK:suggest]
       Draft a reply for a staff member to send to the citizen. Be concrete, polite, and grounded ONLY in the context provided. Do not invent case facts.
-      Subject: #{@case.subject}
-      Original request: #{@case.description.presence || @case.messages.where(direction: :inbound).order(:created_at).first&.body}
-      Latest citizen message: #{last_inbound&.body&.truncate(1500)}
+      #{Llm.fence_instruction}
+      Subject:
+      #{Llm.fence(@case.subject)}
+      Original request:
+      #{Llm.fence(@case.description.presence || @case.messages.where(direction: :inbound).order(:created_at).first&.body || "")}
+      Latest citizen message:
+      #{Llm.fence(last_inbound&.body&.truncate(1500) || "(none)")}
       Grounding:
       #{grounding.map { |g| "- #{g.title}: #{g.text.truncate(600)}" }.join("\n").presence || "(none)"}
       Reply with the message text only.
