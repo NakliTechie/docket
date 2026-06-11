@@ -36,12 +36,15 @@ class CaseAgent
     prompt = <<~PROMPT
       [TASK:route]
       You triage citizen grievances for a public service desk. Classify the case below.
+      #{Llm.fence_instruction}
       QUEUE_OPTIONS:#{CaseQueue.order(:name).pluck(:slug).join(", ")}
       CATEGORY_OPTIONS:#{Category.order(:name).pluck(:name).join(", ")}
       PRIORITY_OPTIONS:low, normal, high, urgent
 
-      Case subject: #{kase.subject}
-      Case body: #{initial_body}
+      Case subject:
+      #{Llm.fence(kase.subject)}
+      Case body:
+      #{Llm.fence(initial_body)}
 
       Respond with JSON: {"queue_slug": ..., "category": ..., "priority": ..., "confidence": 0.0-1.0, "rationale": ...}
     PROMPT
@@ -70,9 +73,12 @@ class CaseAgent
     prompt = <<~PROMPT
       [TASK:draft]
       You resolve tier-1 citizen cases for a public service desk. Use ONLY the grounding context; if it does not contain the answer, say a staff member will follow up and set fully_resolves to false. Always tell the citizen they can reply to reach a human.
+      #{Llm.fence_instruction}
 
-      Case subject: #{kase.subject}
-      Case body: #{initial_body}
+      Case subject:
+      #{Llm.fence(kase.subject)}
+      Case body:
+      #{Llm.fence(initial_body)}
 
       Grounding context:
       #{grounding.map { |g| "- (#{g.source}) #{g.title}: #{g.text}" }.join("\n").presence || "(none)"}
@@ -92,6 +98,15 @@ class CaseAgent
   end
 
   def resolve(draft_result)
+    # Auto-resolve is gated on the DRAFT confidence, independently of
+    # routing — so it can fire on a case that routing left as `new` (low
+    # route confidence). `new` can't transition straight to `resolved`, so
+    # move it through a valid intermediate state FIRST. Doing this before
+    # creating the public reply means we never email the citizen and then
+    # raise InvalidTransition, leaving the case stuck (M19).
+    kase.reload
+    kase.transition_to!(:triaged) if kase.status_new?
+
     kase.messages.create!(
       kind: :agent_turn,
       direction: :outbound,

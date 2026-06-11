@@ -77,7 +77,30 @@ class AuditEntry < ApplicationRecord
 
   # Walks the whole chain; returns { ok: true, count: } or the first break:
   # { ok: false, entry_id:, expected_sha:, stored_sha:, reason: }.
-  def self.verify_chain
+  VERIFICATION_CACHE_KEY = "audit_chain_verification".freeze
+  VERIFICATION_CACHE_TTL = 1.minute
+
+  # Cached by default: the full walk is O(n) over the whole table, so the
+  # admin status page and the API endpoint would otherwise re-verify the
+  # entire chain on every hit (a slow path / DoS lever for anyone with
+  # audit:read). The TTL bounds repeated full walks to once per window;
+  # tampering is still detected, within at most one TTL of latency. Pass
+  # cache: false (the CLI does) for a guaranteed-fresh full check, which
+  # also refreshes the cache the web surfaces read.
+  def self.verify_chain(cache: true)
+    return refresh_verification_cache unless cache
+    Rails.cache.fetch(VERIFICATION_CACHE_KEY, expires_in: VERIFICATION_CACHE_TTL) do
+      compute_chain_verification
+    end
+  end
+
+  def self.refresh_verification_cache
+    compute_chain_verification.tap do |result|
+      Rails.cache.write(VERIFICATION_CACHE_KEY, result, expires_in: VERIFICATION_CACHE_TTL)
+    end
+  end
+
+  def self.compute_chain_verification
     previous = GENESIS_SHA
     count = 0
     order(:id).find_each do |entry|
