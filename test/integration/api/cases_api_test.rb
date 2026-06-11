@@ -94,6 +94,24 @@ module Api
       assert_response :forbidden
     end
 
+    test "an unauthorized case create does not upsert the OBO contact (authz before side-effect, M23)" do
+      token = service_token_for(%w[cases:read contacts:write]) # no cases:write
+      assert_no_difference "Contact.count" do
+        post "/api/v1/cases", params: { on_behalf_of: "CIFGHOST1", case: { subject: "x" } },
+             headers: auth_header(token), as: :json
+      end
+      assert_response :forbidden
+    end
+
+    test "a failed case create rolls back the OBO contact (transactional, M23)" do
+      token = service_token_for(%w[cases:write contacts:write])
+      assert_no_difference "Contact.count" do # blank subject -> case invalid -> rollback
+        post "/api/v1/cases", params: { on_behalf_of: "CIFROLLBACK1", case: { subject: "" } },
+             headers: auth_header(token), as: :json
+      end
+      assert_response :unprocessable_entity
+    end
+
     test "cases:read scope cannot write" do
       token = service_token_for(%w[cases:read])
       post "/api/v1/cases", params: { case: { subject: "Nope", contact_id: contacts(:asha).id } },

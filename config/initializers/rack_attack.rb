@@ -15,6 +15,14 @@ Rack::Attack.throttle("portal/general", limit: 300, period: 5.minutes) do |reque
   request.ip if request.path.start_with?("/portal")
 end
 
+# OAuth client-credentials endpoint: each exchange runs bcrypt, so an
+# unthrottled endpoint is both a brute-force vector on client secrets and
+# a CPU-DoS. Legit integrations refresh ~hourly (1h token TTL), so this is
+# generous for real use (M25).
+Rack::Attack.throttle("api/oauth_token", limit: 30, period: 5.minutes) do |request|
+  request.ip if request.post? && request.path == "/api/v1/oauth/token"
+end
+
 # Public lead-capture form (v1.2 CRM).
 Rack::Attack.throttle("inquiry/submissions", limit: 10, period: 1.hour) do |request|
   request.ip if request.post? && request.path == "/inquiry"

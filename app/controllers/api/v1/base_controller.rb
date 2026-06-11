@@ -92,7 +92,13 @@ module Api
       def resolve_on_behalf_contact!
         external_id = params[:on_behalf_of].to_s.strip
         return nil if external_id.blank?
-        raise ScopeDenied, "contacts:write" if service_account && !current_access_token.scope?("contacts:write")
+
+        # OBO attributes/creates a Contact — require the write capability
+        # for BOTH human tokens (via ContactPolicy) and service accounts
+        # (via scope). Previously only service accounts were checked, so a
+        # user token whose user can't manage contacts could still upsert
+        # one (M23).
+        authorize_api!(Contact.new, :create?, scope: "contacts:write")
 
         contact = Contact.find_by(external_id: external_id)
         contact ||= Contact.create!(

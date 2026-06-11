@@ -51,10 +51,17 @@ class Message < ApplicationRecord
     self.case.record_first_response!(at: created_at)
   end
 
-  # A citizen reply while we wait on them puts the case back in progress.
+  # A citizen reply re-engages staff: while we wait on them it goes back to
+  # in_progress; on an already-resolved case it reopens it — otherwise the
+  # reply lands silently on a resolved case and staff never see it (M13).
   def reopen_conversation_on_citizen_reply
-    return unless direction_inbound? && from_citizen? && self.case.status_waiting_on_citizen?
-    self.case.transition_to!(:in_progress)
+    return unless direction_inbound? && from_citizen?
+
+    if self.case.status_waiting_on_citizen?
+      self.case.transition_to!(:in_progress)
+    elsif self.case.status_resolved?
+      self.case.transition_to!(:reopened)
+    end
   end
 
   # Outbound public answers (human or AI) are mailed to the contact.

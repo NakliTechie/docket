@@ -24,19 +24,28 @@ module Api
         render json: { data: Serialize.kase(@case, include_messages: params[:include] == "messages") }
       end
 
-      def create
-        contact = resolve_on_behalf_contact! || Contact.find_by(id: params.dig(:case, :contact_id))
-        authorize_api!(Case.new, :create?, scope: "cases:write")
-        return render_error("contact_required", status: :unprocessable_entity) if contact.nil?
+      class ContactRequired < StandardError; end
 
-        kase = Case.new(case_params.except(:contact_id))
-        kase.contact = contact
-        kase.channel = :api
-        Case.transaction do
-          kase.save!
-          create_initial_message(kase)
+      def create
+        # Authorize the primary action BEFORE any on-behalf-of contact is
+        # upserted, and do the upsert inside the transaction so a rejected
+        # case never leaves an orphaned contact behind (M23).
+        authorize_api!(Case.new, :create?, scope: "cases:write")
+
+        kase = Case.transaction do
+          contact = resolve_on_behalf_contact! || Contact.find_by(id: params.dig(:case, :contact_id))
+          raise ContactRequired if contact.nil?
+
+          k = Case.new(case_params.except(:contact_id))
+          k.contact = contact
+          k.channel = :api
+          k.save!
+          create_initial_message(k)
+          k
         end
         render json: { data: Serialize.kase(kase.reload, include_messages: true) }, status: :created
+      rescue ContactRequired
+        render_error("contact_required", status: :unprocessable_entity)
       rescue ActiveRecord::RecordInvalid => e
         render_validation_errors(e.record)
       end

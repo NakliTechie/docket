@@ -16,6 +16,15 @@
             <span><%= l message.created_at, format: :short %></span>
           </div>
           <div class="thread-message-body"><%= message.body %></div>
+          <% if message.files.attached? %>
+            <div class="thread-attachments">
+              <% message.files.each do |file| %>
+                <%= link_to rails_blob_path(file, disposition: "attachment") do %>
+                  <%= icon "paperclip" %><%= file.filename %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
         </article>
       <% end %>
     <% else %>
