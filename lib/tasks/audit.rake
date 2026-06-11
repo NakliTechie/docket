@@ -1,7 +1,7 @@
 namespace :audit do
   desc "Verify the audit log hash chain end-to-end; reports the first break"
   task verify: :environment do
-    result = AuditEntry.verify_chain
+    result = AuditEntry.verify_chain(cache: false)
     if result[:ok]
       puts "PASS: audit chain intact (#{result[:count]} entries)"
     else

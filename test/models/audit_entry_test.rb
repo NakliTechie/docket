@@ -22,6 +22,26 @@ class AuditEntryTest < ActiveSupport::TestCase
     assert_operator result[:count], :>=, 2
   end
 
+  test "verify_chain caches the result and cache: false recomputes + refreshes (M27)" do
+    original = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    begin
+      Contact.create!(name: "Cache A", email: "ca@example.com")
+      first = AuditEntry.verify_chain
+      assert first[:ok]
+
+      # A new valid entry — the cached result is now stale (old count).
+      Contact.create!(name: "Cache B", email: "cb@example.com")
+      assert_equal first[:count], AuditEntry.verify_chain[:count], "second call served from cache"
+
+      fresh = AuditEntry.verify_chain(cache: false)
+      assert_operator fresh[:count], :>, first[:count], "uncached recomputes the current count"
+      assert_equal fresh[:count], AuditEntry.verify_chain[:count], "uncached refreshed the cache"
+    ensure
+      Rails.cache = original
+    end
+  end
+
   test "verify_chain reports first tampered entry" do
     Contact.create!(name: "A", email: "a@example.com")
     target = Contact.create!(name: "B", email: "b@example.com")
