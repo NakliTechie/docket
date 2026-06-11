@@ -12,11 +12,14 @@ class SsoTest < ActionDispatch::IntegrationTest
     OmniAuth.config.mock_auth.delete(:customer_oidc)
   end
 
-  def mock_staff_oidc(email:, name: "SSO User", groups: nil)
+  def mock_staff_oidc(email:, name: "SSO User", groups: nil, email_verified: nil)
+    raw = {}
+    raw["groups"] = groups unless groups.nil?
+    raw["email_verified"] = email_verified unless email_verified.nil?
     OmniAuth.config.mock_auth[:staff_oidc] = OmniAuth::AuthHash.new(
       provider: "staff_oidc", uid: "idp-#{email}",
       info: { email: email, name: name },
-      extra: { raw_info: groups ? { "groups" => groups } : {} }
+      extra: { raw_info: raw }
     )
   end
 
@@ -52,6 +55,61 @@ class SsoTest < ActionDispatch::IntegrationTest
   ensure
     Setting.unset("sso_staff_role_claim")
     Setting.unset("sso_staff_role_mapping")
+  end
+
+  test "sso rejects an email the idp marks unverified (M6)" do
+    mock_staff_oidc(email: "spoofed@example.com", email_verified: false)
+    assert_no_difference "User.count" do
+      get "/auth/staff_oidc/callback"
+    end
+    assert_redirected_to new_session_path
+    refute User.exists?(email_address: "spoofed@example.com")
+  end
+
+  test "sso accepts an explicitly verified email (M6 regression)" do
+    mock_staff_oidc(email: "verified@example.com", email_verified: true)
+    assert_difference "User.count" do
+      get "/auth/staff_oidc/callback"
+    end
+  end
+
+  test "role mapping demotes a user no longer in any mapped group (M7)" do
+    user = users(:agent_a)
+    user.update!(role: :admin)
+    Setting.set("sso_staff_role_claim", "groups")
+    Setting.set("sso_staff_role_mapping", { "docket-admins" => "admin" }.to_json)
+    mock_staff_oidc(email: user.email_address, groups: [ "everyone" ]) # no mapped group
+    get "/auth/staff_oidc/callback"
+    assert_equal "agent", user.reload.role
+  ensure
+    Setting.unset("sso_staff_role_claim")
+    Setting.unset("sso_staff_role_mapping")
+  end
+
+  test "multiple mapped groups grant the highest-privilege role (M8)" do
+    Setting.set("sso_staff_role_claim", "groups")
+    Setting.set("sso_staff_role_mapping", { "leads" => "supervisor", "admins" => "admin" }.to_json)
+    # Lower-privilege match listed first — highest must still win, not first.
+    mock_staff_oidc(email: "multi@example.com", groups: [ "leads", "admins" ])
+    get "/auth/staff_oidc/callback"
+    assert_equal "admin", User.find_by(email_address: "multi@example.com").role
+  ensure
+    Setting.unset("sso_staff_role_claim")
+    Setting.unset("sso_staff_role_mapping")
+  end
+
+  test "an idle session past its TTL is rejected and swept on resume (M5)" do
+    mock_staff_oidc(email: "ttl@example.com")
+    get "/auth/staff_oidc/callback"
+    get cases_path
+    assert_response :success
+    session = User.find_by(email_address: "ttl@example.com").sessions.last
+
+    travel(Session::IDLE_TIMEOUT + 1.hour) do
+      get cases_path
+      assert_redirected_to new_session_path
+    end
+    assert_nil Session.find_by(id: session.id), "expired session should be destroyed on resume"
   end
 
   test "deactivated users cannot enter via sso" do

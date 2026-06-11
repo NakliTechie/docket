@@ -7,6 +7,10 @@ shared: &shared
     class: SequenceRunnerJob
     queue: default
     schedule: every hour at minute 5
+  session_sweep:
+    class: SessionSweepJob
+    queue: default
+    schedule: every hour at minute 20
 
 development:
   <<: *shared
