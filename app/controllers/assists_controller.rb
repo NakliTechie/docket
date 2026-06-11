@@ -12,6 +12,12 @@ class AssistsController < ApplicationController
   MAX_SUMMARY_MESSAGES = 60
   MAX_SUMMARY_CHARS = 16_000
 
+  # These run on the request thread (a staff member is waiting), so cap the
+  # model wait well below the 120s background default — a slow/stuck model
+  # mustn't pin a Puma worker for two minutes (M21). On timeout the rescue
+  # renders the friendly assist error.
+  INTERACTIVE_READ_TIMEOUT = 25
+
   def summarise
     authorize @case, :show?
     thread = @case.messages.order(:created_at).last(MAX_SUMMARY_MESSAGES).map { |m|
@@ -28,7 +34,7 @@ class AssistsController < ApplicationController
       #{Llm.fence(thread.presence || "(no messages yet)")}
     PROMPT
 
-    @summary = client.chat([ { role: "user", content: prompt } ])
+    @summary = client.chat([ { role: "user", content: prompt } ], read_timeout: INTERACTIVE_READ_TIMEOUT)
     render partial: "assists/summary", locals: { summary: @summary, kase: @case }
   rescue Llm::Error => e
     render partial: "assists/error", locals: { message: e.message }, status: :bad_gateway
@@ -53,7 +59,7 @@ class AssistsController < ApplicationController
       Reply with the message text only.
     PROMPT
 
-    @suggestion = client.chat([ { role: "user", content: prompt } ])
+    @suggestion = client.chat([ { role: "user", content: prompt } ], read_timeout: INTERACTIVE_READ_TIMEOUT)
     render partial: "assists/suggestion", locals: { suggestion: @suggestion, kase: @case }
   rescue Llm::Error => e
     # Render into the suggestion frame the button targets, not the default

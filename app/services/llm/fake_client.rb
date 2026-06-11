@@ -3,7 +3,7 @@ module Llm
   # present (handoff §4). Routes on prompt markers emitted by the
   # production prompts — same call sites, plausible outputs.
   class FakeClient
-    def chat(messages, json: false, temperature: nil, max_tokens: nil)
+    def chat(messages, json: false, temperature: nil, max_tokens: nil, read_timeout: nil)
       text = messages.map { |m| m[:content] || m["content"] }.join("\n")
 
       if json && text.include?("[TASK:route]")

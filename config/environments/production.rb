@@ -27,6 +27,12 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
+  # Attachment links (rails_blob_path) carry a signed blob id that, left
+  # unset, never expires — a leaked portal attachment URL would work forever
+  # with no auth. Expire them so a citizen's document link is short-lived;
+  # re-opening the (auth-gated) tracking/my-cases page mints a fresh one.
+  config.active_storage.urls_expire_in = 1.hour
+
   # SSL is on by default (sovereign posture). The compose quickstart
   # serves plain HTTP on localhost, so it sets DOCKET_FORCE_SSL=false.
   config.assume_ssl = ENV["DOCKET_FORCE_SSL"] != "false"

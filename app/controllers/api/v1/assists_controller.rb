@@ -6,11 +6,19 @@ module Api
       before_action :set_case
       before_action :require_llm!
 
+      # Mirror the web assist: bound the summary prompt + cap the interactive
+      # model wait so a slow model can't pin a worker (M21).
+      MAX_SUMMARY_MESSAGES = 60
+      MAX_SUMMARY_CHARS = 16_000
+      INTERACTIVE_READ_TIMEOUT = 25
+
       def summarise
         authorize_api!(@case, :show?, scope: "cases:read")
-        thread = @case.messages.order(:created_at).map { |m| "#{m.author_display_name} (#{m.kind}): #{m.body.truncate(800)}" }.join("\n")
+        thread = @case.messages.order(:created_at).last(MAX_SUMMARY_MESSAGES)
+                      .map { |m| "#{m.author_display_name} (#{m.kind}): #{m.body.truncate(800)}" }
+                      .join("\n").truncate(MAX_SUMMARY_CHARS)
         prompt = "[TASK:summarise]\nSummarise this case thread in 3 sentences or fewer, ending with the next action.\nSubject: #{@case.subject}\nThread:\n#{thread}"
-        render json: { data: { summary: client.chat([ { role: "user", content: prompt } ]) } }
+        render json: { data: { summary: client.chat([ { role: "user", content: prompt } ], read_timeout: INTERACTIVE_READ_TIMEOUT) } }
       rescue Llm::Error => e
         render_error("llm_failed", detail: e.message, status: :bad_gateway)
       end
@@ -19,7 +27,7 @@ module Api
         authorize_api!(@case, :update?, scope: "cases:write")
         grounding = Retrieval.grounding_for("#{@case.subject} #{@case.description}")
         prompt = "[TASK:suggest]\nDraft a grounded reply to the citizen.\nSubject: #{@case.subject}\nGrounding:\n#{grounding.map { |g| "- #{g.title}: #{g.text.truncate(600)}" }.join("\n")}"
-        render json: { data: { suggestion: client.chat([ { role: "user", content: prompt } ]) } }
+        render json: { data: { suggestion: client.chat([ { role: "user", content: prompt } ], read_timeout: INTERACTIVE_READ_TIMEOUT) } }
       rescue Llm::Error => e
         render_error("llm_failed", detail: e.message, status: :bad_gateway)
       end
