@@ -60,6 +60,18 @@ class AdminManagementTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "a created secret is shown once, not double-rendered by the generic flash loop" do
+    sign_in_as users(:admin)
+    post admin_service_accounts_path, params: {
+      service_account: { name: "CRM", scopes: [ "cases:read" ] }
+    }
+    follow_redirect!
+    assert_response :success
+    # The once-box renders the secret; the generic flash loop must NOT
+    # also emit it as a flash-client_secret banner.
+    assert_no_match(/flash-client_secret/, response.body)
+  end
+
   test "non-admins are forbidden from admin mutation surfaces" do
     sign_in_as users(:supervisor)
     patch admin_settings_path, params: { llm_model: "x" }
