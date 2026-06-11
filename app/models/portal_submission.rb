@@ -55,8 +55,15 @@ class PortalSubmission
   end
 
   def resolve_contact
-    existing = normalized_email && Contact.find_by(email: normalized_email)
-    existing ||= normalized_phone && Contact.find_by(phone: normalized_phone)
+    # Anonymous submissions only dedupe onto UNVERIFIED contacts (no
+    # external_id). A contact carrying a verified identity (SSO-linked via
+    # external_id) must not be reachable by an email/phone match, or anyone
+    # who knows a customer's email could inject a case into that customer's
+    # authenticated My-Cases view (M9). Signed-in customers file via
+    # Portal::MyCases#create, which attributes by session, not by email.
+    unverified = Contact.where(external_id: nil)
+    existing = normalized_email && unverified.find_by(email: normalized_email)
+    existing ||= normalized_phone && unverified.find_by(phone: normalized_phone)
     return existing if existing
 
     Contact.create!(
