@@ -1,0 +1,6 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title", name: @connector.name) %></h1>
+</div>
+
+<%= render "form", connector: @connector, descriptor: @descriptor %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_100006) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_100007) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -127,6 +127,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100006) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_categories_on_deleted_at"
     t.index ["name"], name: "index_categories_on_name", unique: true, where: "deleted_at IS NULL"
+  end
+
+  create_table "connector_runs", force: :cascade do |t|
+    t.integer "connector_id", null: false
+    t.datetime "created_at", null: false
+    t.text "error"
+    t.datetime "finished_at"
+    t.integer "records_created", default: 0, null: false
+    t.integer "records_in", default: 0, null: false
+    t.integer "records_updated", default: 0, null: false
+    t.datetime "started_at"
+    t.integer "status", default: 0, null: false
+    t.integer "trigger", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["connector_id", "id"], name: "index_connector_runs_on_connector_id_and_id"
+    t.index ["connector_id"], name: "index_connector_runs_on_connector_id"
+  end
+
+  create_table "connectors", force: :cascade do |t|
+    t.json "config"
+    t.datetime "created_at", null: false
+    t.text "credentials"
+    t.datetime "deleted_at"
+    t.json "field_mapping"
+    t.datetime "last_synced_at"
+    t.string "name", null: false
+    t.string "provider", null: false
+    t.integer "schedule_interval_minutes"
+    t.integer "status", default: 0, null: false
+    t.string "target", default: "contacts", null: false
+    t.datetime "updated_at", null: false
+    t.string "webhook_secret"
+    t.index ["deleted_at"], name: "index_connectors_on_deleted_at"
+    t.index ["status"], name: "index_connectors_on_status"
   end
 
   create_table "contacts", force: :cascade do |t|
@@ -467,6 +501,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100006) do
   add_foreign_key "cases", "queues"
   add_foreign_key "cases", "sla_policies"
   add_foreign_key "cases", "users", column: "assignee_id"
+  add_foreign_key "connector_runs", "connectors"
   add_foreign_key "contacts", "organisations"
   add_foreign_key "deals", "contacts"
   add_foreign_key "deals", "leads"

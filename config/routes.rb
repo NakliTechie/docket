@@ -65,7 +65,17 @@ Rails.application.routes.draw do
         get :deliveries
       end
     end
+    resources :connectors do
+      member do
+        post :sync
+        post :pause
+        post :resume
+      end
+    end
   end
+
+  # Inbound connector webhook ping (HMAC-signed, unauthenticated).
+  post "connectors/:id/webhook", to: "connectors/webhooks#create", as: :connector_webhook
 
   # Public lead-capture form (v1.2 CRM) — unauthenticated.
   get "inquiry", to: "inquiries#new", as: :inquiry

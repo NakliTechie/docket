@@ -1,0 +1,46 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+</div>
+
+<p class="muted"><%= t(".intro") %></p>
+
+<div class="panel">
+  <h2 class="panel-title"><%= t(".add") %></h2>
+  <div class="provider-picker">
+    <% @descriptors.each do |descriptor| %>
+      <%= link_to new_admin_connector_path(provider: descriptor.key), class: "btn" do %>
+        <%= descriptor.name %> <span class="muted">· <%= descriptor.category %></span>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<% if @connectors.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.provider") %></th>
+          <th><%= t(".columns.target") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th><%= t(".columns.last_synced") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @connectors.each do |connector| %>
+          <tr>
+            <td><%= link_to connector.name, admin_connector_path(connector) %></td>
+            <td><%= connector.provider_descriptor&.name || connector.provider %></td>
+            <td><%= connector.target %></td>
+            <td><span class="badge"><%= t("admin.connectors.status.#{connector.status}") %></span></td>
+            <td><%= connector.last_synced_at ? l(connector.last_synced_at, format: :long) : t(".never") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="muted"><%= t(".empty") %></p>
+<% end %>

@@ -1,0 +1,49 @@
+<%= form_with model: connector, url: (connector.persisted? ? admin_connector_path(connector) : admin_connectors_path), class: "form" do |f| %>
+  <%= render "shared/form_errors", record: connector %>
+  <%= f.hidden_field :provider %>
+  <%= f.hidden_field :target %>
+
+  <div class="form-row">
+    <%= f.label :name, t("admin.connectors.fields.name") %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <fieldset>
+    <legend><%= t("admin.connectors.config_legend") %></legend>
+    <% Array(descriptor&.config_fields).each do |field| %>
+      <div class="form-row">
+        <%= label_tag "connector_config_#{field}", t("admin.connectors.config.#{field}", default: field.humanize) %>
+        <%= text_field_tag "connector[config][#{field}]", connector.config_value(field), id: "connector_config_#{field}" %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <% if descriptor&.auth == :api_key %>
+    <div class="form-row">
+      <%= label_tag "connector_credentials_api_key", t("admin.connectors.fields.api_key") %>
+      <%= password_field_tag "connector[credentials][api_key]", nil, id: "connector_credentials_api_key",
+            autocomplete: "off", placeholder: connector.persisted? ? t("admin.connectors.api_key_kept") : nil %>
+    </div>
+  <% end %>
+
+  <fieldset>
+    <legend><%= t("admin.connectors.mapping_legend") %></legend>
+    <p class="muted text-sm"><%= t("admin.connectors.mapping_hint") %></p>
+    <% %w[external_id email name phone].each do |docket_field| %>
+      <div class="form-row">
+        <%= label_tag "connector_field_mapping_#{docket_field}", t("admin.connectors.mapping.#{docket_field}") %>
+        <%= text_field_tag "connector[field_mapping][#{docket_field}]", (connector.field_mapping || {})[docket_field],
+              id: "connector_field_mapping_#{docket_field}", placeholder: t("admin.connectors.mapping_placeholder") %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <div class="form-row">
+    <%= f.label :schedule_interval_minutes, t("admin.connectors.fields.schedule") %>
+    <%= f.number_field :schedule_interval_minutes, min: 1, placeholder: t("admin.connectors.schedule_hint") %>
+  </div>
+
+  <div class="form-row">
+    <%= f.submit class: "btn btn-primary" %>
+  </div>
+<% end %>
