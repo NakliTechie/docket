@@ -32,7 +32,7 @@ module Docket
 
     def allowed?(origin)
       allowed_origins.include?(origin)
-    rescue ActiveRecord::ActiveRecordError, ActiveRecord::NoDatabaseError
+    rescue ActiveRecord::ActiveRecordError # NoDatabaseError is a subclass — covered.
       false
     end
 

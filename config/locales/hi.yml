@@ -781,6 +781,13 @@ hi:
         reply_placeholder: "जानकारी जोड़ें या टीम को उत्तर दें…"
         send_reply: "उत्तर भेजें"
 
+  passwords_mailer:
+    reset:
+      subject: "अपना पासवर्ड रीसेट करें"
+      intro_html: "आप %{link} पर अपना पासवर्ड रीसेट कर सकते हैं।"
+      intro_text: "आप यहाँ अपना पासवर्ड रीसेट कर सकते हैं:"
+      link_text: "इस पासवर्ड रीसेट पृष्ठ"
+      expires_in: "यह लिंक %{duration} में समाप्त हो जाएगा।"
   case_mailer:
     signature: "— सेवा टीम"
     confirmation:

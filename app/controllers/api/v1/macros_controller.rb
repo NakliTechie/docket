@@ -9,7 +9,7 @@ module Api
       end
 
       def show
-        authorize_api!(@macro, :index?, scope: "config:read")
+        authorize_api!(@macro, :show?, scope: "config:read")
         render json: { data: Serialize.macro(@macro) }
       end
 

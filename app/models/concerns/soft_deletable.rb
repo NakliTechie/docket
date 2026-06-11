@@ -23,8 +23,10 @@ module SoftDeletable
     deleted_at.present?
   end
 
+  # Clear deleted_at through a normal update so the Audited callback records
+  # the restore (update_columns would silently bypass the audit chain).
   def restore!
-    update_columns(deleted_at: nil)
+    update!(deleted_at: nil)
     self
   end
 end
