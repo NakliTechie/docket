@@ -170,6 +170,21 @@ module Api
       assert_equal "public_reply", response.parsed_body["data"]["kind"]
     end
 
+    test "message metadata does not leak raw LLM prompt/response over the api (L)" do
+      kase = cases(:pension_case)
+      kase.messages.create!(kind: :public_reply, direction: :outbound, author: users(:agent_a),
+                            body: "AI turn marker", metadata: { "ai" => "route", "confidence" => 0.9,
+                                                               "prompt" => "SECRET PROMPT", "response" => "raw model output" })
+      get "/api/v1/cases/#{kase.id}", params: { include: "messages" }, headers: auth_header(@admin_token)
+      assert_response :success
+      mine = response.parsed_body["data"]["messages"].find { |m| m["body"] == "AI turn marker" }
+      assert mine, "the created message should be serialized"
+      assert_equal "route", mine["metadata"]["ai"]   # safe fields kept
+      assert_nil mine["metadata"]["prompt"]          # verbose internals dropped
+      assert_nil mine["metadata"]["response"]
+      refute_includes response.body, "SECRET PROMPT"
+    end
+
     test "a stale case update returns 409, not a silent overwrite (optimistic lock) (L)" do
       kase = cases(:pension_case)
       stale = kase.lock_version

@@ -33,7 +33,7 @@
         <% @endpoints.each do |endpoint| %>
           <tr>
             <td><%= endpoint.name %></td>
-            <td class="mono table-meta"><%= endpoint.url %></td>
+            <td class="mono table-meta"><%= endpoint.sanitized_url %></td>
             <td><% endpoint.events.each do |event| %><span class="badge badge-role mono"><%= event %></span> <% end %></td>
             <td>
               <% if endpoint.active %>

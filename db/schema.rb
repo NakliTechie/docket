@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_100005) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_100006) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -311,6 +311,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100005) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_reference_docs_on_deleted_at"
     t.index ["title"], name: "index_reference_docs_on_title", unique: true, where: "deleted_at IS NULL"
+  end
+
+  create_table "security_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "ip_address"
+    t.string "kind", null: false
+    t.json "metadata"
+    t.string "user_agent"
+    t.index ["created_at"], name: "index_security_events_on_created_at"
+    t.index ["kind"], name: "index_security_events_on_kind"
   end
 
   create_table "sequence_enrollments", force: :cascade do |t|

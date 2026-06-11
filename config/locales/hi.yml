@@ -20,6 +20,7 @@ hi:
       users: "उपयोगकर्ता"
       activity: "गतिविधि"
       audit: "ऑडिट"
+      security_events: "सुरक्षा लॉग"
       settings: "सेटिंग्स"
       reference_docs: "ज्ञान-आधार"
       integrations: "एकीकरण"
@@ -804,6 +805,20 @@ hi:
       instructions: "इस ईमेल का उत्तर दें (विषय में ट्रैकिंग आईडी बनाए रखें) या पोर्टल से जवाब दें।"
 
   admin:
+    security_events:
+      index:
+        title: "सुरक्षा लॉग"
+        intro: "असफल और सीमित किए गए साइन-इन प्रयास — ब्रूट-फोर्स या क्रेडेंशियल-स्टफिंग पहचानने के लिए।"
+        empty: "अभी तक कोई सुरक्षा घटना दर्ज नहीं हुई।"
+        columns:
+          when: "कब"
+          kind: "घटना"
+          email: "प्रयासित ईमेल"
+          ip: "आईपी"
+      kinds:
+        login_failed: "असफल लॉगिन"
+        login_throttled: "सीमित"
+        sso_rejected: "SSO अस्वीकृत"
     users:
       fields:
         name: "नाम"

@@ -16,4 +16,10 @@ class WebhookEndpointTest < ActiveSupport::TestCase
       assert endpoint.valid?, "#{ok} should be allowed: #{endpoint.errors.full_messages}"
     end
   end
+
+  test "sanitized_url strips embedded credentials for display (L)" do
+    endpoint = WebhookEndpoint.new(url: "https://user:s3cret@crm.example.in/hook")
+    assert_equal "https://crm.example.in/hook", endpoint.sanitized_url
+    refute_includes endpoint.sanitized_url, "s3cret"
+  end
 end

@@ -18,6 +18,8 @@ class SsoSessionsController < ApplicationController
     # victim's address (M6). Absent claim (e.g. SAML) is allowed; only an
     # explicit false is rejected.
     if email.blank? || email_unverified?(auth)
+      SecurityEvent.record("sso_rejected", email: email, ip_address: request.remote_ip,
+                           user_agent: request.user_agent, metadata: { provider: auth&.provider })
       return redirect_to new_session_path, alert: t("sessions.sso_failed")
     end
 

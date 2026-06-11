@@ -50,6 +50,7 @@ Rails.application.routes.draw do
     end
     get "activity", to: "activity#index", as: :activity
     get "audit", to: "audit#show", as: :audit
+    get "security_events", to: "security_events#index", as: :security_events
     get "settings", to: "settings#show", as: :settings
     patch "settings", to: "settings#update"
     resources :reference_docs, except: :show

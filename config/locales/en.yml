@@ -20,6 +20,7 @@ en:
       users: "Users"
       activity: "Activity"
       audit: "Audit"
+      security_events: "Security log"
       settings: "Settings"
       reference_docs: "Knowledge"
       integrations: "Integrations"
@@ -804,6 +805,20 @@ en:
       instructions: "Reply to this email (keep the tracking ID in the subject) or use the portal to respond."
 
   admin:
+    security_events:
+      index:
+        title: "Security log"
+        intro: "Failed and throttled sign-in attempts — use it to spot brute-force or credential-stuffing."
+        empty: "No security events recorded yet."
+        columns:
+          when: "When"
+          kind: "Event"
+          email: "Email attempted"
+          ip: "IP"
+      kinds:
+        login_failed: "Failed login"
+        login_throttled: "Throttled"
+        sso_rejected: "SSO rejected"
     users:
       fields:
         name: "Name"
