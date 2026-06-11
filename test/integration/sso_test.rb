@@ -191,4 +191,26 @@ class SsoTest < ActionDispatch::IntegrationTest
     follow_redirect! while response.redirect?
     assert_response :success
   end
+
+  test "a non-Hash role mapping setting does not crash the callback (L)" do
+    Setting.set("sso_staff_role_claim", "groups")
+    Setting.set("sso_staff_role_mapping", "[1,2,3]") # valid JSON, wrong shape
+    mock_staff_oidc(email: "robust@example.com", groups: [ "x" ])
+    assert_nothing_raised { get "/auth/staff_oidc/callback" }
+    assert_equal "agent", User.find_by(email_address: "robust@example.com").role
+  ensure
+    Setting.unset("sso_staff_role_claim")
+    Setting.unset("sso_staff_role_mapping")
+  end
+
+  test "customer sso with an invalid idp email fails gracefully, not a 500 (L)" do
+    OmniAuth.config.mock_auth[:customer_oidc] = OmniAuth::AuthHash.new(
+      provider: "customer_oidc", uid: "CIF-BADMAIL",
+      info: { email: "not-an-email", name: "Bad Mail" }, extra: { raw_info: {} }
+    )
+    assert_no_difference "Contact.count" do
+      get "/auth/customer_oidc/callback"
+    end
+    assert_redirected_to portal_root_path
+  end
 end

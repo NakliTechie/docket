@@ -49,6 +49,23 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "Password has been reset"
   end
 
+  test "update with a blank password is rejected, not silently accepted (L)" do
+    token = @user.password_reset_token
+    assert_no_changes -> { @user.reload.password_digest } do
+      put password_path(token), params: { password: "", password_confirmation: "" }
+      assert_redirected_to edit_password_path(token)
+    end
+  end
+
+  test "a valid token whose user was soft-deleted is treated as invalid, not a 500 (L)" do
+    token = @user.password_reset_token
+    @user.destroy # soft-delete
+    get edit_password_path(token)
+    assert_redirected_to new_password_path
+    follow_redirect!
+    assert_notice "reset link is invalid"
+  end
+
   test "update with non matching passwords" do
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do

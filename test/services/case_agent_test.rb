@@ -154,4 +154,13 @@ class CaseAgentTest < ActiveSupport::TestCase
     results = Retrieval.grounding_for("pension arrears delay")
     assert results.any? { |r| r.source == "reference_doc" && r.title == "Pension SOP" }
   end
+
+  test "a non-Hash model response degrades to nothing instead of crashing (L)" do
+    bad = Object.new
+    def bad.chat(_messages, **) = [ "not", "an", "object" ] # valid JSON, wrong shape
+    kase = build_case
+    assert_nothing_raised { CaseAgent.new(kase, client: bad).run }
+    # No routing/resolution applied, but the job survived.
+    refute kase.reload.status_resolved?
+  end
 end

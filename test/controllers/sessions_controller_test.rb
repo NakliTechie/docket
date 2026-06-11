@@ -22,6 +22,16 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_nil cookies[:session_id]
   end
 
+  test "create with missing credential keys fails gracefully, not a 500 (L)" do
+    post session_path, params: { email_address: @user.email_address } # no password key
+    assert_redirected_to new_session_path
+    assert_nil cookies[:session_id]
+
+    post session_path, params: {} # neither key
+    assert_redirected_to new_session_path
+    assert_nil cookies[:session_id]
+  end
+
   test "destroy" do
     sign_in_as(User.take)
 

@@ -19,6 +19,12 @@ class PasswordsController < ApplicationController
   end
 
   def update
+    if params[:password].blank?
+      # has_secure_password skips presence on update, so a blank password
+      # would "succeed" without changing anything — reject it explicitly.
+      return redirect_to edit_password_path(params[:token]), alert: t(".mismatch")
+    end
+
     if @user.update(params.permit(:password, :password_confirmation))
       @user.sessions.destroy_all
       AuditEntry.append!(action: "user.password_reset", auditable: @user, actor: @user)
@@ -31,7 +37,10 @@ class PasswordsController < ApplicationController
   private
     def set_user_by_token
       @user = User.find_by_password_reset_token!(params[:token])
-    rescue ActiveSupport::MessageVerifier::InvalidSignature
+      # A valid signature whose user was since soft-deleted resolves to no
+      # record (default scope) → RecordNotFound; treat it like a bad token
+      # rather than 500ing.
+    rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
       redirect_to new_password_path, alert: t("passwords.invalid_token")
     end
 end

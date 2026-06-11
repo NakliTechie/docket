@@ -30,4 +30,20 @@ class PortalSubmissionTest < ActiveSupport::TestCase
     end
     assert_equal unverified, kase.contact
   end
+
+  test "rejects absurdly long free-text fields (L)" do
+    sub = PortalSubmission.new(name: "A", email: "a@example.com", subject: "S",
+                               description: "x" * 20_001)
+    assert_not sub.save
+    assert sub.errors[:description].any?
+  end
+
+  test "rejects garbage phone input but accepts a plausible number (L)" do
+    garbage = PortalSubmission.new(name: "A", subject: "S", description: "D", phone: "call-me-maybe")
+    assert_not garbage.save
+    assert garbage.errors[:phone].any?
+
+    ok = PortalSubmission.new(name: "A", subject: "S", description: "D", phone: "+91 98765 43210")
+    assert ok.save
+  end
 end

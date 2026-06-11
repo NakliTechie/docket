@@ -19,6 +19,10 @@ module Portal
       AuditEntry.append!(action: "contact.login_sso", auditable: contact, actor: contact,
                          metadata: { ip: request.remote_ip })
       redirect_to portal_my_cases_path, notice: t("portal.customer.signed_in", name: contact.name)
+    rescue ActiveRecord::RecordInvalid
+      # A bad IdP-supplied email/name (or a provisioning race) shouldn't 500
+      # the callback — fail the sign-in gracefully.
+      redirect_to portal_root_path, alert: t("portal.customer.sso_failed")
     end
 
     def destroy

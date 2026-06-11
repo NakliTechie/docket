@@ -42,6 +42,11 @@ class PortalMyCasesTest < ActionDispatch::IntegrationTest
     assert_equal queues(:pensions), kase.queue
   end
 
+  test "an out-of-range page number lands on the last page, not a 500 (L)" do
+    get portal_my_cases_path(page: 9_999)
+    assert_response :success
+  end
+
   private
 
   def text_upload(name)
