@@ -20,9 +20,11 @@ module Portal
     private
 
     def submission_params
-      params.require(:portal_submission)
-            .permit(:name, :email, :phone, :subject, :description, files: [])
-            .merge(preferred_language: I18n.locale.to_s)
+      permitted = params.require(:portal_submission)
+                        .permit(:name, :email, :phone, :subject, :description, files: [])
+                        .merge(preferred_language: I18n.locale.to_s)
+      permitted[:files] = safe_files(permitted[:files]) if permitted.key?(:files)
+      permitted
     end
   end
 end

@@ -16,7 +16,12 @@ class MessagesController < ApplicationController
     if @message.save
       redirect_to case_path(@case), notice: t(".created")
     else
-      redirect_to case_path(@case), alert: @message.errors.full_messages.to_sentence
+      # Preserve the typed reply so a save failure (e.g. a rejected
+      # attachment) doesn't discard it (M30). Attachments can't survive a
+      # round-trip (browser security), but the text can.
+      redirect_to case_path(@case),
+                  alert: @message.errors.full_messages.to_sentence,
+                  flash: { compose_body: @message.body }
     end
   end
 

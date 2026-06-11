@@ -16,7 +16,8 @@ class CasesController < ApplicationController
   def show
     authorize @case
     @messages = @case.messages.with_attached_files.includes(:author).order(:created_at)
-    @message = Message.new(kind: params[:note] ? :internal_note : :public_reply)
+    @message = Message.new(kind: params[:note] ? :internal_note : :public_reply,
+                           body: flash[:compose_body]) # preserved after a failed save (M30)
     @contact_cases = @case.contact.cases.where.not(id: @case.id).order(created_at: :desc).limit(10)
     @macros = Macro.order(:name)
     @next_case = next_open_case

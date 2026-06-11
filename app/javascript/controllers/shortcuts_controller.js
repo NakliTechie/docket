@@ -14,10 +14,11 @@ export default class extends Controller {
   }
 
   onKeydown(event) {
+    if (document.querySelector("dialog[open]")) return
     if (event.target.closest("input, textarea, select, [contenteditable]")) return
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
 
-    const el = this.element.querySelector(`[data-shortcut="${event.key}"]`)
+    const el = this.element.querySelector(`[data-shortcut="${CSS.escape(event.key)}"]`)
     if (!el) return
     event.preventDefault()
 

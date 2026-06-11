@@ -50,7 +50,11 @@ class AssistsController < ApplicationController
     @suggestion = client.chat([ { role: "user", content: prompt } ])
     render partial: "assists/suggestion", locals: { suggestion: @suggestion, kase: @case }
   rescue Llm::Error => e
-    render partial: "assists/error", locals: { message: e.message }, status: :bad_gateway
+    # Render into the suggestion frame the button targets, not the default
+    # summary frame — otherwise Turbo can't match it and the error is
+    # silently swallowed (M31).
+    render partial: "assists/error", locals: { message: e.message, frame_id: "assist-suggestion" },
+           status: :bad_gateway
   end
 
   private

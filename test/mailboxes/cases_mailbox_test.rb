@@ -93,4 +93,23 @@ class CasesMailboxTest < ActionMailbox::TestCase
     refute_includes body, "<p>"
     refute_includes body, "alert(1)"
   end
+
+  test "a malformed From header bounces instead of crashing the intake (M15)" do
+    assert_no_difference [ "Case.count", "Contact.count" ] do
+      [ "plain text no brackets", "=?utf-8?Q?=ZZ?= <bad", "a@b@c <broken" ].each do |bad_from|
+        inbound = create_inbound_email_from_source("From: #{bad_from}\r\nTo: grievances@docket.local\r\nSubject: x\r\n\r\nbody\r\n")
+        assert_nothing_raised { inbound.route }
+        assert inbound.bounced?, "#{bad_from.inspect} should bounce"
+      end
+    end
+  end
+
+  test "a valid From still opens a case (regression guard for M15)" do
+    assert_difference "Case.count", 1 do
+      receive_inbound_email_from_mail(
+        from: "valid.person@example.com", to: "grievances@docket.local",
+        subject: "Real", body: "Genuine."
+      )
+    end
+  end
 end
