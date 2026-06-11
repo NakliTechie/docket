@@ -32,6 +32,10 @@ Rails.application.routes.draw do
       post :mark_unqualified
     end
   end
+  resources :pipelines, except: :show
+  resources :deals do
+    member { post :move }
+  end
 
   namespace :admin do
     resources :users do
@@ -97,6 +101,10 @@ Rails.application.routes.draw do
       resources :organisations, only: %i[index show create update destroy]
       resources :leads, only: %i[index show create update destroy] do
         member { post :convert }
+      end
+      resources :pipelines, only: %i[index show create update destroy]
+      resources :deals, only: %i[index show create update destroy] do
+        member { post :move }
       end
       resources :queues, only: %i[index show create update destroy]
       resources :categories, only: %i[index show create update destroy] do

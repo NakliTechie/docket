@@ -1,0 +1,40 @@
+<% page_title @deal.name %>
+<div class="page-header">
+  <h1><%= @deal.name %> <span class="badge badge-<%= @deal.status %>"><%= @deal.human_status %></span></h1>
+  <div class="page-actions">
+    <% if policy(@deal).update? %>
+      <%= link_to t("actions.edit"), edit_deal_path(@deal), class: "btn" %>
+    <% end %>
+    <% if policy(@deal).destroy? %>
+      <%= button_to t("actions.delete"), deal_path(@deal), method: :delete, class: "btn btn-danger",
+            form: { data: { turbo_confirm: t(".confirm_delete") } } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 class="panel-title"><%= t(".details") %></h2>
+  <dl class="meta-list">
+    <dt><%= t("deals.fields.pipeline") %></dt><dd><%= @deal.pipeline.name %></dd>
+    <dt><%= t("deals.fields.stage") %></dt><dd><%= @deal.pipeline_stage.name %></dd>
+    <% if @deal.value_cents %>
+      <dt><%= t("deals.fields.value") %></dt><dd><%= number_to_currency(@deal.value, unit: "₹") %></dd>
+    <% end %>
+    <dt><%= t("deals.fields.owner") %></dt><dd><%= @deal.owner&.name || t("forms.none") %></dd>
+    <% if @deal.contact %>
+      <dt><%= t("deals.fields.contact") %></dt>
+      <dd><%= link_to @deal.contact.name, contact_path(@deal.contact) %></dd>
+    <% end %>
+    <% if @deal.organisation %>
+      <dt><%= t("deals.fields.organisation") %></dt>
+      <dd><%= link_to @deal.organisation.name, organisation_path(@deal.organisation) %></dd>
+    <% end %>
+    <% if @deal.expected_close_on %>
+      <dt><%= t("deals.fields.expected_close_on") %></dt><dd><%= l @deal.expected_close_on %></dd>
+    <% end %>
+    <% if @deal.lead %>
+      <dt><%= t("deals.fields.source_lead") %></dt>
+      <dd><%= link_to @deal.lead.name, lead_path(@deal.lead) %></dd>
+    <% end %>
+  </dl>
+</div>

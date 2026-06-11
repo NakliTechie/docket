@@ -18,6 +18,7 @@ class Lead < ApplicationRecord
 
   belongs_to :owner, -> { with_deleted }, class_name: "User", optional: true
   belongs_to :contact, -> { with_deleted }, optional: true
+  belongs_to :converted_deal, -> { with_deleted }, class_name: "Deal", optional: true
 
   normalizes :email, with: ->(e) { e.strip.downcase.presence }
   normalizes :phone, with: ->(p) { p.gsub(/[^\d+]/, "").presence }
@@ -34,14 +35,15 @@ class Lead < ApplicationRecord
   }
 
   # Convert: dedupe-or-create a Contact (same upsert rule as the portal),
-  # link it, and stamp the lead converted. Idempotent. M2 will also open a
-  # Deal here. Returns the Contact.
+  # open a Deal in the default pipeline, and stamp the lead converted.
+  # Idempotent. Returns the Contact.
   def convert!
     return contact if status_converted? && contact
 
     transaction do
       resolved = resolve_contact
-      update!(contact: resolved, status: :converted, converted_at: Time.current)
+      deal = open_deal_for(resolved)
+      update!(contact: resolved, converted_deal: deal, status: :converted, converted_at: Time.current)
       resolved
     end
   end
@@ -73,6 +75,20 @@ class Lead < ApplicationRecord
   def resolve_organisation
     return nil if company_name.blank?
     Organisation.find_or_create_by!(name: company_name) { |o| o.kind = "company" }
+  end
+
+  # Open a Deal for the converted lead in the default pipeline's first
+  # stage. Nil if no pipeline is configured (convert still links a Contact).
+  def open_deal_for(contact)
+    pipeline = Pipeline.default
+    return nil unless pipeline
+
+    Deal.create!(
+      name: company_name.presence || name,
+      pipeline: pipeline, pipeline_stage: pipeline.first_stage,
+      owner: owner, contact: contact, organisation: contact.organisation,
+      lead: self, value_cents: value_estimate_cents
+    )
   end
 
   def reachable_somehow

@@ -14,6 +14,8 @@ en:
       sla_policies: "SLA policies"
       macros: "Macros"
       leads: "Leads"
+      deals: "Deals"
+      pipelines: "Pipelines"
       users: "Users"
       activity: "Activity"
       audit: "Audit"
@@ -335,6 +337,80 @@ en:
       converted: "Lead converted to a contact."
     mark_unqualified:
       unqualified: "Lead marked unqualified."
+
+  deals:
+    fields:
+      name: "Name"
+      pipeline: "Pipeline"
+      stage: "Stage"
+      value: "Value (₹)"
+      owner: "Owner"
+      contact: "Contact"
+      organisation: "Organisation"
+      expected_close_on: "Expected close"
+      source_lead: "Source lead"
+      status: "Status"
+    form:
+      pipeline_hint: "New deals land in this pipeline's first stage."
+    enum:
+      status:
+        open: "Open"
+        won: "Won"
+        lost: "Lost"
+    index:
+      title: "Deals"
+      new_deal: "New deal"
+      no_pipeline:
+        title: "No pipeline yet"
+        hint: "Create a pipeline to start tracking deals on the board."
+    show:
+      details: "Details"
+      confirm_delete: "Delete this deal?"
+    new:
+      title: "New deal"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Deal created."
+    update:
+      updated: "Deal updated."
+    destroy:
+      deleted: "Deal deleted."
+    move:
+      moved: "Deal moved."
+  pipelines:
+    fields:
+      name: "Name"
+      active: "Active"
+      stages: "Stages"
+      stage_name: "Stage name"
+      position: "Order"
+      probability: "Probability %"
+      is_won: "Won"
+      is_lost: "Lost"
+      remove: "Remove"
+    form:
+      stages_hint: "Won/Lost stages close a deal when a card lands in them."
+    index:
+      title: "Pipelines"
+      new_pipeline: "New pipeline"
+      columns:
+        name: "Name"
+        stages: "Stages"
+        active: "Active"
+      empty:
+        title: "No pipelines yet"
+        hint: "A pipeline defines the stages deals move through on the board."
+    new:
+      title: "New pipeline"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Pipeline created."
+    update:
+      updated: "Pipeline updated."
+    destroy:
+      deleted: "Pipeline deleted."
 
   organisations:
     enum:
@@ -950,6 +1026,15 @@ en:
           attributes:
             base:
               unreachable: "needs at least one of email or phone"
+        pipeline:
+          attributes:
+            base:
+              no_stages: "needs at least one stage"
+              won_and_lost: "a stage cannot be both won and lost"
+        deal:
+          attributes:
+            pipeline_stage:
+              not_in_pipeline: "must belong to the deal's pipeline"
         message:
           attributes:
             files:

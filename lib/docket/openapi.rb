@@ -55,8 +55,15 @@ module Docket
                                       notes: :string, created_at: :datetime, updated_at: :datetime),
           Lead: object_schema(id: :integer, name: :string, email: :string, phone: :string,
                               company_name: :string, source: enum(Lead.sources.keys), status: enum(Lead.statuses.keys),
-                              owner_id: :integer, contact_id: :integer, value_estimate_cents: :integer,
+                              owner_id: :integer, contact_id: :integer, converted_deal_id: :integer, value_estimate_cents: :integer,
                               notes: :string, converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
+          Deal: object_schema(id: :integer, name: :string, pipeline_id: :integer, pipeline_stage_id: :integer,
+                              status: enum(Deal.statuses.keys), value_cents: :integer, currency: :string,
+                              owner_id: :integer, contact_id: :integer, organisation_id: :integer, lead_id: :integer,
+                              expected_close_on: :datetime, closed_at: :datetime, created_at: :datetime, updated_at: :datetime),
+          Pipeline: object_schema(id: :integer, name: :string, slug: :string, position: :integer, active: :boolean,
+                                  stages: { type: "array", items: { type: "object" } },
+                                  created_at: :datetime, updated_at: :datetime),
           Queue: object_schema(id: :integer, name: :string, slug: :string, description: :string,
                                member_ids: { type: "array", items: { type: "integer" } },
                                created_at: :datetime, updated_at: :datetime),
@@ -127,6 +134,10 @@ module Docket
       crud(result, "leads", "Lead", extra_params: %w[q status owner_id])
       result["/leads/{id}/convert"] = { post: op("Convert a lead — upserts/links a Contact and stamps the lead converted",
         params: [ id_param ], responses: { "200" => "Converted" }) }
+      crud(result, "pipelines", "Pipeline")
+      crud(result, "deals", "Deal", extra_params: %w[pipeline_id status])
+      result["/deals/{id}/move"] = { post: op("Move a deal to another stage in its pipeline (the kanban drag)",
+        params: [ id_param ], request: { pipeline_stage_id: :integer }, responses: { "200" => "Moved" }) }
       crud(result, "queues", "Queue", create_note: "Queues are addressable by id or slug.")
       crud(result, "categories", "Category")
       result["/categories/{id}/toggle_auto_resolve"] = { post: op("Flip AI auto-resolve for the category (admin user tokens only)", params: [ id_param ]) }

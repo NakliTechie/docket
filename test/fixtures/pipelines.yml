@@ -1,0 +1,5 @@
+sales:
+  name: Sales
+  slug: sales
+  position: 0
+  active: true

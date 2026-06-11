@@ -14,6 +14,8 @@ hi:
       sla_policies: "एसएलए नीतियाँ"
       macros: "मैक्रो"
       leads: "लीड्स"
+      deals: "सौदे"
+      pipelines: "पाइपलाइनें"
       users: "उपयोगकर्ता"
       activity: "गतिविधि"
       audit: "ऑडिट"
@@ -335,6 +337,80 @@ hi:
       converted: "लीड को संपर्क में बदला गया।"
     mark_unqualified:
       unqualified: "लीड अयोग्य चिह्नित की गई।"
+
+  deals:
+    fields:
+      name: "नाम"
+      pipeline: "पाइपलाइन"
+      stage: "चरण"
+      value: "मूल्य (₹)"
+      owner: "स्वामी"
+      contact: "संपर्क"
+      organisation: "संगठन"
+      expected_close_on: "अपेक्षित समापन"
+      source_lead: "स्रोत लीड"
+      status: "स्थिति"
+    form:
+      pipeline_hint: "नए सौदे इस पाइपलाइन के पहले चरण में आते हैं।"
+    enum:
+      status:
+        open: "खुला"
+        won: "जीता"
+        lost: "हारा"
+    index:
+      title: "सौदे"
+      new_deal: "नया सौदा"
+      no_pipeline:
+        title: "अभी कोई पाइपलाइन नहीं"
+        hint: "सौदों को बोर्ड पर ट्रैक करने के लिए एक पाइपलाइन बनाएं।"
+    show:
+      details: "विवरण"
+      confirm_delete: "इस सौदे को हटाएं?"
+    new:
+      title: "नया सौदा"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "सौदा बनाया गया।"
+    update:
+      updated: "सौदा अपडेट किया गया।"
+    destroy:
+      deleted: "सौदा हटाया गया।"
+    move:
+      moved: "सौदा स्थानांतरित किया गया।"
+  pipelines:
+    fields:
+      name: "नाम"
+      active: "सक्रिय"
+      stages: "चरण"
+      stage_name: "चरण नाम"
+      position: "क्रम"
+      probability: "संभावना %"
+      is_won: "जीत"
+      is_lost: "हार"
+      remove: "हटाएं"
+    form:
+      stages_hint: "जीत/हार चरण में कार्ड आने पर सौदा बंद हो जाता है।"
+    index:
+      title: "पाइपलाइनें"
+      new_pipeline: "नई पाइपलाइन"
+      columns:
+        name: "नाम"
+        stages: "चरण"
+        active: "सक्रिय"
+      empty:
+        title: "अभी कोई पाइपलाइन नहीं"
+        hint: "पाइपलाइन उन चरणों को परिभाषित करती है जिनसे सौदे बोर्ड पर गुज़रते हैं।"
+    new:
+      title: "नई पाइपलाइन"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "पाइपलाइन बनाई गई।"
+    update:
+      updated: "पाइपलाइन अपडेट की गई।"
+    destroy:
+      deleted: "पाइपलाइन हटाई गई।"
 
   organisations:
     enum:
@@ -950,6 +1026,15 @@ hi:
           attributes:
             base:
               unreachable: "ईमेल या फ़ोन में से कम से कम एक चाहिए"
+        pipeline:
+          attributes:
+            base:
+              no_stages: "कम से कम एक चरण चाहिए"
+              won_and_lost: "एक चरण जीत और हार दोनों नहीं हो सकता"
+        deal:
+          attributes:
+            pipeline_stage:
+              not_in_pipeline: "सौदे की पाइपलाइन से संबंधित होना चाहिए"
         message:
           attributes:
             files:

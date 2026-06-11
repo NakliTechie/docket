@@ -26,6 +26,10 @@ class LeadTest < ActiveSupport::TestCase
     assert_equal contact, lead.contact
     assert_equal "Buyer Co", contact.organisation.name
     assert lead.converted_at.present?
+    # M2: convert also opens a deal in the default pipeline's first stage.
+    assert lead.converted_deal.present?
+    assert_equal pipelines(:sales), lead.converted_deal.pipeline
+    assert_equal contact, lead.converted_deal.contact
   end
 
   test "convert dedupes onto an existing contact by email" do
