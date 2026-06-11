@@ -1,0 +1,45 @@
+<% page_title t(".title") %>
+<div class="portal-card">
+  <h1><%= t(".title") %></h1>
+  <p class="form-hint"><%= t(".intro") %></p>
+
+  <%= form_with model: @inquiry, url: inquiry_path, method: :post, class: "form" do |f| %>
+    <%= render "shared/form_errors", record: @inquiry %>
+
+    <div class="form-row">
+      <%= f.label :name, t("inquiries.fields.name") %>
+      <%= f.text_field :name, required: true, autocomplete: "name" %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :company_name, t("inquiries.fields.company_name") %>
+      <%= f.text_field :company_name, autocomplete: "organization" %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :email, t("inquiries.fields.email") %>
+      <%= f.email_field :email, autocomplete: "email" %>
+      <p class="form-hint"><%= t("inquiries.fields.reach_hint") %></p>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :phone, t("inquiries.fields.phone") %>
+      <%= f.telephone_field :phone, autocomplete: "tel" %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :message, t("inquiries.fields.message") %>
+      <%= f.text_area :message, rows: 5 %>
+    </div>
+
+    <%# Honeypot: hidden from real users; bots that fill it are silently dropped. %>
+    <div class="visually-hidden" aria-hidden="true">
+      <label for="website"><%= t("inquiries.fields.leave_blank") %></label>
+      <%= text_field_tag :website, nil, tabindex: -1, autocomplete: "off" %>
+    </div>
+
+    <div class="form-actions">
+      <%= f.submit t(".submit"), class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>
