@@ -23,6 +23,11 @@ Rack::Attack.throttle("api/oauth_token", limit: 30, period: 5.minutes) do |reque
   request.ip if request.post? && request.path == "/api/v1/oauth/token"
 end
 
+# Public lead-capture form (v1.2 CRM).
+Rack::Attack.throttle("inquiry/submissions", limit: 10, period: 1.hour) do |request|
+  request.ip if request.post? && request.path == "/inquiry"
+end
+
 Rack::Attack.throttled_responder = lambda do |_request|
   [ 429, { "Content-Type" => "text/plain" }, [ "Rate limit exceeded. Please retry later.\n" ] ]
 end

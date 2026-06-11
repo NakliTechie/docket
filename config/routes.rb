@@ -66,6 +66,10 @@ Rails.application.routes.draw do
     end
   end
 
+  # Public lead-capture form (v1.2 CRM) — unauthenticated.
+  get "inquiry", to: "inquiries#new", as: :inquiry
+  post "inquiry", to: "inquiries#create"
+
   namespace :portal do
     root to: "cases#new"
     resources :cases, only: %i[new create]

@@ -471,6 +471,26 @@ hi:
     cancel:
       cancelled: "नामांकन रद्द किया गया।"
 
+  inquiries:
+    brand: "संपर्क करें"
+    footer: "हम आपका विवरण कभी साझा नहीं करेंगे। डॉकेट द्वारा संचालित।"
+    fields:
+      name: "आपका नाम"
+      company_name: "कंपनी"
+      email: "ईमेल"
+      phone: "फ़ोन"
+      message: "हम कैसे मदद कर सकते हैं?"
+      reach_hint: "ताकि हम आपसे संपर्क कर सकें, ईमेल या फ़ोन दें।"
+      leave_blank: "इस फ़ील्ड को खाली छोड़ें"
+    new:
+      title: "जानकारी का अनुरोध करें"
+      intro: "अपने बारे में थोड़ा बताएं और हमारी टीम संपर्क करेगी।"
+      submit: "भेजें"
+    confirmation:
+      title: "धन्यवाद — हमें मिल गया"
+      body: "आपका विवरण हमारी टीम तक पहुँच गया है। हम जल्द संपर्क करेंगे।"
+      again: "एक और भेजें"
+
   organisations:
     enum:
       kind:
@@ -1108,3 +1128,7 @@ hi:
           attributes:
             base:
               unreachable: "सत्यापन के लिए ईमेल या फ़ोन में से कम-से-कम एक दें"
+        lead_inquiry:
+          attributes:
+            base:
+              unreachable: "ईमेल या फ़ोन में से कम से कम एक दें"
