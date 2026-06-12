@@ -7,7 +7,9 @@ module Connectors
     def providers
       {
         "http_json" => Connectors::HttpJsonProvider,
-        "slack_webhook" => Connectors::SlackWebhookProvider
+        "slack_webhook" => Connectors::SlackWebhookProvider,
+        "msg91" => Connectors::Msg91Provider,
+        "razorpay" => Connectors::RazorpayProvider
       }
     end
 
