@@ -61,7 +61,7 @@ module Connectors
     end
 
     def webhook_uri
-      url = connector.credentials_hash["webhook_url"].to_s
+      url = connector.secret("webhook_url").to_s
       raise Connectors::Error, "webhook_url is required" if url.blank?
       uri = URI.parse(url)
       raise Connectors::Error, "webhook_url must be https" unless uri.is_a?(URI::HTTPS)

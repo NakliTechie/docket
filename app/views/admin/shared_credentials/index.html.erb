@@ -1,0 +1,39 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to t(".add"), new_admin_shared_credential_path, class: "btn btn-primary" %>
+  </div>
+</div>
+<p class="muted"><%= t(".intro") %></p>
+
+<div class="panel">
+  <% if @shared_credentials.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t(".columns.label") %></th>
+            <th><%= t(".columns.name") %></th>
+            <th><%= t(".columns.fields") %></th>
+            <th><%= t(".columns.used_by") %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @shared_credentials.each do |sc| %>
+            <tr>
+              <td><%= sc.label %></td>
+              <td class="mono"><%= sc.name %></td>
+              <td class="mono text-sm"><%= sc.secrets_hash.keys.join(", ") %></td>
+              <td><%= sc.connectors.count %></td>
+              <td><%= link_to t(".edit"), edit_admin_shared_credential_path(sc), class: "btn btn-sm" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".empty") %></p>
+  <% end %>
+</div>

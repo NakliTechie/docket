@@ -79,6 +79,7 @@ Rails.application.routes.draw do
         post :reject
       end
     end
+    resources :shared_credentials, except: :show
   end
 
   # Inbound connector webhook ping (HMAC-signed, unauthenticated).

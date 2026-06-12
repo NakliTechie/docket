@@ -1,0 +1,8 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to t(".back"), admin_shared_credentials_path, class: "btn" %>
+  </div>
+</div>
+<%= render "form", shared_credential: @shared_credential %>

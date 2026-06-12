@@ -75,7 +75,7 @@ module Connectors
     end
 
     def authkey
-      key = connector.credentials_hash["authkey"].to_s
+      key = connector.secret("authkey").to_s
       raise Connectors::Error, "authkey is required" if key.blank?
       key
     end

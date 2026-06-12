@@ -83,7 +83,7 @@ module Admin
 
     def connector_params
       params.require(:connector).permit(:name, :provider, :target, :schedule_interval_minutes,
-                                        config: {}, field_mapping: {})
+                                        :shared_credential_id, config: {}, field_mapping: {})
     end
 
     # Secrets only change when a new value is typed — a blank field keeps the
