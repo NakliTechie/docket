@@ -16,21 +16,13 @@ class ConnectorInvocation < ApplicationRecord
   validates :action, presence: true
   validates :idempotency_key, uniqueness: { scope: :connector_id }, allow_nil: true
 
+  before_create :mint_delegation_id
+
   scope :recent_first, -> { order(id: :desc) }
 
   def duration_seconds
     return nil unless created_at && finished_at
     (finished_at - created_at).round(1)
-  end
-
-  # The provider action this invocation called (nil if the provider has since
-  # dropped it), and its declared side-effect class — used by the admin views.
-  def action_descriptor
-    connector.provider_action(action)
-  end
-
-  def effect
-    action_descriptor&.effect
   end
 
   def awaiting_approval?
@@ -44,5 +36,13 @@ class ConnectorInvocation < ApplicationRecord
 
   def audit_redacted_attributes
     super | %w[args result]
+  end
+
+  private
+
+  # Opaque, stable, bound to this invocation (and thus its principal) at
+  # creation — the correlation id propagated downstream and into the audit.
+  def mint_delegation_id
+    self.delegation_id ||= "dlg_#{SecureRandom.alphanumeric(24)}"
   end
 end

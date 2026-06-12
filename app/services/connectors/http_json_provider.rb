@@ -43,21 +43,21 @@ module Connectors
       raise Connectors::Error, "fetch failed: #{e.class}: #{e.message}"
     end
 
-    def invoke(action_key, args, _context = {})
+    def invoke(action_key, args, context = {})
       case action_key.to_s
-      when "post_json" then post_json(args)
+      when "post_json" then post_json(args, context)
       else raise Connectors::Error, "unknown action: #{action_key}"
       end
     end
 
     private
 
-    def post_json(args)
+    def post_json(args, context)
       uri = endpoint_uri("action_url")
       body = args["body"] || args[:body]
       raise Connectors::Error, "body is required" unless body.is_a?(Hash)
 
-      req = Net::HTTP::Post.new(uri.request_uri, headers.merge("Content-Type" => "application/json"))
+      req = Net::HTTP::Post.new(uri.request_uri, action_headers(context))
       req.body = JSON.generate(body)
       response = request(req, uri)
       unless response.code.to_i.between?(200, 299)
@@ -93,6 +93,15 @@ module Connectors
       h = { "Accept" => "application/json" }
       token = connector.credentials_hash["api_key"].to_s
       h["Authorization"] = "Bearer #{token}" if token.present?
+      h
+    end
+
+    # Outbound action carries the invocation's delegation id so the external
+    # system can correlate the side effect back to the agent that caused it.
+    def action_headers(context)
+      h = headers.merge("Content-Type" => "application/json")
+      delegation = context[:invocation]&.delegation_id
+      h["X-Docket-Delegation-Id"] = delegation if delegation
       h
     end
 

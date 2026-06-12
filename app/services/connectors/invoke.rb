@@ -32,7 +32,7 @@ module Connectors
         invocation = connector.invocations.create!(
           action: action.key, args: args, on_behalf_of: on_behalf_of,
           reasoning: reasoning, requested_by: principal, idempotency_key: idempotency_key,
-          status: gated_status(connector, action)
+          effect: action.effect, status: gated_status(connector, action)
         )
         execute!(invocation, action) if invocation.status_approved?
       end
@@ -66,7 +66,8 @@ module Connectors
     # owns the approval entry and the agent owns the execution.
     def execute!(invocation, action)
       invocation.update!(status: :executing)
-      Current.set(actor: invocation.requested_by, on_behalf_of: invocation.on_behalf_of) do
+      Current.set(actor: invocation.requested_by, on_behalf_of: invocation.on_behalf_of,
+                  delegation_id: invocation.delegation_id) do
         observation = invocation.connector.provider_instance.invoke(
           action.key, invocation.args || {}, { invocation: invocation }
         )

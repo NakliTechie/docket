@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_12_093000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_094000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -136,6 +136,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_093000) do
     t.json "args"
     t.integer "connector_id", null: false
     t.datetime "created_at", null: false
+    t.string "delegation_id"
+    t.string "effect"
     t.text "error"
     t.datetime "finished_at"
     t.string "idempotency_key"
@@ -150,6 +152,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_093000) do
     t.index ["connector_id", "id"], name: "index_connector_invocations_on_connector_id_and_id"
     t.index ["connector_id", "idempotency_key"], name: "index_connector_invocations_idempotency", unique: true
     t.index ["connector_id"], name: "index_connector_invocations_on_connector_id"
+    t.index ["delegation_id"], name: "index_connector_invocations_on_delegation_id", unique: true
     t.index ["requested_by_type", "requested_by_id"], name: "index_connector_invocations_on_requested_by"
   end
 
