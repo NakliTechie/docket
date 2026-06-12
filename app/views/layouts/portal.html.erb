@@ -15,7 +15,7 @@
 
     <header class="app-header">
       <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
-        <span class="brand"><%= t("portal.brand") %></span>
+        <span class="brand"><%= brand_name(t("portal.brand")) %></span>
         <%= nav_link t("portal.nav.new_case"), portal_root_path,
               active: controller_name == "cases" %>
         <%= nav_link t("portal.nav.track"), portal_track_path,

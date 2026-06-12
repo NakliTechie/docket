@@ -4,6 +4,7 @@ module Admin
     # each with a coercion. BYOK enablement is deliberately a separate
     # checkbox carrying the egress warning (handoff §4).
     EDITABLE = {
+      "brand_name" => :string,
       "llm_provider" => :string,
       "llm_endpoint_url" => :string,
       "llm_model" => :string,

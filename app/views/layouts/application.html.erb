@@ -16,7 +16,7 @@
     <% if authenticated? %>
       <header class="app-header">
         <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
-          <%= link_to t("layout.product_name"), root_path, class: "brand" %>
+          <%= link_to brand_name, root_path, class: "brand" %>
           <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
           <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
           <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>

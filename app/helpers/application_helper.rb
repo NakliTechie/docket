@@ -1,6 +1,14 @@
 module ApplicationHelper
   include Pagy::Frontend
 
+  # The operator-configurable brand shown in the staff header, auth pages and
+  # the customer portal. Falls back to the per-surface neutral default, then
+  # the product name — so docket reads private-first out of the box and a
+  # government deploy just sets its own brand.
+  def brand_name(fallback = nil)
+    Setting.get("brand_name").presence || fallback || t("layout.product_name")
+  end
+
   # Inline SVG sprite reference (vendored icons, no icon font, no CDN).
   def icon(name, size: 16, **options)
     options[:class] = [ "icon", options[:class] ].compact.join(" ")

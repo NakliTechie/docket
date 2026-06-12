@@ -15,7 +15,7 @@
 
     <header class="app-header">
       <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
-        <span class="brand"><%= t("inquiries.brand") %></span>
+        <span class="brand"><%= brand_name(t("inquiries.brand")) %></span>
       </nav>
       <div class="app-header-right">
         <%= button_to t("layout.locale_switch_label"), locale_path(locale: I18n.locale == :en ? "hi" : "en"),
