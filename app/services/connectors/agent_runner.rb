@@ -26,6 +26,19 @@ module Connectors
       Connectors::AgentRunnerJob.perform_later(kase.id, agent.id)
     end
 
+    # The ServiceAccount designated (in Settings) to act as the case effector
+    # agent — nil when none is set or it is inactive.
+    def self.designated_agent
+      id = Setting.get("effector_agent_id")
+      id.present? ? ServiceAccount.active.find_by(id: id) : nil
+    end
+
+    # Whether a case can be handed to the agent right now: the AI layer is on
+    # and an active agent is designated.
+    def self.available?
+      Llm.enabled? && designated_agent.present?
+    end
+
     def run
       return if client.nil?
       tools = authorized_tools

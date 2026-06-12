@@ -12,6 +12,7 @@ module Admin
       "ai_draft_enabled" => :bool,
       "ai_route_confidence" => :float,
       "ai_resolve_confidence" => :float,
+      "effector_agent_id" => :int,
       "default_queue_id" => :int,
       "default_sla_policy_id" => :int,
       "outbound_email_from" => :string,

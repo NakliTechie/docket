@@ -199,6 +199,8 @@ en:
       status_panel: "Status"
       assignee: "Assignee"
       assign: "Assign"
+      run_agent: "Run AI agent"
+      run_agent_hint: "The agent acts through connectors; write and decision-of-record actions wait for your approval."
       details: "Details"
       queue: "Queue"
       category: "Category"
@@ -229,6 +231,9 @@ en:
     assign:
       assigned: "Case assigned to %{name}."
       unassigned: "Case unassigned."
+    run_agent:
+      queued: "AI agent “%{name}” started on this case — refresh in a moment to see its steps."
+      unavailable: "No AI effector agent is configured. Set one under Settings → AI."
 
   messages:
     enum:
@@ -1187,6 +1192,8 @@ en:
           secret_set: "(set — enter a new value to replace)"
           llm_byok_enabled: "I understand: enable external (BYOK) provider"
           ai_draft_enabled: "Draft replies for human review on new cases"
+          effector_agent: "Case effector agent"
+          effector_agent_hint: "The service account an AI agent acts as when a staffer runs it on a case. Its connector scopes bound what it can do; write actions still need approval."
           ai_route_confidence: "Routing confidence threshold"
           ai_resolve_confidence: "Auto-resolve confidence threshold"
           ai_resolve_confidence_hint: "Auto-resolve additionally requires the per-category opt-in."

@@ -1,5 +1,5 @@
 class CasesController < ApplicationController
-  before_action :set_case, only: %i[show edit update destroy transition assign]
+  before_action :set_case, only: %i[show edit update destroy transition assign run_agent]
 
   # Optimistic-locking conflict: someone else changed this case since it was
   # loaded. Don't clobber — ask the agent to reload and retry.
@@ -78,6 +78,19 @@ class CasesController < ApplicationController
     assignee = params[:assignee_id].presence && User.active.find(params[:assignee_id])
     @case.update!(assignee: assignee)
     redirect_to @case, notice: assignee ? t(".assigned", name: assignee.name) : t(".unassigned")
+  end
+
+  # Hand the case to the designated AI effector agent (runs off-request).
+  # Write / decision-of-record actions it proposes land in the approval queue.
+  def run_agent
+    authorize @case, :update?
+    agent = Connectors::AgentRunner.designated_agent
+    if agent && Llm.enabled?
+      Connectors::AgentRunner.run_later(@case, agent: agent)
+      redirect_to @case, notice: t(".queued", name: agent.name)
+    else
+      redirect_to @case, alert: t(".unavailable")
+    end
   end
 
   private
