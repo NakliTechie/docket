@@ -857,6 +857,9 @@ en:
         sync_now: "Sync now"
         pause: "Pause"
         resume: "Resume"
+        activate: "Activate"
+        draft_ready: "Draft — ready to activate."
+        draft_needs_credentials: "Draft — add the required credentials, then activate."
         edit: "Edit"
         provider: "Provider"
         target: "Syncs into"
@@ -900,6 +903,9 @@ en:
         paused: "Connector paused."
       resume:
         resumed: "Connector resumed."
+      activate:
+        activated: "Connector activated."
+        not_configured: "Add the required credentials before activating."
       fields:
         name: "Name"
         api_key: "API key / token"
@@ -936,6 +942,7 @@ en:
         active: "Active"
         paused: "Paused"
         error: "Error"
+        draft: "Draft"
       triggers:
         manual: "Manual"
         scheduled: "Scheduled"

@@ -857,6 +857,9 @@ hi:
         sync_now: "अभी सिंक करें"
         pause: "रोकें"
         resume: "फिर शुरू करें"
+        activate: "सक्रिय करें"
+        draft_ready: "ड्राफ़्ट — सक्रिय करने के लिए तैयार।"
+        draft_needs_credentials: "ड्राफ़्ट — आवश्यक क्रेडेंशियल जोड़ें, फिर सक्रिय करें।"
         edit: "संपादित करें"
         provider: "प्रदाता"
         target: "किसमें सिंक"
@@ -900,6 +903,9 @@ hi:
         paused: "कनेक्टर रोका गया।"
       resume:
         resumed: "कनेक्टर फिर शुरू हुआ।"
+      activate:
+        activated: "कनेक्टर सक्रिय किया गया।"
+        not_configured: "सक्रिय करने से पहले आवश्यक क्रेडेंशियल जोड़ें।"
       fields:
         name: "नाम"
         api_key: "API कुंजी / टोकन"
@@ -936,6 +942,7 @@ hi:
         active: "सक्रिय"
         paused: "रुका हुआ"
         error: "त्रुटि"
+        draft: "ड्राफ़्ट"
       triggers:
         manual: "मैनुअल"
         scheduled: "अनुसूचित"

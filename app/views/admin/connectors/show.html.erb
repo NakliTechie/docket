@@ -2,13 +2,17 @@
 <div class="page-header">
   <h1><%= @connector.name %></h1>
   <div class="page-actions">
-    <% if @connector.provider_syncs? %>
-      <%= button_to t(".sync_now"), sync_admin_connector_path(@connector), class: "btn btn-primary" %>
-    <% end %>
-    <% if @connector.status_active? %>
-      <%= button_to t(".pause"), pause_admin_connector_path(@connector), class: "btn" %>
+    <% if @connector.status_draft? %>
+      <%= button_to t(".activate"), activate_admin_connector_path(@connector), class: "btn btn-primary" %>
     <% else %>
-      <%= button_to t(".resume"), resume_admin_connector_path(@connector), class: "btn" %>
+      <% if @connector.provider_syncs? %>
+        <%= button_to t(".sync_now"), sync_admin_connector_path(@connector), class: "btn btn-primary" %>
+      <% end %>
+      <% if @connector.status_active? %>
+        <%= button_to t(".pause"), pause_admin_connector_path(@connector), class: "btn" %>
+      <% else %>
+        <%= button_to t(".resume"), resume_admin_connector_path(@connector), class: "btn" %>
+      <% end %>
     <% end %>
     <%= link_to t(".edit"), edit_admin_connector_path(@connector), class: "btn" %>
   </div>
@@ -24,6 +28,9 @@
     <dt><%= t(".last_synced") %></dt><dd><%= @connector.last_synced_at ? l(@connector.last_synced_at, format: :long) : t(".never") %></dd>
     <dt><%= t(".webhook_url") %></dt><dd class="mono table-meta"><%= connector_webhook_url(@connector) %></dd>
   </dl>
+  <% if @connector.status_draft? %>
+    <p class="muted text-sm"><%= @connector.configured? ? t(".draft_ready") : t(".draft_needs_credentials") %></p>
+  <% end %>
   <p class="muted text-sm"><%= t(".webhook_hint") %></p>
 </div>
 

@@ -15,14 +15,21 @@ module Connectors
     # syncs            — does the provider pull records inbound? Default true.
     #                    Effector-only providers (notify / pay) set syncs: false,
     #                    which drops the field-mapping requirement.
+    # required_credential_fields — secrets that MUST be present before the
+    #                    connector can go live. Defaults to all secret_fields;
+    #                    a provider with optional auth declares [].
     Descriptor = Struct.new(:key, :name, :category, :auth, :config_fields, :credential_fields,
-                            :syncs, keyword_init: true) do
+                            :syncs, :required_credential_fields, keyword_init: true) do
       def secret_fields
         return credential_fields if credential_fields.present?
         auth == :api_key ? %w[api_key] : []
       end
 
       def syncs? = syncs != false
+
+      def required_secret_fields
+        required_credential_fields.nil? ? secret_fields : required_credential_fields
+      end
     end
 
     # An agent-callable action. The SAME struct backs the admin "what can
