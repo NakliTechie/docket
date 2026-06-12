@@ -23,6 +23,25 @@ class ConnectorInvocation < ApplicationRecord
     (finished_at - created_at).round(1)
   end
 
+  # The provider action this invocation called (nil if the provider has since
+  # dropped it), and its declared side-effect class — used by the admin views.
+  def action_descriptor
+    connector.provider_action(action)
+  end
+
+  def effect
+    action_descriptor&.effect
+  end
+
+  def awaiting_approval?
+    status_proposed?
+  end
+
+  # ServiceAccount (an agent) or a staff User — both respond to #name.
+  def requester_label
+    requested_by&.name
+  end
+
   def audit_redacted_attributes
     super | %w[args result]
   end

@@ -31,6 +31,7 @@ module Admin
     def show
       authorize @connector
       @runs = @connector.connector_runs.recent_first.limit(20)
+      @invocations = @connector.invocations.includes(:requested_by).recent_first.limit(20)
     end
 
     def edit

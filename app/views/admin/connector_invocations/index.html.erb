@@ -1,0 +1,49 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+</div>
+<p class="muted"><%= t(".intro") %></p>
+
+<div class="page-actions">
+  <%= link_to t(".pending_only"), admin_connector_invocations_path,
+        class: "btn#{' btn-primary' if params[:filter] != 'all'}" %>
+  <%= link_to t(".all"), admin_connector_invocations_path(filter: "all"),
+        class: "btn#{' btn-primary' if params[:filter] == 'all'}" %>
+</div>
+
+<div class="panel">
+  <% if @invocations.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t(".columns.when") %></th>
+            <th><%= t(".columns.connector") %></th>
+            <th><%= t(".columns.action") %></th>
+            <th><%= t(".columns.effect") %></th>
+            <th><%= t(".columns.on_behalf_of") %></th>
+            <th><%= t(".columns.requested_by") %></th>
+            <th><%= t(".columns.status") %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @invocations.each do |inv| %>
+            <tr>
+              <td><%= l inv.created_at, format: :long %></td>
+              <td><%= inv.connector.name %></td>
+              <td class="mono"><%= inv.action %></td>
+              <td><%= t("admin.connector_invocations.effects.#{inv.effect}", default: inv.effect.to_s) %></td>
+              <td class="mono text-sm"><%= inv.on_behalf_of.presence || t(".none") %></td>
+              <td><%= inv.requester_label.presence || t(".requested_by_system") %></td>
+              <td><span class="badge"><%= t("admin.connector_invocations.status.#{inv.status}") %></span></td>
+              <td><%= link_to t(".review"), admin_connector_invocation_path(inv), class: "btn btn-sm" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".empty") %></p>
+  <% end %>
+</div>

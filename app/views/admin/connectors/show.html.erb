@@ -61,5 +61,37 @@
   <% end %>
 </div>
 
+<div class="panel">
+  <h2 class="panel-title"><%= t(".effector") %></h2>
+  <% if @invocations.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t(".invocation_columns.when") %></th>
+            <th><%= t(".invocation_columns.action") %></th>
+            <th><%= t(".invocation_columns.on_behalf_of") %></th>
+            <th><%= t(".invocation_columns.requested_by") %></th>
+            <th><%= t(".invocation_columns.status") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @invocations.each do |inv| %>
+            <tr>
+              <td><%= link_to l(inv.created_at, format: :long), admin_connector_invocation_path(inv) %></td>
+              <td class="mono"><%= inv.action %></td>
+              <td class="mono text-sm"><%= inv.on_behalf_of %></td>
+              <td><%= inv.requester_label %></td>
+              <td><span class="badge"><%= t("admin.connector_invocations.status.#{inv.status}") %></span></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".no_invocations") %></p>
+  <% end %>
+</div>
+
 <%= button_to t(".delete"), admin_connector_path(@connector), method: :delete, class: "btn btn-danger",
       form: { data: { turbo_confirm: t(".delete_confirm") } } %>

@@ -866,6 +866,14 @@ en:
           created: "Created"
           updated: "Updated"
           error: "Error"
+        effector: "Agent actions"
+        no_invocations: "No agent actions yet."
+        invocation_columns:
+          when: "When"
+          action: "Action"
+          on_behalf_of: "On behalf of"
+          requested_by: "Requested by"
+          status: "Status"
       create:
         created: "Connector created."
       update:
@@ -908,6 +916,59 @@ en:
         running: "Running"
         success: "Success"
         failed: "Failed"
+    connector_invocations:
+      index:
+        title: "Agent actions"
+        intro: "Actions AI agents have taken — or proposed — through connectors. Write and irreversible actions wait here for a human to approve."
+        pending_only: "Awaiting approval"
+        all: "All"
+        empty: "No agent actions yet."
+        review: "Review"
+        none: "—"
+        requested_by_system: "System"
+        columns:
+          when: "When"
+          connector: "Connector"
+          action: "Action"
+          effect: "Effect"
+          on_behalf_of: "On behalf of"
+          requested_by: "Requested by"
+          status: "Status"
+      show:
+        title: "Agent action #%{id}"
+        back: "Back to agent actions"
+        connector: "Connector"
+        action: "Action"
+        effect: "Effect"
+        status: "Status"
+        requested_by: "Requested by"
+        on_behalf_of: "On behalf of"
+        reasoning: "Agent's reasoning"
+        approved_by: "Approved by"
+        args: "Arguments"
+        result: "Result"
+        error: "Error"
+        none: "—"
+        approve: "Approve & run"
+        reject: "Reject"
+        approve_confirm: "Approve and execute this action?"
+        reject_confirm: "Reject this action — it will not run?"
+      approve:
+        approved: "Action approved and executed."
+        failed: "Action approved but failed to execute: %{error}"
+      reject:
+        rejected: "Action rejected."
+      status:
+        proposed: "Awaiting approval"
+        approved: "Approved"
+        rejected: "Rejected"
+        executing: "Executing"
+        succeeded: "Succeeded"
+        failed: "Failed"
+      effects:
+        read: "Read"
+        write: "Write"
+        irreversible: "Irreversible"
     users:
       fields:
         name: "Name"

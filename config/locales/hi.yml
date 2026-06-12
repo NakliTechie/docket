@@ -866,6 +866,14 @@ hi:
           created: "बनाए"
           updated: "अद्यतन"
           error: "त्रुटि"
+        effector: "एजेंट कार्रवाइयाँ"
+        no_invocations: "अभी तक कोई एजेंट कार्रवाई नहीं।"
+        invocation_columns:
+          when: "कब"
+          action: "कार्रवाई"
+          on_behalf_of: "किसकी ओर से"
+          requested_by: "अनुरोधकर्ता"
+          status: "स्थिति"
       create:
         created: "कनेक्टर बनाया गया।"
       update:
@@ -908,6 +916,59 @@ hi:
         running: "चल रहा"
         success: "सफल"
         failed: "असफल"
+    connector_invocations:
+      index:
+        title: "एजेंट कार्रवाइयाँ"
+        intro: "कनेक्टर के ज़रिए AI एजेंटों द्वारा की गई — या प्रस्तावित — कार्रवाइयाँ। लेखन और अपरिवर्तनीय कार्रवाइयाँ किसी मानव की मंज़ूरी के लिए यहाँ प्रतीक्षारत रहती हैं।"
+        pending_only: "मंज़ूरी की प्रतीक्षा में"
+        all: "सभी"
+        empty: "अभी तक कोई एजेंट कार्रवाई नहीं।"
+        review: "समीक्षा"
+        none: "—"
+        requested_by_system: "सिस्टम"
+        columns:
+          when: "कब"
+          connector: "कनेक्टर"
+          action: "कार्रवाई"
+          effect: "प्रभाव"
+          on_behalf_of: "किसकी ओर से"
+          requested_by: "अनुरोधकर्ता"
+          status: "स्थिति"
+      show:
+        title: "एजेंट कार्रवाई #%{id}"
+        back: "एजेंट कार्रवाइयों पर वापस"
+        connector: "कनेक्टर"
+        action: "कार्रवाई"
+        effect: "प्रभाव"
+        status: "स्थिति"
+        requested_by: "अनुरोधकर्ता"
+        on_behalf_of: "किसकी ओर से"
+        reasoning: "एजेंट का तर्क"
+        approved_by: "मंज़ूरीकर्ता"
+        args: "तर्क (आर्ग्युमेंट्स)"
+        result: "परिणाम"
+        error: "त्रुटि"
+        none: "—"
+        approve: "मंज़ूर करें और चलाएँ"
+        reject: "अस्वीकार करें"
+        approve_confirm: "इस कार्रवाई को मंज़ूर करके निष्पादित करें?"
+        reject_confirm: "इस कार्रवाई को अस्वीकार करें — यह नहीं चलेगी?"
+      approve:
+        approved: "कार्रवाई मंज़ूर और निष्पादित हुई।"
+        failed: "कार्रवाई मंज़ूर हुई पर निष्पादन विफल रहा: %{error}"
+      reject:
+        rejected: "कार्रवाई अस्वीकृत।"
+      status:
+        proposed: "मंज़ूरी की प्रतीक्षा में"
+        approved: "मंज़ूर"
+        rejected: "अस्वीकृत"
+        executing: "निष्पादित हो रहा"
+        succeeded: "सफल"
+        failed: "विफल"
+      effects:
+        read: "पठन"
+        write: "लेखन"
+        irreversible: "अपरिवर्तनीय"
     users:
       fields:
         name: "नाम"
