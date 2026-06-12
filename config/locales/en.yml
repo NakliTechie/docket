@@ -7,6 +7,9 @@ en:
     sign_out: "Sign out"
     nav:
       cases: "Cases"
+      crm: "CRM"
+      service_desk: "Service desk"
+      admin: "Admin"
       contacts: "Contacts"
       organisations: "Organisations"
       queues: "Queues"
@@ -117,7 +120,7 @@ en:
         new: "New"
         triaged: "Triaged"
         in_progress: "In progress"
-        waiting_on_citizen: "Waiting on citizen"
+        waiting_on_citizen: "Waiting on customer"
         resolved: "Resolved"
         closed: "Closed"
         reopened: "Reopened"
@@ -174,7 +177,7 @@ en:
         created: "Created"
       empty:
         title: "No cases yet"
-        hint: "Share your public portal link, or create a case on behalf of a citizen."
+        hint: "Share your public portal link, or create a case on behalf of a customer."
     email_intake:
       no_subject: "(no subject)"
     agent:
@@ -276,7 +279,7 @@ en:
         organisation: "Organisation"
       empty:
         title: "No contacts yet"
-        hint: "Contacts are created automatically when citizens file cases, or add one manually."
+        hint: "Contacts are created automatically when customers file cases, or add one manually."
     show:
       new_case: "New case"
       confirm_delete: "Delete this contact?"
@@ -699,7 +702,7 @@ en:
       next_case: "Go to next open case"
       mark_triaged: "Mark triaged"
       mark_in_progress: "Mark in progress"
-      mark_waiting: "Mark waiting on citizen"
+      mark_waiting: "Mark waiting on customer"
       mark_resolved: "Mark resolved"
       mark_closed: "Mark closed"
       mark_reopened: "Reopen case"
@@ -727,10 +730,10 @@ en:
       negative: "Negative"
 
   portal:
-    brand: "Public Grievance Portal"
-    footer: "Powered by Docket — public code for public service."
+    brand: "Support Center"
+    footer: "Powered by Docket."
     nav:
-      new_case: "File a grievance"
+      new_case: "Submit a request"
       track: "Track a case"
       my_cases: "My cases"
       sign_out: "Sign out"
@@ -741,7 +744,7 @@ en:
       signed_out: "You have been signed out."
       sign_in_required: "Please sign in to see your cases."
     my_cases:
-      description_required: "Please describe your grievance."
+      description_required: "Please describe your request."
       created: "Case %{tracking_id} filed."
       index:
         title: "My cases"
@@ -756,14 +759,14 @@ en:
         intro: "This case will be linked to your account — no tracking ID needed."
     cases:
       new:
-        title: "File a grievance or service request"
+        title: "Submit a support request"
         intro: "No account needed. You will receive a tracking ID to check progress. Fields marked with email or phone are how we reach you — provide at least one."
         your_name: "Your name"
         your_email: "Email"
         your_phone: "Phone"
         contact_hint: "Provide email or phone (at least one) so we can verify you when you check status."
         subject: "Subject"
-        description: "Describe your grievance"
+        description: "Describe your request"
         attachments: "Attachments (optional)"
         attachments_hint: "Up to 5 files: images, PDF, or text. 10 MB each."
         submit: "Submit"
@@ -809,7 +812,7 @@ en:
     confirmation:
       subject: "Your case %{tracking_id}: %{subject}"
       greeting: "Dear %{name},"
-      body: "Your grievance \"%{subject}\" has been registered."
+      body: "Your request \"%{subject}\" has been registered."
       tracking_label: "Tracking ID"
       instructions: "Check status anytime on the portal with this ID and your email or phone. You can also reply to this email to add information."
     public_reply:
@@ -857,6 +860,9 @@ en:
         sync_now: "Sync now"
         pause: "Pause"
         resume: "Resume"
+        activate: "Activate"
+        draft_ready: "Draft — ready to activate."
+        draft_needs_credentials: "Draft — add the required credentials, then activate."
         edit: "Edit"
         provider: "Provider"
         target: "Syncs into"
@@ -900,6 +906,9 @@ en:
         paused: "Connector paused."
       resume:
         resumed: "Connector resumed."
+      activate:
+        activated: "Connector activated."
+        not_configured: "Add the required credentials before activating."
       fields:
         name: "Name"
         api_key: "API key / token"
@@ -936,6 +945,7 @@ en:
         active: "Active"
         paused: "Paused"
         error: "Error"
+        draft: "Draft"
       triggers:
         manual: "Manual"
         scheduled: "Scheduled"
@@ -1217,13 +1227,14 @@ en:
         title: "Settings"
         save: "Save settings"
         sections:
+          branding: "Branding"
           ai: "AI / agentic resolution"
           intake: "Intake defaults"
           api: "API & integrations"
           staff_sso: "Staff SSO (internal IdP)"
           customer_sso: "Customer SSO (portal IdP)"
-        staff_sso_intro: "Bank employees sign into the console via your corporate IdP — OIDC preferred, SAML 2.0 for ADFS. First SSO login provisions the user as an agent; an admin promotes, or configure the role claim mapping. Local password login always remains as break-glass."
-        customer_sso_intro: "The public portal trusts your customer identity provider (the login behind netbanking). The configured claim maps to the contact's customer ID; signed-in customers see their own cases without the tracking-ID flow. Customer sessions can never reach the staff console. The anonymous flow always remains available."
+        staff_sso_intro: "Staff sign into the console via your corporate IdP — OIDC preferred, SAML 2.0 for ADFS. First SSO login provisions the user as an agent; an admin promotes, or configure the role claim mapping. Local password login always remains as break-glass."
+        customer_sso_intro: "The customer portal trusts your customer identity provider. The configured claim maps to the contact's customer ID; signed-in customers see their own cases without the tracking-ID flow. Customer sessions can never reach the staff console. The anonymous flow always remains available."
         ai_intro: "Docket is fully usable without AI. Configure an in-deployment model endpoint (Ollama/vLLM, OpenAI-compatible) to enable routing, drafting, and staff assist."
         byok_warning: "Bring-your-own-key sends case text to an external provider outside this deployment. In sovereign deployments this is a data-egress decision — leave it off unless you have explicit approval."
         providers:
@@ -1232,6 +1243,8 @@ en:
           byok: "External provider (BYOK) — data egress"
           fake: "Demo (canned responses, no model)"
         fields:
+          brand_name: "Brand name"
+          brand_name_hint: "Shown in the staff header, sign-in pages, and the customer portal. Leave blank to use the default."
           llm_provider: "Provider mode"
           llm_endpoint_url: "Endpoint URL"
           llm_endpoint_hint: "OpenAI-compatible base URL, e.g. http://ollama:11434/v1"

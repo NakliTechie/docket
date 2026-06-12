@@ -3,6 +3,15 @@
 
 <%= form_with url: admin_settings_path, method: :patch, class: "form" do |f| %>
   <fieldset>
+    <legend><%= t(".sections.branding") %></legend>
+    <div class="form-row">
+      <%= label_tag :brand_name, t(".fields.brand_name") %>
+      <%= text_field_tag :brand_name, Setting.get("brand_name"), placeholder: t("layout.product_name") %>
+      <p class="form-hint"><%= t(".fields.brand_name_hint") %></p>
+    </div>
+  </fieldset>
+
+  <fieldset>
     <legend><%= t(".sections.ai") %></legend>
     <p class="form-hint"><%= t(".ai_intro") %></p>
 

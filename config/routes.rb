@@ -71,6 +71,7 @@ Rails.application.routes.draw do
         post :sync
         post :pause
         post :resume
+        post :activate
       end
     end
     resources :connector_invocations, only: %i[index show] do

@@ -2,7 +2,7 @@ module Admin
   # Admin surface for the connector framework: configure an integration,
   # map its fields, schedule it, run it on demand, and read its sync log.
   class ConnectorsController < ApplicationController
-    before_action :set_connector, only: %i[show edit update destroy sync pause resume]
+    before_action :set_connector, only: %i[show edit update destroy sync pause resume activate]
 
     def index
       authorize Connector
@@ -18,6 +18,7 @@ module Admin
 
     def create
       @connector = Connector.new(connector_params)
+      @connector.status = :draft # configure-later: wired, activate when ready
       authorize @connector
       assign_credentials
       if @connector.save
@@ -73,6 +74,18 @@ module Admin
       authorize @connector, :update?
       @connector.update!(status: :active)
       redirect_to admin_connector_path(@connector), notice: t(".resumed")
+    end
+
+    # Configure-later: take a draft connector live, once its required
+    # credentials are present.
+    def activate
+      authorize @connector, :update?
+      if @connector.configured?
+        @connector.update!(status: :active)
+        redirect_to admin_connector_path(@connector), notice: t(".activated")
+      else
+        redirect_to admin_connector_path(@connector), alert: t(".not_configured")
+      end
     end
 
     private

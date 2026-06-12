@@ -10,7 +10,8 @@ module Connectors
     def self.descriptor
       Descriptor.new(
         key: "http_json", name: "HTTP JSON API", category: "Generic",
-        auth: :api_key, config_fields: %w[endpoint_url records_path action_url]
+        auth: :api_key, config_fields: %w[endpoint_url records_path action_url],
+        required_credential_fields: [] # bearer token is optional
       )
     end
 

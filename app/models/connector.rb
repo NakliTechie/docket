@@ -14,7 +14,9 @@ class Connector < ApplicationRecord
   has_many :connector_runs, dependent: :delete_all
   has_many :invocations, class_name: "ConnectorInvocation", dependent: :destroy
 
-  enum :status, { active: 0, paused: 1, error: 2 }, prefix: true
+  # draft = wired but not live (configure-later): excluded from the active
+  # scope, so agents and the scheduler never touch it until it's activated.
+  enum :status, { active: 0, paused: 1, error: 2, draft: 3 }, prefix: true
 
   validates :name, presence: true
   validates :target, inclusion: { in: TARGETS }
@@ -36,6 +38,13 @@ class Connector < ApplicationRecord
   # Effector-only providers (notify / pay) don't pull records inbound.
   def provider_syncs?
     provider_descriptor.nil? || provider_descriptor.syncs?
+  end
+
+  # Has every required secret (own vault or shared)? A draft connector can be
+  # activated once this is true — "wire now, configure (and go live) later".
+  def configured?
+    return true unless provider_descriptor
+    provider_descriptor.required_secret_fields.all? { |field| secret(field).present? }
   end
 
   # The agent-callable actions this provider declares, and a key lookup.
