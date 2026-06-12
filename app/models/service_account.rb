@@ -18,10 +18,16 @@ class ServiceAccount < ApplicationRecord
 
   has_many :oauth_access_tokens, dependent: :delete_all
 
+  # Default rolling window for the effector action budget when an agent sets
+  # a budget but no window (see Connectors::Budget).
+  DEFAULT_BUDGET_WINDOW_MINUTES = 60
+
   validates :name, presence: true
   validates :client_id, presence: true, uniqueness: true
   validates :scopes, presence: true
   validate :scopes_are_known
+  validates :action_budget, numericality: { greater_than: 0 }, allow_nil: true
+  validates :action_budget_window_minutes, numericality: { greater_than: 0 }, allow_nil: true
 
   attr_reader :raw_client_secret
 
@@ -54,6 +60,15 @@ class ServiceAccount < ApplicationRecord
 
   def scope?(scope)
     scopes.include?(scope.to_s)
+  end
+
+  # Effector budgeted autonomy: nil budget = unlimited.
+  def effector_budgeted?
+    action_budget.present?
+  end
+
+  def effector_budget_window_minutes
+    action_budget_window_minutes || DEFAULT_BUDGET_WINDOW_MINUTES
   end
 
   def deactivate!

@@ -1,7 +1,7 @@
 module Connectors
   # Runs ONE agent-initiated action — the outbound mirror of Connectors::Sync.
-  # Orchestrates: authorize → idempotency short-circuit → approval gate →
-  # execute with the agent as the audit actor → record the observation.
+  # Orchestrates: authorize → idempotency short-circuit → budget → approval
+  # gate → execute with the agent as the audit actor → record the observation.
   #
   #   inv = Connectors::Invoke.call(connector, "post_json",
   #           args: { "body" => { ... } }, principal: agent,
@@ -24,6 +24,8 @@ module Connectors
         existing = connector.invocations.find_by(idempotency_key: idempotency_key)
         return existing if existing
       end
+
+      Budget.enforce!(principal)
 
       invocation = nil
       Current.set(actor: principal, on_behalf_of: on_behalf_of) do

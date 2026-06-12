@@ -1052,6 +1052,11 @@ en:
         scopes: "Scopes"
         scopes_hint: "Grant only what the integration needs. cases:write + contacts:write enables filing cases on behalf of customers."
         active: "Active"
+        budget: "Effector budget"
+        budget_hint: "Caps how many connector actions an AI agent may take in a rolling window. Blank = unlimited. Bounds the agent's blast radius."
+        action_budget: "Max actions"
+        action_budget_placeholder: "e.g. 50 (blank = unlimited)"
+        action_budget_window: "Per window (minutes)"
       index:
         title: "Service accounts"
         new_account: "New service account"
