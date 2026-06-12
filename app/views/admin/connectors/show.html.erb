@@ -2,7 +2,9 @@
 <div class="page-header">
   <h1><%= @connector.name %></h1>
   <div class="page-actions">
-    <%= button_to t(".sync_now"), sync_admin_connector_path(@connector), class: "btn btn-primary" %>
+    <% if @connector.provider_syncs? %>
+      <%= button_to t(".sync_now"), sync_admin_connector_path(@connector), class: "btn btn-primary" %>
+    <% end %>
     <% if @connector.status_active? %>
       <%= button_to t(".pause"), pause_admin_connector_path(@connector), class: "btn" %>
     <% else %>

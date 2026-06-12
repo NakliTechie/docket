@@ -86,11 +86,19 @@ module Admin
                                         config: {}, field_mapping: {})
     end
 
-    # Secrets only change when a new value is typed — a blank field keeps
-    # the stored credential (so editing a connector doesn't wipe its key).
+    # Secrets only change when a new value is typed — a blank field keeps the
+    # stored value (so editing a connector doesn't wipe its keys). Each
+    # provider declares which secret fields it stores (descriptor.secret_fields).
     def assign_credentials
-      api_key = params.dig(:connector, :credentials, :api_key)
-      @connector.credentials_hash = { "api_key" => api_key } if api_key.present?
+      descriptor = @connector.provider_descriptor
+      return unless descriptor
+
+      current = @connector.credentials_hash
+      descriptor.secret_fields.each do |field|
+        value = params.dig(:connector, :credentials, field)
+        current[field] = value if value.present?
+      end
+      @connector.credentials_hash = current
     end
   end
 end

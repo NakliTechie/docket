@@ -18,30 +18,32 @@
     <% end %>
   </fieldset>
 
-  <% if descriptor&.auth == :api_key %>
+  <% descriptor&.secret_fields&.each do |field| %>
     <div class="form-row">
-      <%= label_tag "connector_credentials_api_key", t("admin.connectors.fields.api_key") %>
-      <%= password_field_tag "connector[credentials][api_key]", nil, id: "connector_credentials_api_key",
+      <%= label_tag "connector_credentials_#{field}", t("admin.connectors.credentials.#{field}", default: field.to_s.humanize) %>
+      <%= password_field_tag "connector[credentials][#{field}]", nil, id: "connector_credentials_#{field}",
             autocomplete: "off", placeholder: connector.persisted? ? t("admin.connectors.api_key_kept") : nil %>
     </div>
   <% end %>
 
-  <fieldset>
-    <legend><%= t("admin.connectors.mapping_legend") %></legend>
-    <p class="muted text-sm"><%= t("admin.connectors.mapping_hint") %></p>
-    <% %w[external_id email name phone].each do |docket_field| %>
-      <div class="form-row">
-        <%= label_tag "connector_field_mapping_#{docket_field}", t("admin.connectors.mapping.#{docket_field}") %>
-        <%= text_field_tag "connector[field_mapping][#{docket_field}]", (connector.field_mapping || {})[docket_field],
-              id: "connector_field_mapping_#{docket_field}", placeholder: t("admin.connectors.mapping_placeholder") %>
-      </div>
-    <% end %>
-  </fieldset>
+  <% if descriptor.nil? || descriptor.syncs? %>
+    <fieldset>
+      <legend><%= t("admin.connectors.mapping_legend") %></legend>
+      <p class="muted text-sm"><%= t("admin.connectors.mapping_hint") %></p>
+      <% %w[external_id email name phone].each do |docket_field| %>
+        <div class="form-row">
+          <%= label_tag "connector_field_mapping_#{docket_field}", t("admin.connectors.mapping.#{docket_field}") %>
+          <%= text_field_tag "connector[field_mapping][#{docket_field}]", (connector.field_mapping || {})[docket_field],
+                id: "connector_field_mapping_#{docket_field}", placeholder: t("admin.connectors.mapping_placeholder") %>
+        </div>
+      <% end %>
+    </fieldset>
 
-  <div class="form-row">
-    <%= f.label :schedule_interval_minutes, t("admin.connectors.fields.schedule") %>
-    <%= f.number_field :schedule_interval_minutes, min: 1, placeholder: t("admin.connectors.schedule_hint") %>
-  </div>
+    <div class="form-row">
+      <%= f.label :schedule_interval_minutes, t("admin.connectors.fields.schedule") %>
+      <%= f.number_field :schedule_interval_minutes, min: 1, placeholder: t("admin.connectors.schedule_hint") %>
+    </div>
+  <% end %>
 
   <div class="form-row">
     <%= f.submit class: "btn btn-primary" %>

@@ -907,6 +907,16 @@ hi:
       config:
         endpoint_url: "एंडपॉइंट URL"
         records_path: "रिकॉर्ड्स पाथ (वैकल्पिक, जैसे data.items)"
+        action_url: "एक्शन URL (लेखन कार्रवाइयों हेतु)"
+        webhook_url: "Slack इनकमिंग-वेबहुक URL"
+        base_url: "बेस URL"
+      credentials:
+        api_key: "API कुंजी / टोकन"
+        api_secret: "API सीक्रेट"
+        webhook_url: "Slack इनकमिंग-वेबहुक URL"
+        authkey: "MSG91 ऑथ-की"
+        key_id: "Razorpay की-आईडी"
+        key_secret: "Razorpay की-सीक्रेट"
       api_key_kept: "•••••• (अपरिवर्तित)"
       mapping_legend: "फ़ील्ड मैपिंग"
       mapping_hint: "प्रत्येक Docket फ़ील्ड को स्रोत रिकॉर्ड के फ़ील्ड-नाम से मैप करें। कम-से-कम एक बाहरी आईडी या ईमेल दें।"
