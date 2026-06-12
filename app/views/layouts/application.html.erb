@@ -31,9 +31,9 @@
             <% end %>
           <% end %>
 
-          <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? %>
+          <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? || policy(ConnectorInvocation).index? %>
             <%= nav_group t("layout.nav.service_desk"),
-                  active: %w[case_queues categories sla_policies macros reference_docs].include?(controller_name) do %>
+                  active: %w[case_queues categories sla_policies macros reference_docs connector_invocations].include?(controller_name) do %>
               <% if policy(CaseQueue).create? %>
                 <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                 <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
@@ -43,12 +43,15 @@
               <% if policy(ReferenceDoc).index? %>
                 <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
               <% end %>
+              <% if policy(ConnectorInvocation).index? %>
+                <%= nav_link t("layout.nav.agent_actions"), admin_connector_invocations_path, active: controller_name == "connector_invocations" %>
+              <% end %>
             <% end %>
           <% end %>
 
           <% if policy(User).index? %>
             <%= nav_group t("layout.nav.admin"),
-                  active: %w[users activity audit security_events service_accounts api_tokens webhook_endpoints connectors connector_invocations shared_credentials settings].include?(controller_name) do %>
+                  active: %w[users activity audit security_events service_accounts api_tokens webhook_endpoints connectors shared_credentials settings].include?(controller_name) do %>
               <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
               <%= nav_link t("layout.nav.activity"), admin_activity_path, active: controller_name == "activity" %>
               <%= nav_link t("layout.nav.audit"), admin_audit_path, active: controller_name == "audit" %>
@@ -56,7 +59,7 @@
               <%= nav_link t("layout.nav.integrations"), admin_service_accounts_path,
                     active: %w[service_accounts api_tokens webhook_endpoints].include?(controller_name) %>
               <%= nav_link t("layout.nav.connectors"), admin_connectors_path,
-                    active: %w[connectors connector_invocations shared_credentials].include?(controller_name) %>
+                    active: %w[connectors shared_credentials].include?(controller_name) %>
               <%= nav_link t("layout.nav.settings"), admin_settings_path, active: controller_name == "settings" %>
             <% end %>
           <% end %>

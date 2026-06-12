@@ -28,6 +28,7 @@ hi:
       reference_docs: "ज्ञान-आधार"
       integrations: "एकीकरण"
       connectors: "कनेक्टर"
+      agent_actions: "एजेंट कार्रवाइयाँ"
 
   locales:
     en: "English"

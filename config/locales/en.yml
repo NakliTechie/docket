@@ -28,6 +28,7 @@ en:
       reference_docs: "Knowledge"
       integrations: "Integrations"
       connectors: "Connectors"
+      agent_actions: "Agent actions"
 
   locales:
     en: "English"
