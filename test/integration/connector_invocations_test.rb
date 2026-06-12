@@ -102,4 +102,36 @@ class ConnectorInvocationsTest < ActionDispatch::IntegrationTest
     get admin_connector_invocations_path(filter: "all")
     assert_match "case:auto", response.body
   end
+
+  # --- decision of record: the reasoned-order gate through the controller ---
+
+  def of_record_invocation
+    connector.invocations.create!(action: "post_json", decision_class: "of_record",
+      status: :proposed, requested_by: agent, args: { "body" => { "x" => 1 } }, on_behalf_of: "case:9")
+  end
+
+  test "a decision of record cannot be approved without a reasoned order" do
+    inv = of_record_invocation
+    sign_in_as users(:admin)
+    post approve_admin_connector_invocation_path(inv), params: { reason: "" }
+    assert inv.reload.status_proposed?
+  end
+
+  test "a decision of record executes once a reasoned order is supplied" do
+    inv = of_record_invocation
+    sign_in_as users(:admin)
+    with_http(FakeResponse.new("200", "{}")) do
+      post approve_admin_connector_invocation_path(inv), params: { reason: "Eligibility verified" }
+    end
+    assert inv.reload.status_succeeded?
+    assert_equal "Eligibility verified", inv.decision_reason
+  end
+
+  test "the review form surfaces the decision-of-record notice" do
+    inv = of_record_invocation
+    sign_in_as users(:admin)
+    get admin_connector_invocation_path(inv)
+    assert_response :success
+    assert_match "decision of record", response.body
+  end
 end

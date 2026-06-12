@@ -19,7 +19,7 @@ module Admin
 
     def approve
       authorize @invocation, :approve?
-      Connectors::Invoke.approve!(@invocation, approver: Current.user)
+      Connectors::Invoke.approve!(@invocation, approver: Current.user, reason: params[:reason])
       if @invocation.reload.status_succeeded?
         redirect_to admin_connector_invocation_path(@invocation), notice: t(".approved")
       else

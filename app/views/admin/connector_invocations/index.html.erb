@@ -20,7 +20,7 @@
             <th><%= t(".columns.when") %></th>
             <th><%= t(".columns.connector") %></th>
             <th><%= t(".columns.action") %></th>
-            <th><%= t(".columns.effect") %></th>
+            <th><%= t(".columns.decision") %></th>
             <th><%= t(".columns.on_behalf_of") %></th>
             <th><%= t(".columns.requested_by") %></th>
             <th><%= t(".columns.status") %></th>
@@ -33,7 +33,7 @@
               <td><%= l inv.created_at, format: :long %></td>
               <td><%= inv.connector.name %></td>
               <td class="mono"><%= inv.action %></td>
-              <td><%= t("admin.connector_invocations.effects.#{inv.effect}", default: inv.effect.to_s) %></td>
+              <td><span class="badge"><%= t("admin.connector_invocations.decision_classes.#{inv.decision_class}", default: inv.decision_class.to_s) %></span></td>
               <td class="mono text-sm"><%= inv.on_behalf_of.presence || t(".none") %></td>
               <td><%= inv.requester_label.presence || t(".requested_by_system") %></td>
               <td><span class="badge"><%= t("admin.connector_invocations.status.#{inv.status}") %></span></td>

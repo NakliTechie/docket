@@ -930,6 +930,7 @@ hi:
           when: "कब"
           connector: "कनेक्टर"
           action: "कार्रवाई"
+          decision: "निर्णय"
           effect: "प्रभाव"
           on_behalf_of: "किसकी ओर से"
           requested_by: "अनुरोधकर्ता"
@@ -941,10 +942,13 @@ hi:
         action: "कार्रवाई"
         effect: "प्रभाव"
         status: "स्थिति"
+        decision_class: "निर्णय श्रेणी"
+        contestable: "· विवाद्य (अपील योग्य)"
         requested_by: "अनुरोधकर्ता"
         on_behalf_of: "किसकी ओर से"
         reasoning: "एजेंट का तर्क"
         approved_by: "मंज़ूरीकर्ता"
+        decision_reason: "कारण (सकारण आदेश)"
         args: "तर्क (आर्ग्युमेंट्स)"
         result: "परिणाम"
         error: "त्रुटि"
@@ -953,6 +957,10 @@ hi:
         reject: "अस्वीकार करें"
         approve_confirm: "इस कार्रवाई को मंज़ूर करके निष्पादित करें?"
         reject_confirm: "इस कार्रवाई को अस्वीकार करें — यह नहीं चलेगी?"
+        review_heading: "समीक्षा करें और निर्णय लें"
+        of_record_notice: "यह एक अभिलेखीय निर्णय है — इसके लिए सकारण आदेश आवश्यक है, इसे स्वतः-मंज़ूर नहीं किया जा सकता, और यह अपील-पथ से विवाद्य है।"
+        reason_label: "कारण (सकारण आदेश)"
+        reason_placeholder: "यह निर्णय क्यों — अभिलेखीय निर्णयों के लिए आवश्यक"
       approve:
         approved: "कार्रवाई मंज़ूर और निष्पादित हुई।"
         failed: "कार्रवाई मंज़ूर हुई पर निष्पादन विफल रहा: %{error}"
@@ -969,6 +977,10 @@ hi:
         read: "पठन"
         write: "लेखन"
         irreversible: "अपरिवर्तनीय"
+      decision_classes:
+        autonomous: "स्वायत्त"
+        confirm: "पुष्टि"
+        of_record: "अभिलेखीय"
     users:
       fields:
         name: "नाम"

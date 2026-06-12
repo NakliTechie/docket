@@ -13,17 +13,33 @@ module Connectors
 
     # An agent-callable action. The SAME struct backs the admin "what can
     # this connector do" list and the LLM tool spec (see Registry.tool_specs).
-    #   key     — stable action id (also the audit/invocation verb)
-    #   name    — human label
-    #   summary — natural-language description handed to the model
-    #   params  — JSON Schema (Hash) for the action's arguments
-    #   effect  — :read | :write | :irreversible → drives the approval gate
-    Action = Struct.new(:key, :name, :summary, :params, :effect, keyword_init: true) do
+    #   key            — stable action id (also the audit/invocation verb)
+    #   name           — human label
+    #   summary        — natural-language description handed to the model
+    #   params         — JSON Schema (Hash) for the action's arguments
+    #   effect         — :read | :write | :irreversible (technical descriptor)
+    #   decision_class — accountability tier (Indian admin-law boundary):
+    #     :autonomous — mechanical, rights-neutral → runs unattended
+    #     :confirm    — AI prepares, a human confirms before it takes effect
+    #     :of_record  — discretionary AND adverse: a human is of record, must
+    #                   give a reasoned order, and the decision is contestable;
+    #                   never auto-approvable.
+    #   When unset, decision_class defaults from effect.
+    Action = Struct.new(:key, :name, :summary, :params, :effect, :decision_class, keyword_init: true) do
       EFFECTS = %i[read write irreversible].freeze
+      DECISION_CLASSES = %i[autonomous confirm of_record].freeze
+      EFFECT_DEFAULT = { read: :autonomous, write: :confirm, irreversible: :of_record }.freeze
 
-      # Reads run unattended; anything that mutates the outside world needs a
-      # human-of-record unless the connector explicitly auto-approves it.
-      def requires_approval? = effect != :read
+      def effective_decision_class
+        decision_class || EFFECT_DEFAULT.fetch(effect, :confirm)
+      end
+
+      # Reads (autonomous) run unattended; confirm/of_record need a human.
+      def requires_approval? = effective_decision_class != :autonomous
+
+      # A decision of record must have a human + a reasoned order; the
+      # connector's auto-approve list can never bypass it.
+      def of_record? = effective_decision_class == :of_record
     end
 
     attr_reader :connector

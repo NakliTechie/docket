@@ -29,6 +29,16 @@ class ConnectorInvocation < ApplicationRecord
     status_proposed?
   end
 
+  # A decision of record (discretionary + adverse): needs a human + a reasoned
+  # order, and is contestable through an appeal path.
+  def of_record?
+    decision_class == "of_record"
+  end
+
+  def contestable?
+    of_record?
+  end
+
   # ServiceAccount (an agent) or a staff User — both respond to #name.
   def requester_label
     requested_by&.name

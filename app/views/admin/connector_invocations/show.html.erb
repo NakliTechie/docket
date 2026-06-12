@@ -2,14 +2,6 @@
 <div class="page-header">
   <h1><%= t(".title", id: @invocation.id) %></h1>
   <div class="page-actions">
-    <% if @invocation.awaiting_approval? %>
-      <%= button_to t(".approve"), approve_admin_connector_invocation_path(@invocation),
-            class: "btn btn-primary",
-            form: { data: { turbo_confirm: t(".approve_confirm") } } %>
-      <%= button_to t(".reject"), reject_admin_connector_invocation_path(@invocation),
-            class: "btn btn-danger",
-            form: { data: { turbo_confirm: t(".reject_confirm") } } %>
-    <% end %>
     <%= link_to t(".back"), admin_connector_invocations_path, class: "btn" %>
   </div>
 </div>
@@ -18,15 +10,21 @@
   <dl class="meta-list">
     <dt><%= t(".status") %></dt>
     <dd><span class="badge"><%= t("admin.connector_invocations.status.#{@invocation.status}") %></span></dd>
+    <dt><%= t(".decision_class") %></dt>
+    <dd>
+      <span class="badge"><%= t("admin.connector_invocations.decision_classes.#{@invocation.decision_class}", default: @invocation.decision_class.to_s) %></span>
+      <% if @invocation.contestable? %><span class="muted text-sm"><%= t(".contestable") %></span><% end %>
+    </dd>
     <dt><%= t(".connector") %></dt><dd><%= @invocation.connector.name %></dd>
     <dt><%= t(".action") %></dt><dd class="mono"><%= @invocation.action %></dd>
-    <dt><%= t(".effect") %></dt>
-    <dd><%= t("admin.connector_invocations.effects.#{@invocation.effect}", default: @invocation.effect.to_s) %></dd>
     <dt><%= t(".requested_by") %></dt>
     <dd><%= @invocation.requester_label.presence || t("admin.connector_invocations.index.requested_by_system") %></dd>
     <dt><%= t(".on_behalf_of") %></dt><dd class="mono"><%= @invocation.on_behalf_of.presence || t(".none") %></dd>
     <% if @invocation.approved_by %>
       <dt><%= t(".approved_by") %></dt><dd><%= @invocation.approved_by.name %></dd>
+    <% end %>
+    <% if @invocation.decision_reason.present? %>
+      <dt><%= t(".decision_reason") %></dt><dd><%= @invocation.decision_reason %></dd>
     <% end %>
   </dl>
   <% if @invocation.reasoning.present? %>
@@ -34,6 +32,27 @@
     <p class="muted"><%= @invocation.reasoning %></p>
   <% end %>
 </div>
+
+<% if @invocation.awaiting_approval? %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t(".review_heading") %></h2>
+    <% if @invocation.of_record? %>
+      <p class="muted"><%= t(".of_record_notice") %></p>
+    <% end %>
+    <%= form_with url: approve_admin_connector_invocation_path(@invocation), method: :post, class: "form" do %>
+      <div class="form-row">
+        <%= label_tag :reason, t(".reason_label") %>
+        <%= text_area_tag :reason, nil, rows: 3, required: @invocation.of_record?,
+              placeholder: t(".reason_placeholder") %>
+      </div>
+      <%= submit_tag t(".approve"), class: "btn btn-primary",
+            data: { turbo_confirm: t(".approve_confirm") } %>
+    <% end %>
+    <%= button_to t(".reject"), reject_admin_connector_invocation_path(@invocation),
+          class: "btn btn-danger",
+          form: { data: { turbo_confirm: t(".reject_confirm") } } %>
+  </div>
+<% end %>
 
 <div class="panel">
   <h2 class="panel-title"><%= t(".args") %></h2>

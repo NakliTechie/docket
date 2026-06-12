@@ -930,6 +930,7 @@ en:
           when: "When"
           connector: "Connector"
           action: "Action"
+          decision: "Decision"
           effect: "Effect"
           on_behalf_of: "On behalf of"
           requested_by: "Requested by"
@@ -941,10 +942,13 @@ en:
         action: "Action"
         effect: "Effect"
         status: "Status"
+        decision_class: "Decision class"
+        contestable: "· contestable (appealable)"
         requested_by: "Requested by"
         on_behalf_of: "On behalf of"
         reasoning: "Agent's reasoning"
         approved_by: "Approved by"
+        decision_reason: "Reason (reasoned order)"
         args: "Arguments"
         result: "Result"
         error: "Error"
@@ -953,6 +957,10 @@ en:
         reject: "Reject"
         approve_confirm: "Approve and execute this action?"
         reject_confirm: "Reject this action — it will not run?"
+        review_heading: "Review & decide"
+        of_record_notice: "This is a decision of record — a reasoned order is required, it cannot be auto-approved, and it is contestable through an appeal path."
+        reason_label: "Reason (reasoned order)"
+        reason_placeholder: "Why this decision — required for decisions of record"
       approve:
         approved: "Action approved and executed."
         failed: "Action approved but failed to execute: %{error}"
@@ -969,6 +977,10 @@ en:
         read: "Read"
         write: "Write"
         irreversible: "Irreversible"
+      decision_classes:
+        autonomous: "Autonomous"
+        confirm: "Confirm"
+        of_record: "Of record"
     users:
       fields:
         name: "Name"

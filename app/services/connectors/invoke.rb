@@ -32,17 +32,24 @@ module Connectors
         invocation = connector.invocations.create!(
           action: action.key, args: args, on_behalf_of: on_behalf_of,
           reasoning: reasoning, requested_by: principal, idempotency_key: idempotency_key,
-          effect: action.effect, status: gated_status(connector, action)
+          effect: action.effect, decision_class: action.effective_decision_class,
+          status: gated_status(connector, action)
         )
         execute!(invocation, action) if invocation.status_approved?
       end
       invocation
     end
 
-    # Human-of-record path: a staff approver releases a parked action.
-    def approve!(invocation, approver:)
+    # Human-of-record path: a staff approver releases a parked action. A
+    # decision of record requires a reasoned order (substantive review — a
+    # blank rubber-stamp is itself legally void under Indian admin law).
+    def approve!(invocation, approver:, reason: nil)
       raise Connectors::Error, "invocation is not awaiting approval" unless invocation.status_proposed?
-      invocation.update!(status: :approved, approved_by: approver, approved_at: Time.current)
+      if invocation.of_record? && reason.to_s.strip.blank?
+        raise Connectors::Error, "a decision of record requires a reason (a reasoned order)"
+      end
+      invocation.update!(status: :approved, approved_by: approver, approved_at: Time.current,
+                         decision_reason: reason.presence)
       action = invocation.connector.provider_action(invocation.action)
       execute!(invocation, action)
       invocation
@@ -54,11 +61,15 @@ module Connectors
       invocation
     end
 
-    # :read runs unattended; a write runs only if the connector auto-approves
-    # it, otherwise it parks as :proposed for a human.
+    # Route by accountability tier: autonomous runs unattended; a decision of
+    # record ALWAYS parks for a human (auto-approve cannot bypass it); confirm
+    # parks unless the connector auto-approves the action.
     def gated_status(connector, action)
-      return :approved unless action.requires_approval?
-      connector.auto_approves?(action.key) ? :approved : :proposed
+      case action.effective_decision_class
+      when :autonomous then :approved
+      when :of_record  then :proposed
+      else connector.auto_approves?(action.key) ? :approved : :proposed
+      end
     end
 
     # The action is attributed to the agent (requested_by) in the audit chain,
