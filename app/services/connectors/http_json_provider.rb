@@ -91,7 +91,7 @@ module Connectors
 
     def headers
       h = { "Accept" => "application/json" }
-      token = connector.credentials_hash["api_key"].to_s
+      token = connector.secret("api_key").to_s
       h["Authorization"] = "Bearer #{token}" if token.present?
       h
     end

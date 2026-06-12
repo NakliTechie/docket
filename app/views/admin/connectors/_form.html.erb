@@ -26,6 +26,16 @@
     </div>
   <% end %>
 
+  <% if SharedCredential.ordered.any? %>
+    <div class="form-row">
+      <%= f.label :shared_credential_id, t("admin.connectors.fields.shared_credential") %>
+      <%= f.select :shared_credential_id,
+            options_from_collection_for_select(SharedCredential.ordered, :id, :label, connector.shared_credential_id),
+            include_blank: t("forms.none") %>
+      <p class="form-hint"><%= t("admin.connectors.fields.shared_credential_hint") %></p>
+    </div>
+  <% end %>
+
   <% if descriptor.nil? || descriptor.syncs? %>
     <fieldset>
       <legend><%= t("admin.connectors.mapping_legend") %></legend>

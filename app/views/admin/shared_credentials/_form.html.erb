@@ -1,0 +1,37 @@
+<%= form_with model: [ :admin, shared_credential ], class: "form" do |f| %>
+  <%= render "shared/form_errors", record: shared_credential %>
+
+  <div class="form-row">
+    <%= f.label :label, t("admin.shared_credentials.fields.label") %>
+    <%= f.text_field :label, required: true, placeholder: t("admin.shared_credentials.fields.label_placeholder") %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :name, t("admin.shared_credentials.fields.name") %>
+    <%= f.text_field :name, required: true, placeholder: "api_setu" %>
+    <p class="form-hint"><%= t("admin.shared_credentials.fields.name_hint") %></p>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :description, t("admin.shared_credentials.fields.description") %>
+    <%= f.text_field :description %>
+  </div>
+
+  <fieldset>
+    <legend><%= t("admin.shared_credentials.secrets_legend") %></legend>
+    <p class="form-hint"><%= t("admin.shared_credentials.secrets_hint") %></p>
+    <% SharedCredential::COMMON_FIELDS.each do |field| %>
+      <div class="form-row">
+        <%= label_tag "shared_credential_secrets_#{field}", t("admin.connectors.credentials.#{field}", default: field.to_s.humanize) %>
+        <%= password_field_tag "shared_credential[secrets][#{field}]", nil,
+              id: "shared_credential_secrets_#{field}", autocomplete: "off",
+              placeholder: (shared_credential.secrets_hash[field].present? ? t("admin.connectors.api_key_kept") : nil) %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), admin_shared_credentials_path, class: "btn" %>
+  </div>
+<% end %>

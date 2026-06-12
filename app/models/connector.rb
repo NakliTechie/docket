@@ -10,6 +10,7 @@ class Connector < ApplicationRecord
 
   TARGETS = %w[contacts].freeze
 
+  belongs_to :shared_credential, optional: true
   has_many :connector_runs, dependent: :delete_all
   has_many :invocations, class_name: "ConnectorInvocation", dependent: :destroy
 
@@ -66,6 +67,15 @@ class Connector < ApplicationRecord
 
   def config_value(key)
     (config || {})[key.to_s]
+  end
+
+  # Resolve a secret field: this connector's own vault first, then the shared
+  # app-level credential it references (a licence/key reused across connectors).
+  def secret(field)
+    key = field.to_s
+    own = credentials_hash[key]
+    return own if own.present?
+    shared_credential&.secret(key)
   end
 
   def due?(now = Time.current)

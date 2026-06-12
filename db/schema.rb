@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_12_095000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_120000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -186,11 +186,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_095000) do
     t.string "name", null: false
     t.string "provider", null: false
     t.integer "schedule_interval_minutes"
+    t.integer "shared_credential_id"
     t.integer "status", default: 0, null: false
     t.string "target", default: "contacts", null: false
     t.datetime "updated_at", null: false
     t.string "webhook_secret"
     t.index ["deleted_at"], name: "index_connectors_on_deleted_at"
+    t.index ["shared_credential_id"], name: "index_connectors_on_shared_credential_id"
     t.index ["status"], name: "index_connectors_on_status"
   end
 
@@ -462,6 +464,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_095000) do
     t.index ["key"], name: "index_settings_on_key", unique: true
   end
 
+  create_table "shared_credentials", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.text "description"
+    t.string "label", null: false
+    t.string "name", null: false
+    t.text "secrets"
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_shared_credentials_on_deleted_at"
+    t.index ["name"], name: "index_shared_credentials_on_name_live", unique: true, where: "deleted_at IS NULL"
+  end
+
   create_table "sla_policies", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
@@ -537,6 +551,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_095000) do
   add_foreign_key "connector_invocations", "connectors"
   add_foreign_key "connector_invocations", "users", column: "approved_by_id"
   add_foreign_key "connector_runs", "connectors"
+  add_foreign_key "connectors", "shared_credentials"
   add_foreign_key "contacts", "organisations"
   add_foreign_key "deals", "contacts"
   add_foreign_key "deals", "leads"

@@ -1,0 +1,10 @@
+<% page_title t(".title", label: @shared_credential.label) %>
+<div class="page-header">
+  <h1><%= t(".title", label: @shared_credential.label) %></h1>
+  <div class="page-actions">
+    <%= button_to t(".delete"), admin_shared_credential_path(@shared_credential), method: :delete,
+          class: "btn btn-danger", form: { data: { turbo_confirm: t(".delete_confirm") } } %>
+    <%= link_to t(".back"), admin_shared_credentials_path, class: "btn" %>
+  </div>
+</div>
+<%= render "form", shared_credential: @shared_credential %>

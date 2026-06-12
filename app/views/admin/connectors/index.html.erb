@@ -1,6 +1,9 @@
 <% page_title t(".title") %>
 <div class="page-header">
   <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to t(".shared_credentials"), admin_shared_credentials_path, class: "btn" %>
+  </div>
 </div>
 
 <p class="muted"><%= t(".intro") %></p>

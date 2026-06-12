@@ -83,8 +83,8 @@ module Connectors
     end
 
     def auth_headers
-      key_id = connector.credentials_hash["key_id"].to_s
-      secret = connector.credentials_hash["key_secret"].to_s
+      key_id = connector.secret("key_id").to_s
+      secret = connector.secret("key_secret").to_s
       raise Connectors::Error, "key_id and key_secret are required" if key_id.blank? || secret.blank?
       token = [ "#{key_id}:#{secret}" ].pack("m0")
       { "Authorization" => "Basic #{token}", "Accept" => "application/json" }

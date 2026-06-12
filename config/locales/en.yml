@@ -838,6 +838,7 @@ en:
         title: "Connectors"
         intro: "Pull data from external systems into Docket on a schedule or webhook. Configure once; the sync log shows every run."
         add: "Add a connector"
+        shared_credentials: "Shared keys"
         empty: "No connectors yet — add one above."
         never: "Never"
         columns:
@@ -903,6 +904,8 @@ en:
         name: "Name"
         api_key: "API key / token"
         schedule: "Sync every (minutes)"
+        shared_credential: "Shared credential (optional)"
+        shared_credential_hint: "Source secrets from a shared app-level credential instead of entering them here. This connector's own values, if any, take precedence."
       config_legend: "Connection"
       config:
         endpoint_url: "Endpoint URL"
@@ -917,6 +920,8 @@ en:
         authkey: "MSG91 auth key"
         key_id: "Razorpay key id"
         key_secret: "Razorpay key secret"
+        license_id: "Licence id"
+        token: "Token"
       api_key_kept: "•••••• (unchanged)"
       mapping_legend: "Field mapping"
       mapping_hint: "Map each Docket field to the field name in the source records. Provide at least an external ID or email."
@@ -939,6 +944,40 @@ en:
         running: "Running"
         success: "Success"
         failed: "Failed"
+    shared_credentials:
+      index:
+        title: "Shared credentials"
+        intro: "App-level keys and licences reused across connectors — set once here, reference from any connector."
+        add: "Add a shared credential"
+        edit: "Edit"
+        empty: "No shared credentials yet."
+        columns:
+          label: "Label"
+          name: "Name"
+          fields: "Secret fields"
+          used_by: "Used by"
+      new:
+        title: "New shared credential"
+        back: "Back to shared credentials"
+      edit:
+        title: "Edit %{label}"
+        back: "Back to shared credentials"
+        delete: "Delete"
+        delete_confirm: "Delete this shared credential? Connectors using it fall back to their own values."
+      fields:
+        label: "Label"
+        label_placeholder: "e.g. API Setu key"
+        name: "Name (id)"
+        name_hint: "Lowercase id used in code, e.g. api_setu. Letters, digits, underscore."
+        description: "Description"
+      secrets_legend: "Secrets"
+      secrets_hint: "Fill only the fields this credential carries. Blank fields are left unchanged on save; values are encrypted and never shown again."
+      create:
+        created: "Shared credential created."
+      update:
+        updated: "Shared credential updated."
+      destroy:
+        deleted: "Shared credential deleted."
     connector_invocations:
       index:
         title: "Agent actions"
