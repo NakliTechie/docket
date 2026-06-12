@@ -32,6 +32,27 @@ module Llm
       json ? parse_json(content) : content
     end
 
+    # One tool-use turn. `tools` is the OpenAI function-tools array
+    # ({ type: "function", function: { name, description, parameters } }).
+    # Returns the raw assistant message Hash, which may carry "tool_calls".
+    # The caller appends it verbatim, executes any tool_calls, appends the
+    # role:"tool" results, and calls again — the loop lives in the agent
+    # runner, not here.
+    def chat_with_tools(messages, tools:, temperature: 0.2, max_tokens: 1024, read_timeout: DEFAULT_READ_TIMEOUT)
+      body = {
+        model: model,
+        messages: messages,
+        temperature: temperature,
+        max_tokens: max_tokens,
+        tools: tools,
+        tool_choice: "auto"
+      }
+      response = post_json("#{endpoint}/chat/completions", body, read_timeout: read_timeout)
+      message = response.dig("choices", 0, "message")
+      raise Error, "empty completion" if message.nil?
+      message
+    end
+
     private
 
     def post_json(url, payload, read_timeout: DEFAULT_READ_TIMEOUT)

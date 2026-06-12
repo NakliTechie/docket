@@ -21,6 +21,26 @@ module Llm
       end
     end
 
+    # Deterministic tool-use driver for the demo/tests: on the first turn it
+    # calls the first offered tool once; once a tool result is in the
+    # transcript it stops with a final message. Enough to exercise the
+    # AgentRunner loop end-to-end without a live model.
+    def chat_with_tools(messages, tools:, **_opts)
+      already_acted = messages.any? { |m| (m[:role] || m["role"]) == "tool" }
+      if already_acted || tools.empty?
+        { "role" => "assistant",
+          "content" => "Done. I took the actions I could and queued anything that needs human approval." }
+      else
+        tool = tools.first
+        name = tool.dig(:function, :name) || tool.dig("function", "name")
+        { "role" => "assistant", "content" => nil,
+          "tool_calls" => [ {
+            "id" => "call_1", "type" => "function",
+            "function" => { "name" => name, "arguments" => JSON.generate({ "body" => { "demo" => true } }) }
+          } ] }
+      end
+    end
+
     private
 
     def route_response(text)
