@@ -21,17 +21,21 @@
 <div class="panel">
   <dl class="meta-list">
     <dt><%= t(".provider") %></dt><dd><%= @connector.provider_descriptor&.name || @connector.provider %></dd>
-    <dt><%= t(".target") %></dt><dd><%= @connector.target %></dd>
     <dt><%= t(".status") %></dt><dd><span class="badge"><%= t("admin.connectors.status.#{@connector.status}") %></span></dd>
-    <dt><%= t(".schedule") %></dt>
-    <dd><%= @connector.schedule_interval_minutes ? t(".every_minutes", count: @connector.schedule_interval_minutes) : t(".manual") %></dd>
-    <dt><%= t(".last_synced") %></dt><dd><%= @connector.last_synced_at ? l(@connector.last_synced_at, format: :long) : t(".never") %></dd>
-    <dt><%= t(".webhook_url") %></dt><dd class="mono table-meta"><%= connector_webhook_url(@connector) %></dd>
+    <% if @connector.provider_syncs? %>
+      <dt><%= t(".target") %></dt><dd><%= @connector.target %></dd>
+      <dt><%= t(".schedule") %></dt>
+      <dd><%= @connector.schedule_interval_minutes ? t(".every_minutes", count: @connector.schedule_interval_minutes) : t(".manual") %></dd>
+      <dt><%= t(".last_synced") %></dt><dd><%= @connector.last_synced_at ? l(@connector.last_synced_at, format: :long) : t(".never") %></dd>
+      <dt><%= t(".webhook_url") %></dt><dd class="mono table-meta"><%= connector_webhook_url(@connector) %></dd>
+    <% end %>
   </dl>
   <% if @connector.status_draft? %>
     <p class="muted text-sm"><%= @connector.configured? ? t(".draft_ready") : t(".draft_needs_credentials") %></p>
   <% end %>
-  <p class="muted text-sm"><%= t(".webhook_hint") %></p>
+  <% if @connector.provider_syncs? %>
+    <p class="muted text-sm"><%= t(".webhook_hint") %></p>
+  <% end %>
 </div>
 
 <div class="panel">
