@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_100007) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_090000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -129,6 +129,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100007) do
     t.index ["name"], name: "index_categories_on_name", unique: true, where: "deleted_at IS NULL"
   end
 
+  create_table "connector_invocations", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "approved_at"
+    t.integer "approved_by_id"
+    t.json "args"
+    t.integer "connector_id", null: false
+    t.datetime "created_at", null: false
+    t.text "error"
+    t.datetime "finished_at"
+    t.string "idempotency_key"
+    t.string "on_behalf_of"
+    t.text "reasoning"
+    t.integer "requested_by_id"
+    t.string "requested_by_type"
+    t.json "result"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_connector_invocations_on_approved_by_id"
+    t.index ["connector_id", "id"], name: "index_connector_invocations_on_connector_id_and_id"
+    t.index ["connector_id", "idempotency_key"], name: "index_connector_invocations_idempotency", unique: true
+    t.index ["connector_id"], name: "index_connector_invocations_on_connector_id"
+    t.index ["requested_by_type", "requested_by_id"], name: "index_connector_invocations_on_requested_by"
+  end
+
   create_table "connector_runs", force: :cascade do |t|
     t.integer "connector_id", null: false
     t.datetime "created_at", null: false
@@ -146,10 +170,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100007) do
   end
 
   create_table "connectors", force: :cascade do |t|
+    t.json "auto_approve_actions"
     t.json "config"
     t.datetime "created_at", null: false
     t.text "credentials"
     t.datetime "deleted_at"
+    t.json "enabled_actions"
     t.json "field_mapping"
     t.datetime "last_synced_at"
     t.string "name", null: false
@@ -501,6 +527,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_100007) do
   add_foreign_key "cases", "queues"
   add_foreign_key "cases", "sla_policies"
   add_foreign_key "cases", "users", column: "assignee_id"
+  add_foreign_key "connector_invocations", "connectors"
+  add_foreign_key "connector_invocations", "users", column: "approved_by_id"
   add_foreign_key "connector_runs", "connectors"
   add_foreign_key "contacts", "organisations"
   add_foreign_key "deals", "contacts"

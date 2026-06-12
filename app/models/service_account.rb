@@ -13,6 +13,7 @@ class ServiceAccount < ApplicationRecord
     config:read config:write
     audit:read
     webhooks:manage
+    connectors:read connectors:invoke
   ].freeze
 
   has_many :oauth_access_tokens, dependent: :delete_all
