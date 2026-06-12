@@ -50,6 +50,13 @@
       <%= number_field_tag :ai_resolve_confidence, Setting.get("ai_resolve_confidence", CaseAgent::RESOLVE_CONFIDENCE_DEFAULT), step: 0.05, min: 0, max: 1 %>
       <p class="form-hint"><%= t(".fields.ai_resolve_confidence_hint") %></p>
     </div>
+    <div class="form-row">
+      <%= label_tag :effector_agent_id, t(".fields.effector_agent") %>
+      <%= select_tag :effector_agent_id,
+            options_from_collection_for_select(ServiceAccount.active.order(:name), :id, :name, Setting.get("effector_agent_id")),
+            include_blank: t("forms.none") %>
+      <p class="form-hint"><%= t(".fields.effector_agent_hint") %></p>
+    </div>
   </fieldset>
 
   <fieldset>

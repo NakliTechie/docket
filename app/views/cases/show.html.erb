@@ -162,6 +162,11 @@
           <%= f.submit t(".assign"), class: "btn btn-sm" %>
         <% end %>
       <% end %>
+      <% if policy(@case).update? && Connectors::AgentRunner.available? %>
+        <%= button_to t(".run_agent"), run_agent_case_path(@case), class: "btn btn-sm",
+              form: { class: "inline-form" } %>
+        <p class="form-hint"><%= t(".run_agent_hint") %></p>
+      <% end %>
     </div>
 
     <div class="panel">
