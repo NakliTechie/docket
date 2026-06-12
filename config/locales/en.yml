@@ -241,6 +241,14 @@ en:
     create:
       created: "Message added."
 
+  connectors:
+    agent:
+      ran: "AI agent ran “%{action}”."
+      queued: "AI agent queued “%{action}” for human approval."
+      failed_action: "AI agent action “%{action}” failed."
+      blocked: "AI agent action “%{action}” was not permitted: %{reason}"
+      failed: "AI agent run could not complete."
+
   contacts:
     fields:
       name: "Name"

@@ -241,6 +241,14 @@ hi:
     create:
       created: "संदेश जोड़ा गया।"
 
+  connectors:
+    agent:
+      ran: "एआई एजेंट ने “%{action}” चलाया।"
+      queued: "एआई एजेंट ने “%{action}” को मानव-मंज़ूरी के लिए कतारबद्ध किया।"
+      failed_action: "एआई एजेंट की कार्रवाई “%{action}” विफल रही।"
+      blocked: "एआई एजेंट की कार्रवाई “%{action}” की अनुमति नहीं थी: %{reason}"
+      failed: "एआई एजेंट का रन पूरा नहीं हो सका।"
+
   contacts:
     fields:
       name: "नाम"
