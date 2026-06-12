@@ -4,12 +4,26 @@ module Connectors
   # to be usable by an AI agent as an effector — declares .actions and
   # implements #invoke to take outbound actions.
   class Provider
-    # key            — registry id, also the DB `provider` value
-    # name           — human label in the admin picker
-    # category       — grouping in the picker
-    # auth           — :none | :api_key (what the credential form asks for)
-    # config_fields  — provider config keys the admin fills in
-    Descriptor = Struct.new(:key, :name, :category, :auth, :config_fields, keyword_init: true)
+    # key              — registry id, also the DB `provider` value
+    # name             — human label in the admin picker
+    # category         — grouping in the picker
+    # auth             — :none | :api_key (legacy shorthand; see credential_fields)
+    # config_fields    — non-secret provider config keys the admin fills in
+    # credential_fields — secret field names stored in the vault (e.g.
+    #                    %w[key_id key_secret], %w[webhook_url]). Defaults to
+    #                    %w[api_key] when auth is :api_key.
+    # syncs            — does the provider pull records inbound? Default true.
+    #                    Effector-only providers (notify / pay) set syncs: false,
+    #                    which drops the field-mapping requirement.
+    Descriptor = Struct.new(:key, :name, :category, :auth, :config_fields, :credential_fields,
+                            :syncs, keyword_init: true) do
+      def secret_fields
+        return credential_fields if credential_fields.present?
+        auth == :api_key ? %w[api_key] : []
+      end
+
+      def syncs? = syncs != false
+    end
 
     # An agent-callable action. The SAME struct backs the admin "what can
     # this connector do" list and the LLM tool spec (see Registry.tool_specs).

@@ -907,6 +907,16 @@ en:
       config:
         endpoint_url: "Endpoint URL"
         records_path: "Records path (optional, e.g. data.items)"
+        action_url: "Action URL (for write actions)"
+        webhook_url: "Slack incoming-webhook URL"
+        base_url: "Base URL"
+      credentials:
+        api_key: "API key / token"
+        api_secret: "API secret"
+        webhook_url: "Slack incoming-webhook URL"
+        authkey: "MSG91 auth key"
+        key_id: "Razorpay key id"
+        key_secret: "Razorpay key secret"
       api_key_kept: "•••••• (unchanged)"
       mapping_legend: "Field mapping"
       mapping_hint: "Map each Docket field to the field name in the source records. Provide at least an external ID or email."

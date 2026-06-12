@@ -32,6 +32,11 @@ class Connector < ApplicationRecord
     Connectors::Registry.descriptor(provider)
   end
 
+  # Effector-only providers (notify / pay) don't pull records inbound.
+  def provider_syncs?
+    provider_descriptor.nil? || provider_descriptor.syncs?
+  end
+
   # The agent-callable actions this provider declares, and a key lookup.
   def provider_actions
     Connectors::Registry.klass(provider)&.actions || []
@@ -82,9 +87,10 @@ class Connector < ApplicationRecord
     errors.add(:provider, :unknown) unless Connectors::Registry.key?(provider)
   end
 
-  # A pull is useless if nothing maps to an identity we can upsert on.
+  # A pull is useless if nothing maps to an identity we can upsert on — but
+  # effector-only providers (notify / pay) don't sync, so they need no mapping.
   def mapping_reaches_a_contact
-    return unless target == "contacts"
+    return unless provider_syncs? && target == "contacts"
     mapped = (field_mapping || {}).keys.map(&:to_s)
     return if (mapped & %w[external_id email]).any?
     errors.add(:field_mapping, :needs_identity)
