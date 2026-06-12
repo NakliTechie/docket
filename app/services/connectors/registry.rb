@@ -32,5 +32,19 @@ module Connectors
     def descriptors
       providers.values.map(&:descriptor)
     end
+
+    # Anthropic tool-use specs for one connector's actions — the agent-facing
+    # view of the same Provider::Action structs the admin UI lists. Names are
+    # namespaced by connector id so several connectors of the same provider
+    # never collide in a single tool set.
+    def tool_specs(connector)
+      klass(connector.provider)&.actions.to_a.map do |action|
+        {
+          name: "conn_#{connector.id}__#{action.key}",
+          description: action.summary,
+          input_schema: action.params || { "type" => "object", "properties" => {} }
+        }
+      end
+    end
   end
 end

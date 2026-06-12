@@ -72,6 +72,12 @@ Rails.application.routes.draw do
         post :resume
       end
     end
+    resources :connector_invocations, only: %i[index show] do
+      member do
+        post :approve
+        post :reject
+      end
+    end
   end
 
   # Inbound connector webhook ping (HMAC-signed, unauthenticated).

@@ -11,6 +11,7 @@ class Connector < ApplicationRecord
   TARGETS = %w[contacts].freeze
 
   has_many :connector_runs, dependent: :delete_all
+  has_many :invocations, class_name: "ConnectorInvocation", dependent: :destroy
 
   enum :status, { active: 0, paused: 1, error: 2 }, prefix: true
 
@@ -30,6 +31,22 @@ class Connector < ApplicationRecord
   def provider_descriptor
     Connectors::Registry.descriptor(provider)
   end
+
+  # The agent-callable actions this provider declares, and a key lookup.
+  def provider_actions
+    Connectors::Registry.klass(provider)&.actions || []
+  end
+
+  def provider_action(key)
+    Connectors::Registry.klass(provider)&.action(key)
+  end
+
+  # Effector authorization: which actions are exposed to agents (deny by
+  # default) and which writes skip the human-of-record gate.
+  def enabled_actions = super || []
+  def auto_approve_actions = super || []
+  def enabled_action?(key) = enabled_actions.map(&:to_s).include?(key.to_s)
+  def auto_approves?(key) = auto_approve_actions.map(&:to_s).include?(key.to_s)
 
   # Parsed secret blob; never logged or audited (see redaction below).
   def credentials_hash

@@ -27,6 +27,19 @@
     <% end %>
   </fieldset>
 
+  <fieldset>
+    <legend><%= t("admin.service_accounts.fields.budget") %></legend>
+    <p class="form-hint"><%= t("admin.service_accounts.fields.budget_hint") %></p>
+    <div class="form-row">
+      <%= f.label :action_budget, t("admin.service_accounts.fields.action_budget") %>
+      <%= f.number_field :action_budget, min: 1, placeholder: t("admin.service_accounts.fields.action_budget_placeholder") %>
+    </div>
+    <div class="form-row">
+      <%= f.label :action_budget_window_minutes, t("admin.service_accounts.fields.action_budget_window") %>
+      <%= f.number_field :action_budget_window_minutes, min: 1, placeholder: "60" %>
+    </div>
+  </fieldset>
+
   <% unless service_account.new_record? %>
     <div class="checkbox-row form-row">
       <%= f.check_box :active %>
