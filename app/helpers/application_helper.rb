@@ -53,6 +53,16 @@ module ApplicationHelper
             aria: { current: active ? "page" : nil }
   end
 
+  # A collapsible nav dropdown (CSS-only <details>), keeping the top bar short.
+  # `active` highlights the group when one of its pages is current.
+  def nav_group(label, active: false)
+    content = capture { yield }
+    tag.details(class: class_names("nav-group", active: active)) do
+      tag.summary(label, class: class_names("nav-link", "nav-group-toggle", active: active)) +
+        tag.div(content, class: "nav-menu")
+    end
+  end
+
   # Single-key status shortcuts on the case view; documented in the
   # in-app help modal.
   TRANSITION_SHORTCUTS = {

@@ -18,33 +18,47 @@
         <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
           <%= link_to brand_name, root_path, class: "brand" %>
           <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
-          <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
-          <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>
-          <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
-          <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
-          <% if policy(Pipeline).create? %>
-            <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
-            <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
+
+          <%= nav_group t("layout.nav.crm"),
+                active: %w[contacts organisations leads deals pipelines sequences].include?(controller_name) do %>
+            <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
+            <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>
+            <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
+            <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
+            <% if policy(Pipeline).create? %>
+              <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
+              <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
+            <% end %>
           <% end %>
-          <% if policy(CaseQueue).create? %>
-            <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
-            <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
-            <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
-            <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
+
+          <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? %>
+            <%= nav_group t("layout.nav.service_desk"),
+                  active: %w[case_queues categories sla_policies macros reference_docs].include?(controller_name) do %>
+              <% if policy(CaseQueue).create? %>
+                <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
+                <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
+                <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
+                <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
+              <% end %>
+              <% if policy(ReferenceDoc).index? %>
+                <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
+              <% end %>
+            <% end %>
           <% end %>
-          <% if policy(ReferenceDoc).index? %>
-            <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
-          <% end %>
+
           <% if policy(User).index? %>
-            <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
-            <%= nav_link t("layout.nav.activity"), admin_activity_path, active: controller_name == "activity" %>
-            <%= nav_link t("layout.nav.audit"), admin_audit_path, active: controller_name == "audit" %>
-            <%= nav_link t("layout.nav.security_events"), admin_security_events_path, active: controller_name == "security_events" %>
-            <%= nav_link t("layout.nav.integrations"), admin_service_accounts_path,
-                  active: %w[service_accounts api_tokens webhook_endpoints].include?(controller_name) %>
-            <%= nav_link t("layout.nav.connectors"), admin_connectors_path,
-                  active: %w[connectors connector_invocations shared_credentials].include?(controller_name) %>
-            <%= nav_link t("layout.nav.settings"), admin_settings_path, active: controller_name == "settings" %>
+            <%= nav_group t("layout.nav.admin"),
+                  active: %w[users activity audit security_events service_accounts api_tokens webhook_endpoints connectors connector_invocations shared_credentials settings].include?(controller_name) do %>
+              <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
+              <%= nav_link t("layout.nav.activity"), admin_activity_path, active: controller_name == "activity" %>
+              <%= nav_link t("layout.nav.audit"), admin_audit_path, active: controller_name == "audit" %>
+              <%= nav_link t("layout.nav.security_events"), admin_security_events_path, active: controller_name == "security_events" %>
+              <%= nav_link t("layout.nav.integrations"), admin_service_accounts_path,
+                    active: %w[service_accounts api_tokens webhook_endpoints].include?(controller_name) %>
+              <%= nav_link t("layout.nav.connectors"), admin_connectors_path,
+                    active: %w[connectors connector_invocations shared_credentials].include?(controller_name) %>
+              <%= nav_link t("layout.nav.settings"), admin_settings_path, active: controller_name == "settings" %>
+            <% end %>
           <% end %>
         </nav>
         <div class="app-header-right">

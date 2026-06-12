@@ -7,6 +7,9 @@ en:
     sign_out: "Sign out"
     nav:
       cases: "Cases"
+      crm: "CRM"
+      service_desk: "Service desk"
+      admin: "Admin"
       contacts: "Contacts"
       organisations: "Organisations"
       queues: "Queues"

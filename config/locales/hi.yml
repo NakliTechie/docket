@@ -7,6 +7,9 @@ hi:
     sign_out: "साइन आउट"
     nav:
       cases: "मामले"
+      crm: "सीआरएम"
+      service_desk: "सेवा डेस्क"
+      admin: "प्रशासन"
       contacts: "संपर्क"
       organisations: "संगठन"
       queues: "कतारें"

@@ -116,6 +116,27 @@ code, .mono { font-family: var(--font-mono); font-size: 0.85em; }
 }
 .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
 .nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.18); font-weight: 600; }
+/* Grouped nav dropdowns (CSS-only <details>) */
+.nav-group { position: relative; }
+.nav-group > summary { cursor: pointer; list-style: none; user-select: none; }
+.nav-group > summary::-webkit-details-marker { display: none; }
+.nav-group-toggle::after { content: "▾"; font-size: 0.7em; margin-left: var(--space-1); opacity: 0.85; }
+.nav-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 190px;
+  padding: var(--space-1);
+  background: var(--color-primary-dark);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.nav-menu .nav-link { display: block; white-space: nowrap; }
 .app-header-right { display: flex; align-items: center; gap: var(--space-3); }
 .current-user { color: #d7e1f0; font-size: var(--text-xs); }
 .inline-form { display: inline; }
