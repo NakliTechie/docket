@@ -889,6 +889,14 @@ hi:
         login_failed: "असफल लॉगिन"
         login_throttled: "सीमित"
         sso_rejected: "SSO अस्वीकृत"
+    connector_oauth:
+      oauth_authorize:
+        not_ready: "कनेक्ट करने से पहले OAuth क्लाइंट id और client secret जोड़ें।"
+      oauth_callback:
+        connected: "कनेक्ट हो गया — कनेक्टर अब लाइव है।"
+        denied: "प्राधिकरण अस्वीकृत हुआ (%{error})।"
+        exchange_failed: "कनेक्शन पूरा नहीं हो सका: %{error}"
+        bad_state: "वह प्राधिकरण लिंक समाप्त या अमान्य था — कनेक्शन फिर से शुरू करें।"
     connectors:
       index:
         title: "कनेक्टर"
@@ -914,8 +922,12 @@ hi:
         pause: "रोकें"
         resume: "फिर शुरू करें"
         activate: "सक्रिय करें"
+        connect: "कनेक्ट करें"
+        reconnect: "पुनः कनेक्ट करें"
         draft_ready: "ड्राफ़्ट — सक्रिय करने के लिए तैयार।"
         draft_needs_credentials: "ड्राफ़्ट — आवश्यक क्रेडेंशियल जोड़ें, फिर सक्रिय करें।"
+        oauth_ready: "ड्राफ़्ट — क्लाइंट क्रेडेंशियल सहेजे गए। लाइव होने के लिए कनेक्ट करें।"
+        oauth_needs_credentials: "ड्राफ़्ट — OAuth क्लाइंट id (कॉन्फ़िग) और client secret जोड़ें, फिर कनेक्ट करें।"
         edit: "संपादित करें"
         provider: "प्रदाता"
         target: "किसमें सिंक"

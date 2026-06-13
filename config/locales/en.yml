@@ -889,6 +889,14 @@ en:
         login_failed: "Failed login"
         login_throttled: "Throttled"
         sso_rejected: "SSO rejected"
+    connector_oauth:
+      oauth_authorize:
+        not_ready: "Add the OAuth client id and client secret before connecting."
+      oauth_callback:
+        connected: "Connected — the connector is now live."
+        denied: "Authorization was declined (%{error})."
+        exchange_failed: "Could not complete the connection: %{error}"
+        bad_state: "That authorization link expired or was invalid — start the connection again."
     connectors:
       index:
         title: "Connectors"
@@ -914,8 +922,12 @@ en:
         pause: "Pause"
         resume: "Resume"
         activate: "Activate"
+        connect: "Connect"
+        reconnect: "Reconnect"
         draft_ready: "Draft — ready to activate."
         draft_needs_credentials: "Draft — add the required credentials, then activate."
+        oauth_ready: "Draft — client credentials saved. Click Connect to authorize and go live."
+        oauth_needs_credentials: "Draft — add the OAuth client id (config) and client secret, then Connect."
         edit: "Edit"
         provider: "Provider"
         target: "Syncs into"

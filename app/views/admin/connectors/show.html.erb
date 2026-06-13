@@ -2,7 +2,11 @@
 <div class="page-header">
   <h1><%= @connector.name %></h1>
   <div class="page-actions">
-    <% if @connector.status_draft? %>
+    <% if @connector.oauth? && !@connector.oauth_connected? %>
+      <% if @connector.configured? %>
+        <%= link_to t(".connect"), oauth_authorize_admin_connector_path(@connector), class: "btn btn-primary" %>
+      <% end %>
+    <% elsif @connector.status_draft? %>
       <%= button_to t(".activate"), activate_admin_connector_path(@connector), class: "btn btn-primary" %>
     <% else %>
       <% if @connector.provider_syncs? %>
@@ -13,6 +17,9 @@
       <% else %>
         <%= button_to t(".resume"), resume_admin_connector_path(@connector), class: "btn" %>
       <% end %>
+    <% end %>
+    <% if @connector.oauth? && @connector.oauth_connected? %>
+      <%= link_to t(".reconnect"), oauth_authorize_admin_connector_path(@connector), class: "btn" %>
     <% end %>
     <%= link_to t(".edit"), edit_admin_connector_path(@connector), class: "btn" %>
   </div>
@@ -30,7 +37,9 @@
       <dt><%= t(".webhook_url") %></dt><dd class="mono table-meta"><%= connector_webhook_url(@connector) %></dd>
     <% end %>
   </dl>
-  <% if @connector.status_draft? %>
+  <% if @connector.oauth? && !@connector.oauth_connected? %>
+    <p class="muted text-sm"><%= @connector.configured? ? t(".oauth_ready") : t(".oauth_needs_credentials") %></p>
+  <% elsif @connector.status_draft? %>
     <p class="muted text-sm"><%= @connector.configured? ? t(".draft_ready") : t(".draft_needs_credentials") %></p>
   <% end %>
   <% if @connector.provider_syncs? %>

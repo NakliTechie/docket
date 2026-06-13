@@ -7,6 +7,10 @@ class Connector < ApplicationRecord
 
   # Credential vault: secrets (api keys, tokens) encrypted at rest.
   encrypts :credentials
+  # OAuth2 access/refresh token bundle, encrypted at rest — kept SEPARATE from
+  # the operator-entered `credentials` (client secret) so saving the admin form
+  # never clobbers a live connection's tokens.
+  encrypts :oauth_credentials
 
   TARGETS = %w[contacts].freeze
 
@@ -45,6 +49,29 @@ class Connector < ApplicationRecord
   def configured?
     return true unless provider_descriptor
     provider_descriptor.required_secret_fields.all? { |field| secret(field).present? }
+  end
+
+  # An OAuth2 provider (Connectors::OauthProvider): the operator supplies a
+  # client id/secret, then completes a browser authorization-code connect that
+  # stores the token bundle. `configured?` (client secret present) means "ready
+  # to connect"; `oauth_connected?` means "usable".
+  def oauth?
+    klass = Connectors::Registry.klass(provider)
+    klass.present? && klass < Connectors::OauthProvider
+  end
+
+  def oauth_tokens
+    JSON.parse(oauth_credentials.presence || "{}")
+  rescue JSON::ParserError
+    {}
+  end
+
+  def oauth_tokens=(hash)
+    self.oauth_credentials = JSON.generate(hash.to_h)
+  end
+
+  def oauth_connected?
+    oauth_tokens["access_token"].present?
   end
 
   # The agent-callable actions this provider declares, and a key lookup.

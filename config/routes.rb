@@ -73,6 +73,10 @@ Rails.application.routes.draw do
         post :pause
         post :resume
         post :activate
+        get :oauth_authorize, controller: "connector_oauth"
+      end
+      collection do
+        get :oauth_callback, controller: "connector_oauth"
       end
     end
     resources :connector_invocations, only: %i[index show] do

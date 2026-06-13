@@ -50,7 +50,9 @@ module Connectors
         "airtable" => Connectors::AirtableProvider,
         "activecampaign" => Connectors::ActivecampaignProvider,
         "klaviyo" => Connectors::KlaviyoProvider,
-        "mailgun" => Connectors::MailgunProvider
+        "mailgun" => Connectors::MailgunProvider,
+        # OAuth2 tier (Connectors::OauthProvider — browser connect + token refresh)
+        "google_calendar" => Connectors::GoogleCalendarProvider
       }
     end
 

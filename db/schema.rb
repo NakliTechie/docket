@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_042442) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_063117) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -184,6 +184,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_042442) do
     t.json "field_mapping"
     t.datetime "last_synced_at"
     t.string "name", null: false
+    t.text "oauth_credentials"
     t.string "provider", null: false
     t.integer "schedule_interval_minutes"
     t.integer "shared_credential_id"
