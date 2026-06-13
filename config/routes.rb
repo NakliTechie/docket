@@ -157,6 +157,8 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "oauth/token", to: "oauth#token"
       get "openapi.json", to: "openapi#show"
+      # MCP server face (PG5): JSON-RPC over the api/v1 surface.
+      post "mcp", to: "mcp#handle"
 
       resources :cases, only: %i[index show create update destroy] do
         member do

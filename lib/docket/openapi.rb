@@ -116,6 +116,12 @@ module Docket
                  responses: { "200" => "Access token issued", "401" => "Invalid client" })
       }
       result["/openapi.json"] = { get: op("This document", security: []) }
+      result["/mcp"] = {
+        post: op("Model Context Protocol endpoint (JSON-RPC 2.0): initialize, tools/list, and tools/call " \
+                 "expose every api/v1 operation as an MCP tool, under the same bearer auth, tenant and scopes.",
+                 request: { jsonrpc: :string, id: :integer, method: :string, params: :object },
+                 responses: { "200" => "JSON-RPC response", "202" => "Accepted (notification)" })
+      }
 
       crud(result, "cases", "Case",
            extra_params: %w[q status priority queue_id assignee_id contact_id contact_external_id],
