@@ -17,4 +17,14 @@ class ApplicationJob < ActiveJob::Base
       block.call
     end
   end
+
+  private
+
+  # Run a block once per active tenant, scoped to it. The recurring scheduler
+  # sweeps use this so they cover every tenant in a shared deploy (and the single
+  # tenant in an isolated one). Jobs enqueued from within (e.g. ConnectorSyncJob)
+  # inherit the per-tenant scope via acts_as_tenant's ActiveJob serialization.
+  def each_active_tenant(&block)
+    Tenant.active.find_each { |tenant| ActsAsTenant.with_tenant(tenant, &block) }
+  end
 end
