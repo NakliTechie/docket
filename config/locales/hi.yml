@@ -33,6 +33,7 @@ hi:
       integrations: "एकीकरण"
       connectors: "कनेक्टर"
       agent_actions: "एजेंट कार्रवाइयाँ"
+      decision_appeals: "अपीलें"
 
   locales:
     en: "English"
@@ -1537,6 +1538,29 @@ hi:
         cannot_suspend_primary: "प्राथमिक टेनेंट को निलंबित नहीं किया जा सकता।"
       activate:
         activated: "टेनेंट %{name} सक्रिय कर दिया गया।"
+    decision_appeals:
+      index:
+        title: "निर्णय अपीलें"
+        intro: "रिकॉर्ड-स्तर निर्णयों के विरुद्ध आपत्तियाँ। पलटने पर निर्णय उलट जाता है; अस्वीकार करने पर कायम रहता है। पलटना एक सकारण आदेश है।"
+        open_appeals: "लंबित अपीलें"
+        no_open_appeals: "समीक्षा हेतु कोई अपील नहीं।"
+        file_against: "रिकॉर्ड-स्तर निर्णय (अपील-योग्य)"
+        none_appealable: "अपील करने योग्य कोई लागू रिकॉर्ड-निर्णय नहीं।"
+        already_appealed: "अपील लंबित"
+        file: "अपील दर्ज करें"
+        overturn: "पलटें"
+        deny: "अस्वीकार करें"
+        reason_placeholder: "सकारण आदेश (पलटने हेतु आवश्यक)"
+        grounds_placeholder: "अपील का आधार"
+        columns:
+          decision: "निर्णय"
+          grounds: "आधार"
+      create:
+        filed: "अपील दर्ज की गई।"
+      overturn:
+        overturned: "अपील स्वीकृत — निर्णय उलट दिया गया।"
+      deny:
+        denied: "अपील अस्वीकृत — निर्णय कायम है।"
     activity:
       index:
         title: "गतिविधि और उपयोग"

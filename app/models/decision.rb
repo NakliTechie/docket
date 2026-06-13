@@ -9,6 +9,7 @@ class Decision < ApplicationRecord
 
   belongs_to :subject, polymorphic: true
   belongs_to :approved_by, class_name: "User", optional: true
+  has_many :appeals, class_name: "DecisionAppeal", dependent: :destroy
 
   enum :status, { proposed: 0, applied: 1, dismissed: 2, rejected: 3 }, prefix: true
 
@@ -21,7 +22,12 @@ class Decision < ApplicationRecord
   def autonomous? = decision_class == "autonomous"
   def of_record? = decision_class == "of_record"
 
-  # A decision of record is contestable through an appeal path (future work);
-  # it always carries a human approver + a reasoned order once acted on.
+  # A decision of record is contestable through the appeal path; it always
+  # carries a human approver + a reasoned order once acted on.
   def contestable? = of_record?
+
+  # Appealable once it has actually acted (applied) and is contestable.
+  def appealable? = contestable? && status_applied?
+
+  def open_appeal = appeals.status_pending.recent_first.first
 end

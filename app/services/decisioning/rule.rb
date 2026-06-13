@@ -26,13 +26,18 @@ module Decisioning
 
     private
 
-    def decision(subject:, signal:, recommendation:, reasoning:, label: nil)
+    # action defaults to :label (attach the reversible segment tag). A rule may
+    # instead propose a richer action — :route_case, :enroll_lead — with its
+    # target in action_params; the Dispatcher applies it through the same gate.
+    def decision(subject:, signal:, recommendation:, reasoning:, label: nil,
+                 action: :label, action_params: nil)
       Proposal.new(
         rule: self.class.key, version: self.class.version,
         subject_type: subject.class.name, subject_id: subject.id,
         subject_label: label || default_label(subject),
         signal: signal, recommendation: recommendation,
-        effect: self.class.effect, decision_class: self.class.decision_class, reasoning: reasoning
+        effect: self.class.effect, decision_class: self.class.decision_class, reasoning: reasoning,
+        action: action.to_s, action_params: action_params
       )
     end
 
