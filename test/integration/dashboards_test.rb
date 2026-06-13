@@ -21,8 +21,8 @@ class DashboardsTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "an ordinary agent is forbidden" do
-    sign_in_as users(:agent_a)
+  test "a role without report:operational is forbidden" do
+    sign_in_as users(:sales)
     get dashboard_path
     assert_response :forbidden
   end
@@ -41,7 +41,7 @@ class DashboardsTest < ActionDispatch::IntegrationTest
     get cases_path
     assert_match(%r{href="/dashboard"}, response.body)
 
-    sign_in_as users(:agent_a)
+    sign_in_as users(:sales)
     get cases_path
     assert_no_match(%r{href="/dashboard"}, response.body)
   end

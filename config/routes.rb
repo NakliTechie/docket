@@ -61,6 +61,12 @@ Rails.application.routes.draw do
         post :activate
       end
     end
+    resources :decision_appeals, only: %i[index create] do
+      member do
+        post :overturn
+        post :deny
+      end
+    end
     get "activity", to: "activity#index", as: :activity
     get "audit", to: "audit#show", as: :audit
     get "security_events", to: "security_events#index", as: :security_events

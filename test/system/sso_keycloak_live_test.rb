@@ -22,14 +22,14 @@ class SsoKeycloakLiveTest < ApplicationSystemTestCase
     Setting.set("sso_staff_oidc_client_id", "docket-staff")
     Setting.set("sso_staff_oidc_client_secret", "staff-client-secret")
     Setting.set("sso_staff_role_claim", "groups")
-    Setting.set("sso_staff_role_mapping", { "docket-admins" => "admin" }.to_json)
+    Setting.set("sso_staff_role_mapping", { "docket-admins" => "super_admin" }.to_json)
     Setting.set("sso_customer_oidc_issuer", issuer)
     Setting.set("sso_customer_oidc_client_id", "docket-customer")
     Setting.set("sso_customer_oidc_client_secret", "customer-client-secret")
     Setting.set("sso_customer_external_id_claim", "cif")
   end
 
-  test "staff oidc login against keycloak provisions an admin via role mapping" do
+  test "staff oidc login against keycloak provisions a super_admin via role mapping" do
     visit new_session_path
     click_button I18n.t("sessions.new.sso_oidc")
 
@@ -40,7 +40,7 @@ class SsoKeycloakLiveTest < ApplicationSystemTestCase
 
     assert_text I18n.t("cases.index.title")
     user = User.find_by(email_address: "staff.sso@example.com")
-    assert_equal "admin", user.role
+    assert_equal "super_admin", user.role
   end
 
   test "customer oidc login against keycloak maps cif and stays portal-only" do

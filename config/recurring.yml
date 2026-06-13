@@ -15,6 +15,10 @@ shared: &shared
     class: ConnectorSchedulerJob
     queue: default
     schedule: every 5 minutes
+  decisioning_run:
+    class: DecisioningRunJob
+    queue: default
+    schedule: every hour at minute 40
 
 development:
   <<: *shared

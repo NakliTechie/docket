@@ -9,7 +9,8 @@ module Decisioning
     RULES = [
       Rules::LeadScore,
       Rules::SlaAtRisk,
-      Rules::StalledDeal
+      Rules::StalledDeal,
+      Rules::ReengageStaleLead
     ].freeze
 
     def run(rules: RULES)

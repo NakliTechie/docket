@@ -8,18 +8,14 @@ class User < ApplicationRecord
 
   has_secure_password
 
-  # Method names prefixed (user.role_admin?) because a bare `readonly?`
-  # would collide with ActiveRecord; stored values are the role names below.
-  #
-  # The functional roles (super_admin … technical) are the target model; the
-  # legacy roles (admin/supervisor/agent) are kept live only through the
-  # transition (a data migration reassigns rows; a later step removes them).
-  # Authority for every role — legacy included — comes from Authz::ROLE_PERMISSIONS
-  # via #can?, never from a bare role name. See plan/rbac-research-2026-06-13.md.
+  # Method names prefixed (user.role_super_admin?) because a bare `readonly?`
+  # would collide with ActiveRecord. Authority for every role comes from
+  # Authz::ROLE_PERMISSIONS via #can?, never from a bare role name. (The legacy
+  # admin/supervisor/agent values were retired by the MigrateLegacyRoles
+  # cutover.) See plan/rbac-research-2026-06-13.md.
   enum :role, {
     super_admin: 4, client_admin: 5, finance: 6, sales: 7,
-    customer_service: 8, technical: 9, readonly: 3,
-    admin: 0, supervisor: 1, agent: 2 # legacy — removed once prod rows migrate
+    customer_service: 8, technical: 9, readonly: 3
   }, default: :customer_service, prefix: true
 
   has_many :sessions, dependent: :destroy

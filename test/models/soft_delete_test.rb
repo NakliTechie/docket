@@ -49,10 +49,10 @@ class SoftDeleteTest < ActiveSupport::TestCase
   # --- W1 invariant sweep -------------------------------------------------
 
   test "a soft-deleted user's email can be re-provisioned (M1)" do
-    user = User.create!(name: "Temp", email_address: "reuse@example.com", password: "password", role: :agent)
+    user = User.create!(name: "Temp", email_address: "reuse@example.com", password: "password", role: :customer_service)
     user.destroy
     assert_nothing_raised do
-      User.create!(name: "Temp Again", email_address: "reuse@example.com", password: "password", role: :agent)
+      User.create!(name: "Temp Again", email_address: "reuse@example.com", password: "password", role: :customer_service)
     end
   end
 

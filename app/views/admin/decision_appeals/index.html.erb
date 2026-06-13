@@ -1,0 +1,61 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+</div>
+
+<p class="muted"><%= t(".intro") %></p>
+
+<h2><%= t(".open_appeals") %></h2>
+<% open_appeals = @appeals.select(&:status_pending?) %>
+<% if open_appeals.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.decision") %></th>
+          <th><%= t(".columns.grounds") %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% open_appeals.each do |appeal| %>
+          <tr>
+            <td><span class="mono"><%= appeal.decision.rule %></span> — <%= appeal.decision.subject_label %></td>
+            <td><%= appeal.grounds %></td>
+            <td class="table-actions">
+              <%= form_with url: overturn_admin_decision_appeal_path(appeal), class: "inline-form" do %>
+                <%= text_field_tag :reason, nil, placeholder: t(".reason_placeholder"), required: true %>
+                <%= submit_tag t(".overturn"), class: "btn btn-sm" %>
+              <% end %>
+              <%= button_to t(".deny"), deny_admin_decision_appeal_path(appeal), class: "btn btn-sm btn-ghost" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="muted"><%= t(".no_open_appeals") %></p>
+<% end %>
+
+<h2><%= t(".file_against") %></h2>
+<% if @appealable.any? %>
+  <ul class="stack">
+    <% @appealable.each do |decision| %>
+      <li>
+        <span class="mono"><%= decision.rule %></span> — <%= decision.subject_label %>
+        <% if decision.open_appeal %>
+          <span class="badge badge-role"><%= t(".already_appealed") %></span>
+        <% else %>
+          <%= form_with url: admin_decision_appeals_path, class: "inline-form" do %>
+            <%= hidden_field_tag :decision_id, decision.id %>
+            <%= text_field_tag :grounds, nil, placeholder: t(".grounds_placeholder"), required: true %>
+            <%= submit_tag t(".file"), class: "btn btn-sm" %>
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="muted"><%= t(".none_appealable") %></p>
+<% end %>

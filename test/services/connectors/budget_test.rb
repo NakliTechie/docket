@@ -68,7 +68,7 @@ class Connectors::BudgetTest < ActiveSupport::TestCase
   test "a staff User principal carries no budget" do
     conn = connector
     user = User.create!(name: "Admin", email_address: "a-#{SecureRandom.hex(4)}@x.test",
-                        password: "password123", role: :admin)
+                        password: "password123", role: :super_admin)
     10.times do
       Connectors::Invoke.call(conn, "post_json", args: { "body" => {} },
         principal: user, on_behalf_of: "case:1")
@@ -78,5 +78,19 @@ class Connectors::BudgetTest < ActiveSupport::TestCase
 
   test "a negative budget is rejected at the model" do
     assert_not ServiceAccount.new(name: "X", scopes: %w[connectors:invoke], action_budget: -1).valid?
+  end
+
+  test "a per-connector budget caps actions through it across all agents" do
+    conn = Connector.create!(name: "Capped", provider: "http_json", target: "contacts",
+      config: { "action_url" => "https://api.example.com/do" }, field_mapping: { "external_id" => "id" },
+      enabled_actions: %w[post_json], action_budget: 2, action_budget_window_minutes: 60)
+    a1 = agent # unbudgeted agents — only the connector cap should bite
+    a2 = agent
+
+    propose(conn, a1)
+    propose(conn, a2) # a different agent, same connector
+    err = assert_raises(Connectors::Budget::Exceeded) { propose(conn, a1) }
+    assert_includes err.message, "connector action budget"
+    assert_equal 2, ConnectorInvocation.where(connector: conn).count
   end
 end

@@ -9,13 +9,11 @@ class SsoSessionsController < ApplicationController
   # Demotion-safety rank: the highest mapped group wins when an IdP asserts
   # several. The functional roles below client_admin are siblings, not a strict
   # lattice — finance/technical rank above sales/customer_service so a conflict
-  # errs toward the more-privileged. Legacy roles retained until they're
-  # migrated out. Every User.roles key MUST appear here (asserted in test) or
-  # an SSO-asserted role is mis-ranked or unassignable.
+  # errs toward the more-privileged. Every User.roles key MUST appear here
+  # (asserted in test) or an SSO-asserted role is mis-ranked or unassignable.
   ROLE_RANK = {
     "super_admin" => 6, "client_admin" => 5, "finance" => 4, "technical" => 3,
-    "sales" => 2, "customer_service" => 1, "readonly" => 0,
-    "admin" => 6, "supervisor" => 5, "agent" => 1 # legacy
+    "sales" => 2, "customer_service" => 1, "readonly" => 0
   }.freeze
   DEFAULT_SSO_ROLE = "customer_service".freeze
 

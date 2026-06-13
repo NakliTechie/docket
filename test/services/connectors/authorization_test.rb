@@ -10,11 +10,6 @@ class Connectors::AuthorizationTest < ActiveSupport::TestCase
     refute Connectors::Authorization.may_invoke?(users(:sales))
     refute Connectors::Authorization.may_invoke?(users(:technical))
     refute Connectors::Authorization.may_invoke?(users(:readonly))
-
-    # Legacy roles: admin/supervisor could invoke today, agent could not.
-    assert Connectors::Authorization.may_invoke?(users(:admin))
-    assert Connectors::Authorization.may_invoke?(users(:supervisor))
-    refute Connectors::Authorization.may_invoke?(users(:agent_a))
   end
 
   test "may_invoke? for a service account still checks the connectors:invoke scope" do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -190,6 +190,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
   end
 
   create_table "connectors", force: :cascade do |t|
+    t.integer "action_budget"
+    t.integer "action_budget_window_minutes"
     t.json "auto_approve_actions"
     t.json "config"
     t.datetime "created_at", null: false
@@ -272,7 +274,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
     t.index ["tenant_id"], name: "index_deals_on_tenant_id"
   end
 
+  create_table "decision_appeals", force: :cascade do |t|
+    t.integer "appellant_id"
+    t.datetime "created_at", null: false
+    t.integer "decision_id", null: false
+    t.text "grounds", null: false
+    t.text "resolution"
+    t.datetime "resolved_at"
+    t.integer "reviewed_by_id"
+    t.integer "status", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["appellant_id"], name: "index_decision_appeals_on_appellant_id"
+    t.index ["decision_id"], name: "index_decision_appeals_on_decision_id"
+    t.index ["reviewed_by_id"], name: "index_decision_appeals_on_reviewed_by_id"
+    t.index ["tenant_id"], name: "index_decision_appeals_on_tenant_id"
+  end
+
   create_table "decisions", force: :cascade do |t|
+    t.string "action", default: "label", null: false
+    t.json "action_params"
     t.integer "approved_by_id"
     t.datetime "created_at", null: false
     t.datetime "decided_at"
@@ -667,6 +688,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
   add_foreign_key "deals", "pipelines"
   add_foreign_key "deals", "tenants"
   add_foreign_key "deals", "users", column: "owner_id"
+  add_foreign_key "decision_appeals", "contacts", column: "appellant_id"
+  add_foreign_key "decision_appeals", "decisions"
+  add_foreign_key "decision_appeals", "tenants"
+  add_foreign_key "decision_appeals", "users", column: "reviewed_by_id"
   add_foreign_key "decisions", "tenants"
   add_foreign_key "leads", "contacts"
   add_foreign_key "leads", "deals", column: "converted_deal_id"

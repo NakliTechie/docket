@@ -11,7 +11,7 @@ module Api
       assert_response :success
 
       post "/api/v1/users", params: { user: { name: "API User", email_address: "apiuser@example.com",
-                                              password: "longpassword1", role: "agent" } },
+                                              password: "longpassword1", role: "customer_service" } },
            headers: auth_header(@admin_token), as: :json
       assert_response :created
 

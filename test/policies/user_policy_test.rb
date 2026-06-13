@@ -1,9 +1,11 @@
 require "test_helper"
 
 class UserPolicyTest < ActiveSupport::TestCase
-  test "only admins manage users" do
-    assert UserPolicy.new(users(:admin), users(:agent_a)).update?
-    %i[supervisor agent_a readonly].each do |role|
+  test "only the admin tiers manage users" do
+    [ users(:admin), users(:client_admin) ].each do |u|
+      assert UserPolicy.new(u, users(:agent_a)).update?, "#{u.role} should manage users"
+    end
+    %i[finance sales customer_service readonly].each do |role|
       refute UserPolicy.new(users(role), users(:agent_b)).index?
       refute UserPolicy.new(users(role), users(:agent_b)).update?
       refute UserPolicy.new(users(role), users(:agent_b)).create?

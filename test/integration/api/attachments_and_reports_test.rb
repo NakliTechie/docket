@@ -153,7 +153,7 @@ module Api
       get "/api/v1/reports/activity", headers: auth_header(service_token_for(%w[cases:read]))
       assert_response :forbidden
 
-      get "/api/v1/reports/activity", headers: auth_header(api_token_for(users(:supervisor)))
+      get "/api/v1/reports/activity", headers: auth_header(api_token_for(users(:sales)))
       assert_response :forbidden
     end
 

@@ -53,37 +53,6 @@ class AuthzMatrixTest < ActiveSupport::TestCase
     end
   end
 
-  # Transition safety: legacy roles reproduce TODAY's authority. admin == the
-  # full set; supervisor/agent are explicit sets (NOT their functional successors).
-  test "legacy admin holds the full vocabulary" do
-    assert_equal Authz::PERMISSIONS.sort, Authz.permissions_for("admin").sort
-  end
-
-  test "legacy supervisor matches the old admin-or-supervisor authority" do
-    u = User.new(role: :supervisor)
-    %w[case:delete case_config:manage invocation:review reference_doc:manage
-       report:operational connector:invoke contact:delete lead:delete deal:delete].each do |p|
-      assert u.can?(p), "legacy supervisor should hold #{p}"
-    end
-    # supervisor was NOT a user-manager / platform admin / pipeline-manager today.
-    %w[user:manage audit:read settings:manage connector:manage connector:read
-       pipeline:manage ai:autonomy finance:read].each do |p|
-      refute u.can?(p), "legacy supervisor should NOT hold #{p}"
-    end
-  end
-
-  test "legacy agent matches the old can_work authority (restricted)" do
-    u = User.new(role: :agent)
-    %w[case:write contact:write lead:write deal:write pipeline:read sequence:enroll report:sales].each do |p|
-      assert u.can?(p), "legacy agent should hold #{p}"
-    end
-    # agent could not delete, manage config, see the operational dashboard, or invoke.
-    %w[case:delete contact:delete case_config:manage report:operational connector:invoke
-       reference_doc:manage invocation:review].each do |p|
-      refute u.can?(p), "legacy agent should NOT hold #{p}"
-    end
-  end
-
   test "can? is fail-closed for unknown or blank permissions" do
     u = User.new(role: :super_admin)
     refute u.can?("nonsense:action")

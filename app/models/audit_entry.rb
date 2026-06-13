@@ -12,6 +12,11 @@ class AuditEntry < ApplicationRecord
   # classes have no with_deleted scope.
   belongs_to :actor, -> { with_deleted }, polymorphic: true, optional: true
   belongs_to :auditable, polymorphic: true
+  # The chain itself stays GLOBAL (AuditEntry is deliberately NOT acts_as_tenant):
+  # tenant_id is a denormalized filter column for per-tenant audit views only. It
+  # is NEVER part of canonical_json — adding it would re-hash every entry and
+  # break verify_chain. Nullable (pre-tenancy + global-auditable entries).
+  belongs_to :tenant, optional: true
 
   validates :action, :previous_sha, :sha, presence: true
 
@@ -28,6 +33,7 @@ class AuditEntry < ApplicationRecord
         action: action,
         auditable: auditable,
         actor: actor,
+        tenant_id: ActsAsTenant.current_tenant&.id, # filter-only; not in canonical_json
         changeset: changeset,
         metadata: metadata.presence,
         previous_sha: order(id: :desc).limit(1).pick(:sha) || GENESIS_SHA,

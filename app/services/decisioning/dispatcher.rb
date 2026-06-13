@@ -31,17 +31,53 @@ module Decisioning
         decision.update!(
           version: proposal.version, subject_label: proposal.subject_label, signal: proposal.signal,
           recommendation: proposal.recommendation, effect: proposal.effect.to_s,
-          decision_class: proposal.decision_class.to_s, reasoning: proposal.reasoning
+          decision_class: proposal.decision_class.to_s, reasoning: proposal.reasoning,
+          action: (proposal.action.presence || "label"), action_params: proposal.action_params
         )
         decision
       end
     end
 
-    # Attach the decision's label to its subject and mark it applied.
+    # Perform the decision's action on its subject and mark it applied. The
+    # action gates by decision_class upstream (autonomous auto-applies; confirm/
+    # of_record reach here only after approve!), so a richer action — routing a
+    # case, enrolling a lead — rides the same accountability path as a label.
     def apply!(decision)
-      decision.subject&.try(:add_label, decision.signal)
+      perform_action!(decision)
       decision.update!(status: :applied, decided_at: Time.current)
       decision
+    end
+
+    # Best-effort reversal of an applied decision's effect (used by the appeal
+    # overturn path). Labels and enrollments reverse cleanly; a re-route can't be
+    # undone without the prior queue, so it's left as a no-op.
+    def reverse!(decision)
+      subject = decision.subject
+      case decision.action
+      when "enroll_lead"
+        sequence_id = decision.action_params&.dig("sequence_id")
+        SequenceEnrollment.where(enrollable: subject, sequence_id: sequence_id)
+                          .find_each { |e| e.update!(status: :cancelled) }
+      when "route_case" then nil # no prior queue recorded
+      else subject&.try(:remove_label, decision.signal)
+      end
+      decision
+    end
+
+    def perform_action!(decision)
+      subject = decision.subject
+      case decision.action
+      when "route_case"
+        queue_id = decision.action_params&.dig("queue_id")
+        subject.update!(queue_id: queue_id) if queue_id && subject.respond_to?(:queue_id=)
+      when "enroll_lead"
+        sequence = Sequence.find_by(id: decision.action_params&.dig("sequence_id"))
+        if sequence && subject && !SequenceEnrollment.exists?(sequence: sequence, enrollable: subject)
+          sequence.enroll!(subject)
+        end
+      else # "label" — attach the reversible segment tag (the default)
+        subject&.try(:add_label, decision.signal)
+      end
     end
 
     # Human path for confirm / of_record: an approver releases a parked decision.
@@ -59,6 +95,34 @@ module Decisioning
       raise Decisioning::Error, "decision is not awaiting confirmation" unless decision.status_proposed?
       decision.update!(status: :rejected, approved_by: approver, decided_at: Time.current)
       decision
+    end
+
+    # ── Appeal / contest path (for decisions of record) ─────────────────────
+    # File a contest against an applied decision of record. The grounds are the
+    # appellant's case; appellant is the contesting customer (optional — staff
+    # may record it on their behalf).
+    def file_appeal!(decision, grounds:, appellant: nil)
+      raise Decisioning::Error, "only an applied decision of record can be appealed" unless decision.appealable?
+      decision.appeals.create!(grounds: grounds, appellant: appellant)
+    end
+
+    # Overturn (grant) an appeal: reverse the decision's effect and dismiss it.
+    # Like a decision of record itself, an overturn is a reasoned order.
+    def overturn_appeal!(appeal, reviewer:, reason:)
+      raise Decisioning::Error, "appeal is already resolved" unless appeal.status_pending?
+      raise Decisioning::Error, "overturning requires a reasoned order" if reason.to_s.strip.blank?
+
+      reverse!(appeal.decision)
+      appeal.decision.update!(status: :dismissed)
+      appeal.update!(status: :overturned, reviewed_by: reviewer, resolution: reason, resolved_at: Time.current)
+      appeal
+    end
+
+    # Deny an appeal: the decision stands.
+    def deny_appeal!(appeal, reviewer:, reason: nil)
+      raise Decisioning::Error, "appeal is already resolved" unless appeal.status_pending?
+      appeal.update!(status: :denied, reviewed_by: reviewer, resolution: reason.presence, resolved_at: Time.current)
+      appeal
     end
   end
 end

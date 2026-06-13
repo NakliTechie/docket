@@ -8,14 +8,14 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
   Action = Connectors::Provider::Action
 
   def build_action(effect: :write, decision_class: nil)
-    Action.new(key: "act", name: "Act", summary: "s", params: {},
+    Action.new(key: "post_json", name: "Act", summary: "s", params: {},
                effect: effect, decision_class: decision_class)
   end
 
   def connector(auto_approve: [])
     Connector.create!(name: "E", provider: "http_json", target: "contacts",
       config: {}, field_mapping: { "external_id" => "id" },
-      enabled_actions: %w[act], auto_approve_actions: auto_approve)
+      enabled_actions: %w[post_json], auto_approve_actions: auto_approve)
   end
 
   def agent
@@ -24,7 +24,7 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
 
   def staff
     User.create!(name: "Sup", email_address: "s-#{SecureRandom.hex(4)}@x.test",
-                 password: "password123", role: :supervisor)
+                 password: "password123", role: :client_admin)
   end
 
   # Stub the action lookup + execution so we test the gate, not a provider.
@@ -36,7 +36,7 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
   end
 
   def call(conn)
-    Connectors::Invoke.call(conn, "act", args: { "x" => 1 }, principal: agent, on_behalf_of: "case:1")
+    Connectors::Invoke.call(conn, "post_json", args: { "x" => 1 }, principal: agent, on_behalf_of: "case:1")
   end
 
   # --- derivation from effect ---
@@ -69,7 +69,7 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
   end
 
   test "a decision of record always parks for a human — auto-approve cannot bypass it" do
-    conn = connector(auto_approve: %w[act])
+    conn = connector(auto_approve: %w[post_json])
     stub(conn, build_action(decision_class: :of_record))
     inv = call(conn)
     assert inv.status_proposed?
@@ -77,7 +77,7 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
   end
 
   test "a confirm action respects the connector's auto-approve list" do
-    conn = connector(auto_approve: %w[act])
+    conn = connector(auto_approve: %w[post_json])
     stub(conn, build_action(effect: :write)) # → confirm
     inv = call(conn)
     assert inv.status_succeeded?

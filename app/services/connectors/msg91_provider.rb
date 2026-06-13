@@ -3,7 +3,7 @@ module Connectors
   # dominant India CPaaS). Auth is the `authkey` header (vaulted). Citizen-
   # facing comms default to :confirm — a human reviews before it goes out
   # (the connector can auto-approve it if the operator trusts the template).
-  class Msg91Provider < Provider
+  class Msg91Provider < HttpProvider
     def self.descriptor
       Descriptor.new(
         key: "msg91", name: "MSG91 (SMS / WhatsApp)", category: "Communications",
@@ -28,10 +28,6 @@ module Connectors
           effect: :write, decision_class: :confirm
         )
       ]
-    end
-
-    def fetch
-      []
     end
 
     def invoke(action_key, args, _context = {})

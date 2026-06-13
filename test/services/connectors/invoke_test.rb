@@ -15,7 +15,7 @@ class Connectors::InvokeTest < ActiveSupport::TestCase
     ServiceAccount.create!(name: "Triage agent", scopes: scopes)
   end
 
-  def staff(role: :supervisor)
+  def staff(role: :client_admin)
     User.create!(name: "Sup", email_address: "sup-#{SecureRandom.hex(4)}@x.test",
                  password: "password123", role: role)
   end

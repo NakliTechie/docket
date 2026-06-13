@@ -82,4 +82,15 @@ class CrossTenantIsolationTest < ActiveSupport::TestCase
     ActsAsTenant.with_tenant(@acme) { Contact.create!(name: "A", email: "a2@acme.test") }
     assert AuditEntry.verify_chain[:ok], "mixed-tenant audit entries verify as one chain"
   end
+
+  test "audit entries stamp the acting tenant but keep it out of the hashed payload" do
+    contact = ActsAsTenant.with_tenant(@acme) { Contact.create!(name: "A", email: "audit@acme.test") }
+    entry = AuditEntry.where(auditable: contact, action: "contact.create").last
+
+    assert_equal @acme.id, entry.tenant_id, "entry stamped with the acting tenant"
+    # tenant_id must NOT enter canonical_json — it stays the fixed 8 fields, or
+    # verify_chain would break for every pre-tenancy entry.
+    assert_equal 8, JSON.parse(entry.canonical_json).size
+    assert AuditEntry.verify_chain(cache: false)[:ok]
+  end
 end

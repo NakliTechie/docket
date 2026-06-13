@@ -32,7 +32,7 @@ class SecurityEventsTest < ActionDispatch::IntegrationTest
   end
 
   test "non-admins cannot view the security log" do
-    sign_in_as users(:supervisor)
+    sign_in_as users(:sales)
     get admin_security_events_path
     assert_response :forbidden
   end

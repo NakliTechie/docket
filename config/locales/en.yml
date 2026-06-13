@@ -33,6 +33,7 @@ en:
       integrations: "Integrations"
       connectors: "Connectors"
       agent_actions: "Agent actions"
+      decision_appeals: "Appeals"
 
   locales:
     en: "English"
@@ -822,9 +823,6 @@ en:
         customer_service: "Customer service"
         technical: "Technical"
         readonly: "Read-only"
-        admin: "Admin"
-        supervisor: "Supervisor"
-        agent: "Agent"
 
   macros:
     fields:
@@ -1540,6 +1538,29 @@ en:
         cannot_suspend_primary: "The primary tenant cannot be suspended."
       activate:
         activated: "Tenant %{name} activated."
+    decision_appeals:
+      index:
+        title: "Decision appeals"
+        intro: "Contests against decisions of record. Overturn reverses the decision; deny lets it stand. Overturning is a reasoned order."
+        open_appeals: "Open appeals"
+        no_open_appeals: "No appeals awaiting review."
+        file_against: "Decisions of record (appealable)"
+        none_appealable: "No applied decisions of record to appeal."
+        already_appealed: "Appeal open"
+        file: "File appeal"
+        overturn: "Overturn"
+        deny: "Deny"
+        reason_placeholder: "Reasoned order (required to overturn)"
+        grounds_placeholder: "Grounds for the appeal"
+        columns:
+          decision: "Decision"
+          grounds: "Grounds"
+      create:
+        filed: "Appeal filed."
+      overturn:
+        overturned: "Appeal upheld — the decision was reversed."
+      deny:
+        denied: "Appeal denied — the decision stands."
     activity:
       index:
         title: "Activity & Usage"

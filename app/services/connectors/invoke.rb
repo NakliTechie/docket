@@ -26,6 +26,7 @@ module Connectors
       end
 
       Budget.enforce!(principal)
+      Budget.enforce_connector!(connector)
 
       invocation = nil
       Current.set(actor: principal, on_behalf_of: on_behalf_of) do

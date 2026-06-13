@@ -10,6 +10,7 @@ module Decisioning
   Proposal = Struct.new(
     :rule, :version, :subject_type, :subject_id, :subject_label,
     :signal, :recommendation, :effect, :decision_class, :reasoning,
+    :action, :action_params,
     keyword_init: true
   ) do
     def autonomous? = decision_class == :autonomous
