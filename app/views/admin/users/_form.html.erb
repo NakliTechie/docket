@@ -23,7 +23,9 @@
 
   <div class="form-row">
     <%= f.label :role, t("admin.users.fields.role") %>
-    <%= f.select :role, User.roles.keys.map { |r| [ t("users.enum.role.#{r}"), r ] } %>
+    <%# Only functional roles are assignable; a not-yet-migrated user's legacy
+        role is kept in the list so editing them doesn't silently reassign. %>
+    <%= f.select :role, (Authz::ASSIGNABLE_ROLES | [ user.role ]).compact.map { |r| [ t("users.enum.role.#{r}"), r ] } %>
   </div>
 
   <div class="form-row">

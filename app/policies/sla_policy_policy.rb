@@ -1,9 +1,9 @@
 class SlaPolicyPolicy < ApplicationPolicy
-  def index?   = staff?
-  def show?    = staff?
-  def create?  = admin? || supervisor?
-  def update?  = admin? || supervisor?
-  def destroy? = admin? || supervisor?
+  def index?   = permit?("case:read")
+  def show?    = permit?("case:read")
+  def create?  = permit?("case_config:manage")
+  def update?  = permit?("case_config:manage")
+  def destroy? = permit?("case_config:manage")
 
   class Scope < Scope
     def resolve

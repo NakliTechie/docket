@@ -23,6 +23,7 @@ hi:
       pipelines: "पाइपलाइनें"
       sequences: "अनुक्रम"
       users: "उपयोगकर्ता"
+      roles: "भूमिकाएँ"
       activity: "गतिविधि"
       audit: "ऑडिट"
       security_events: "सुरक्षा लॉग"
@@ -813,10 +814,16 @@ hi:
   users:
     enum:
       role:
+        super_admin: "सुपर प्रशासक"
+        client_admin: "क्लाइंट प्रशासक"
+        finance: "वित्त"
+        sales: "बिक्री"
+        customer_service: "ग्राहक सेवा"
+        technical: "तकनीकी"
+        readonly: "केवल-पठन"
         admin: "प्रशासक"
         supervisor: "पर्यवेक्षक"
         agent: "एजेंट"
-        readonly: "केवल-पठन"
 
   macros:
     fields:
@@ -1495,6 +1502,13 @@ hi:
         updated: "संदर्भ दस्तावेज़ अद्यतन किया गया।"
       destroy:
         deleted: "संदर्भ दस्तावेज़ हटाया गया।"
+    roles:
+      index:
+        title: "भूमिकाएँ और अनुमतियाँ"
+        intro: "प्रत्येक भूमिका क्या कर सकती है। अनुमतियाँ resource:action रूप में हैं; ✓ का अर्थ है प्रदान किया गया। भूमिकाएँ उपयोगकर्ता अनुभाग में प्रति उपयोगकर्ता सौंपी जाती हैं।"
+        permission_column: "अनुमति"
+        granted: "प्रदान किया गया"
+        denied: "प्रदान नहीं किया गया"
     activity:
       index:
         title: "गतिविधि और उपयोग"

@@ -54,6 +54,7 @@ Rails.application.routes.draw do
         post :deactivate
       end
     end
+    get "roles", to: "roles#index", as: :roles
     get "activity", to: "activity#index", as: :activity
     get "audit", to: "audit#show", as: :audit
     get "security_events", to: "security_events#index", as: :security_events

@@ -10,7 +10,7 @@ admin_created = false
 
 admin = User.find_or_create_by!(email_address: "admin@docket.local") do |user|
   user.name = "Docket Admin"
-  user.role = :admin
+  user.role = :super_admin # break-glass: the platform tier (does everything)
   user.password = admin_password
   admin_created = true
 end

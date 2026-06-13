@@ -23,6 +23,7 @@ en:
       pipelines: "Pipelines"
       sequences: "Sequences"
       users: "Users"
+      roles: "Roles"
       activity: "Activity"
       audit: "Audit"
       security_events: "Security log"
@@ -813,10 +814,16 @@ en:
   users:
     enum:
       role:
+        super_admin: "Super admin"
+        client_admin: "Client admin"
+        finance: "Finance"
+        sales: "Sales"
+        customer_service: "Customer service"
+        technical: "Technical"
+        readonly: "Read-only"
         admin: "Admin"
         supervisor: "Supervisor"
         agent: "Agent"
-        readonly: "Read-only"
 
   macros:
     fields:
@@ -1495,6 +1502,13 @@ en:
         updated: "Reference document updated."
       destroy:
         deleted: "Reference document deleted."
+    roles:
+      index:
+        title: "Roles & permissions"
+        intro: "What each role may do. Permissions are resource:action; ✓ means granted. Roles are assigned per user under Users."
+        permission_column: "Permission"
+        granted: "Granted"
+        denied: "Not granted"
     activity:
       index:
         title: "Activity & Usage"

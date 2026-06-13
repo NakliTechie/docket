@@ -1,15 +1,15 @@
 class ConnectorPolicy < ApplicationPolicy
-  def index?   = admin?
-  def show?    = admin?
-  def new?     = admin?
-  def create?  = admin?
-  def edit?    = admin?
-  def update?  = admin?
-  def destroy? = admin?
+  def index?   = permit?("connector:read")
+  def show?    = permit?("connector:read")
+  def new?     = permit?("connector:manage")
+  def create?  = permit?("connector:manage")
+  def edit?    = permit?("connector:manage")
+  def update?  = permit?("connector:manage")
+  def destroy? = permit?("connector:manage")
 
   class Scope < Scope
     def resolve
-      admin? ? scope.all : scope.none
+      permit?("connector:read") ? scope.all : scope.none
     end
   end
 end

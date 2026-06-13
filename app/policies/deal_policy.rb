@@ -1,10 +1,10 @@
 class DealPolicy < ApplicationPolicy
-  def index?   = staff?
-  def show?    = staff?
-  def create?  = can_work?
-  def update?  = can_work?
-  def move?    = can_work?
-  def destroy? = admin? || supervisor?
+  def index?   = permit?("deal:read")
+  def show?    = permit?("deal:read")
+  def create?  = permit?("deal:write")
+  def update?  = permit?("deal:write")
+  def move?    = permit?("deal:write")
+  def destroy? = permit?("deal:delete")
 
   class Scope < Scope
     def resolve

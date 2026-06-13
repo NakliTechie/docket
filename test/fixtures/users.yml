@@ -41,3 +41,47 @@ inactive:
   password_digest: <%= password_digest %>
   role: agent
   active: false
+
+# Functional roles (the target model). Legacy admin/supervisor/agent above are
+# kept to prove the transition is authority-neutral.
+super_admin:
+  name: Priya Platform
+  email_address: super.admin@example.com
+  password_digest: <%= password_digest %>
+  role: super_admin
+  active: true
+
+client_admin:
+  name: Chetan ClientAdmin
+  email_address: client.admin@example.com
+  password_digest: <%= password_digest %>
+  role: client_admin
+  active: true
+
+finance:
+  name: Farah Finance
+  email_address: finance@example.com
+  password_digest: <%= password_digest %>
+  role: finance
+  active: true
+
+sales:
+  name: Sanjay Sales
+  email_address: sales@example.com
+  password_digest: <%= password_digest %>
+  role: sales
+  active: true
+
+customer_service:
+  name: Kavya CustomerService
+  email_address: customer.service@example.com
+  password_digest: <%= password_digest %>
+  role: customer_service
+  active: true
+
+technical:
+  name: Tarun Technical
+  email_address: technical@example.com
+  password_digest: <%= password_digest %>
+  role: technical
+  active: true

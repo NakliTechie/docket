@@ -1,11 +1,11 @@
 class LeadPolicy < ApplicationPolicy
-  def index?   = staff?
-  def show?    = staff?
-  def create?  = can_work?
-  def update?  = can_work?
-  def convert? = can_work?
-  def mark_unqualified? = can_work?
-  def destroy? = admin? || supervisor?
+  def index?   = permit?("lead:read")
+  def show?    = permit?("lead:read")
+  def create?  = permit?("lead:write")
+  def update?  = permit?("lead:write")
+  def convert? = permit?("lead:write")
+  def mark_unqualified? = permit?("lead:write")
+  def destroy? = permit?("lead:delete")
 
   class Scope < Scope
     def resolve

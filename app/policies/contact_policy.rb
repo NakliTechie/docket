@@ -1,9 +1,9 @@
 class ContactPolicy < ApplicationPolicy
-  def index?   = staff?
-  def show?    = staff?
-  def create?  = can_work?
-  def update?  = can_work?
-  def destroy? = admin? || supervisor?
+  def index?   = permit?("contact:read")
+  def show?    = permit?("contact:read")
+  def create?  = permit?("contact:write")
+  def update?  = permit?("contact:write")
+  def destroy? = permit?("contact:delete")
 
   class Scope < Scope
     def resolve

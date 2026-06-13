@@ -3,17 +3,17 @@ module Admin
     before_action :set_account, only: %i[edit update destroy rotate_secret]
 
     def index
-      authorize :service_accounts, policy_class: AdminAreaPolicy
+      authorize :service_accounts, policy_class: PlatformAreaPolicy
       @service_accounts = ServiceAccount.order(:name)
     end
 
     def new
-      authorize :service_accounts, policy_class: AdminAreaPolicy
+      authorize :service_accounts, policy_class: PlatformAreaPolicy
       @service_account = ServiceAccount.new
     end
 
     def create
-      authorize :service_accounts, policy_class: AdminAreaPolicy
+      authorize :service_accounts, policy_class: PlatformAreaPolicy
       @service_account = ServiceAccount.new(account_params)
       if @service_account.save
         flash[:client_secret] = @service_account.raw_client_secret
@@ -24,11 +24,11 @@ module Admin
     end
 
     def edit
-      authorize :service_accounts, policy_class: AdminAreaPolicy
+      authorize :service_accounts, policy_class: PlatformAreaPolicy
     end
 
     def update
-      authorize :service_accounts, policy_class: AdminAreaPolicy
+      authorize :service_accounts, policy_class: PlatformAreaPolicy
       if @service_account.update(account_params)
         @service_account.deactivate! unless @service_account.active
         redirect_to admin_service_accounts_path, notice: t(".updated")
@@ -38,14 +38,14 @@ module Admin
     end
 
     def destroy
-      authorize :service_accounts, policy_class: AdminAreaPolicy
+      authorize :service_accounts, policy_class: PlatformAreaPolicy
       @service_account.deactivate!
       @service_account.destroy
       redirect_to admin_service_accounts_path, notice: t(".deleted"), status: :see_other
     end
 
     def rotate_secret
-      authorize :service_accounts, policy_class: AdminAreaPolicy
+      authorize :service_accounts, policy_class: PlatformAreaPolicy
       flash[:client_secret] = @service_account.rotate_secret!
       redirect_to admin_service_accounts_path, notice: t(".rotated")
     end

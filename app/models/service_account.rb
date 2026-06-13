@@ -16,6 +16,27 @@ class ServiceAccount < ApplicationRecord
     connectors:read connectors:invoke
   ].freeze
 
+  # Each M2M scope projected onto the console permission vocabulary, so a scope
+  # is a provable slice of Authz::PERMISSIONS rather than a parallel hand-list.
+  # A test asserts the values are a subset of Authz::PERMISSIONS and the keys
+  # match SCOPES exactly (catches drift either way). See plan/rbac-research.
+  SCOPE_PERMISSIONS = {
+    "cases:read" => %w[case:read],
+    "cases:write" => %w[case:write],
+    "contacts:read" => %w[contact:read],
+    "contacts:write" => %w[contact:write],
+    "organisations:read" => %w[contact:read],
+    "organisations:write" => %w[contact:write],
+    "crm:read" => %w[lead:read deal:read pipeline:read],
+    "crm:write" => %w[lead:write deal:write],
+    "config:read" => %w[settings:manage case_config:manage],
+    "config:write" => %w[settings:manage case_config:manage],
+    "audit:read" => %w[audit:read],
+    "webhooks:manage" => %w[webhook:manage],
+    "connectors:read" => %w[connector:read],
+    "connectors:invoke" => %w[connector:invoke]
+  }.freeze
+
   has_many :oauth_access_tokens, dependent: :delete_all
 
   # Default rolling window for the effector action budget when an agent sets
