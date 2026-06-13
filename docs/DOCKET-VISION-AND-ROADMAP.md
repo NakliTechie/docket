@@ -35,7 +35,7 @@ What Docket is **not** (not contested): forecasting, CPQ, territory management, 
 ## 4. Architecture posture
 
 - **Chassis**: Ruby on Rails 8 + Hotwire. Same chassis family as the commerce platform and Parley. Postgres primary; SQLite for dev/demo. Solid Queue + Solid Cache — no Redis, no external dependencies that complicate self-hosting.
-- **Single-tenant always.** One deployment = one organisation, one database. Multi-tenancy is delivered at the hosting layer by the fleet console (v1.2): the operator runs N isolated instances. The core never carries a `tenant_id` — isolation is the product and the procurement asset.
+- **Two deployment topologies, one codebase** (decision 2026-06-13). *Isolated* — the default and the sovereign procurement asset: one deployment = one organisation = one database, with nothing of another client in it. *Shared* — multiple tenants on shared infrastructure, scoped by `tenant_id` and resolved by subdomain (`acme.docket.app`), for SMBs who can't fund a dedicated instance. The core now carries a `tenant_id` and runs tenant-scoped (`acts_as_tenant`), but an **isolated deploy is the degenerate single-tenant case** — one tenant row, scoping a constant predicate — so "your data, your database, no other client's rows" stays literally true. The mode is set per deploy by `DOCKET_DEPLOYMENT_MODE` (`isolated`|`shared`, default `isolated`); scoping fails closed in shared mode. "Isolation is the product" remains true for the isolated SKU — it is simply no longer the *only* model.
 - **Shared primitive**: the support-agent primitive (operator-owned small models, confidence gating, BYOK escape hatch) is shared with Parley at the pattern level. Code reuse where clean; no shared runtime, no shared DB.
 - **Agent face is non-negotiable**: every UI action is a REST API call. OpenAPI spec generated. Docket's own AI agent and any external agent consume the same API. NakliPoster collection ships with v1.0.
 - **Audit**: append-only, hash-chained audit log on every case mutation (tamper-evident pattern proven in Sunshine). For a government buyer this is a headline feature, not plumbing.
@@ -74,7 +74,7 @@ What Docket is **not** (not contested): forecasting, CPQ, territory management, 
 ### v1.2 — the CRM module + the fleet
 - Sales objects: Lead, Deal, Pipeline (kanban), Sequence. Sequences route through the configured comms gateway.
 - Connector framework (commerce-platform connector as reference; same interface discipline as ShopifyCloneConnector).
-- **Fleet console (operator product)**: provisions, upgrades, monitors, and backs up N isolated single-tenant Docket instances (Kamal/K8s). Multi-tenancy delivered as a hosting capability — one client, one database, always. The core never gains a `tenant_id`.
+- **Fleet console (operator product)**: provisions, upgrades, monitors, and backs up the fleet — either N **isolated** single-tenant instances (Kamal/K8s, one client one database) or **shared**-instance tenants (provisioned via `Tenants::Provisioner` / the in-app super_admin platform console at `/admin/tenants`). Multi-tenancy is delivered both ways: dedicated-instance isolation for sovereign buyers, shared-tenant for SMBs who can't fund a dedicated instance.
 
 ### v1.x candidates (unscheduled)
 - IVR intake adapter. DigiLocker/API Setu integration (API-ready in v1.0 schema; integration deferred — no Aadhaar data handling until explicitly scoped with legal posture).

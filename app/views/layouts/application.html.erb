@@ -55,9 +55,12 @@
 
           <% if policy(User).index? %>
             <%= nav_group t("layout.nav.admin"),
-                  active: %w[users roles activity audit security_events service_accounts api_tokens webhook_endpoints connectors shared_credentials settings].include?(controller_name) do %>
+                  active: %w[users roles tenants activity audit security_events service_accounts api_tokens webhook_endpoints connectors shared_credentials settings].include?(controller_name) do %>
               <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
               <%= nav_link t("layout.nav.roles"), admin_roles_path, active: controller_name == "roles" %>
+              <% if policy(Tenant).index? %>
+                <%= nav_link t("layout.nav.tenants"), admin_tenants_path, active: controller_name == "tenants" %>
+              <% end %>
               <%= nav_link t("layout.nav.activity"), admin_activity_path, active: controller_name == "activity" %>
               <%= nav_link t("layout.nav.audit"), admin_audit_path, active: controller_name == "audit" %>
               <%= nav_link t("layout.nav.security_events"), admin_security_events_path, active: controller_name == "security_events" %>

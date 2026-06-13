@@ -22,7 +22,7 @@ class AuthzMatrixTest < ActiveSupport::TestCase
   end
 
   test "platform plumbing is super_admin-only among functional roles" do
-    %w[settings:manage service_account:manage api_token:manage connector:manage ai:autonomy].each do |perm|
+    %w[settings:manage service_account:manage api_token:manage connector:manage ai:autonomy tenant:manage].each do |perm|
       holders = Authz::ASSIGNABLE_ROLES.select { |r| Authz.permissions_for(r).include?(perm) }
       assert_equal %w[super_admin], holders, "#{perm} should be super_admin-only"
     end

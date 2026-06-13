@@ -24,6 +24,7 @@ hi:
       sequences: "अनुक्रम"
       users: "उपयोगकर्ता"
       roles: "भूमिकाएँ"
+      tenants: "टेनेंट"
       activity: "गतिविधि"
       audit: "ऑडिट"
       security_events: "सुरक्षा लॉग"
@@ -1509,6 +1510,36 @@ hi:
         permission_column: "अनुमति"
         granted: "प्रदान किया गया"
         denied: "प्रदान नहीं किया गया"
+    tenants:
+      index:
+        title: "टेनेंट"
+        intro: "इस परिनियोजन पर संगठनों का बेड़ा। पृथक परिनियोजन में केवल एक होता है; साझा परिनियोजन में अनेक, प्रत्येक का अपना डेटा और सबडोमेन।"
+        provision: "टेनेंट बनाएँ"
+        admin_password_once: "नए टेनेंट एडमिन का पासवर्ड (एक बार दिखाया गया — टेनेंट एडमिन को दें):"
+        primary: "प्राथमिक"
+        suspend: "निलंबित करें"
+        activate: "सक्रिय करें"
+        columns:
+          name: "नाम"
+          subdomain: "सबडोमेन"
+          status: "स्थिति"
+          cases: "मामले"
+      new:
+        title: "टेनेंट बनाएँ"
+        submit: "बनाएँ"
+        subdomain_hint: "छोटे अक्षर, अंक और हाइफ़न। साझा परिनियोजन में टेनेंट इसी सबडोमेन पर पहुँचा जाता है।"
+        admin_email_hint: "वैकल्पिक। टेनेंट का पहला क्लाइंट-एडमिन बनाता है और एक-बार का पासवर्ड दिखाता है।"
+        fields:
+          name: "संगठन का नाम"
+          subdomain: "सबडोमेन"
+          admin_email: "एडमिन ईमेल"
+      create:
+        created: "टेनेंट %{name} बना दिया गया।"
+      suspend:
+        suspended: "टेनेंट %{name} निलंबित कर दिया गया।"
+        cannot_suspend_primary: "प्राथमिक टेनेंट को निलंबित नहीं किया जा सकता।"
+      activate:
+        activated: "टेनेंट %{name} सक्रिय कर दिया गया।"
     activity:
       index:
         title: "गतिविधि और उपयोग"

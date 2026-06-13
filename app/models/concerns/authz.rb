@@ -26,7 +26,7 @@ module Authz
     report:operational report:sales finance:read finance:write
     connector:read connector:operate connector:manage connector:invoke
     invocation:review reference_doc:manage
-    user:manage settings:manage audit:read
+    user:manage settings:manage audit:read tenant:manage
     service_account:manage api_token:manage webhook:manage
   ].freeze
 

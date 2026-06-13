@@ -114,6 +114,12 @@ Rails.application.configure do
   # always allowed; /up stays reachable for health checks regardless.
   allowed_hosts = ENV["DOCKET_ALLOWED_HOSTS"].to_s.split(",").map(&:strip).reject(&:blank?)
   allowed_hosts << ENV["DOCKET_HOST"] if ENV["DOCKET_HOST"].present?
+  # Shared deployments serve every tenant on a subdomain of the base domain, so
+  # allow the whole `*.base-domain` space (a leading dot matches the domain and
+  # all its subdomains). Isolated deployments stay pinned to their single host.
+  if ENV["DOCKET_DEPLOYMENT_MODE"] == "shared" && ENV["DOCKET_BASE_DOMAIN"].present?
+    allowed_hosts << ".#{ENV['DOCKET_BASE_DOMAIN']}"
+  end
   config.hosts.concat(allowed_hosts.uniq) if allowed_hosts.any?
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

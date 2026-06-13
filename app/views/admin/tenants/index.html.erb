@@ -1,0 +1,46 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <%= link_to t(".provision"), new_admin_tenant_path, class: "btn btn-primary" %>
+</div>
+
+<p class="muted"><%= t(".intro") %></p>
+
+<% if flash[:tenant_admin_password] %>
+  <div class="flash flash-notice">
+    <%= t(".admin_password_once") %> <code class="mono"><%= flash[:tenant_admin_password] %></code>
+  </div>
+<% end %>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th><%= t(".columns.name") %></th>
+        <th><%= t(".columns.subdomain") %></th>
+        <th><%= t(".columns.status") %></th>
+        <th><%= t(".columns.cases") %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @tenants.each do |tenant| %>
+        <tr>
+          <td><%= tenant.name %></td>
+          <td class="mono"><%= tenant.subdomain.presence || "—" %></td>
+          <td><span class="badge badge-role"><%= tenant.status %></span></td>
+          <td><%= @case_counts[tenant.id] %></td>
+          <td class="table-actions">
+            <% if tenant.slug == Tenant::PRIMARY_SLUG %>
+              <span class="muted"><%= t(".primary") %></span>
+            <% elsif tenant.active? %>
+              <%= button_to t(".suspend"), suspend_admin_tenant_path(tenant), class: "btn btn-sm" %>
+            <% else %>
+              <%= button_to t(".activate"), activate_admin_tenant_path(tenant), class: "btn btn-sm" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

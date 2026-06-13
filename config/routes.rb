@@ -55,6 +55,12 @@ Rails.application.routes.draw do
       end
     end
     get "roles", to: "roles#index", as: :roles
+    resources :tenants, only: %i[index new create] do
+      member do
+        post :suspend
+        post :activate
+      end
+    end
     get "activity", to: "activity#index", as: :activity
     get "audit", to: "audit#show", as: :audit
     get "security_events", to: "security_events#index", as: :security_events
