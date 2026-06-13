@@ -15,6 +15,9 @@ Rails.application.routes.draw do
     post "assist/summarise", to: "assists#summarise", as: :assist_summarise
     post "assist/suggest_reply", to: "assists#suggest_reply", as: :assist_suggest_reply
   end
+  # In-console knowledge-base search (staff): a turbo-frame of matching
+  # articles the agent can insert into a reply.
+  get "knowledge_base/search", to: "knowledge_base#search", as: :knowledge_base_search
   resources :contacts
   resources :organisations
   resources :queues, controller: "case_queues", as: :case_queues, except: :show
@@ -25,6 +28,12 @@ Rails.application.routes.draw do
   end
   resources :sla_policies, except: :show
   resources :macros, except: :show
+  resources :routing_rules, except: :show do
+    member do
+      patch :move
+    end
+  end
+  resources :approval_processes, except: :show
 
   # Sales funnel (v1.2 CRM)
   resources :leads do
@@ -67,12 +76,20 @@ Rails.application.routes.draw do
         post :deny
       end
     end
+    resources :approval_requests, only: %i[index] do
+      member do
+        post :approve
+        post :reject
+      end
+    end
     get "activity", to: "activity#index", as: :activity
     get "audit", to: "audit#show", as: :audit
     get "security_events", to: "security_events#index", as: :security_events
     get "settings", to: "settings#show", as: :settings
     patch "settings", to: "settings#update"
-    resources :reference_docs, except: :show
+    resources :reference_docs, except: :show do
+      member { post :toggle_published }
+    end
     resources :api_tokens, only: %i[index create destroy]
     resources :service_accounts, except: :show do
       member do
@@ -105,8 +122,10 @@ Rails.application.routes.draw do
     resources :shared_credentials, except: :show
   end
 
-  # Inbound connector webhook ping (HMAC-signed, unauthenticated).
+  # Inbound connector webhook ping (HMAC-signed, unauthenticated). GET is the
+  # platform webhook-URL verification handshake (WhatsApp Cloud).
   post "connectors/:id/webhook", to: "connectors/webhooks#create", as: :connector_webhook
+  get  "connectors/:id/webhook", to: "connectors/webhooks#verify", as: :connector_webhook_verify
 
   # Public lead-capture form (v1.2 CRM) — unauthenticated.
   get "inquiry", to: "inquiries#new", as: :inquiry
@@ -114,6 +133,7 @@ Rails.application.routes.draw do
 
   namespace :portal do
     root to: "cases#new"
+    resources :kb, only: %i[index show], controller: "knowledge_base", param: :slug
     resources :cases, only: %i[new create]
     get "track", to: "tracking#new", as: :track
     post "track", to: "tracking#show", as: :track_lookup
@@ -137,6 +157,8 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "oauth/token", to: "oauth#token"
       get "openapi.json", to: "openapi#show"
+      # MCP server face (PG5): JSON-RPC over the api/v1 surface.
+      post "mcp", to: "mcp#handle"
 
       resources :cases, only: %i[index show create update destroy] do
         member do

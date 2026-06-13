@@ -15,22 +15,32 @@
       <thead>
         <tr>
           <th><%= t(".columns.title") %></th>
-          <th><%= t(".columns.body") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th><%= t(".columns.category") %></th>
           <th><%= t(".columns.file") %></th>
           <th class="actions"><%= t("tables.actions") %></th>
         </tr>
       </thead>
       <tbody>
         <% @reference_docs.each do |doc| %>
-          <tr>
+          <tr class="<%= "muted-row" if doc.status_draft? %>">
             <td><%= doc.title %></td>
-            <td class="table-meta"><%= doc.body.truncate(120) %></td>
+            <td>
+              <span class="badge <%= doc.status_published? ? "badge-success" : "" %>"><%= t("reference_docs.enum.status.#{doc.status}") %></span>
+              <% if doc.visibility_public? %>
+                <span class="badge"><%= t("reference_docs.enum.visibility.public") %></span>
+              <% end %>
+            </td>
+            <td class="table-meta"><%= doc.category&.name %></td>
             <td class="table-meta">
               <% if doc.file.attached? %>
                 <%= link_to doc.file.filename, rails_blob_path(doc.file, disposition: "attachment") %>
               <% end %>
             </td>
             <td class="actions">
+              <%= button_to doc.status_published? ? t(".unpublish") : t(".publish"),
+                    toggle_published_admin_reference_doc_path(doc), method: :post,
+                    class: "btn btn-sm", form: { class: "inline-form" } %>
               <%= link_to t("actions.edit"), edit_admin_reference_doc_path(doc), class: "btn btn-sm" %>
               <%= button_to t("actions.delete"), admin_reference_doc_path(doc), method: :delete, class: "btn btn-sm btn-danger",
                     form: { class: "inline-form", data: { turbo_confirm: t(".confirm_delete") } } %>

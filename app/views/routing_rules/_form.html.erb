@@ -1,0 +1,89 @@
+<%= form_with model: rule, url: rule.persisted? ? routing_rule_path(rule) : routing_rules_path,
+      scope: :routing_rule, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: rule %>
+
+  <div class="form-row <%= "field-error" if rule.errors[:name].any? %>">
+    <%= f.label :name, t("routing_rules.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% rule.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <label class="checkbox-row">
+      <%= f.check_box :active %>
+      <%= t("routing_rules.fields.active") %>
+    </label>
+    <p class="form-hint"><%= t("routing_rules.form.active_hint") %></p>
+  </div>
+
+  <fieldset>
+    <legend><%= t("routing_rules.form.conditions_legend") %></legend>
+    <p class="form-hint"><%= t("routing_rules.form.conditions_hint") %></p>
+
+    <div class="form-row">
+      <%= f.label :if_channel, t("routing_rules.fields.if_channel") %>
+      <%= f.select :if_channel, Case.channels.keys.map { |c| [ t("cases.enum.channel.#{c}"), c ] },
+            { include_blank: t("routing_rules.form.any") } %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :if_priority, t("routing_rules.fields.if_priority") %>
+      <%= f.select :if_priority, Case.priorities.keys.map { |p| [ t("cases.enum.priority.#{p}"), p ] },
+            { include_blank: t("routing_rules.form.any") } %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :match_category_id, t("routing_rules.fields.match_category") %>
+      <%= f.collection_select :match_category_id, Category.order(:name), :id, :name,
+            { include_blank: t("routing_rules.form.any") } %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :if_subject_contains, t("routing_rules.fields.if_subject_contains") %>
+      <%= f.text_field :if_subject_contains %>
+      <p class="form-hint"><%= t("routing_rules.form.keyword_hint") %></p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t("routing_rules.form.actions_legend") %></legend>
+    <p class="form-hint"><%= t("routing_rules.form.actions_hint") %></p>
+
+    <div class="form-row">
+      <%= f.label :then_queue_id, t("routing_rules.fields.then_queue") %>
+      <%= f.collection_select :then_queue_id, CaseQueue.order(:name), :id, :name,
+            { include_blank: t("routing_rules.form.keep") } %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :then_category_id, t("routing_rules.fields.then_category") %>
+      <%= f.collection_select :then_category_id, Category.order(:name), :id, :name,
+            { include_blank: t("routing_rules.form.keep") } %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :then_priority, t("routing_rules.fields.then_priority") %>
+      <%= f.select :then_priority, Case.priorities.keys.map { |p| [ t("cases.enum.priority.#{p}"), p ] },
+            { include_blank: t("routing_rules.form.keep") } %>
+    </div>
+
+    <div class="form-row <%= "field-error" if rule.errors[:then_assignee_id].any? %>">
+      <%= f.label :then_assignment, t("routing_rules.fields.then_assignment") %>
+      <%= f.select :then_assignment,
+            RoutingRule.then_assignments.keys.map { |a| [ t("routing_rules.enum.then_assignment.#{a}"), a ] } %>
+      <p class="form-hint"><%= t("routing_rules.form.assignment_hint") %></p>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :then_assignee_id, t("routing_rules.fields.then_assignee") %>
+      <%= f.collection_select :then_assignee_id, User.active.staff.order(:name), :id, :display_label,
+            { include_blank: t("routing_rules.form.unassigned") } %>
+      <% rule.errors[:then_assignee_id].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+    </div>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), routing_rules_path, class: "btn" %>
+  </div>
+<% end %>

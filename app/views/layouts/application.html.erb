@@ -37,12 +37,18 @@
 
           <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? || policy(ConnectorInvocation).index? %>
             <%= nav_group t("layout.nav.service_desk"),
-                  active: %w[case_queues categories sla_policies macros reference_docs connector_invocations decision_appeals].include?(controller_name) do %>
+                  active: %w[case_queues categories sla_policies macros routing_rules approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
               <% if policy(CaseQueue).create? %>
                 <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                 <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
                 <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
                 <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
+              <% end %>
+              <% if policy(RoutingRule).index? %>
+                <%= nav_link t("layout.nav.routing_rules"), routing_rules_path, active: controller_name == "routing_rules" %>
+              <% end %>
+              <% if policy(ApprovalProcess).index? %>
+                <%= nav_link t("layout.nav.approval_processes"), approval_processes_path, active: controller_name == "approval_processes" %>
               <% end %>
               <% if policy(ReferenceDoc).index? %>
                 <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
@@ -52,6 +58,9 @@
               <% end %>
               <% if policy(DecisionAppeal).index? %>
                 <%= nav_link t("layout.nav.decision_appeals"), admin_decision_appeals_path, active: controller_name == "decision_appeals" %>
+              <% end %>
+              <% if policy(ApprovalRequest).index? %>
+                <%= nav_link t("layout.nav.approval_requests"), admin_approval_requests_path, active: controller_name == "approval_requests" %>
               <% end %>
             <% end %>
           <% end %>

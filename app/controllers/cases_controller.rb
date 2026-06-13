@@ -69,7 +69,16 @@ class CasesController < ApplicationController
 
   def transition
     authorize @case
-    @case.transition_to!(params.require(:status))
+    to = params.require(:status)
+
+    # Maker-checker (PG4): a guarded transition (e.g. closure) can't proceed
+    # until a checker approves it — the maker's request is parked for review.
+    if ApprovalGate.guarded_transition?(@case, to) && !ApprovalGate.transition_cleared?(@case, to)
+      ApprovalGate.submit_transition!(@case, to, requested_by: Current.user)
+      return redirect_to @case, notice: t(".submitted_for_approval")
+    end
+
+    @case.transition_to!(to)
     redirect_to @case, notice: t(".transitioned", status: @case.human_status)
   end
 

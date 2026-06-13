@@ -17,6 +17,9 @@ hi:
       categories: "श्रेणियाँ"
       sla_policies: "एसएलए नीतियाँ"
       macros: "मैक्रो"
+      routing_rules: "रूटिंग नियम"
+      approval_processes: "अनुमोदन नियम"
+      approval_requests: "अनुमोदन"
       leads: "लीड्स"
       deals: "सौदे"
       sales_report: "बिक्री रिपोर्ट"
@@ -142,6 +145,8 @@ hi:
         staff: "स्टाफ़"
         phone: "फ़ोन"
         walk_in: "प्रत्यक्ष आगमन"
+        whatsapp: "व्हाट्सऐप"
+        telegram: "टेलीग्राम"
     sort:
       created_at: "बनाया गया"
       priority: "प्राथमिकता"
@@ -237,6 +242,7 @@ hi:
       deleted: "मामला हटाया गया।"
     transition:
       transitioned: "मामला %{status} चिह्नित किया गया।"
+      submitted_for_approval: "अनुमोदन हेतु प्रस्तुत — यह परिवर्तन प्रभावी होने से पहले एक चेकर की मंज़ूरी आवश्यक है।"
     assign:
       assigned: "मामला %{name} को सौंपा गया।"
       unassigned: "मामले से नियुक्ति हटाई गई।"
@@ -262,6 +268,25 @@ hi:
       failed_action: "एआई एजेंट की कार्रवाई “%{action}” विफल रही।"
       blocked: "एआई एजेंट की कार्रवाई “%{action}” की अनुमति नहीं थी: %{reason}"
       failed: "एआई एजेंट का रन पूरा नहीं हो सका।"
+    inbound:
+      no_subject: "नया संदेश"
+
+  reference_docs:
+    enum:
+      status:
+        draft: "मसौदा"
+        published: "प्रकाशित"
+      visibility:
+        internal: "आंतरिक"
+        public: "सार्वजनिक"
+
+  knowledge_base:
+    console:
+      title: "ज्ञान-आधार"
+      placeholder: "सम्मिलित करने हेतु लेख खोजें…"
+      insert: "सम्मिलित करें"
+      public: "सार्वजनिक"
+      no_results: "कोई मेल खाता लेख नहीं।"
 
   contacts:
     fields:
@@ -851,6 +876,111 @@ hi:
     destroy:
       deleted: "मैक्रो हटाया गया।"
 
+  routing_rules:
+    fields:
+      name: "नाम"
+      active: "सक्रिय"
+      if_channel: "चैनल"
+      if_priority: "प्राथमिकता"
+      match_category: "श्रेणी"
+      if_subject_contains: "विषय में शामिल है"
+      then_queue: "इस कतार में भेजें"
+      then_category: "श्रेणी सेट करें"
+      then_priority: "प्राथमिकता सेट करें"
+      then_assignment: "इन्हें सौंपें"
+      then_assignee: "विशिष्ट एजेंट"
+    enum:
+      then_assignment:
+        keep: "अनासौंपा छोड़ें"
+        round_robin: "कतार सदस्यों में बारी-बारी से"
+        least_loaded: "सबसे कम भार वाला कतार सदस्य"
+        specific_user: "एक विशिष्ट एजेंट"
+    form:
+      any: "कोई भी"
+      keep: "यथावत रखें"
+      unassigned: "अनासौंपा"
+      active_hint: "निष्क्रिय नियम रखे जाते हैं पर रूटिंग के दौरान छोड़ दिए जाते हैं।"
+      conditions_legend: "जब कोई मामला मेल खाए…"
+      conditions_hint: "नियम तभी मेल खाता है जब आपकी सेट की गई सभी शर्तें पूरी हों। किसी शर्त को खाली छोड़ने का अर्थ है “कोई भी”।"
+      actions_hint: "तय करें कि मेल खाने वाला मामला क्या बने। किसी फ़ील्ड को खाली छोड़ने पर मामले का मौजूदा मान बना रहता है।"
+      actions_legend: "…तो इसे रूट करें"
+      keyword_hint: "विषय और विवरण के विरुद्ध बड़े-छोटे अक्षरों की परवाह किए बिना मिलान।"
+      assignment_hint: "बारी-बारी और सबसे कम भार लक्ष्य कतार के सक्रिय सदस्यों में से चुनते हैं।"
+    index:
+      title: "रूटिंग नियम"
+      new_rule: "नया नियम"
+      intro: "इनटेक पर मामलों को वर्गीकृत और सौंपने वाले निर्धारक, क्रमबद्ध नियम — ऊपर से नीचे मूल्यांकित; पहला मेल खाता सक्रिय नियम जीतता है, और शेष बचे मामलों को AI ट्राइएज संभालता है।"
+      any: "कोई भी मामला"
+      active: "सक्रिय"
+      inactive: "निष्क्रिय"
+      move_up: "ऊपर ले जाएँ"
+      move_down: "नीचे ले जाएँ"
+      confirm_delete: "इस रूटिंग नियम को हटाएँ? इससे पहले रूट किए गए मामले अपनी कतार और सौंपा एजेंट बनाए रखते हैं।"
+      columns:
+        order: "#"
+        name: "नाम"
+        conditions: "जब"
+        actions: "तो"
+        status: "स्थिति"
+      empty:
+        title: "अभी कोई रूटिंग नियम नहीं"
+        hint: "मामलों को निर्धारक रूप से रूट करने के लिए नियम जोड़ें — उदाहरण के लिए, जिस मामले के विषय में “ATM” हो उसे कार्ड विवाद कतार में भेजें।"
+    new:
+      title: "नया रूटिंग नियम"
+    edit:
+      title: "रूटिंग नियम %{name} संपादित करें"
+    create:
+      created: "रूटिंग नियम बनाया गया।"
+    update:
+      updated: "रूटिंग नियम अद्यतन किया गया।"
+    destroy:
+      deleted: "रूटिंग नियम हटाया गया।"
+
+  approval_processes:
+    fields:
+      name: "नाम"
+      trigger_type: "ट्रिगर"
+      trigger_key: "कब"
+      active: "सक्रिय"
+    enum:
+      trigger_type:
+        case_transition: "मामला परिवर्तन"
+        effector_action: "कनेक्टर क्रिया"
+    form:
+      trigger_type_hint: "किस प्रकार की क्रिया के लिए दूसरे व्यक्ति की मंज़ूरी आवश्यक है।"
+      trigger_key_hint: "मामला परिवर्तन हेतु, लक्ष्य स्थिति (इनमें से एक: %{statuses})। कनेक्टर क्रिया हेतु, क्रिया कुंजी (जैसे post_message)।"
+    index:
+      title: "अनुमोदन नियम"
+      new_process: "नया अनुमोदन नियम"
+      intro: "मेकर-चेकर: किसी संरक्षित क्रिया के प्रभावी होने से पहले दूसरे व्यक्ति की मंज़ूरी आवश्यक करें — जैसे मामला बंद करना या रिफ़ंड भेजना।"
+      active: "सक्रिय"
+      inactive: "निष्क्रिय"
+      confirm_delete: "यह अनुमोदन नियम हटाएँ? लंबित अनुरोध हटा दिए जाते हैं।"
+      columns:
+        name: "नाम"
+        trigger: "अनुमोदन आवश्यक है"
+        status: "स्थिति"
+      empty:
+        title: "अभी कोई अनुमोदन नियम नहीं"
+        hint: "एक नियम जोड़ें — जैसे, मामला बंद होने से पहले मंज़ूरी आवश्यक करें।"
+    new:
+      title: "नया अनुमोदन नियम"
+    edit:
+      title: "अनुमोदन नियम %{name} संपादित करें"
+    create:
+      created: "अनुमोदन नियम बनाया गया।"
+    update:
+      updated: "अनुमोदन नियम अद्यतन किया गया।"
+    destroy:
+      deleted: "अनुमोदन नियम हटाया गया।"
+
+  approval_requests:
+    enum:
+      status:
+        pending: "लंबित"
+        approved: "अनुमोदित"
+        rejected: "अस्वीकृत"
+
   help:
     title: "कीबोर्ड शॉर्टकट"
     close: "बंद करें"
@@ -904,9 +1034,21 @@ hi:
     nav:
       new_case: "अनुरोध सबमिट करें"
       track: "मामला ट्रैक करें"
+      knowledge_base: "सहायता"
       my_cases: "मेरे मामले"
       sign_out: "साइन आउट"
       customer_sign_in: "अपने खाते से लॉग इन करें"
+    knowledge_base:
+      index:
+        title: "सहायता और उत्तर"
+        intro: "हमारे प्रकाशित लेख खोजें, या नीचे सूची देखें।"
+        search_label: "लेख खोजें"
+        search_placeholder: "किसी विषय की खोज करें…"
+        search: "खोजें"
+        no_results: "“%{query}” से कोई लेख मेल नहीं खाता।"
+        empty: "अभी तक कोई लेख प्रकाशित नहीं हुआ है।"
+      show:
+        back: "← सभी लेख"
     customer:
       sso_failed: "साइन-इन विफल। कृपया पुनः प्रयास करें।"
       signed_in: "स्वागत है, %{name}।"
@@ -1473,20 +1615,29 @@ hi:
         title: "शीर्षक"
         body: "पाठ सामग्री"
         file: "फ़ाइल अपलोड करें (वैकल्पिक)"
+        status: "स्थिति"
+        visibility: "दृश्यता"
+        category: "श्रेणी"
       form:
         file_hint: "PDF, टेक्स्ट, मार्कडाउन या CSV — पाठ नीचे के फ़ील्ड में निकाला जाता है जिस पर एआई आधारित होता है।"
         body_hint: "एआई यही पुनर्प्राप्त और उद्धृत करता है। अपलोड के बाद स्वतंत्र रूप से संपादित करें।"
+        lifecycle_legend: "प्रकाशन"
+        visibility_hint: "आंतरिक लेख एआई को आधार देते हैं पर निजी रहते हैं। सार्वजनिक लेख प्रकाशित होने पर नागरिक ज्ञान-आधार में भी दिखते हैं।"
+        no_category: "कोई श्रेणी नहीं"
       errors:
         bad_pdf: "PDF के रूप में पढ़ा नहीं जा सका"
         extraction_failed: "पढ़ा नहीं जा सका — टेक्स्ट निकाला नहीं जा सका"
       index:
         title: "ज्ञान-आधार / संदर्भ दस्तावेज़"
         new_doc: "नया दस्तावेज़"
-        intro: "एआई अपने मसौदे इन दस्तावेज़ों और बंद समाधानित मामलों पर आधारित करता है। इन्हें तथ्यपरक और अद्यतन रखें।"
+        intro: "एआई अपने मसौदे प्रकाशित दस्तावेज़ों पर आधारित करता है। सार्वजनिक + प्रकाशित लेख नागरिक ज्ञान-आधार में भी दिखते हैं। इन्हें तथ्यपरक और अद्यतन रखें।"
         confirm_delete: "यह दस्तावेज़ हटाएँ?"
+        publish: "प्रकाशित करें"
+        unpublish: "अप्रकाशित करें"
         columns:
           title: "शीर्षक"
-          body: "सामग्री"
+          status: "स्थिति"
+          category: "श्रेणी"
           file: "फ़ाइल"
         empty:
           title: "अभी तक कोई संदर्भ दस्तावेज़ नहीं"
@@ -1501,6 +1652,9 @@ hi:
         updated: "संदर्भ दस्तावेज़ अद्यतन किया गया।"
       destroy:
         deleted: "संदर्भ दस्तावेज़ हटाया गया।"
+      toggle_published:
+        published: "“%{title}” प्रकाशित किया गया।"
+        unpublished: "“%{title}” अप्रकाशित किया गया।"
     roles:
       index:
         title: "भूमिकाएँ और अनुमतियाँ"
@@ -1561,6 +1715,27 @@ hi:
         overturned: "अपील स्वीकृत — निर्णय उलट दिया गया।"
       deny:
         denied: "अपील अस्वीकृत — निर्णय कायम है।"
+    approval_requests:
+      index:
+        title: "अनुमोदन"
+        intro: "मेकर-चेकर अनुरोध जो आपकी मंज़ूरी की प्रतीक्षा में हैं। अनुमोदन क्रिया को पूरा करता है (एक सकारण आदेश); अस्वीकृति इसे रोकती है।"
+        pending: "अनुमोदन की प्रतीक्षा में"
+        no_pending: "अनुमोदन की प्रतीक्षा में कुछ नहीं।"
+        recent: "हाल ही में निर्णीत"
+        reason_placeholder: "सकारण आदेश (अनुमोदन हेतु आवश्यक)"
+        reject_reason_placeholder: "कारण (वैकल्पिक)"
+        approve: "अनुमोदित करें"
+        reject: "अस्वीकृत करें"
+        columns:
+          request: "अनुमोदन नियम"
+          subject: "विषय"
+          requested_by: "अनुरोधकर्ता"
+          decision: "निर्णय"
+          reason: "सकारण आदेश"
+      approve:
+        approved: "अनुमोदित — क्रिया पूरी की गई।"
+      reject:
+        rejected: "अस्वीकृत — क्रिया रोक दी गई।"
     activity:
       index:
         title: "गतिविधि और उपयोग"
@@ -1615,6 +1790,15 @@ hi:
               must_use_state_machine: "परिवर्तन केवल मामला स्थिति-तंत्र के माध्यम से ही हो सकते हैं"
             assignee:
               inactive: "सक्रिय उपयोगकर्ता होना चाहिए"
+        routing_rule:
+          attributes:
+            base:
+              needs_condition: "कम से कम एक शर्त आवश्यक है (चैनल, प्राथमिकता, श्रेणी, या विषय कीवर्ड)"
+              needs_action: "कम से कम एक क्रिया आवश्यक है (कतार, श्रेणी, प्राथमिकता, या असाइनमेंट सेट करें)"
+        approval_process:
+          attributes:
+            trigger_key:
+              not_a_status: "मामला-परिवर्तन ट्रिगर हेतु एक वैध मामला स्थिति होनी चाहिए"
         reference_doc:
           attributes:
             file:

@@ -92,5 +92,31 @@ module Connectors
     def invoke(action_key, args, context = {})
       raise NotImplementedError, "#{self.class.name} cannot #{action_key}"
     end
+
+    # --- Inbound omnichannel (PG2) --------------------------------------------
+    # Does this provider turn inbound webhook payloads into cases (vs. only
+    # acting as an outbound effector / pull-sync)? Messaging providers override.
+    def self.ingests? = false
+
+    # Authenticate an inbound webhook request. Default: the X-Docket-Signature
+    # HMAC over the connector's per-endpoint webhook_secret (the sync-ping
+    # scheme). Messaging providers override with their platform's scheme.
+    # Fail-closed: a blank/absent signature must not pass.
+    def inbound_authentic?(request)
+      provided = request.headers["X-Docket-Signature"].to_s
+      return false if provided.blank?
+      expected = "sha256=#{OpenSSL::HMAC.hexdigest("SHA256", connector.webhook_secret.to_s, request.raw_post)}"
+      ActiveSupport::SecurityUtils.secure_compare(provided, expected)
+    end
+
+    # Normalize a webhook payload into zero or more inbound messages. Each:
+    #   { sender: { name:, phone:, external_id: }, external_thread_id:,
+    #     body:, channel:, external_message_id: }
+    # Non-message events (delivery receipts, edits) → []. Default: not inbound.
+    def ingest(_payload) = []
+
+    # Some platforms (Meta/WhatsApp) verify a webhook URL with a GET handshake.
+    # → the challenge string to echo, or nil to reject. Default: no handshake.
+    def verification_challenge(_params) = nil
   end
 end

@@ -10,13 +10,22 @@ module Connectors
     DEFAULT_BASE = "https://graph.facebook.com/v21.0".freeze
     DEFAULT_LANGUAGE = "en_US".freeze
 
+    CHANNEL = "whatsapp".freeze
+
     def self.descriptor
       Descriptor.new(
         key: "whatsapp_cloud", name: "WhatsApp Business (Cloud API)", category: "Communications",
         auth: :none, config_fields: %w[phone_number_id base_url],
-        credential_fields: %w[access_token], syncs: false
+        # access_token sends; app_secret verifies inbound webhook signatures
+        # (optional — only inbound needs it). The connector's webhook_secret
+        # doubles as the Meta verify-token for the GET handshake.
+        credential_fields: %w[access_token app_secret],
+        required_credential_fields: %w[access_token], syncs: false
       )
     end
+
+    # Inbound: parse WhatsApp Cloud "messages" webhooks into cases.
+    def self.ingests? = true
 
     def self.actions
       [
@@ -58,7 +67,57 @@ module Connectors
       end
     end
 
+    # Meta signs every webhook with X-Hub-Signature-256 = HMAC-SHA256(app_secret,
+    # raw_body). Fail-closed when no app_secret is configured (better to drop
+    # unverifiable inbound than to ingest a forgery).
+    def inbound_authentic?(request)
+      secret = connector.secret("app_secret").to_s
+      return false if secret.blank?
+      provided = request.headers["X-Hub-Signature-256"].to_s
+      return false if provided.blank?
+      expected = "sha256=#{OpenSSL::HMAC.hexdigest("SHA256", secret, request.raw_post)}"
+      ActiveSupport::SecurityUtils.secure_compare(provided, expected)
+    end
+
+    # GET verification handshake: echo hub.challenge iff the verify token matches
+    # the connector's webhook_secret (which the operator sets as Meta's token).
+    def verification_challenge(params)
+      return nil unless params["hub.mode"].to_s == "subscribe"
+      token = params["hub.verify_token"].to_s
+      return nil if token.blank? || connector.webhook_secret.to_s.blank?
+      return nil unless ActiveSupport::SecurityUtils.secure_compare(token, connector.webhook_secret.to_s)
+      params["hub.challenge"].to_s.presence
+    end
+
+    # entry[].changes[].value.messages[] → normalized inbound messages. Status
+    # receipts (value.statuses) carry no messages and yield [].
+    def ingest(payload)
+      values = Array(payload["entry"]).flat_map { |e| Array(e["changes"]) }.filter_map { |c| c["value"] }
+      values.flat_map do |value|
+        names = Array(value["contacts"]).to_h { |c| [ c["wa_id"].to_s, c.dig("profile", "name") ] }
+        Array(value["messages"]).map do |msg|
+          from = msg["from"].to_s
+          {
+            sender: { name: names[from].presence || from, phone: from, external_id: from },
+            external_thread_id: from,
+            body: message_body(msg),
+            channel: CHANNEL,
+            external_message_id: msg["id"].to_s.presence
+          }
+        end
+      end
+    end
+
     private
+
+    # Text bodies pass through; non-text messages (image, audio, location…) get
+    # a typed marker so the case still threads and a human can follow up.
+    def message_body(msg)
+      type = msg["type"].to_s
+      return msg.dig("text", "body").to_s if type == "text"
+      caption = msg.dig(type, "caption").to_s
+      caption.presence || "[#{type.presence || 'message'}]"
+    end
 
     def send_text_message(args)
       to   = present!(args, "to")

@@ -1,0 +1,74 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+</div>
+
+<p class="muted"><%= t(".intro") %></p>
+
+<h2><%= t(".pending") %></h2>
+<% if @pending.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.request") %></th>
+          <th><%= t(".columns.subject") %></th>
+          <th><%= t(".columns.requested_by") %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @pending.each do |req| %>
+          <tr>
+            <td><%= req.approval_process.name %></td>
+            <td><%= req.subject_label %></td>
+            <td><%= req.requested_by&.name %></td>
+            <td class="table-actions">
+              <%= form_with url: approve_admin_approval_request_path(req), class: "inline-form" do %>
+                <%= text_field_tag :reason, nil, placeholder: t(".reason_placeholder"), required: true %>
+                <%= submit_tag t(".approve"), class: "btn btn-sm btn-primary" %>
+              <% end %>
+              <%= form_with url: reject_admin_approval_request_path(req), class: "inline-form" do %>
+                <%= text_field_tag :reason, nil, placeholder: t(".reject_reason_placeholder") %>
+                <%= submit_tag t(".reject"), class: "btn btn-sm btn-ghost" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="muted"><%= t(".no_pending") %></p>
+<% end %>
+
+<% if @recent.any? %>
+  <h2><%= t(".recent") %></h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.request") %></th>
+          <th><%= t(".columns.subject") %></th>
+          <th><%= t(".columns.decision") %></th>
+          <th><%= t(".columns.reason") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent.each do |req| %>
+          <tr>
+            <td><%= req.approval_process.name %></td>
+            <td><%= req.subject_label %></td>
+            <td>
+              <span class="badge <%= req.status_approved? ? "badge-success" : "" %>">
+                <%= t("approval_requests.enum.status.#{req.status}") %>
+              </span>
+              <% if req.decided_by %><span class="muted">· <%= req.decided_by.name %></span><% end %>
+            </td>
+            <td class="table-meta"><%= req.reason %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

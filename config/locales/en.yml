@@ -17,6 +17,9 @@ en:
       categories: "Categories"
       sla_policies: "SLA policies"
       macros: "Macros"
+      routing_rules: "Routing rules"
+      approval_processes: "Approval rules"
+      approval_requests: "Approvals"
       leads: "Leads"
       deals: "Deals"
       sales_report: "Sales report"
@@ -142,6 +145,8 @@ en:
         staff: "Staff"
         phone: "Phone"
         walk_in: "Walk-in"
+        whatsapp: "WhatsApp"
+        telegram: "Telegram"
     sort:
       created_at: "Created"
       priority: "Priority"
@@ -237,6 +242,7 @@ en:
       deleted: "Case deleted."
     transition:
       transitioned: "Case marked %{status}."
+      submitted_for_approval: "Submitted for approval — this change needs a checker's sign-off before it takes effect."
     assign:
       assigned: "Case assigned to %{name}."
       unassigned: "Case unassigned."
@@ -262,6 +268,25 @@ en:
       failed_action: "AI agent action “%{action}” failed."
       blocked: "AI agent action “%{action}” was not permitted: %{reason}"
       failed: "AI agent run could not complete."
+    inbound:
+      no_subject: "New message"
+
+  reference_docs:
+    enum:
+      status:
+        draft: "Draft"
+        published: "Published"
+      visibility:
+        internal: "Internal"
+        public: "Public"
+
+  knowledge_base:
+    console:
+      title: "Knowledge base"
+      placeholder: "Search articles to insert…"
+      insert: "Insert"
+      public: "Public"
+      no_results: "No matching articles."
 
   contacts:
     fields:
@@ -851,6 +876,111 @@ en:
     destroy:
       deleted: "Macro deleted."
 
+  routing_rules:
+    fields:
+      name: "Name"
+      active: "Active"
+      if_channel: "Channel"
+      if_priority: "Priority"
+      match_category: "Category"
+      if_subject_contains: "Subject contains"
+      then_queue: "Route to queue"
+      then_category: "Set category"
+      then_priority: "Set priority"
+      then_assignment: "Assign to"
+      then_assignee: "Specific agent"
+    enum:
+      then_assignment:
+        keep: "Leave unassigned"
+        round_robin: "Round-robin across queue members"
+        least_loaded: "Least-loaded queue member"
+        specific_user: "A specific agent"
+    form:
+      any: "Any"
+      keep: "Keep / unchanged"
+      unassigned: "Unassigned"
+      active_hint: "Inactive rules are kept but skipped during routing."
+      conditions_legend: "When a case matches…"
+      conditions_hint: "A rule matches when ALL the conditions you set hold. Leave a condition blank to mean “any”."
+      actions_hint: "Set what the matched case should become. Leave a field blank to keep the case's value."
+      actions_legend: "…then route it"
+      keyword_hint: "Case-insensitive match against the subject and description."
+      assignment_hint: "Round-robin and least-loaded pick from the target queue's active members."
+    index:
+      title: "Routing rules"
+      new_rule: "New rule"
+      intro: "Deterministic, ordered rules that classify and assign cases on intake — evaluated top to bottom; the first matching active rule wins, and the AI triage handles anything left unmatched."
+      any: "Any case"
+      active: "Active"
+      inactive: "Inactive"
+      move_up: "Move up"
+      move_down: "Move down"
+      confirm_delete: "Delete this routing rule? Cases already routed by it keep their queue and assignee."
+      columns:
+        order: "#"
+        name: "Name"
+        conditions: "When"
+        actions: "Then"
+        status: "Status"
+      empty:
+        title: "No routing rules yet"
+        hint: "Add a rule to deterministically route cases — for example, send any case whose subject mentions “ATM” to the Card disputes queue."
+    new:
+      title: "New routing rule"
+    edit:
+      title: "Edit routing rule %{name}"
+    create:
+      created: "Routing rule created."
+    update:
+      updated: "Routing rule updated."
+    destroy:
+      deleted: "Routing rule deleted."
+
+  approval_processes:
+    fields:
+      name: "Name"
+      trigger_type: "Trigger"
+      trigger_key: "When"
+      active: "Active"
+    enum:
+      trigger_type:
+        case_transition: "Case transition"
+        effector_action: "Connector action"
+    form:
+      trigger_type_hint: "What kind of action requires a second person's sign-off."
+      trigger_key_hint: "For a case transition, the target status (one of: %{statuses}). For a connector action, the action key (e.g. post_message)."
+    index:
+      title: "Approval rules"
+      new_process: "New approval rule"
+      intro: "Maker-checker: require a second person to approve a guarded action before it takes effect — for example, closing a case or sending a refund."
+      active: "Active"
+      inactive: "Inactive"
+      confirm_delete: "Delete this approval rule? In-flight requests are removed."
+      columns:
+        name: "Name"
+        trigger: "Requires approval to"
+        status: "Status"
+      empty:
+        title: "No approval rules yet"
+        hint: "Add a rule — for example, require sign-off before a case can be closed."
+    new:
+      title: "New approval rule"
+    edit:
+      title: "Edit approval rule %{name}"
+    create:
+      created: "Approval rule created."
+    update:
+      updated: "Approval rule updated."
+    destroy:
+      deleted: "Approval rule deleted."
+
+  approval_requests:
+    enum:
+      status:
+        pending: "Pending"
+        approved: "Approved"
+        rejected: "Rejected"
+
   help:
     title: "Keyboard shortcuts"
     close: "Close"
@@ -904,9 +1034,21 @@ en:
     nav:
       new_case: "Submit a request"
       track: "Track a case"
+      knowledge_base: "Help"
       my_cases: "My cases"
       sign_out: "Sign out"
       customer_sign_in: "Log in with your account"
+    knowledge_base:
+      index:
+        title: "Help & answers"
+        intro: "Search our published articles, or browse the list below."
+        search_label: "Search articles"
+        search_placeholder: "Search for a topic…"
+        search: "Search"
+        no_results: "No articles match “%{query}”."
+        empty: "No articles have been published yet."
+      show:
+        back: "← All articles"
     customer:
       sso_failed: "Sign-in failed. Please try again."
       signed_in: "Welcome, %{name}."
@@ -1473,20 +1615,29 @@ en:
         title: "Title"
         body: "Text content"
         file: "Upload file (optional)"
+        status: "Status"
+        visibility: "Visibility"
+        category: "Category"
       form:
         file_hint: "PDF, text, markdown or CSV — the text is extracted into the field below for the AI to ground on."
         body_hint: "This is what the AI retrieves and quotes. Edit freely after upload."
+        lifecycle_legend: "Publishing"
+        visibility_hint: "Internal articles ground the AI but stay private. Public articles also appear on the citizen knowledge base (only when published)."
+        no_category: "No category"
       errors:
         bad_pdf: "could not be read as a PDF"
         extraction_failed: "could not be read — the text could not be extracted"
       index:
         title: "Knowledge / reference docs"
         new_doc: "New document"
-        intro: "The AI grounds its drafts on these documents plus closed resolved cases. Keep them factual and current."
+        intro: "The AI grounds its drafts on published documents. Public + published articles also appear on the citizen knowledge base. Keep them factual and current."
         confirm_delete: "Delete this document?"
+        publish: "Publish"
+        unpublish: "Unpublish"
         columns:
           title: "Title"
-          body: "Content"
+          status: "Status"
+          category: "Category"
           file: "File"
         empty:
           title: "No reference documents yet"
@@ -1501,6 +1652,9 @@ en:
         updated: "Reference document updated."
       destroy:
         deleted: "Reference document deleted."
+      toggle_published:
+        published: "“%{title}” published."
+        unpublished: "“%{title}” unpublished."
     roles:
       index:
         title: "Roles & permissions"
@@ -1561,6 +1715,27 @@ en:
         overturned: "Appeal upheld — the decision was reversed."
       deny:
         denied: "Appeal denied — the decision stands."
+    approval_requests:
+      index:
+        title: "Approvals"
+        intro: "Maker-checker requests awaiting your sign-off. Approving carries out the action (a reasoned order); rejecting blocks it."
+        pending: "Awaiting approval"
+        no_pending: "Nothing is awaiting approval."
+        recent: "Recently decided"
+        reason_placeholder: "Reasoned order (required to approve)"
+        reject_reason_placeholder: "Reason (optional)"
+        approve: "Approve"
+        reject: "Reject"
+        columns:
+          request: "Approval rule"
+          subject: "Subject"
+          requested_by: "Requested by"
+          decision: "Decision"
+          reason: "Reasoned order"
+      approve:
+        approved: "Approved — the action was carried out."
+      reject:
+        rejected: "Rejected — the action was blocked."
     activity:
       index:
         title: "Activity & Usage"
@@ -1615,6 +1790,15 @@ en:
               must_use_state_machine: "transitions must go through the case state machine"
             assignee:
               inactive: "must be an active user"
+        routing_rule:
+          attributes:
+            base:
+              needs_condition: "needs at least one condition (channel, priority, category, or subject keyword)"
+              needs_action: "needs at least one action (set a queue, category, priority, or assignment)"
+        approval_process:
+          attributes:
+            trigger_key:
+              not_a_status: "must be a valid case status for a case-transition trigger"
         reference_doc:
           attributes:
             file:

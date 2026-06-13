@@ -40,8 +40,13 @@ class Connectors::WhatsappCloudProviderTest < ActiveSupport::TestCase
     assert_equal "whatsapp_cloud", desc.key
     assert_equal "Communications", desc.category
     assert_equal %w[phone_number_id base_url], desc.config_fields
-    assert_equal %w[access_token], desc.credential_fields
+    assert_equal %w[access_token app_secret], desc.credential_fields
+    assert_equal %w[access_token], desc.required_secret_fields, "app_secret is optional (inbound-only)"
     assert_not desc.syncs?
+  end
+
+  test "is an inbound (ingesting) provider" do
+    assert Connectors::WhatsappCloudProvider.ingests?
   end
 
   test "effector-only provider inherits an empty fetch" do

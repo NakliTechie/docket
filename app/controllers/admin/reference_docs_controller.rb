@@ -1,6 +1,6 @@
 module Admin
   class ReferenceDocsController < ApplicationController
-    before_action :set_doc, only: %i[edit update destroy]
+    before_action :set_doc, only: %i[edit update destroy toggle_published]
 
     def index
       authorize ReferenceDoc
@@ -47,6 +47,14 @@ module Admin
       redirect_to admin_reference_docs_path, notice: t(".deleted"), status: :see_other
     end
 
+    # One-click publish/unpublish from the index (lifecycle without a full edit).
+    def toggle_published
+      authorize @reference_doc, :update?
+      @reference_doc.status_published? ? @reference_doc.status_draft! : @reference_doc.status_published!
+      redirect_to admin_reference_docs_path,
+                  notice: t(@reference_doc.status_published? ? ".published" : ".unpublished", title: @reference_doc.title)
+    end
+
     private
 
     def set_doc
@@ -54,7 +62,7 @@ module Admin
     end
 
     def doc_params
-      params.require(:reference_doc).permit(:title, :body, :file)
+      params.require(:reference_doc).permit(:title, :body, :file, :status, :visibility, :category_id)
     end
 
     def extract_body_from_upload

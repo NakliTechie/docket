@@ -1,0 +1,21 @@
+<turbo-frame id="kb-search">
+  <% if @articles.any? %>
+    <ul class="kb-results stack-sm">
+      <% @articles.each do |article| %>
+        <% snippet = article.visibility_public? ? "#{article.title}\n#{portal_kb_url(article.slug)}" : "#{article.title} — #{article.body.truncate(240)}" %>
+        <li>
+          <div class="kb-result-title">
+            <%= article.title %>
+            <% if article.visibility_public? %>
+              <span class="badge badge-success"><%= t("knowledge_base.console.public") %></span>
+            <% end %>
+          </div>
+          <button type="button" class="btn btn-xs" data-action="article-insert#insert"
+                  data-snippet="<%= snippet %>"><%= t("knowledge_base.console.insert") %></button>
+        </li>
+      <% end %>
+    </ul>
+  <% elsif @query.present? %>
+    <p class="muted"><%= t("knowledge_base.console.no_results") %></p>
+  <% end %>
+</turbo-frame>

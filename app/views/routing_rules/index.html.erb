@@ -1,0 +1,71 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <% if policy(RoutingRule).create? %>
+      <%= link_to new_routing_rule_path, class: "btn btn-primary" do %>
+        <%= icon "plus" %><%= t(".new_rule") %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<p class="page-intro"><%= t(".intro") %></p>
+
+<% if @rules.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="num"><%= t(".columns.order") %></th>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.conditions") %></th>
+          <th><%= t(".columns.actions") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @rules.each_with_index do |rule, i| %>
+          <tr class="<%= "muted-row" unless rule.active %>">
+            <td class="num">
+              <div class="reorder">
+                <% if policy(rule).move? && i.positive? %>
+                  <%= button_to "↑", move_routing_rule_path(rule, dir: "up"), method: :patch,
+                        class: "btn btn-xs", form: { class: "inline-form" }, "aria-label": t(".move_up") %>
+                <% end %>
+                <% if policy(rule).move? && i < @rules.size - 1 %>
+                  <%= button_to "↓", move_routing_rule_path(rule, dir: "down"), method: :patch,
+                        class: "btn btn-xs", form: { class: "inline-form" }, "aria-label": t(".move_down") %>
+                <% end %>
+              </div>
+            </td>
+            <td><%= rule.name %></td>
+            <td><%= rule.conditions_summary.join(" · ").presence || tag.span(t(".any"), class: "muted") %></td>
+            <td><%= rule.actions_summary.join(" · ").presence || tag.span("—", class: "muted") %></td>
+            <td>
+              <% if rule.active %>
+                <span class="badge badge-success"><%= t(".active") %></span>
+              <% else %>
+                <span class="badge"><%= t(".inactive") %></span>
+              <% end %>
+            </td>
+            <td class="actions">
+              <% if policy(rule).update? %>
+                <%= link_to t("actions.edit"), edit_routing_rule_path(rule), class: "btn btn-sm" %>
+              <% end %>
+              <% if policy(rule).destroy? %>
+                <%= button_to t("actions.delete"), routing_rule_path(rule), method: :delete, class: "btn btn-sm btn-danger",
+                      form: { class: "inline-form", data: { turbo_confirm: t(".confirm_delete") } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state",
+        title: t(".empty.title"), hint: t(".empty.hint"),
+        action: policy(RoutingRule).create? ? link_to(t(".new_rule"), new_routing_rule_path, class: "btn btn-primary") : nil %>
+<% end %>

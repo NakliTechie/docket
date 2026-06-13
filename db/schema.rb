@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_243000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -60,6 +60,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
     t.index ["user_id"], name: "index_api_tokens_on_user_id"
   end
 
+  create_table "approval_processes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "tenant_id", null: false
+    t.string "trigger_key", null: false
+    t.integer "trigger_type", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "trigger_type", "trigger_key"], name: "index_approval_processes_on_tenant_and_trigger", unique: true
+    t.index ["tenant_id"], name: "index_approval_processes_on_tenant_id"
+  end
+
+  create_table "approval_requests", force: :cascade do |t|
+    t.integer "approval_process_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "decided_at"
+    t.integer "decided_by_id"
+    t.text "reason"
+    t.string "requested_action"
+    t.integer "requested_by_id"
+    t.integer "status", default: 0, null: false
+    t.integer "subject_id", null: false
+    t.string "subject_type", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approval_process_id"], name: "index_approval_requests_on_approval_process_id"
+    t.index ["decided_by_id"], name: "index_approval_requests_on_decided_by_id"
+    t.index ["requested_by_id"], name: "index_approval_requests_on_requested_by_id"
+    t.index ["subject_type", "subject_id"], name: "index_approval_requests_on_subject"
+    t.index ["tenant_id", "status"], name: "index_approval_requests_on_tenant_id_and_status"
+    t.index ["tenant_id"], name: "index_approval_requests_on_tenant_id"
+  end
+
   create_table "audit_entries", force: :cascade do |t|
     t.string "action", null: false
     t.integer "actor_id"
@@ -102,8 +135,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
     t.boolean "resolution_breached", default: false, null: false
     t.datetime "resolution_due_at"
     t.datetime "resolved_at"
+    t.integer "routed_by_rule_id"
     t.integer "sla_policy_id"
     t.integer "source_connector_id"
+    t.string "source_thread_id"
     t.integer "status", default: 0, null: false
     t.string "subject", null: false
     t.integer "tenant_id", null: false
@@ -119,10 +154,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
     t.index ["priority"], name: "index_cases_on_priority"
     t.index ["queue_id"], name: "index_cases_on_queue_id"
     t.index ["resolution_breached", "resolution_due_at"], name: "index_cases_on_resolution_breached_and_resolution_due_at"
+    t.index ["routed_by_rule_id"], name: "index_cases_on_routed_by_rule_id"
     t.index ["sla_policy_id"], name: "index_cases_on_sla_policy_id"
     t.index ["source_connector_id"], name: "index_cases_on_source_connector_id"
     t.index ["status", "queue_id"], name: "index_cases_on_status_and_queue_id"
     t.index ["status"], name: "index_cases_on_status"
+    t.index ["tenant_id", "source_connector_id", "source_thread_id"], name: "index_cases_on_tenant_connector_thread"
     t.index ["tenant_id", "tracking_id"], name: "index_cases_on_tenant_id_and_tracking_id", unique: true
     t.index ["tenant_id"], name: "index_cases_on_tenant_id"
   end
@@ -466,14 +503,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
 
   create_table "reference_docs", force: :cascade do |t|
     t.text "body", null: false
+    t.integer "category_id"
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.string "slug"
+    t.integer "status", default: 1, null: false
     t.integer "tenant_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
+    t.index ["category_id"], name: "index_reference_docs_on_category_id"
     t.index ["deleted_at"], name: "index_reference_docs_on_deleted_at"
+    t.index ["tenant_id", "slug"], name: "index_reference_docs_on_tenant_id_and_slug", unique: true, where: "slug IS NOT NULL AND deleted_at IS NULL"
     t.index ["tenant_id", "title"], name: "index_reference_docs_on_tenant_id_and_title", unique: true, where: "deleted_at IS NULL"
     t.index ["tenant_id"], name: "index_reference_docs_on_tenant_id"
+  end
+
+  create_table "routing_rules", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "if_channel"
+    t.string "if_priority"
+    t.string "if_subject_contains"
+    t.integer "match_category_id"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.integer "then_assignee_id"
+    t.integer "then_assignment", default: 0, null: false
+    t.integer "then_category_id"
+    t.string "then_priority"
+    t.integer "then_queue_id"
+    t.datetime "updated_at", null: false
+    t.index ["match_category_id"], name: "index_routing_rules_on_match_category_id"
+    t.index ["tenant_id", "position"], name: "index_routing_rules_on_tenant_id_and_position"
+    t.index ["tenant_id"], name: "index_routing_rules_on_tenant_id"
+    t.index ["then_assignee_id"], name: "index_routing_rules_on_then_assignee_id"
+    t.index ["then_category_id"], name: "index_routing_rules_on_then_category_id"
+    t.index ["then_queue_id"], name: "index_routing_rules_on_then_queue_id"
   end
 
   create_table "security_events", force: :cascade do |t|
@@ -665,9 +732,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_tokens", "users"
+  add_foreign_key "approval_processes", "tenants"
+  add_foreign_key "approval_requests", "approval_processes"
+  add_foreign_key "approval_requests", "tenants"
+  add_foreign_key "approval_requests", "users", column: "decided_by_id"
+  add_foreign_key "approval_requests", "users", column: "requested_by_id"
   add_foreign_key "cases", "categories"
   add_foreign_key "cases", "contacts"
   add_foreign_key "cases", "queues"
+  add_foreign_key "cases", "routing_rules", column: "routed_by_rule_id"
   add_foreign_key "cases", "sla_policies"
   add_foreign_key "cases", "tenants"
   add_foreign_key "cases", "users", column: "assignee_id"
@@ -707,7 +780,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_220000) do
   add_foreign_key "queue_memberships", "queues"
   add_foreign_key "queue_memberships", "users"
   add_foreign_key "queues", "tenants"
+  add_foreign_key "reference_docs", "categories"
   add_foreign_key "reference_docs", "tenants"
+  add_foreign_key "routing_rules", "categories", column: "match_category_id"
+  add_foreign_key "routing_rules", "categories", column: "then_category_id"
+  add_foreign_key "routing_rules", "queues", column: "then_queue_id"
+  add_foreign_key "routing_rules", "tenants"
+  add_foreign_key "routing_rules", "users", column: "then_assignee_id"
   add_foreign_key "sequence_enrollments", "sequences"
   add_foreign_key "sequence_enrollments", "tenants"
   add_foreign_key "sequence_steps", "sequences"

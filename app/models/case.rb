@@ -33,7 +33,8 @@ class Case < ApplicationRecord
   enum :status, { new: 0, triaged: 1, in_progress: 2, waiting_on_citizen: 3,
                   resolved: 4, closed: 5, reopened: 6 }, default: :new, prefix: true
   enum :priority, { low: 0, normal: 1, high: 2, urgent: 3 }, default: :normal, prefix: true
-  enum :channel, { web_portal: 0, email: 1, api: 2, staff: 3, phone: 4, walk_in: 5 },
+  enum :channel, { web_portal: 0, email: 1, api: 2, staff: 3, phone: 4, walk_in: 5,
+                   whatsapp: 6, telegram: 7 },
        default: :web_portal, prefix: true
 
   belongs_to :contact, -> { with_deleted }
@@ -46,10 +47,12 @@ class Case < ApplicationRecord
 
   has_many :messages, dependent: nil, inverse_of: :case
   has_many :audit_entries, as: :auditable, dependent: nil
+  has_many :approval_requests, as: :subject, dependent: :destroy
 
   before_validation :ensure_tracking_id, on: :create
   before_validation :apply_default_sla_policy, on: :create
   before_save :compute_sla_due_dates, if: :sla_inputs_changed?
+  after_create_commit :apply_routing_rules
   after_create_commit :enqueue_agent_triage
   after_create_commit :publish_created_webhook
 
@@ -190,12 +193,28 @@ class Case < ApplicationRecord
     errors.add(:assignee, :inactive) unless assignee&.active?
   end
 
-  # Citizen-originated cases get the AI triage/draft/resolve loop when a
-  # model endpoint is configured; silently nothing otherwise.
-  def enqueue_agent_triage
-    return unless channel_web_portal? || channel_email? || channel_api?
-    CaseAgentJob.perform_later(self) if Llm.enabled?
+  # First-match declarative routing (CaseRouting) — deterministic, runs before
+  # the AI triage and wins over it. No-op when no rule matches.
+  def apply_routing_rules
+    CaseRouting.apply(self)
   end
+
+  # Citizen-originated cases get the AI triage/draft/resolve loop when a model
+  # endpoint is configured; silently nothing otherwise.
+  def enqueue_agent_triage
+    CaseAgentJob.perform_later(self) if ai_triage_eligible?
+  end
+
+  public
+
+  # Whether the AI triage/draft/resolve loop will run for this case — used both
+  # to enqueue it and (in CaseRouting) to decide whether a rule must complete
+  # triage itself.
+  def ai_triage_eligible?
+    Llm.enabled? && (channel_web_portal? || channel_email? || channel_api?)
+  end
+
+  private
 
   def publish_created_webhook
     Webhooks.publish("case.created", Webhooks.case_payload(self))
