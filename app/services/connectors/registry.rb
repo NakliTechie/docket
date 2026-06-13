@@ -55,6 +55,17 @@ module Connectors
         "netcore_email" => Connectors::NetcoreEmailProvider,
         "netcore_whatsapp" => Connectors::NetcoreWhatsappProvider,
         "netcore_sms" => Connectors::NetcoreSmsProvider,
+        # Static-cred stragglers (scheduling, surveys, BI read)
+        "calendly" => Connectors::CalendlyProvider,
+        "surveymonkey" => Connectors::SurveymonkeyProvider,
+        "qualtrics" => Connectors::QualtricsProvider,
+        "metabase" => Connectors::MetabaseProvider,
+        # AWS (SigV4-signed)
+        "amazon_ses" => Connectors::AmazonSesProvider,
+        "amazon_s3" => Connectors::AmazonS3Provider,
+        # India payment gateways (checksum auth)
+        "payu" => Connectors::PayuProvider,
+        "phonepe" => Connectors::PhonepeProvider,
         # OAuth2 tier (Connectors::OauthProvider — browser connect + token refresh)
         "google_calendar" => Connectors::GoogleCalendarProvider,
         "gmail" => Connectors::GmailProvider,
