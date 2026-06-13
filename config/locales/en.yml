@@ -453,6 +453,8 @@ en:
       open_pipeline: "Open pipeline (now)"
       weighted_forecast: "Weighted forecast"
       win_rate: "Win rate (window)"
+      avg_days_to_win: "Avg days to win"
+      days: "%{count} days"
       view_sales_report: "Open sales report"
       connectors: "Connectors & ingestion"
       sync_activity: "Sync activity (window)"
@@ -514,6 +516,10 @@ en:
       lead_conversion: "Lead conversion"
       by_owner: "By owner"
       loss_reasons: "Why deals are lost"
+      velocity: "Pipeline velocity"
+      avg_days_to_win: "Avg days to win"
+      days: "%{count} days"
+      no_velocity: "No won deals in this period."
       count_value: "%{count} · %{value}"
       percent: "%{value}%"
       unassigned: "(unassigned)"
@@ -527,6 +533,7 @@ en:
         open: "Open"
         won: "Won"
         reason: "Reason"
+        avg_days: "Avg days in stage"
   pipelines:
     fields:
       name: "Name"

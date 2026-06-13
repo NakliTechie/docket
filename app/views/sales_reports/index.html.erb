@@ -137,3 +137,30 @@
     </div>
   </aside>
 </div>
+
+<div class="panel">
+  <h2 class="panel-title"><%= t(".velocity") %></h2>
+  <dl class="meta-list">
+    <dt><%= t(".avg_days_to_win") %></dt>
+    <dd><%= @report.velocity[:avg_days_to_win] ? t(".days", count: @report.velocity[:avg_days_to_win]) : "—" %></dd>
+  </dl>
+  <% if @report.velocity[:stage_dwell].any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th><%= t(".columns.stage") %></th><th><%= t(".columns.avg_days") %></th></tr>
+        </thead>
+        <tbody>
+          <% @report.velocity[:stage_dwell].each do |row| %>
+            <tr>
+              <td><%= row[:stage]&.name || "—" %></td>
+              <td><%= t(".days", count: row[:avg_days]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".no_velocity") %></p>
+  <% end %>
+</div>

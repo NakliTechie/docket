@@ -97,6 +97,31 @@ class SalesReport
     end
   end
 
+  # Pipeline velocity over deals WON in the window: average days from creation
+  # to close, plus average dwell per stage reconstructed from the audit log
+  # (DealStageHistory). Audit-mined — fine at MVP volume; a daily rollup is the
+  # path if won-deal counts grow large.
+  def velocity
+    @velocity ||= begin
+      won = Deal.with_deleted.status_won.where(closed_at: range).to_a
+      to_win = won.filter_map { |d| (d.closed_at - d.created_at).to_f if d.closed_at && d.created_at }
+
+      dwell = Hash.new { |h, k| h[k] = [] }
+      won.each do |deal|
+        DealStageHistory.new(deal).segments.each { |seg| dwell[seg.stage_id] << seg.dwell_seconds }
+      end
+      stages = PipelineStage.with_deleted.where(id: dwell.keys.compact).index_by(&:id)
+
+      {
+        won_count: won.size,
+        avg_days_to_win: to_win.any? ? (to_win.sum / to_win.size / 86_400.0).round(1) : nil,
+        stage_dwell: dwell.map { |sid, secs|
+          { stage: stages[sid], avg_days: (secs.sum / secs.size / 86_400.0).round(1) }
+        }.sort_by { |row| -row[:avg_days] }
+      }
+    end
+  end
+
   def to_csv
     require "csv"
     CSV.generate do |csv|

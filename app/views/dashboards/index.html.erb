@@ -107,6 +107,8 @@
     <dt><%= t(".weighted_forecast") %></dt><dd><%= format_cents(sal[:weighted_value_cents]) %></dd>
     <dt><%= t(".win_rate") %></dt>
     <dd><%= sal[:win_rate] ? t(".percent", value: sal[:win_rate]) : "—" %></dd>
+    <dt><%= t(".avg_days_to_win") %></dt>
+    <dd><%= @overview.sales.velocity[:avg_days_to_win] ? t(".days", count: @overview.sales.velocity[:avg_days_to_win]) : "—" %></dd>
   </dl>
   <%= link_to t(".view_sales_report"), sales_report_path(from: @from, to: @to), class: "btn btn-ghost btn-sm" %>
 </div>

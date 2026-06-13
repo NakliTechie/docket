@@ -108,4 +108,19 @@ class SalesReportTest < ActiveSupport::TestCase
     assert_equal 500_000, row[:won_value_cents]
     assert_equal [ @rep ], @report.by_owner.map { |r| r[:owner] } # the unassigned deal added no row
   end
+
+  test "velocity reports avg days-to-win and audit-mined per-stage dwell over won deals" do
+    t0 = 8.days.ago
+    deal = nil
+    travel_to(t0)          { deal = Deal.create!(name: "w", pipeline: @pipeline, pipeline_stage: @new, value: 5000) }
+    travel_to(t0 + 3.days) { deal.update!(pipeline_stage: @qualified) }
+    travel_to(2.days.ago)  { deal.update!(pipeline_stage: @won) } # terminal → won + auto-closes now
+
+    v = @report.velocity
+    assert_equal 1, v[:won_count]
+    assert_in_delta 6.0, v[:avg_days_to_win], 0.3 # created 8d ago, closed 2d ago
+    # the stages it dwelt in are reconstructed from the audit log
+    assert_includes v[:stage_dwell].map { |row| row[:stage]&.name }, "New"
+    assert_includes v[:stage_dwell].map { |row| row[:stage]&.name }, "Qualified"
+  end
 end

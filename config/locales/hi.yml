@@ -453,6 +453,8 @@ hi:
       open_pipeline: "खुली पाइपलाइन (अभी)"
       weighted_forecast: "भारित पूर्वानुमान"
       win_rate: "जीत दर (अवधि)"
+      avg_days_to_win: "जीतने में औसत दिन"
+      days: "%{count} दिन"
       view_sales_report: "बिक्री रिपोर्ट खोलें"
       connectors: "कनेक्टर और अंतर्ग्रहण"
       sync_activity: "सिंक गतिविधि (अवधि)"
@@ -514,6 +516,10 @@ hi:
       lead_conversion: "लीड रूपांतरण"
       by_owner: "स्वामी अनुसार"
       loss_reasons: "सौदे क्यों हारे"
+      velocity: "पाइपलाइन गति"
+      avg_days_to_win: "जीतने में औसत दिन"
+      days: "%{count} दिन"
+      no_velocity: "इस अवधि में कोई जीता सौदा नहीं।"
       count_value: "%{count} · %{value}"
       percent: "%{value}%"
       unassigned: "(अनिर्दिष्ट)"
@@ -527,6 +533,7 @@ hi:
         open: "खुले"
         won: "जीते"
         reason: "कारण"
+        avg_days: "चरण में औसत दिन"
   pipelines:
     fields:
       name: "नाम"
