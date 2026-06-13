@@ -19,10 +19,10 @@ class SequencesTest < ActionDispatch::IntegrationTest
     assert_redirected_to sequence_path(Sequence.order(:id).last)
   end
 
-  test "an agent can enroll a lead and cancel the enrollment" do
+  test "a sales rep can enroll a lead and cancel the enrollment" do
     seq = create_sequence
     lead = Lead.create!(name: "Enroll Me", email: "enroll@example.com")
-    sign_in_as users(:agent_a)
+    sign_in_as users(:sales)
 
     assert_difference "SequenceEnrollment.count", 1 do
       post sequence_enrollments_path, params: { sequence_id: seq.id, enrollable_type: "Lead", enrollable_id: lead.id }

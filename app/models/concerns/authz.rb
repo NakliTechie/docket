@@ -73,33 +73,12 @@ module Authz
     ].freeze
   }.freeze
 
-  # ── Legacy roles (transition only) ─────────────────────────────────────────
-  # Reconstruct each legacy role's CURRENT authority exactly. Kept live until a
-  # data migration reassigns rows and a later step removes them (plan 1b/1f).
-  # admin == super_admin (admin already held everything). supervisor and agent
-  # are NOT equal to their functional successors (client_admin/customer_service
-  # are intentionally different) — so they get explicit sets, not aliases.
-  LEGACY = {
-    "admin" => PERMISSIONS,
-    "supervisor" => %w[
-      case:read case:write case:delete case_config:manage
-      contact:read contact:write contact:delete
-      lead:read lead:write lead:delete deal:read deal:write deal:delete
-      pipeline:read sequence:enroll
-      report:operational report:sales
-      invocation:review reference_doc:manage connector:invoke
-    ].freeze,
-    "agent" => %w[
-      case:read case:write contact:read contact:write
-      lead:read lead:write deal:read deal:write
-      pipeline:read sequence:enroll report:sales
-    ].freeze
-  }.freeze
+  # The legacy admin/supervisor/agent roles + their transitional aliases were
+  # retired by the MigrateLegacyRoles cutover — ROLE_PERMISSIONS is now the
+  # functional matrix alone.
+  ROLE_PERMISSIONS = FUNCTIONAL
 
-  ROLE_PERMISSIONS = FUNCTIONAL.merge(LEGACY).freeze
-
-  # Functional roles surfaced as assignment targets + in the admin matrix page;
-  # legacy aliases are intentionally excluded.
+  # Functional roles surfaced as assignment targets + in the admin matrix page.
   ASSIGNABLE_ROLES = FUNCTIONAL.keys.freeze
 
   module_function

@@ -64,7 +64,7 @@ class ConsoleFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "non-admins get 403 on user management" do
-    sign_in_as users(:supervisor)
+    sign_in_as users(:sales)
     get admin_users_path
     assert_response :forbidden
     post admin_users_path, params: { user: { name: "X", email_address: "x@example.com", password: "password1234" } }

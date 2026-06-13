@@ -5,7 +5,7 @@ admin:
   name: Anita Admin
   email_address: admin@example.com
   password_digest: <%= password_digest %>
-  role: admin
+  role: super_admin
   active: true
 
 supervisor:
@@ -13,7 +13,7 @@ supervisor:
   name: Suresh Supervisor
   email_address: supervisor@example.com
   password_digest: <%= password_digest %>
-  role: supervisor
+  role: client_admin
   active: true
 
 agent_a:
@@ -21,7 +21,7 @@ agent_a:
   name: Asha Agent
   email_address: agent.a@example.com
   password_digest: <%= password_digest %>
-  role: agent
+  role: customer_service
   active: true
 
 agent_b:
@@ -29,7 +29,7 @@ agent_b:
   name: Bharat Agent
   email_address: agent.b@example.com
   password_digest: <%= password_digest %>
-  role: agent
+  role: customer_service
   active: true
 
 readonly:
@@ -45,7 +45,7 @@ inactive:
   name: Iqbal Inactive
   email_address: inactive@example.com
   password_digest: <%= password_digest %>
-  role: agent
+  role: customer_service
   active: false
 
 # Functional roles (the target model). Legacy admin/supervisor/agent above are

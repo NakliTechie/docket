@@ -39,13 +39,13 @@ Current.set(actor: nil) do
   # --- Staff (names are scenario-neutral; logins stay stable) ---
   password = ENV.fetch("DOCKET_DEMO_PASSWORD", "docket-demo")
   staff_plan = [
-    [ "Arjun Mehta", "arjun@docket.local", :admin ],
-    [ "Sunita Rao", "sunita@docket.local", :supervisor ],
-    [ "Vikram Joshi", "vikram@docket.local", :supervisor ],
-    [ "Priya Nair", "priya@docket.local", :agent ],
-    [ "Rohan Gupta", "rohan@docket.local", :agent ],
-    [ "Fatima Khan", "fatima@docket.local", :agent ],
-    [ "Deepak Yadav", "deepak@docket.local", :agent ],
+    [ "Arjun Mehta", "arjun@docket.local", :super_admin ],
+    [ "Sunita Rao", "sunita@docket.local", :client_admin ],
+    [ "Vikram Joshi", "vikram@docket.local", :client_admin ],
+    [ "Priya Nair", "priya@docket.local", :customer_service ],
+    [ "Rohan Gupta", "rohan@docket.local", :customer_service ],
+    [ "Fatima Khan", "fatima@docket.local", :customer_service ],
+    [ "Deepak Yadav", "deepak@docket.local", :customer_service ],
     [ "Meena Iyer", "meena@docket.local", :readonly ]
   ]
   users = {}

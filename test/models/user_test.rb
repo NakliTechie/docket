@@ -14,8 +14,8 @@ class UserTest < ActiveSupport::TestCase
     assert_empty user.sessions.reload
   end
 
-  test "role enum stores the functional roles plus the legacy ones in transition" do
-    assert_equal %w[super_admin client_admin finance sales customer_service technical readonly admin supervisor agent],
+  test "role enum stores the functional roles" do
+    assert_equal %w[super_admin client_admin finance sales customer_service technical readonly],
                  User.roles.keys
   end
 

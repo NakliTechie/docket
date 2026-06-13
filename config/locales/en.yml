@@ -822,9 +822,6 @@ en:
         customer_service: "Customer service"
         technical: "Technical"
         readonly: "Read-only"
-        admin: "Admin"
-        supervisor: "Supervisor"
-        agent: "Agent"
 
   macros:
     fields:

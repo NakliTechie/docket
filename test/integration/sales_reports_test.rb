@@ -4,8 +4,8 @@ require "test_helper"
 # is visible to all staff (like the deals + pipelines lists it summarizes),
 # with a CSV export, mirroring the Activity report.
 class SalesReportsTest < ActionDispatch::IntegrationTest
-  test "a staff member sees the sales dashboard with its key figures" do
-    sign_in_as users(:agent_a)
+  test "a sales rep sees the sales dashboard with its key figures" do
+    sign_in_as users(:sales)
     get sales_report_path
     assert_response :success
     assert_match "Sales report", response.body
@@ -21,8 +21,8 @@ class SalesReportsTest < ActionDispatch::IntegrationTest
     assert_match "section,label,count,value_rupees,from,to", response.body
   end
 
-  test "the nav links staff to the sales report under CRM" do
-    sign_in_as users(:agent_a)
+  test "the nav links a sales rep to the sales report under CRM" do
+    sign_in_as users(:sales)
     get cases_path
     assert_match(%r{/reports/sales}, response.body)
   end

@@ -24,7 +24,7 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
 
   def staff
     User.create!(name: "Sup", email_address: "s-#{SecureRandom.hex(4)}@x.test",
-                 password: "password123", role: :supervisor)
+                 password: "password123", role: :client_admin)
   end
 
   # Stub the action lookup + execution so we test the gate, not a provider.

@@ -822,9 +822,6 @@ hi:
         customer_service: "ग्राहक सेवा"
         technical: "तकनीकी"
         readonly: "केवल-पठन"
-        admin: "प्रशासक"
-        supervisor: "पर्यवेक्षक"
-        agent: "एजेंट"
 
   macros:
     fields:

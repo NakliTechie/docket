@@ -1,8 +1,8 @@
 require "test_helper"
 
 class LeadsTest < ActionDispatch::IntegrationTest
-  test "an agent can capture, view, convert and unqualify a lead" do
-    sign_in_as users(:agent_a)
+  test "a sales rep can capture, view, convert and unqualify a lead" do
+    sign_in_as users(:sales)
 
     assert_difference "Lead.count", 1 do
       post leads_path, params: { lead: { name: "Walkin Prospect", email: "walkin@example.com",
@@ -23,7 +23,7 @@ class LeadsTest < ActionDispatch::IntegrationTest
   end
 
   test "mark unqualified from the console" do
-    sign_in_as users(:agent_a)
+    sign_in_as users(:sales)
     lead = Lead.create!(name: "Cold", email: "cold@example.com")
     post mark_unqualified_lead_path(lead)
     assert lead.reload.status_unqualified?

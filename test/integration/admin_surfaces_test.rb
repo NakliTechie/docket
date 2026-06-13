@@ -1,8 +1,8 @@
 require "test_helper"
 
 class AdminSurfacesTest < ActionDispatch::IntegrationTest
-  test "activity view is admin-only" do
-    sign_in_as users(:supervisor)
+  test "activity view is admin-tier only" do
+    sign_in_as users(:sales)
     get admin_activity_path
     assert_response :forbidden
 

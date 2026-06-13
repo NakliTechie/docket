@@ -48,10 +48,10 @@ class SsoTest < ActionDispatch::IntegrationTest
 
   test "role mapping from idp claim promotes users" do
     Setting.set("sso_staff_role_claim", "groups")
-    Setting.set("sso_staff_role_mapping", { "docket-admins" => "admin" }.to_json)
+    Setting.set("sso_staff_role_mapping", { "docket-admins" => "super_admin" }.to_json)
     mock_staff_oidc(email: "boss@example.com", groups: [ "everyone", "docket-admins" ])
     get "/auth/staff_oidc/callback"
-    assert_equal "admin", User.find_by(email_address: "boss@example.com").role
+    assert_equal "super_admin", User.find_by(email_address: "boss@example.com").role
   ensure
     Setting.unset("sso_staff_role_claim")
     Setting.unset("sso_staff_role_mapping")
@@ -75,9 +75,9 @@ class SsoTest < ActionDispatch::IntegrationTest
 
   test "role mapping demotes a user no longer in any mapped group (M7)" do
     user = users(:agent_a)
-    user.update!(role: :admin)
+    user.update!(role: :super_admin)
     Setting.set("sso_staff_role_claim", "groups")
-    Setting.set("sso_staff_role_mapping", { "docket-admins" => "admin" }.to_json)
+    Setting.set("sso_staff_role_mapping", { "docket-admins" => "super_admin" }.to_json)
     mock_staff_oidc(email: user.email_address, groups: [ "everyone" ]) # no mapped group
     get "/auth/staff_oidc/callback"
     assert_equal "customer_service", user.reload.role
@@ -88,11 +88,11 @@ class SsoTest < ActionDispatch::IntegrationTest
 
   test "multiple mapped groups grant the highest-privilege role (M8)" do
     Setting.set("sso_staff_role_claim", "groups")
-    Setting.set("sso_staff_role_mapping", { "leads" => "supervisor", "admins" => "admin" }.to_json)
+    Setting.set("sso_staff_role_mapping", { "leads" => "sales", "admins" => "super_admin" }.to_json)
     # Lower-privilege match listed first — highest must still win, not first.
     mock_staff_oidc(email: "multi@example.com", groups: [ "leads", "admins" ])
     get "/auth/staff_oidc/callback"
-    assert_equal "admin", User.find_by(email_address: "multi@example.com").role
+    assert_equal "super_admin", User.find_by(email_address: "multi@example.com").role
   ensure
     Setting.unset("sso_staff_role_claim")
     Setting.unset("sso_staff_role_mapping")

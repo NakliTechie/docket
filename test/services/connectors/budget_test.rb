@@ -68,7 +68,7 @@ class Connectors::BudgetTest < ActiveSupport::TestCase
   test "a staff User principal carries no budget" do
     conn = connector
     user = User.create!(name: "Admin", email_address: "a-#{SecureRandom.hex(4)}@x.test",
-                        password: "password123", role: :admin)
+                        password: "password123", role: :super_admin)
     10.times do
       Connectors::Invoke.call(conn, "post_json", args: { "body" => {} },
         principal: user, on_behalf_of: "case:1")
