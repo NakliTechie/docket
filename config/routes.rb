@@ -43,6 +43,9 @@ Rails.application.routes.draw do
   end
   get "reports/sales", to: "sales_reports#index", as: :sales_report
   get "dashboard", to: "dashboards#index", as: :dashboard
+  post "decisions/run", to: "decisions#run", as: :run_decisions
+  post "decisions/:id/approve", to: "decisions#approve", as: :approve_decision
+  post "decisions/:id/reject", to: "decisions#reject", as: :reject_decision
 
   namespace :admin do
     resources :users do

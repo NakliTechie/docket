@@ -13,15 +13,20 @@ class DashboardOverview
     @operational = OperationalReport.new(from: from, to: to)
   end
 
-  # Rule-based decisioning proposals over the deployment's own data (live —
-  # computed on read; a rollup is the path if rule fan-out gets heavy). Each
-  # decision carries its accountability tier; surfacing them is :autonomous.
+  # Persisted decisioning history (the rule engine writes here when "run"; see
+  # Decisioning::Dispatcher). Recent decisions, counts by lifecycle status, and
+  # the parked confirm/of_record proposals awaiting a human.
   def decisions
-    @decisions ||= Decisioning::Engine.run
+    @decisions ||= Decision.recent_first.limit(15).to_a
   end
 
   def decision_summary
-    @decision_summary ||= Decisioning::Engine.summary(decisions)
+    @decision_summary ||= Decision.group(:status).count
+                                  .transform_keys { |k| k.is_a?(Integer) ? Decision.statuses.key(k) : k.to_s }
+  end
+
+  def pending_confirmations
+    @pending_confirmations ||= Decision.awaiting_confirmation.recent_first.to_a
   end
 
   # Headline KPIs across the four planes, one row each. All cells are fixed

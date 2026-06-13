@@ -258,16 +258,23 @@
   </aside>
 </div>
 
-<%# ---- Decisioning (rule-based proposals) ---- %>
-<h2 class="panel-title"><%= t(".decisioning") %></h2>
+<%# ---- Decisioning (rule-based, persisted + gated) ---- %>
+<div class="page-header">
+  <h2 class="panel-title"><%= t(".decisioning") %></h2>
+  <div class="page-actions">
+    <%= button_to t(".run_decisioning"), run_decisions_path, class: "btn btn-sm" %>
+  </div>
+</div>
 <div class="panel">
   <p class="muted"><%= t(".decisioning_note") %></p>
   <dl class="meta-list">
-    <dt><%= t(".decisions_autonomous") %></dt><dd><%= @overview.decision_summary[:autonomous].to_i %></dd>
-    <dt><%= t(".decisions_confirm") %></dt><dd><%= @overview.decision_summary[:confirm].to_i %></dd>
-    <dt><%= t(".decisions_of_record") %></dt><dd><%= @overview.decision_summary[:of_record].to_i %></dd>
+    <dt><%= t(".decisions_proposed") %></dt><dd><%= @overview.decision_summary["proposed"].to_i %></dd>
+    <dt><%= t(".decisions_applied") %></dt><dd><%= @overview.decision_summary["applied"].to_i %></dd>
+    <dt><%= t(".decisions_rejected") %></dt><dd><%= @overview.decision_summary["rejected"].to_i %></dd>
   </dl>
-  <% if @overview.decisions.any? %>
+
+  <% if @overview.pending_confirmations.any? %>
+    <h3 class="panel-title"><%= t(".pending_confirmation") %></h3>
     <div class="table-wrap">
       <table>
         <thead>
@@ -275,16 +282,45 @@
             <th><%= t(".columns.rule") %></th>
             <th><%= t(".columns.subject") %></th>
             <th><%= t(".columns.recommendation") %></th>
-            <th><%= t(".columns.tier") %></th>
+            <th><%= t(".columns.act") %></th>
           </tr>
         </thead>
         <tbody>
-          <% @overview.decisions.first(10).each do |proposal| %>
+          <% @overview.pending_confirmations.each do |decision| %>
             <tr>
-              <td><%= proposal.rule.humanize %></td>
-              <td><%= proposal.subject_label %></td>
-              <td><%= proposal.recommendation %></td>
-              <td><%= proposal.decision_class.to_s.humanize %></td>
+              <td><%= decision.rule.humanize %></td>
+              <td><%= decision.subject_label %></td>
+              <td><%= decision.recommendation %></td>
+              <td class="row-actions">
+                <%= button_to t(".approve"), approve_decision_path(decision), class: "btn btn-sm" %>
+                <%= button_to t(".reject"), reject_decision_path(decision), class: "btn btn-ghost btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <h3 class="panel-title"><%= t(".recent_decisions") %></h3>
+  <% if @overview.decisions.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t(".columns.rule") %></th>
+            <th><%= t(".columns.subject") %></th>
+            <th><%= t(".columns.tier") %></th>
+            <th><%= t(".columns.dstatus") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @overview.decisions.each do |decision| %>
+            <tr>
+              <td><%= decision.rule.humanize %></td>
+              <td><%= decision.subject_label %></td>
+              <td><%= decision.decision_class.to_s.humanize %></td>
+              <td><%= decision.status.humanize %></td>
             </tr>
           <% end %>
         </tbody>

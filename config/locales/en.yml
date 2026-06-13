@@ -416,6 +416,13 @@ en:
       deleted: "Deal deleted."
     move:
       moved: "Deal moved."
+  decisions:
+    run:
+      ran: "Decisioning run — autonomous signals applied; confirm/of-record proposals are awaiting you."
+    approve:
+      approved: "Decision approved and applied."
+    reject:
+      rejected: "Decision rejected."
   dashboards:
     index:
       title: "Dashboard"
@@ -486,11 +493,16 @@ en:
       no_agent_actions: "No agent actions in this window."
       by_status: "By status (window)"
       decisioning: "Decisioning"
-      decisioning_note: "Rule-based proposals over this deployment's own data — recommendations only; acting on them gates by accountability tier. Computed live."
-      decisions_autonomous: "Autonomous signals"
-      decisions_confirm: "Need confirmation"
-      decisions_of_record: "Decisions of record"
-      no_decisions: "No proposals right now."
+      decisioning_note: "Rule-based proposals over this deployment's own data, persisted as a history. Autonomous signals auto-apply a reversible label; confirm / of-record proposals wait for a human."
+      run_decisioning: "Run decisioning"
+      decisions_proposed: "Proposed"
+      decisions_applied: "Applied"
+      decisions_rejected: "Rejected"
+      pending_confirmation: "Awaiting confirmation"
+      recent_decisions: "Recent decisions"
+      approve: "Approve"
+      reject: "Reject"
+      no_decisions: "No decisions yet — run decisioning to generate proposals."
       columns:
         status: "Status"
         cases: "Cases"
@@ -506,6 +518,8 @@ en:
         subject: "Subject"
         recommendation: "Recommendation"
         tier: "Tier"
+        act: "Act"
+        dstatus: "Status"
   sales_reports:
     index:
       title: "Sales report"

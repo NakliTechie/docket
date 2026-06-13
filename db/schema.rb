@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_150000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -91,6 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_140000) do
     t.datetime "first_responded_at"
     t.boolean "first_response_breached", default: false, null: false
     t.datetime "first_response_due_at"
+    t.json "labels"
     t.integer "lock_version", default: 0, null: false
     t.integer "priority", default: 1, null: false
     t.integer "queue_id"
@@ -230,6 +231,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_140000) do
     t.datetime "deleted_at"
     t.date "expected_close_on"
     t.string "external_id"
+    t.json "labels"
     t.integer "lead_id"
     t.integer "lost_reason"
     t.string "name", null: false
@@ -254,6 +256,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_140000) do
     t.index ["status"], name: "index_deals_on_status"
   end
 
+  create_table "decisions", force: :cascade do |t|
+    t.integer "approved_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "decided_at"
+    t.string "decision_class", null: false
+    t.text "decision_reason"
+    t.string "effect"
+    t.text "reasoning"
+    t.text "recommendation"
+    t.string "rule", null: false
+    t.string "signal", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "subject_id", null: false
+    t.string "subject_label"
+    t.string "subject_type", null: false
+    t.datetime "updated_at", null: false
+    t.string "version", null: false
+    t.index ["rule", "subject_type", "subject_id"], name: "index_decisions_on_rule_and_subject_type_and_subject_id"
+    t.index ["status"], name: "index_decisions_on_status"
+    t.index ["subject_type", "subject_id"], name: "index_decisions_on_subject_type_and_subject_id"
+  end
+
   create_table "leads", force: :cascade do |t|
     t.string "company_name"
     t.integer "contact_id"
@@ -263,6 +287,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_140000) do
     t.datetime "deleted_at"
     t.string "email"
     t.string "external_id"
+    t.json "labels"
     t.string "name", null: false
     t.text "notes"
     t.integer "owner_id"

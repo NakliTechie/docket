@@ -5,6 +5,7 @@
 class Case < ApplicationRecord
   include SoftDeletable
   include Audited
+  include Labelable
   include HumanEnums
 
   humanizes_enums :status, :priority, :channel

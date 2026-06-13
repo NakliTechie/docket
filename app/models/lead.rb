@@ -5,6 +5,7 @@
 class Lead < ApplicationRecord
   include SoftDeletable
   include Audited
+  include Labelable
   include HumanEnums
 
   humanizes_enums :status, :source

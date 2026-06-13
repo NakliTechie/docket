@@ -19,7 +19,7 @@ module Decisioning
       def effect = :read
     end
 
-    # → Array<Decision>. Override in subclasses.
+    # → Array<Proposal>. Override in subclasses.
     def evaluate
       raise NotImplementedError, "#{self.class} must implement #evaluate"
     end
@@ -27,7 +27,7 @@ module Decisioning
     private
 
     def decision(subject:, signal:, recommendation:, reasoning:, label: nil)
-      Decision.new(
+      Proposal.new(
         rule: self.class.key, version: self.class.version,
         subject_type: subject.class.name, subject_id: subject.id,
         subject_label: label || default_label(subject),

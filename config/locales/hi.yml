@@ -416,6 +416,13 @@ hi:
       deleted: "सौदा हटाया गया।"
     move:
       moved: "सौदा स्थानांतरित किया गया।"
+  decisions:
+    run:
+      ran: "निर्णयन चला — स्वायत्त संकेत लागू; पुष्टि/अभिलेख प्रस्ताव आपकी प्रतीक्षा में।"
+    approve:
+      approved: "निर्णय अनुमोदित और लागू।"
+    reject:
+      rejected: "निर्णय अस्वीकृत।"
   dashboards:
     index:
       title: "डैशबोर्ड"
@@ -486,11 +493,16 @@ hi:
       no_agent_actions: "इस अवधि में कोई एजेंट कार्रवाई नहीं।"
       by_status: "स्थिति अनुसार (अवधि)"
       decisioning: "निर्णयन"
-      decisioning_note: "इस परिनियोजन के अपने डेटा पर नियम-आधारित प्रस्ताव — केवल सिफ़ारिशें; उन पर कार्रवाई जवाबदेही स्तर के अनुसार गेट होती है। लाइव गणना।"
-      decisions_autonomous: "स्वायत्त संकेत"
-      decisions_confirm: "पुष्टि आवश्यक"
-      decisions_of_record: "अभिलेख के निर्णय"
-      no_decisions: "अभी कोई प्रस्ताव नहीं।"
+      decisioning_note: "इस परिनियोजन के अपने डेटा पर नियम-आधारित प्रस्ताव, इतिहास के रूप में संग्रहित। स्वायत्त संकेत स्वतः एक प्रतिवर्ती लेबल लगाते हैं; पुष्टि / अभिलेख प्रस्ताव मानव की प्रतीक्षा करते हैं।"
+      run_decisioning: "निर्णयन चलाएँ"
+      decisions_proposed: "प्रस्तावित"
+      decisions_applied: "लागू"
+      decisions_rejected: "अस्वीकृत"
+      pending_confirmation: "पुष्टि की प्रतीक्षा में"
+      recent_decisions: "हाल के निर्णय"
+      approve: "अनुमोदित करें"
+      reject: "अस्वीकार करें"
+      no_decisions: "अभी कोई निर्णय नहीं — प्रस्ताव बनाने के लिए निर्णयन चलाएँ।"
       columns:
         status: "स्थिति"
         cases: "मामले"
@@ -506,6 +518,8 @@ hi:
         subject: "विषय"
         recommendation: "सिफ़ारिश"
         tier: "स्तर"
+        act: "कार्रवाई"
+        dstatus: "स्थिति"
   sales_reports:
     index:
       title: "बिक्री रिपोर्ट"

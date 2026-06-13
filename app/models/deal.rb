@@ -4,6 +4,7 @@
 class Deal < ApplicationRecord
   include SoftDeletable
   include Audited
+  include Labelable
   include HumanEnums
 
   humanizes_enums :status, :lost_reason
