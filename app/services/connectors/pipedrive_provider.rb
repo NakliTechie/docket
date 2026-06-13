@@ -60,7 +60,7 @@ module Connectors
 
     private
 
-    # POST /v1/persons — Pipedrive takes email/phone as arrays of strings.
+    # POST /api/v1/persons — Pipedrive takes email/phone as arrays of strings.
     def create_person(args)
       name = require_arg(args, "name")
       body = { "name" => name }
@@ -70,12 +70,12 @@ module Connectors
       phone = blank_to_nil(args["phone"] || args[:phone])
       body["phone"] = [ phone ] unless phone.nil?
 
-      uri = build_uri(base, "/v1/persons?api_token=#{require_secret('api_token')}")
+      uri = build_uri(base, "/api/v1/persons?api_token=#{require_secret('api_token')}")
       response = ensure_ok!(post_json(uri, body, headers: {}), "Pipedrive")
       { "ok" => true, "person" => parse_json(response.body) }
     end
 
-    # POST /v1/deals
+    # POST /api/v1/deals
     def create_deal(args)
       title = require_arg(args, "title")
       body = { "title" => title }
@@ -85,7 +85,7 @@ module Connectors
       currency = blank_to_nil(args["currency"] || args[:currency])
       body["currency"] = currency unless currency.nil?
 
-      uri = build_uri(base, "/v1/deals?api_token=#{require_secret('api_token')}")
+      uri = build_uri(base, "/api/v1/deals?api_token=#{require_secret('api_token')}")
       response = ensure_ok!(post_json(uri, body, headers: {}), "Pipedrive")
       { "ok" => true, "deal" => parse_json(response.body) }
     end

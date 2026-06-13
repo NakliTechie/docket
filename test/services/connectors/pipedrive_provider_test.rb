@@ -41,7 +41,7 @@ class Connectors::PipedriveProviderTest < ActiveSupport::TestCase
       req = reqs.last.last
       assert_kind_of Net::HTTP::Post, req
       # Auth is a query param, not a header.
-      assert_equal "/v1/persons?api_token=tok-secret", req.path
+      assert_equal "/api/v1/persons?api_token=tok-secret", req.path
       assert_nil req["Authorization"]
       sent = JSON.parse(req.body)
       assert_equal "Ada Lovelace", sent["name"]
@@ -84,7 +84,7 @@ class Connectors::PipedriveProviderTest < ActiveSupport::TestCase
 
       req = reqs.last.last
       assert_kind_of Net::HTTP::Post, req
-      assert_equal "/v1/deals?api_token=tok-secret", req.path
+      assert_equal "/api/v1/deals?api_token=tok-secret", req.path
       sent = JSON.parse(req.body)
       assert_equal "Q3 renewal", sent["title"]
       assert_equal "5000", sent["value"]
@@ -128,7 +128,7 @@ class Connectors::PipedriveProviderTest < ActiveSupport::TestCase
       obs = prov.invoke("create_person", { "name" => "Ada" })
       assert obs["ok"]
       # The path (and query) are unchanged; only the (stubbed) host differs.
-      assert_equal "/v1/persons?api_token=tok-secret", reqs.last.last.path
+      assert_equal "/api/v1/persons?api_token=tok-secret", reqs.last.last.path
     end
   end
 

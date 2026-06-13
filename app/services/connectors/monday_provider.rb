@@ -11,7 +11,7 @@ module Connectors
   # interpolated into the query string) so there is no query-injection surface.
   class MondayProvider < HttpProvider
     DEFAULT_BASE = "https://api.monday.com".freeze
-    API_VERSION = "2023-10".freeze
+    API_VERSION = "2026-01".freeze
 
     def self.descriptor
       Descriptor.new(

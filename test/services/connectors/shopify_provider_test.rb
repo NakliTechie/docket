@@ -13,10 +13,23 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
     def read_timeout=(_) ; end
     def request(req) = (@last = req; @r)
   end
+
   def with_http(code, body = "{}")
+    with_http_seq([ code, body ]) { |reqs| yield reqs }
+  end
+
+  # Serve a sequence of responses — the Nth Net::HTTP.new gets the Nth pair
+  # (the last pair repeats if more calls happen). create_fulfillment makes two
+  # calls: GET fulfillment_orders, then POST fulfillments.
+  def with_http_seq(*responses)
     captured = []
+    i = -1
     original = Net::HTTP.method(:new)
-    Net::HTTP.define_singleton_method(:new) { |*_a| FakeHttp.new(FakeResponse.new(code.to_s, body)).tap { |h| captured << h } }
+    Net::HTTP.define_singleton_method(:new) do |*_a|
+      i += 1
+      code, body = responses[i] || responses.last
+      FakeHttp.new(FakeResponse.new(code.to_s, body)).tap { |h| captured << h }
+    end
     yield captured
   ensure
     Net::HTTP.define_singleton_method(:new, original)
@@ -28,6 +41,8 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
     conn.credentials_hash = { "access_token" => "shpat_token" }.merge(creds)
     Connectors::ShopifyProvider.new(conn)
   end
+
+  FO = { "fulfillment_orders" => [ { "id" => 1122 } ] }.to_json
 
   # --- descriptor / decision classes ---
 
@@ -50,34 +65,44 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
     assert action.of_record?
   end
 
-  # --- create_fulfillment ---
+  # --- create_fulfillment (resolves the fulfillment order, then fulfils) ---
 
-  test "create_fulfillment posts to the fulfillments endpoint with tracking and custom-token auth" do
-    body = { "fulfillment" => { "id" => 99, "status" => "success" } }.to_json
-    with_http(201, body) do |reqs|
+  test "create_fulfillment resolves the order's fulfillment orders then posts tracking_info" do
+    done = { "fulfillment" => { "id" => 99, "status" => "success" } }.to_json
+    with_http_seq([ 200, FO ], [ 201, done ]) do |reqs|
       obs = provider.invoke("create_fulfillment",
                             { "order_id" => "450789469", "tracking_number" => "1Z999", "notify_customer" => true })
       assert obs["ok"]
       assert_equal "success", obs["fulfillment"]["fulfillment"]["status"]
 
-      req = reqs.last.last
-      assert_equal "/admin/api/2025-01/fulfillments.json", req.path
-      assert_kind_of Net::HTTP::Post, req
-      assert_equal "shpat_token", req["X-Shopify-Access-Token"]
-      sent = JSON.parse(req.body)
-      assert_equal "450789469", sent["fulfillment"]["order_id"]
-      assert_equal "1Z999", sent["fulfillment"]["tracking_number"]
-      assert_equal true, sent["fulfillment"]["notify_customer"]
+      get = reqs.first.last
+      assert_equal "/admin/api/2025-01/orders/450789469/fulfillment_orders.json", get.path
+      assert_kind_of Net::HTTP::Get, get
+
+      post = reqs.last.last
+      assert_equal "/admin/api/2025-01/fulfillments.json", post.path
+      assert_kind_of Net::HTTP::Post, post
+      assert_equal "shpat_token", post["X-Shopify-Access-Token"]
+      sent = JSON.parse(post.body)["fulfillment"]
+      assert_equal [ { "fulfillment_order_id" => 1122 } ], sent["line_items_by_fulfillment_order"]
+      assert_equal({ "number" => "1Z999" }, sent["tracking_info"])
+      assert_equal true, sent["notify_customer"]
     end
   end
 
   test "create_fulfillment omits tracking and notify when not given" do
-    with_http(201, { "fulfillment" => {} }.to_json) do |reqs|
+    with_http_seq([ 200, FO ], [ 201, { "fulfillment" => {} }.to_json ]) do |reqs|
       provider.invoke("create_fulfillment", { "order_id" => "1" })
-      sent = JSON.parse(reqs.last.last.body)
-      assert_equal "1", sent["fulfillment"]["order_id"]
-      assert_not sent["fulfillment"].key?("tracking_number")
-      assert_not sent["fulfillment"].key?("notify_customer")
+      sent = JSON.parse(reqs.last.last.body)["fulfillment"]
+      assert_equal [ { "fulfillment_order_id" => 1122 } ], sent["line_items_by_fulfillment_order"]
+      assert_not sent.key?("tracking_info")
+      assert_not sent.key?("notify_customer")
+    end
+  end
+
+  test "create_fulfillment raises when the order has no fulfillment orders" do
+    with_http(200, { "fulfillment_orders" => [] }.to_json) do
+      assert_raises(Connectors::Error) { provider.invoke("create_fulfillment", { "order_id" => "1" }) }
     end
   end
 
@@ -87,7 +112,7 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
     end
   end
 
-  test "create_fulfillment raises on a non-2xx response" do
+  test "create_fulfillment raises when the fulfillment-order lookup fails" do
     with_http(422, { "errors" => "bad" }.to_json) do
       assert_raises(Connectors::Error) { provider.invoke("create_fulfillment", { "order_id" => "1" }) }
     end
@@ -125,8 +150,9 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
   # --- defaults / derivation ---
 
   test "api_version defaults to 2025-01 when config value is blank" do
-    with_http(201, { "fulfillment" => {} }.to_json) do |reqs|
+    with_http_seq([ 200, FO ], [ 201, { "fulfillment" => {} }.to_json ]) do |reqs|
       provider(config: { "api_version" => "" }).invoke("create_fulfillment", { "order_id" => "1" })
+      assert_equal "/admin/api/2025-01/orders/1/fulfillment_orders.json", reqs.first.last.path
       assert_equal "/admin/api/2025-01/fulfillments.json", reqs.last.last.path
     end
   end

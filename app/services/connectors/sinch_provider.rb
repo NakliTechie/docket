@@ -7,7 +7,7 @@ module Connectors
   # message to a citizen is rights-touching comms → :confirm (the AI prepares
   # the send and a human confirms before it goes out).
   class SinchProvider < HttpProvider
-    DEFAULT_BASE = "https://sms.api.sinch.com".freeze
+    DEFAULT_BASE = "https://us.sms.api.sinch.com".freeze
 
     def self.descriptor
       Descriptor.new(

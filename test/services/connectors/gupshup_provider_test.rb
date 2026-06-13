@@ -24,7 +24,7 @@ class Connectors::GupshupProviderTest < ActiveSupport::TestCase
 
   def provider(config: {}, creds: {})
     conn = Connector.new(provider: "http_json", name: "t",
-                         config: { "source" => "917000000000" }.merge(config))
+                         config: { "source" => "917000000000", "app_name" => "DocketBot" }.merge(config))
     conn.credentials_hash = { "api_key" => "key-secret" }.merge(creds)
     Connectors::GupshupProvider.new(conn)
   end
@@ -33,14 +33,14 @@ class Connectors::GupshupProviderTest < ActiveSupport::TestCase
 
   # --- descriptor / decision-class ---
 
-  test "descriptor declares Gupshup as an effector-only comms provider" do
+  test "descriptor declares Gupshup as an effector-only WhatsApp comms provider" do
     d = Connectors::GupshupProvider.descriptor
     assert_equal "gupshup", d.key
-    assert_equal "Gupshup (messaging)", d.name
+    assert_equal "Gupshup (WhatsApp)", d.name
     assert_equal "Communications", d.category
     assert_not d.syncs?
     assert_equal %w[api_key], d.secret_fields
-    assert_equal %w[source base_url], d.config_fields
+    assert_equal %w[source app_name base_url], d.config_fields
   end
 
   test "send_message is a :confirm action (a human confirms before a customer send goes out)" do
@@ -56,7 +56,7 @@ class Connectors::GupshupProviderTest < ActiveSupport::TestCase
 
   # --- send_message (network stubbed) ---
 
-  test "send_message posts a form-encoded message and returns the parsed observation" do
+  test "send_message posts to the /wa endpoint with src.name and a JSON text message" do
     with_http(200, SENT_BODY) do |reqs|
       obs = provider.invoke("send_message", { "to" => "919812345678", "text" => "Your case DKT-1 was updated" })
       assert obs["ok"]
@@ -64,14 +64,15 @@ class Connectors::GupshupProviderTest < ActiveSupport::TestCase
 
       req = reqs.last.last
       assert_instance_of Net::HTTP::Post, req
-      assert_equal "/sm/api/v1/msg", req.path
+      assert_equal "/wa/api/v1/msg", req.path
       assert_equal "application/x-www-form-urlencoded", req["Content-Type"]
 
       form = URI.decode_www_form(req.body).to_h
-      assert_equal "sms", form["channel"]
+      assert_equal "whatsapp", form["channel"]
       assert_equal "917000000000", form["source"]
+      assert_equal "DocketBot", form["src.name"]
       assert_equal "919812345678", form["destination"]
-      assert_equal "Your case DKT-1 was updated", form["message"]
+      assert_equal({ "type" => "text", "text" => "Your case DKT-1 was updated" }, JSON.parse(form["message"]))
     end
   end
 
@@ -82,29 +83,20 @@ class Connectors::GupshupProviderTest < ActiveSupport::TestCase
     end
   end
 
-  test "send_message defaults the channel to sms and honours an override" do
-    with_http(200, SENT_BODY) do |reqs|
-      provider.invoke("send_message", { "to" => "919812345678", "text" => "hi", "channel" => "whatsapp" })
-      assert_equal "whatsapp", URI.decode_www_form(reqs.last.last.body).to_h["channel"]
-    end
-  end
-
-  test "send_message honours a configured base_url override without erroring" do
+  test "send_message honours a configured base_url override and keeps the /wa path" do
     with_http(200, SENT_BODY) do |reqs|
       obs = provider(config: { "base_url" => "https://api.gupshup.test" })
             .invoke("send_message", { "to" => "919812345678", "text" => "hi" })
       assert obs["ok"]
-      assert_equal "/sm/api/v1/msg", reqs.last.last.path
+      assert_equal "/wa/api/v1/msg", reqs.last.last.path
     end
   end
 
   test "send_message accepts symbol-keyed args" do
     with_http(200, SENT_BODY) do |reqs|
-      obs = provider.invoke("send_message", { to: "919812345678", text: "hi", channel: "whatsapp" })
+      obs = provider.invoke("send_message", { to: "919812345678", text: "hi" })
       assert obs["ok"]
-      form = URI.decode_www_form(reqs.last.last.body).to_h
-      assert_equal "919812345678", form["destination"]
-      assert_equal "whatsapp", form["channel"]
+      assert_equal "919812345678", URI.decode_www_form(reqs.last.last.body).to_h["destination"]
     end
   end
 
@@ -130,10 +122,13 @@ class Connectors::GupshupProviderTest < ActiveSupport::TestCase
     end
   end
 
-  test "send_message requires the source config value" do
+  test "send_message requires the source and app_name config values" do
     with_http(200, SENT_BODY) do
       assert_raises(Connectors::Error) do
         provider(config: { "source" => "" }).invoke("send_message", { "to" => "919812345678", "text" => "hi" })
+      end
+      assert_raises(Connectors::Error) do
+        provider(config: { "app_name" => "" }).invoke("send_message", { "to" => "919812345678", "text" => "hi" })
       end
     end
   end

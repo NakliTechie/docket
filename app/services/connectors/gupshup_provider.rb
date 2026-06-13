@@ -1,18 +1,17 @@
 module Connectors
-  # Effector-only provider: send an SMS or WhatsApp message to a customer via
-  # Gupshup, a widely used CPaaS (strong in India). Auth is the `apikey`
-  # header (vaulted); the registered source/sender is a config value. The
-  # /sm/api/v1/msg endpoint is form-encoded. Sending a message to a customer
-  # is :confirm — the AI prepares the send and a human confirms before it goes
-  # out.
+  # Effector-only provider: send a WhatsApp message to a customer via Gupshup,
+  # a widely used CPaaS (strong in India). Auth is the `apikey` header (vaulted);
+  # the registered WhatsApp source number and the Gupshup app name (`src.name`)
+  # are config. Uses the /wa/api/v1/msg endpoint — the legacy /sm endpoint was
+  # end-of-lifed 2025-06-30. Sending a message to a customer is :confirm — the
+  # AI prepares the send and a human confirms before it goes out.
   class GupshupProvider < HttpProvider
     DEFAULT_BASE = "https://api.gupshup.io".freeze
-    DEFAULT_CHANNEL = "sms".freeze
 
     def self.descriptor
       Descriptor.new(
-        key: "gupshup", name: "Gupshup (messaging)", category: "Communications",
-        auth: :none, config_fields: %w[source base_url],
+        key: "gupshup", name: "Gupshup (WhatsApp)", category: "Communications",
+        auth: :none, config_fields: %w[source app_name base_url],
         credential_fields: %w[api_key], syncs: false
       )
     end
@@ -20,14 +19,13 @@ module Connectors
     def self.actions
       [
         Action.new(
-          key: "send_message", name: "Send message",
-          summary: "Send an SMS/WhatsApp message via Gupshup.",
+          key: "send_message", name: "Send WhatsApp message",
+          summary: "Send a WhatsApp message to a customer via Gupshup.",
           params: {
             "type" => "object",
             "properties" => {
               "to" => { "type" => "string", "description" => "Recipient phone number (E.164 / national format)" },
-              "text" => { "type" => "string", "description" => "Message body text" },
-              "channel" => { "type" => "string", "description" => "Delivery channel (default 'sms')" }
+              "text" => { "type" => "string", "description" => "Message body text" }
             },
             "required" => %w[to text]
           },
@@ -51,13 +49,13 @@ module Connectors
       raise Connectors::Error, "to is required" if to.blank?
       raise Connectors::Error, "text is required" if text.blank?
 
-      channel = (args["channel"] || args[:channel]).to_s.strip.presence || DEFAULT_CHANNEL
-      uri = build_uri(base, "/sm/api/v1/msg")
+      uri = build_uri(base, "/wa/api/v1/msg")
       form = {
-        "channel" => channel,
+        "channel" => "whatsapp",
         "source" => require_config("source"),
+        "src.name" => require_config("app_name"),
         "destination" => to,
-        "message" => text
+        "message" => { "type" => "text", "text" => text }.to_json
       }
       resp = post_form(uri, form, headers: { "apikey" => require_secret("api_key") })
       ensure_ok!(resp, "Gupshup")

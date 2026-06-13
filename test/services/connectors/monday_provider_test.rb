@@ -43,7 +43,7 @@ class Connectors::MondayProviderTest < ActiveSupport::TestCase
       assert_equal "/v2", req.path
       # monday auth is the RAW token — no "Bearer " prefix.
       assert_equal "tok-secret", req["Authorization"]
-      assert_equal "2023-10", req["API-Version"]
+      assert_equal "2026-01", req["API-Version"]
 
       sent = JSON.parse(req.body)
       assert_includes sent["query"], "create_item"

@@ -72,19 +72,27 @@ module Connectors
 
     private
 
-    # NOTE: modern Shopify prefers the GraphQL fulfillmentCreateV2 mutation
-    # (which needs a fulfillment_order_id); the REST create-fulfillment
-    # endpoint still works for custom apps and is fine for v1 here.
+    # The order_id-based create-fulfillment endpoint was removed in API 2022-07.
+    # The current REST flow: resolve the order's fulfillment order(s), then POST
+    # /fulfillments.json fulfilling against them (line_items_by_fulfillment_order,
+    # tracking under tracking_info). (GraphQL fulfillmentCreateV2 is the modern
+    # equivalent; this keeps the REST shape consistent with the rest of the API.)
     def create_fulfillment(args)
       order_id = require_arg(args, "order_id")
-      fulfillment = {}
+
+      fo_uri = build_uri(api_base, "/orders/#{order_id}/fulfillment_orders.json")
+      fo_body = parse_json(ensure_ok!(get(fo_uri, headers: auth_headers), "Shopify").body)
+      ids = (fo_body.is_a?(Hash) ? Array(fo_body["fulfillment_orders"]) : []).filter_map { |fo| fo["id"] }
+      raise Connectors::Error, "no fulfillment orders for order #{order_id}" if ids.empty?
+
+      fulfillment = { "line_items_by_fulfillment_order" => ids.map { |id| { "fulfillment_order_id" => id } } }
       tracking = (args["tracking_number"] || args[:tracking_number]).to_s
-      fulfillment["tracking_number"] = tracking if tracking.present?
+      fulfillment["tracking_info"] = { "number" => tracking } if tracking.present?
       notify = args["notify_customer"] || args[:notify_customer]
       fulfillment["notify_customer"] = !!notify unless notify.nil?
 
       uri = build_uri(api_base, "/fulfillments.json")
-      response = ensure_ok!(post_json(uri, { "fulfillment" => fulfillment.merge("order_id" => order_id) }, headers: auth_headers), "Shopify")
+      response = ensure_ok!(post_json(uri, { "fulfillment" => fulfillment }, headers: auth_headers), "Shopify")
       { "ok" => true, "fulfillment" => parse_json(response.body) }
     end
 
