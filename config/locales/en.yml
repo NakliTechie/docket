@@ -1066,6 +1066,7 @@ en:
         schedule: "Sync every (minutes)"
         shared_credential: "Shared credential (optional)"
         shared_credential_hint: "Source secrets from a shared app-level credential instead of entering them here. This connector's own values, if any, take precedence."
+        target: "Sync target"
       config_legend: "Connection"
       config:
         endpoint_url: "Endpoint URL"
@@ -1073,6 +1074,7 @@ en:
         action_url: "Action URL (for write actions)"
         webhook_url: "Slack incoming-webhook URL"
         base_url: "Base URL"
+        default_pipeline_id: "Default pipeline (for deal sync)"
       credentials:
         api_key: "API key / token"
         api_secret: "API secret"
@@ -1091,6 +1093,11 @@ en:
         email: "Email ←"
         name: "Name ←"
         phone: "Phone ←"
+      targets:
+        contacts: "Contacts"
+        leads: "Leads"
+        deals: "Deals"
+        cases: "Cases"
       schedule_hint: "Blank = manual / webhook only"
       status:
         active: "Active"
@@ -1527,7 +1534,9 @@ en:
             provider:
               unknown: "is not a known connector type"
             field_mapping:
-              needs_identity: "must map at least an external ID or email"
+              needs_identity: "must map the identity fields this target needs (e.g. external ID, email, subject)"
+            config:
+              missing_default: "is missing a required default for this target (e.g. a default pipeline)"
         contact:
           attributes:
             base:

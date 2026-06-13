@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_140000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -87,6 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.text "description"
+    t.string "external_id"
     t.datetime "first_responded_at"
     t.boolean "first_response_breached", default: false, null: false
     t.datetime "first_response_due_at"
@@ -99,6 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
     t.datetime "resolution_due_at"
     t.datetime "resolved_at"
     t.integer "sla_policy_id"
+    t.integer "source_connector_id"
     t.integer "status", default: 0, null: false
     t.string "subject", null: false
     t.string "tracking_id", null: false
@@ -108,11 +110,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
     t.index ["contact_id"], name: "index_cases_on_contact_id"
     t.index ["created_at"], name: "index_cases_on_created_at"
     t.index ["deleted_at"], name: "index_cases_on_deleted_at"
+    t.index ["external_id"], name: "index_cases_on_external_id"
     t.index ["first_response_breached", "first_response_due_at"], name: "idx_on_first_response_breached_first_response_due_a_66b2255ab2"
     t.index ["priority"], name: "index_cases_on_priority"
     t.index ["queue_id"], name: "index_cases_on_queue_id"
     t.index ["resolution_breached", "resolution_due_at"], name: "index_cases_on_resolution_breached_and_resolution_due_at"
     t.index ["sla_policy_id"], name: "index_cases_on_sla_policy_id"
+    t.index ["source_connector_id"], name: "index_cases_on_source_connector_id"
     t.index ["status", "queue_id"], name: "index_cases_on_status_and_queue_id"
     t.index ["status"], name: "index_cases_on_status"
     t.index ["tracking_id"], name: "index_cases_on_tracking_id", unique: true
@@ -225,6 +229,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
     t.string "currency", default: "INR", null: false
     t.datetime "deleted_at"
     t.date "expected_close_on"
+    t.string "external_id"
     t.integer "lead_id"
     t.integer "lost_reason"
     t.string "name", null: false
@@ -238,6 +243,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
     t.bigint "value_cents"
     t.index ["contact_id"], name: "index_deals_on_contact_id"
     t.index ["deleted_at"], name: "index_deals_on_deleted_at"
+    t.index ["external_id"], name: "index_deals_on_external_id"
     t.index ["lead_id"], name: "index_deals_on_lead_id"
     t.index ["organisation_id"], name: "index_deals_on_organisation_id"
     t.index ["owner_id"], name: "index_deals_on_owner_id"
@@ -256,6 +262,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "email"
+    t.string "external_id"
     t.string "name", null: false
     t.text "notes"
     t.integer "owner_id"
@@ -270,6 +277,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
     t.index ["converted_deal_id"], name: "index_leads_on_converted_deal_id"
     t.index ["deleted_at"], name: "index_leads_on_deleted_at"
     t.index ["email"], name: "index_leads_on_email"
+    t.index ["external_id"], name: "index_leads_on_external_id"
     t.index ["owner_id"], name: "index_leads_on_owner_id"
     t.index ["source_connector_id"], name: "index_leads_on_source_connector_id"
     t.index ["status"], name: "index_leads_on_status"

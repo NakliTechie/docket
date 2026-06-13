@@ -39,6 +39,8 @@ class Case < ApplicationRecord
   belongs_to :assignee, -> { with_deleted }, class_name: "User", optional: true
   belongs_to :category, -> { with_deleted }, optional: true
   belongs_to :sla_policy, -> { with_deleted }, optional: true
+  # Which connector ingested this case (nil for portal/email/manual/API).
+  belongs_to :source_connector, class_name: "Connector", optional: true
 
   has_many :messages, dependent: nil, inverse_of: :case
   has_many :audit_entries, as: :auditable, dependent: nil

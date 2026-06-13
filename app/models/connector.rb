@@ -12,7 +12,17 @@ class Connector < ApplicationRecord
   # never clobbers a live connection's tokens.
   encrypts :oauth_credentials
 
-  TARGETS = %w[contacts].freeze
+  TARGETS = %w[contacts leads deals cases].freeze
+
+  # Per-target sync requirements. `any` = at least one identity field must be
+  # mapped; `all` = every listed field must be mapped; `config` = these config
+  # keys must be set. external_id is the dedup key everywhere.
+  SYNC_REQUIREMENTS = {
+    "contacts" => { any: %w[external_id email] },
+    "leads" => { any: %w[external_id email] },
+    "deals" => { all: %w[external_id], config: %w[default_pipeline_id] },
+    "cases" => { all: %w[external_id subject contact_email] }
+  }.freeze
 
   belongs_to :shared_credential, optional: true
   has_many :connector_runs, dependent: :delete_all
@@ -25,7 +35,7 @@ class Connector < ApplicationRecord
   validates :name, presence: true
   validates :target, inclusion: { in: TARGETS }
   validate :provider_is_known
-  validate :mapping_reaches_a_contact
+  validate :sync_mapping_is_complete
 
   before_validation :ensure_webhook_secret, on: :create
 
@@ -135,10 +145,19 @@ class Connector < ApplicationRecord
 
   # A pull is useless if nothing maps to an identity we can upsert on — but
   # effector-only providers (notify / pay) don't sync, so they need no mapping.
-  def mapping_reaches_a_contact
-    return unless provider_syncs? && target == "contacts"
+  # Requirements vary by target (see SYNC_REQUIREMENTS): deals also need a
+  # default pipeline; cases need a subject + a contact_email to resolve.
+  def sync_mapping_is_complete
+    return unless provider_syncs?
+    rules = SYNC_REQUIREMENTS[target] or return
     mapped = (field_mapping || {}).keys.map(&:to_s)
-    return if (mapped & %w[external_id email]).any?
-    errors.add(:field_mapping, :needs_identity)
+
+    needs_any = rules[:any].present? && (mapped & rules[:any]).empty?
+    needs_all = Array(rules[:all]).any? { |field| mapped.exclude?(field) }
+    errors.add(:field_mapping, :needs_identity) if needs_any || needs_all
+
+    Array(rules[:config]).each do |key|
+      errors.add(:config, :missing_default) if config_value(key).blank?
+    end
   end
 end

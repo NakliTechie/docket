@@ -1066,6 +1066,7 @@ hi:
         schedule: "हर कितने मिनट में सिंक"
         shared_credential: "साझा क्रेडेंशियल (वैकल्पिक)"
         shared_credential_hint: "यहाँ सीक्रेट दर्ज करने के बजाय किसी साझा ऐप-स्तरीय क्रेडेंशियल से लें। इस कनेक्टर के अपने मान, यदि हों, प्राथमिकता पाते हैं।"
+        target: "सिंक लक्ष्य"
       config_legend: "कनेक्शन"
       config:
         endpoint_url: "एंडपॉइंट URL"
@@ -1073,6 +1074,7 @@ hi:
         action_url: "एक्शन URL (लेखन कार्रवाइयों हेतु)"
         webhook_url: "Slack इनकमिंग-वेबहुक URL"
         base_url: "बेस URL"
+        default_pipeline_id: "डिफ़ॉल्ट पाइपलाइन (डील सिंक के लिए)"
       credentials:
         api_key: "API कुंजी / टोकन"
         api_secret: "API सीक्रेट"
@@ -1091,6 +1093,11 @@ hi:
         email: "ईमेल ←"
         name: "नाम ←"
         phone: "फ़ोन ←"
+      targets:
+        contacts: "संपर्क"
+        leads: "लीड"
+        deals: "सौदे"
+        cases: "मामले"
       schedule_hint: "रिक्त = केवल मैनुअल / वेबहुक"
       status:
         active: "सक्रिय"
@@ -1527,7 +1534,9 @@ hi:
             provider:
               unknown: "ज्ञात कनेक्टर प्रकार नहीं है"
             field_mapping:
-              needs_identity: "कम-से-कम एक बाहरी आईडी या ईमेल मैप करना आवश्यक है"
+              needs_identity: "इस लक्ष्य के लिए आवश्यक पहचान फ़ील्ड मैप करना आवश्यक है (जैसे बाहरी आईडी, ईमेल, विषय)"
+            config:
+              missing_default: "इस लक्ष्य के लिए एक आवश्यक डिफ़ॉल्ट गायब है (जैसे एक डिफ़ॉल्ट पाइपलाइन)"
         contact:
           attributes:
             base:

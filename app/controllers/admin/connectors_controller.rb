@@ -11,7 +11,8 @@ module Admin
     end
 
     def new
-      @connector = Connector.new(provider: params[:provider], target: "contacts")
+      @connector = Connector.new(provider: params[:provider],
+                                 target: params[:target].presence_in(Connector::TARGETS) || "contacts")
       authorize @connector
       @descriptor = Connectors::Registry.descriptor(@connector.provider)
     end
