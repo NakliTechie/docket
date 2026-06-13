@@ -138,6 +138,19 @@
       </div>
     <% end %>
 
+    <% if policy(@case).update? %>
+      <div class="panel" data-controller="article-insert">
+        <h2 class="panel-title"><%= t("knowledge_base.console.title") %></h2>
+        <%= form_with url: knowledge_base_search_path, method: :get, data: { turbo_frame: "kb-search" } do |f| %>
+          <div class="form-row">
+            <%= f.label :q, t("knowledge_base.console.placeholder"), class: "visually-hidden" %>
+            <%= f.search_field :q, placeholder: t("knowledge_base.console.placeholder") %>
+          </div>
+        <% end %>
+        <turbo-frame id="kb-search"></turbo-frame>
+      </div>
+    <% end %>
+
     <div class="panel">
       <h2 class="panel-title"><%= t(".status_panel") %></h2>
       <p><%= status_badge(@case) %> <%= priority_badge(@case) %> <%= sla_chip(@case) %></p>

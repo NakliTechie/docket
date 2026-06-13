@@ -10,20 +10,29 @@ module Retrieval
 
   module_function
 
+  # AI grounding — published docs only (drafts never ground), wrapped as
+  # Results. Both visibilities ground; only the portal gates on public.
   def grounding_for(query, limit: 3)
-    search_reference_docs(query, limit: limit * 2)
+    matched(ReferenceDoc.grounding, query, limit: limit * 2)
+      .map { |doc| Result.new(source: "reference_doc", title: doc.title, text: doc.body.truncate(2000)) }
   end
 
-  def search_reference_docs(query, limit: 3)
-    scope = ReferenceDoc.all
-    matched =
-      if postgres?
-        scope.where("to_tsvector('simple', title || ' ' || body) @@ plainto_tsquery('simple', ?)", query)
-             .limit(limit)
-      else
-        keyword_match(scope, query, %w[title body], limit: limit)
-      end
-    matched.map { |doc| Result.new(source: "reference_doc", title: doc.title, text: doc.body.truncate(2000)) }
+  # Knowledge-base article search over a caller-chosen scope, returning the
+  # ReferenceDoc records (so the portal/console can link by slug). A blank
+  # query falls back to the scope's own default order.
+  def search_articles(query, scope: ReferenceDoc.public_kb, limit: 20)
+    return scope.limit(limit).to_a if query.blank?
+    matched(scope, query, limit: limit)
+  end
+
+  # → Array of matching records from `scope`, ranked.
+  def matched(scope, query, limit:)
+    if postgres?
+      scope.where("to_tsvector('simple', title || ' ' || body) @@ plainto_tsquery('simple', ?)", query)
+           .limit(limit).to_a
+    else
+      keyword_match(scope, query, %w[title body], limit: limit)
+    end
   end
 
   def keyword_match(scope, query, columns, limit:)

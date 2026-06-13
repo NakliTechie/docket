@@ -1,0 +1,32 @@
+<% page_title t(".title") %>
+<div class="portal-card">
+  <h1><%= t(".title") %></h1>
+  <p class="muted"><%= t(".intro") %></p>
+
+  <%= form_with url: portal_kb_index_path, method: :get, class: "form" do |f| %>
+    <div class="form-row">
+      <%= f.label :q, t(".search_label"), class: "visually-hidden" %>
+      <%= f.search_field :q, value: @query, placeholder: t(".search_placeholder") %>
+    </div>
+    <div class="form-actions">
+      <%= f.submit t(".search"), class: "btn btn-primary" %>
+    </div>
+  <% end %>
+
+  <% if @articles.any? %>
+    <ul class="kb-list">
+      <% @articles.each do |article| %>
+        <li>
+          <%= link_to article.title, portal_kb_path(article.slug) %>
+          <% if article.category %>
+            <span class="muted">· <%= article.category.name %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% elsif @query.present? %>
+    <p class="muted"><%= t(".no_results", query: @query) %></p>
+  <% else %>
+    <p class="muted"><%= t(".empty") %></p>
+  <% end %>
+</div>

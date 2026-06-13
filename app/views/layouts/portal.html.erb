@@ -20,6 +20,8 @@
               active: controller_name == "cases" %>
         <%= nav_link t("portal.nav.track"), portal_track_path,
               active: controller_name == "tracking" %>
+        <%= nav_link t("portal.nav.knowledge_base"), portal_kb_index_path,
+              active: controller_name == "knowledge_base" %>
         <% if session[:portal_contact_id] %>
           <%= nav_link t("portal.nav.my_cases"), portal_my_cases_path,
                 active: controller_name == "my_cases" %>

@@ -268,6 +268,23 @@ en:
     inbound:
       no_subject: "New message"
 
+  reference_docs:
+    enum:
+      status:
+        draft: "Draft"
+        published: "Published"
+      visibility:
+        internal: "Internal"
+        public: "Public"
+
+  knowledge_base:
+    console:
+      title: "Knowledge base"
+      placeholder: "Search articles to insert…"
+      insert: "Insert"
+      public: "Public"
+      no_results: "No matching articles."
+
   contacts:
     fields:
       name: "Name"
@@ -969,9 +986,21 @@ en:
     nav:
       new_case: "Submit a request"
       track: "Track a case"
+      knowledge_base: "Help"
       my_cases: "My cases"
       sign_out: "Sign out"
       customer_sign_in: "Log in with your account"
+    knowledge_base:
+      index:
+        title: "Help & answers"
+        intro: "Search our published articles, or browse the list below."
+        search_label: "Search articles"
+        search_placeholder: "Search for a topic…"
+        search: "Search"
+        no_results: "No articles match “%{query}”."
+        empty: "No articles have been published yet."
+      show:
+        back: "← All articles"
     customer:
       sso_failed: "Sign-in failed. Please try again."
       signed_in: "Welcome, %{name}."
@@ -1538,20 +1567,29 @@ en:
         title: "Title"
         body: "Text content"
         file: "Upload file (optional)"
+        status: "Status"
+        visibility: "Visibility"
+        category: "Category"
       form:
         file_hint: "PDF, text, markdown or CSV — the text is extracted into the field below for the AI to ground on."
         body_hint: "This is what the AI retrieves and quotes. Edit freely after upload."
+        lifecycle_legend: "Publishing"
+        visibility_hint: "Internal articles ground the AI but stay private. Public articles also appear on the citizen knowledge base (only when published)."
+        no_category: "No category"
       errors:
         bad_pdf: "could not be read as a PDF"
         extraction_failed: "could not be read — the text could not be extracted"
       index:
         title: "Knowledge / reference docs"
         new_doc: "New document"
-        intro: "The AI grounds its drafts on these documents plus closed resolved cases. Keep them factual and current."
+        intro: "The AI grounds its drafts on published documents. Public + published articles also appear on the citizen knowledge base. Keep them factual and current."
         confirm_delete: "Delete this document?"
+        publish: "Publish"
+        unpublish: "Unpublish"
         columns:
           title: "Title"
-          body: "Content"
+          status: "Status"
+          category: "Category"
           file: "File"
         empty:
           title: "No reference documents yet"
@@ -1566,6 +1604,9 @@ en:
         updated: "Reference document updated."
       destroy:
         deleted: "Reference document deleted."
+      toggle_published:
+        published: "“%{title}” published."
+        unpublished: "“%{title}” unpublished."
     roles:
       index:
         title: "Roles & permissions"

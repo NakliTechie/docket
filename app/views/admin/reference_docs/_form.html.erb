@@ -21,6 +21,27 @@
     <% reference_doc.errors[:body].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
   </div>
 
+  <fieldset>
+    <legend><%= t("admin.reference_docs.form.lifecycle_legend") %></legend>
+
+    <div class="form-row">
+      <%= f.label :status, t("admin.reference_docs.fields.status") %>
+      <%= f.select :status, ReferenceDoc.statuses.keys.map { |s| [ t("reference_docs.enum.status.#{s}"), s ] } %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :visibility, t("admin.reference_docs.fields.visibility") %>
+      <%= f.select :visibility, ReferenceDoc.visibilities.keys.map { |v| [ t("reference_docs.enum.visibility.#{v}"), v ] } %>
+      <p class="form-hint"><%= t("admin.reference_docs.form.visibility_hint") %></p>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :category_id, t("admin.reference_docs.fields.category") %>
+      <%= f.collection_select :category_id, Category.order(:name), :id, :name,
+            { include_blank: t("admin.reference_docs.form.no_category") } %>
+    </div>
+  </fieldset>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), admin_reference_docs_path, class: "btn" %>

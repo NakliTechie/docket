@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_234500) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_240000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -470,12 +470,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_234500) do
 
   create_table "reference_docs", force: :cascade do |t|
     t.text "body", null: false
+    t.integer "category_id"
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.string "slug"
+    t.integer "status", default: 1, null: false
     t.integer "tenant_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
+    t.index ["category_id"], name: "index_reference_docs_on_category_id"
     t.index ["deleted_at"], name: "index_reference_docs_on_deleted_at"
+    t.index ["tenant_id", "slug"], name: "index_reference_docs_on_tenant_id_and_slug", unique: true, where: "slug IS NOT NULL AND deleted_at IS NULL"
     t.index ["tenant_id", "title"], name: "index_reference_docs_on_tenant_id_and_title", unique: true, where: "deleted_at IS NULL"
     t.index ["tenant_id"], name: "index_reference_docs_on_tenant_id"
   end
@@ -736,6 +742,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_234500) do
   add_foreign_key "queue_memberships", "queues"
   add_foreign_key "queue_memberships", "users"
   add_foreign_key "queues", "tenants"
+  add_foreign_key "reference_docs", "categories"
   add_foreign_key "reference_docs", "tenants"
   add_foreign_key "routing_rules", "categories", column: "match_category_id"
   add_foreign_key "routing_rules", "categories", column: "then_category_id"

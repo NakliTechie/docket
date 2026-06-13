@@ -1,0 +1,9 @@
+<% page_title @article.title %>
+<article class="portal-card">
+  <p><%= link_to t(".back"), portal_kb_index_path, class: "muted" %></p>
+  <h1><%= @article.title %></h1>
+  <% if @article.category %>
+    <p class="muted"><%= @article.category.name %></p>
+  <% end %>
+  <div class="kb-body"><%= simple_format(@article.body) %></div>
+</article>

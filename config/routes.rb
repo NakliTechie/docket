@@ -15,6 +15,9 @@ Rails.application.routes.draw do
     post "assist/summarise", to: "assists#summarise", as: :assist_summarise
     post "assist/suggest_reply", to: "assists#suggest_reply", as: :assist_suggest_reply
   end
+  # In-console knowledge-base search (staff): a turbo-frame of matching
+  # articles the agent can insert into a reply.
+  get "knowledge_base/search", to: "knowledge_base#search", as: :knowledge_base_search
   resources :contacts
   resources :organisations
   resources :queues, controller: "case_queues", as: :case_queues, except: :show
@@ -77,7 +80,9 @@ Rails.application.routes.draw do
     get "security_events", to: "security_events#index", as: :security_events
     get "settings", to: "settings#show", as: :settings
     patch "settings", to: "settings#update"
-    resources :reference_docs, except: :show
+    resources :reference_docs, except: :show do
+      member { post :toggle_published }
+    end
     resources :api_tokens, only: %i[index create destroy]
     resources :service_accounts, except: :show do
       member do
@@ -121,6 +126,7 @@ Rails.application.routes.draw do
 
   namespace :portal do
     root to: "cases#new"
+    resources :kb, only: %i[index show], controller: "knowledge_base", param: :slug
     resources :cases, only: %i[new create]
     get "track", to: "tracking#new", as: :track
     post "track", to: "tracking#show", as: :track_lookup
