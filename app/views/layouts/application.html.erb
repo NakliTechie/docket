@@ -20,11 +20,12 @@
           <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
 
           <%= nav_group t("layout.nav.crm"),
-                active: %w[contacts organisations leads deals pipelines sequences].include?(controller_name) do %>
+                active: %w[contacts organisations leads deals pipelines sequences sales_reports].include?(controller_name) do %>
             <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
             <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>
             <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
             <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
+            <%= nav_link t("layout.nav.sales_report"), sales_report_path, active: controller_name == "sales_reports" %>
             <% if policy(Pipeline).create? %>
               <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
               <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>

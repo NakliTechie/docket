@@ -9,6 +9,12 @@ module ApplicationHelper
     Setting.get("brand_name").presence || fallback || t("layout.product_name")
   end
 
+  # Format a cents amount as currency, matching the deal/lead views
+  # (whole-rupee display, ₹ unit). Nil reads as zero.
+  def format_cents(cents)
+    number_to_currency((cents || 0) / 100.0, unit: "₹", precision: 0)
+  end
+
   # Inline SVG sprite reference (vendored icons, no icon font, no CDN).
   def icon(name, size: 16, **options)
     options[:class] = [ "icon", options[:class] ].compact.join(" ")

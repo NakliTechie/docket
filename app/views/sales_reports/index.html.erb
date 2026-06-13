@@ -1,0 +1,111 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to t(".export_csv"), sales_report_path(format: :csv, from: @from, to: @to), class: "btn" %>
+  </div>
+</div>
+
+<p class="muted"><%= t(".sovereignty_note") %></p>
+
+<%= form_with url: sales_report_path, method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row">
+    <%= f.label :from, t(".from") %>
+    <%= f.date_field :from, value: @from %>
+  </div>
+  <div class="form-row">
+    <%= f.label :to, t(".to") %>
+    <%= f.date_field :to, value: @to %>
+  </div>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+<% end %>
+
+<div class="two-column">
+  <section>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".pipeline_now") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".open_deals") %></dt><dd><%= @report.stats[:open_deals] %></dd>
+        <dt><%= t(".open_value") %></dt><dd><%= format_cents(@report.stats[:open_value_cents]) %></dd>
+        <dt><%= t(".weighted_value") %></dt><dd><%= format_cents(@report.stats[:weighted_value_cents]) %></dd>
+      </dl>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".value_by_stage") %></h2>
+      <% if @report.pipeline_by_stage.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><%= t(".columns.stage") %></th>
+                <th><%= t(".columns.deals") %></th>
+                <th><%= t(".columns.value") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @report.pipeline_by_stage.each do |row| %>
+                <tr>
+                  <td><%= row[:stage]&.name || "—" %></td>
+                  <td><%= row[:count] %></td>
+                  <td><%= format_cents(row[:value_cents]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_open_deals") %></p>
+      <% end %>
+    </div>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".won_lost_window") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".won") %></dt>
+        <dd><%= t(".count_value", count: @report.stats[:won_count], value: format_cents(@report.stats[:won_value_cents])) %></dd>
+        <dt><%= t(".lost") %></dt>
+        <dd><%= t(".count_value", count: @report.stats[:lost_count], value: format_cents(@report.stats[:lost_value_cents])) %></dd>
+        <dt><%= t(".win_rate") %></dt>
+        <dd><%= @report.stats[:win_rate] ? t(".percent", value: @report.stats[:win_rate]) : "—" %></dd>
+        <dt><%= t(".deals_created") %></dt>
+        <dd><%= t(".count_value", count: @report.stats[:deals_created], value: format_cents(@report.stats[:deals_created_value_cents])) %></dd>
+        <dt><%= t(".lead_conversion") %></dt>
+        <dd>
+          <%= @report.stats[:lead_conversion_rate] ? t(".percent", value: @report.stats[:lead_conversion_rate]) : "—" %>
+          <span class="muted">(<%= @report.stats[:leads_converted] %>/<%= @report.stats[:leads_created] %>)</span>
+        </dd>
+      </dl>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".by_owner") %></h2>
+      <% if @report.by_owner.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><%= t(".columns.owner") %></th>
+                <th><%= t(".columns.open") %></th>
+                <th><%= t(".columns.won") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @report.by_owner.each do |row| %>
+                <tr>
+                  <td><%= row[:owner]&.name || t(".unassigned") %></td>
+                  <td><%= format_cents(row[:open_value_cents]) %></td>
+                  <td><%= format_cents(row[:won_value_cents]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_open_deals") %></p>
+      <% end %>
+    </div>
+  </aside>
+</div>

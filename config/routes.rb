@@ -41,6 +41,7 @@ Rails.application.routes.draw do
   resources :sequence_enrollments, only: %i[create] do
     member { post :cancel }
   end
+  get "reports/sales", to: "sales_reports#index", as: :sales_report
 
   namespace :admin do
     resources :users do
