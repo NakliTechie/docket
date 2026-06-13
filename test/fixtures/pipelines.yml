@@ -1,4 +1,5 @@
 sales:
+  tenant: primary
   name: Sales
   slug: sales
   position: 0

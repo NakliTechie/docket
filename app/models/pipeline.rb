@@ -1,6 +1,7 @@
 # A named sales funnel — an ordered set of stages that deals move
 # through on the kanban board (v1.2 CRM). Admin-managed, like queues.
 class Pipeline < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 
@@ -12,7 +13,7 @@ class Pipeline < ApplicationRecord
   before_validation :ensure_slug, on: :create
 
   validates :name, presence: true
-  validates :slug, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } }
+  validates :slug, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }
   validate :has_at_least_one_stage
 
   scope :active, -> { where(active: true) }

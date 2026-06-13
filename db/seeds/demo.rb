@@ -12,6 +12,10 @@ scenario = DemoScenarios.fetch(ENV.fetch("DOCKET_SEED_SCENARIO", "saas"))
 rng = Random.new(42)
 puts "Seeding demo data (scenario: #{ENV.fetch('DOCKET_SEED_SCENARIO', 'saas')})…"
 
+# Demo data owns a tenant; seed it into the primary (resolves to the existing
+# test tenant when invoked from the suite). Leaves an already-set tenant intact.
+ActsAsTenant.current_tenant ||= Tenant.find_or_create_by!(slug: Tenant::PRIMARY_SLUG) { |t| t.name = "Docket" }
+
 Current.set(actor: nil) do
   Setting.set("llm_provider", "fake")
   Setting.set("ai_draft_enabled", true)

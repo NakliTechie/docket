@@ -3,6 +3,7 @@
 # Organisation) and, from M2, an open Deal. SoftDeletable + Audited like
 # every other domain object.
 class Lead < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
   include Labelable

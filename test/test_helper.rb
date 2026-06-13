@@ -15,6 +15,12 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
+    # Default every test to the primary tenant so scoped reads/writes work the
+    # way an isolated deploy does. Cross-tenant tests override with
+    # ActsAsTenant.with_tenant(...) or by resolving a subdomain per request.
+    setup { ActsAsTenant.test_tenant = tenants(:primary) }
+    teardown { ActsAsTenant.test_tenant = nil }
+
     # Add more helper methods to be used by all tests here...
   end
 end

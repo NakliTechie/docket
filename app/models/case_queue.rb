@@ -2,6 +2,7 @@
 # membership. Class is CaseQueue because ::Queue is a Ruby core class;
 # the table, UI vocabulary, and API resource all remain "queues".
 class CaseQueue < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 
@@ -16,8 +17,8 @@ class CaseQueue < ApplicationRecord
 
   before_validation :derive_slug
 
-  validates :name, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } }
-  validates :slug, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } },
+  validates :name, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }
+  validates :slug, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } },
             format: { with: /\A[a-z0-9-]+\z/ }
 
   def self.default

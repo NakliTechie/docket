@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
   include HumanEnums
@@ -33,7 +34,7 @@ class User < ApplicationRecord
   # re-provisioned (e.g. an offboarded staffer returning via SSO). Matches
   # every other SoftDeletable model; the DB index is partial to match.
   validates :email_address, presence: true,
-            uniqueness: { conditions: -> { where(deleted_at: nil) } },
+            uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } },
             format: { with: URI::MailTo::EMAIL_REGEXP }
 
   scope :active, -> { where(active: true) }

@@ -2,6 +2,7 @@
 # board (v1.2 CRM). Moving a card = changing pipeline_stage; landing in a
 # terminal stage derives won/lost.
 class Deal < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
   include Labelable

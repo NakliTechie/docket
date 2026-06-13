@@ -2,6 +2,7 @@
 # fetch; the connector holds the WHAT — endpoint config, encrypted
 # credentials, the field mapping into a Docket entity, and the schedule.
 class Connector < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 

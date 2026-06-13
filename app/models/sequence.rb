@@ -1,6 +1,7 @@
 # An automated multi-step outreach (v1.2 CRM). Enroll a Lead or Contact;
 # the SequenceRunnerJob sends each step in turn through the comms gateway.
 class Sequence < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 

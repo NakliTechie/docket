@@ -2,6 +2,7 @@
 # with scopes. This is how the operator's own systems (netbanking,
 # branch CRM, IVR backend) call Docket headlessly.
 class ServiceAccount < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 

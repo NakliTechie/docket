@@ -1,0 +1,12 @@
+# primary backs the isolated-deploy singleton (the default test tenant set in
+# test_helper). acme is a second tenant for cross-tenant isolation tests.
+primary:
+  name: Docket
+  slug: primary
+  status: active
+
+acme:
+  name: Acme Corp
+  slug: acme
+  subdomain: acme
+  status: active

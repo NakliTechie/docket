@@ -1,2 +1,3 @@
 standard:
+  tenant: primary
   name: Standard service

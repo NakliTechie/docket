@@ -2,6 +2,7 @@
 # directly or extracted from an uploaded PDF/text file. The AI retrieves
 # over +body+; the original file stays attached for reference.
 class ReferenceDoc < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 
@@ -10,7 +11,7 @@ class ReferenceDoc < ApplicationRecord
 
   has_one_attached :file
 
-  validates :title, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } }
+  validates :title, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }
   validates :body, presence: true
   # The attached original is only ever a source for extraction — hold it to
   # the same allowlist as every other upload surface, not "any file".

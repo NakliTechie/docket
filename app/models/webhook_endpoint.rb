@@ -2,6 +2,7 @@
 # case lifecycle events, per-endpoint secret, retry with backoff,
 # delivery log in the admin UI.
 class WebhookEndpoint < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 

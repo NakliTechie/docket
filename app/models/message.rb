@@ -2,6 +2,7 @@
 # turn (handoff §2). Agent turns carry their full prompt/response in
 # +metadata+. Messages are never edited or deleted by the AI.
 class Message < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
   include HumanEnums
