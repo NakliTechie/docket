@@ -66,6 +66,11 @@ class Connector < ApplicationRecord
     provider_descriptor.nil? || provider_descriptor.syncs?
   end
 
+  # Does this provider turn inbound webhooks into cases (PG2)?
+  def ingests?
+    Connectors::Registry.klass(provider)&.ingests? || false
+  end
+
   # Has every required secret (own vault or shared)? A draft connector can be
   # activated once this is true — "wire now, configure (and go live) later".
   def configured?

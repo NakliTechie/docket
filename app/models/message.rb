@@ -23,6 +23,7 @@ class Message < ApplicationRecord
   after_create :stamp_first_response
   after_create :reopen_conversation_on_citizen_reply
   after_create_commit :notify_contact_by_email
+  after_create_commit :deliver_via_messaging_connector
   after_create_commit :enqueue_sentiment_analysis
   after_create_commit :publish_message_webhook
 
@@ -65,11 +66,22 @@ class Message < ApplicationRecord
     end
   end
 
-  # Outbound public answers (human or AI) are mailed to the contact.
+  # Outbound public answers (human or AI) are mailed to the contact — unless the
+  # case came in over a messaging connector, where the reply goes back out that
+  # same channel instead (see #deliver_via_messaging_connector).
   def notify_contact_by_email
     return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
+    return if self.case.source_connector&.ingests?
     return if self.case.contact.email.blank?
     CaseMailer.public_reply(self).deliver_later
+  end
+
+  # Outbound public answers on a messaging case (WhatsApp/Telegram) are sent
+  # back out through the originating connector — the omnichannel reply loop (PG2).
+  def deliver_via_messaging_connector
+    return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
+    return unless self.case.source_connector&.ingests?
+    ConnectorReplyJob.perform_later(id)
   end
 
   def enqueue_sentiment_analysis

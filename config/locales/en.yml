@@ -143,6 +143,8 @@ en:
         staff: "Staff"
         phone: "Phone"
         walk_in: "Walk-in"
+        whatsapp: "WhatsApp"
+        telegram: "Telegram"
     sort:
       created_at: "Created"
       priority: "Priority"
@@ -263,6 +265,8 @@ en:
       failed_action: "AI agent action “%{action}” failed."
       blocked: "AI agent action “%{action}” was not permitted: %{reason}"
       failed: "AI agent run could not complete."
+    inbound:
+      no_subject: "New message"
 
   contacts:
     fields:

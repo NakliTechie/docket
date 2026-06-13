@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_230000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_234500) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -105,6 +105,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_230000) do
     t.integer "routed_by_rule_id"
     t.integer "sla_policy_id"
     t.integer "source_connector_id"
+    t.string "source_thread_id"
     t.integer "status", default: 0, null: false
     t.string "subject", null: false
     t.integer "tenant_id", null: false
@@ -125,6 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_230000) do
     t.index ["source_connector_id"], name: "index_cases_on_source_connector_id"
     t.index ["status", "queue_id"], name: "index_cases_on_status_and_queue_id"
     t.index ["status"], name: "index_cases_on_status"
+    t.index ["tenant_id", "source_connector_id", "source_thread_id"], name: "index_cases_on_tenant_connector_thread"
     t.index ["tenant_id", "tracking_id"], name: "index_cases_on_tenant_id_and_tracking_id", unique: true
     t.index ["tenant_id"], name: "index_cases_on_tenant_id"
   end

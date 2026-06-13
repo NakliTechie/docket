@@ -143,6 +143,8 @@ hi:
         staff: "स्टाफ़"
         phone: "फ़ोन"
         walk_in: "प्रत्यक्ष आगमन"
+        whatsapp: "व्हाट्सऐप"
+        telegram: "टेलीग्राम"
     sort:
       created_at: "बनाया गया"
       priority: "प्राथमिकता"
@@ -263,6 +265,8 @@ hi:
       failed_action: "एआई एजेंट की कार्रवाई “%{action}” विफल रही।"
       blocked: "एआई एजेंट की कार्रवाई “%{action}” की अनुमति नहीं थी: %{reason}"
       failed: "एआई एजेंट का रन पूरा नहीं हो सका।"
+    inbound:
+      no_subject: "नया संदेश"
 
   contacts:
     fields:

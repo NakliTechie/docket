@@ -6,6 +6,7 @@ module Connectors
   # neutral → :autonomous, like Slack. No inbound sync (syncs: false).
   class TelegramBotProvider < HttpProvider
     DEFAULT_BASE = "https://api.telegram.org".freeze
+    CHANNEL = "telegram".freeze
 
     def self.descriptor
       Descriptor.new(
@@ -13,6 +14,9 @@ module Connectors
         auth: :none, config_fields: %w[chat_id base_url], credential_fields: %w[bot_token], syncs: false
       )
     end
+
+    # Inbound: parse Telegram bot updates into cases.
+    def self.ingests? = true
 
     def self.actions
       [
@@ -41,7 +45,38 @@ module Connectors
       end
     end
 
+    # Telegram echoes the secret token set on setWebhook in this header; we use
+    # the connector's webhook_secret as that token. Fail-closed on a mismatch.
+    def inbound_authentic?(request)
+      provided = request.headers["X-Telegram-Bot-Api-Secret-Token"].to_s
+      return false if provided.blank?
+      ActiveSupport::SecurityUtils.secure_compare(provided, connector.webhook_secret.to_s)
+    end
+
+    # A bot update → one inbound message (or none, for non-message updates).
+    # chat.id is the conversation/thread key; from.id keys the contact.
+    def ingest(payload)
+      msg = payload["message"] || payload["edited_message"]
+      return [] unless msg.is_a?(Hash)
+
+      from = msg["from"] || {}
+      chat_id = msg.dig("chat", "id").to_s
+      sender_id = from["id"].to_s
+      body = (msg["text"] || msg["caption"]).to_s
+      [ {
+        sender: { name: telegram_name(from).presence || sender_id, phone: nil, external_id: sender_id },
+        external_thread_id: chat_id.presence || sender_id,
+        body: body.presence || "[message]",
+        channel: CHANNEL,
+        external_message_id: msg["message_id"].to_s.presence
+      } ]
+    end
+
     private
+
+    def telegram_name(from)
+      [ from["first_name"], from["last_name"] ].compact_blank.join(" ").presence || from["username"].to_s
+    end
 
     def send_message(args)
       text = (args["text"] || args[:text]).to_s.strip

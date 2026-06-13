@@ -110,8 +110,10 @@ Rails.application.routes.draw do
     resources :shared_credentials, except: :show
   end
 
-  # Inbound connector webhook ping (HMAC-signed, unauthenticated).
+  # Inbound connector webhook ping (HMAC-signed, unauthenticated). GET is the
+  # platform webhook-URL verification handshake (WhatsApp Cloud).
   post "connectors/:id/webhook", to: "connectors/webhooks#create", as: :connector_webhook
+  get  "connectors/:id/webhook", to: "connectors/webhooks#verify", as: :connector_webhook_verify
 
   # Public lead-capture form (v1.2 CRM) — unauthenticated.
   get "inquiry", to: "inquiries#new", as: :inquiry
