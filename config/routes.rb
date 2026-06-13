@@ -42,6 +42,7 @@ Rails.application.routes.draw do
     member { post :cancel }
   end
   get "reports/sales", to: "sales_reports#index", as: :sales_report
+  get "dashboard", to: "dashboards#index", as: :dashboard
 
   namespace :admin do
     resources :users do

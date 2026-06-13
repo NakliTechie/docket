@@ -18,6 +18,9 @@
         <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
           <%= link_to brand_name, root_path, class: "brand" %>
           <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
+          <% if policy(:dashboard).index? %>
+            <%= nav_link t("layout.nav.dashboard"), dashboard_path, active: controller_name == "dashboards" %>
+          <% end %>
 
           <%= nav_group t("layout.nav.crm"),
                 active: %w[contacts organisations leads deals pipelines sequences sales_reports].include?(controller_name) do %>

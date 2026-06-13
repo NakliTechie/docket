@@ -1,0 +1,236 @@
+<% page_title t(".title") %>
+<% op = @overview.operational %>
+<% act = @overview.activity.stats %>
+<% sal = @overview.sales.stats %>
+
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <%= link_to t(".export_csv"), dashboard_path(format: :csv, from: @from, to: @to), class: "btn" %>
+  </div>
+</div>
+
+<p class="muted"><%= t(".sovereignty_note") %></p>
+
+<%= form_with url: dashboard_path, method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row">
+    <%= f.label :from, t(".from") %>
+    <%= f.date_field :from, value: @from %>
+  </div>
+  <div class="form-row">
+    <%= f.label :to, t(".to") %>
+    <%= f.date_field :to, value: @to %>
+  </div>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+<% end %>
+
+<%# ---- Case-desk plane ---- %>
+<h2 class="panel-title"><%= t(".case_desk") %></h2>
+<div class="two-column">
+  <section>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".case_kpis") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".open_cases") %></dt><dd><%= op.open_by_status.values.sum %></dd>
+        <dt><%= t(".sla_at_risk") %></dt><dd><%= op.sla_at_risk %></dd>
+        <dt><%= t(".created_window") %></dt><dd><%= act[:cases_created] %></dd>
+        <dt><%= t(".resolved_window") %></dt><dd><%= act[:cases_resolved] %></dd>
+        <dt><%= t(".resolution_rate") %></dt>
+        <dd><%= act[:resolution_rate] ? t(".percent", value: act[:resolution_rate]) : "—" %></dd>
+        <dt><%= t(".sla_breaches") %></dt><dd><%= act[:sla_breaches] %></dd>
+        <dt><%= t(".reply_share") %></dt>
+        <dd><%= t(".reply_share_value", ai: act[:agent_turns], human: act[:human_replies]) %></dd>
+      </dl>
+      <%= link_to t(".view_cases"), cases_path, class: "btn btn-ghost btn-sm" %>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".open_by_status") %></h2>
+      <% if op.open_by_status.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><%= t(".columns.status") %></th><th><%= t(".columns.cases") %></th></tr></thead>
+            <tbody>
+              <% op.open_by_status.sort_by { |_, n| -n }.each do |status, count| %>
+                <tr><td><%= t("cases.enum.status.#{status}", default: status.humanize) %></td><td><%= count %></td></tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_open_cases") %></p>
+      <% end %>
+    </div>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".created_trend") %></h2>
+      <div class="sparkline-wrap"><%= sparkline(op.cases_created_trend) %></div>
+      <p class="muted"><%= t(".created_trend_total", count: op.cases_created_trend.sum { |d| d[:count] }) %></p>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".backlog_age") %></h2>
+      <dl class="meta-list">
+        <% op.backlog_age.each do |bucket, count| %>
+          <dt><%= t(".backlog.#{bucket}") %></dt><dd><%= count %></dd>
+        <% end %>
+      </dl>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".by_channel") %></h2>
+      <% if op.channel_mix.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><%= t(".columns.channel") %></th><th><%= t(".columns.cases") %></th></tr></thead>
+            <tbody>
+              <% op.channel_mix.sort_by { |_, n| -n }.each do |channel, count| %>
+                <tr><td><%= t("cases.enum.channel.#{channel}", default: channel.humanize) %></td><td><%= count %></td></tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_cases_window") %></p>
+      <% end %>
+    </div>
+  </aside>
+</div>
+
+<%# ---- Sales plane (compact; full detail on the sales report) ---- %>
+<div class="panel">
+  <h2 class="panel-title"><%= t(".sales") %></h2>
+  <dl class="meta-list">
+    <dt><%= t(".open_pipeline") %></dt><dd><%= format_cents(sal[:open_value_cents]) %></dd>
+    <dt><%= t(".weighted_forecast") %></dt><dd><%= format_cents(sal[:weighted_value_cents]) %></dd>
+    <dt><%= t(".win_rate") %></dt>
+    <dd><%= sal[:win_rate] ? t(".percent", value: sal[:win_rate]) : "—" %></dd>
+  </dl>
+  <%= link_to t(".view_sales_report"), sales_report_path(from: @from, to: @to), class: "btn btn-ghost btn-sm" %>
+</div>
+
+<%# ---- Connector / ingestion plane ---- %>
+<h2 class="panel-title"><%= t(".connectors") %></h2>
+<div class="two-column">
+  <section>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".sync_activity") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".sync_runs") %></dt><dd><%= op.sync_stats[:runs] %></dd>
+        <dt><%= t(".sync_success_rate") %></dt>
+        <dd><%= op.sync_stats[:success_rate] ? t(".percent", value: op.sync_stats[:success_rate]) : "—" %></dd>
+        <dt><%= t(".records_in") %></dt><dd><%= op.sync_stats[:records_in] %></dd>
+        <dt><%= t(".records_created") %></dt><dd><%= op.sync_stats[:records_created] %></dd>
+        <dt><%= t(".records_updated") %></dt><dd><%= op.sync_stats[:records_updated] %></dd>
+      </dl>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".connector_health") %></h2>
+      <% if op.connector_health.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><%= t(".columns.connector") %></th>
+                <th><%= t(".columns.cstatus") %></th>
+                <th><%= t(".columns.last_synced") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% op.connector_health.each do |row| %>
+                <tr>
+                  <td><%= row[:connector].name %></td>
+                  <td>
+                    <%= row[:status].to_s.humanize %><% if row[:overdue] %> · <span class="muted"><%= t(".overdue") %></span><% end %>
+                  </td>
+                  <td><%= row[:last_synced_at] ? t(".synced_ago", time: time_ago_in_words(row[:last_synced_at])) : t(".never") %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <%= link_to t(".manage_connectors"), admin_connectors_path, class: "btn btn-ghost btn-sm" %>
+      <% else %>
+        <p class="muted"><%= t(".no_connectors") %></p>
+      <% end %>
+    </div>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".needs_attention") %></h2>
+      <% if op.connectors_needing_attention.any? %>
+        <ul class="meta-list">
+          <% op.connectors_needing_attention.each do |row| %>
+            <li>
+              <strong><%= row[:connector].name %></strong> —
+              <%= row[:overdue] ? t(".overdue") : row[:status].to_s.humanize %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="muted"><%= t(".all_healthy") %></p>
+      <% end %>
+    </div>
+  </aside>
+</div>
+
+<%# ---- Effector / accountability plane ---- %>
+<h2 class="panel-title"><%= t(".effector") %></h2>
+<div class="two-column">
+  <section>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".agent_accountability") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".approval_queue_depth") %></dt><dd><%= op.approval_queue_depth %></dd>
+        <dt><%= t(".actions_succeeded") %></dt><dd><%= op.autonomy[:succeeded] %></dd>
+        <dt><%= t(".autonomy_rate") %></dt>
+        <dd><%= op.autonomy[:autonomy_rate] ? t(".percent", value: op.autonomy[:autonomy_rate]) : "—" %></dd>
+        <dt><%= t(".human_approved") %></dt><dd><%= op.autonomy[:human_approved] %></dd>
+        <dt><%= t(".rejected") %></dt><dd><%= op.autonomy[:rejected] %></dd>
+      </dl>
+      <%= link_to t(".view_agent_actions"), admin_connector_invocations_path, class: "btn btn-ghost btn-sm" %>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".by_decision_class") %></h2>
+      <% if op.invocations_by_decision_class.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><%= t(".columns.decision_class") %></th><th><%= t(".columns.actions") %></th></tr></thead>
+            <tbody>
+              <% op.invocations_by_decision_class.sort_by { |_, n| -n }.each do |decision_class, count| %>
+                <tr><td><%= decision_class.humanize %></td><td><%= count %></td></tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_agent_actions") %></p>
+      <% end %>
+    </div>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".by_status") %></h2>
+      <% if op.invocations_by_status.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><%= t(".columns.istatus") %></th><th><%= t(".columns.actions") %></th></tr></thead>
+            <tbody>
+              <% op.invocations_by_status.sort_by { |_, n| -n }.each do |status, count| %>
+                <tr><td><%= status.humanize %></td><td><%= count %></td></tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_agent_actions") %></p>
+      <% end %>
+    </div>
+  </aside>
+</div>
