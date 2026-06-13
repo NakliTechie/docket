@@ -36,6 +36,25 @@ class CasesMailboxTest < ActionMailbox::TestCase
     ActsAsTenant.test_tenant = tenants(:primary)
   end
 
+  test "in shared mode the tenant is resolved from the recipient subdomain" do
+    orig = Rails.application.config.x.tenancy_mode
+    Rails.application.config.x.tenancy_mode = "shared"
+    acme = tenants(:acme)
+    ActsAsTenant.test_tenant = nil
+    ActsAsTenant.current_tenant = nil
+
+    receive_inbound_email_from_mail(
+      from: "outsider@external.test", to: "support@acme.docket.app",
+      subject: "Routed by recipient", body: "Hello acme."
+    )
+    kase = ActsAsTenant.with_tenant(acme) { Case.find_by(subject: "Routed by recipient") }
+    assert kase, "the case landed in the tenant named by the recipient subdomain"
+    assert_equal acme.id, kase.tenant_id
+  ensure
+    Rails.application.config.x.tenancy_mode = orig
+    ActsAsTenant.test_tenant = tenants(:primary)
+  end
+
   test "email from a known contact reuses the contact" do
     assert_no_difference "Contact.count" do
       receive_inbound_email_from_mail(
