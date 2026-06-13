@@ -9,7 +9,16 @@ module Connectors
         "http_json" => Connectors::HttpJsonProvider,
         "slack_webhook" => Connectors::SlackWebhookProvider,
         "msg91" => Connectors::Msg91Provider,
-        "razorpay" => Connectors::RazorpayProvider
+        "razorpay" => Connectors::RazorpayProvider,
+        # Commercial lane — wave 1 (effector + sync, static credentials)
+        "whatsapp_cloud" => Connectors::WhatsappCloudProvider,
+        "shopify" => Connectors::ShopifyProvider,
+        "stripe" => Connectors::StripeProvider,
+        "hubspot" => Connectors::HubspotProvider,
+        "zendesk" => Connectors::ZendeskProvider,
+        "sendgrid" => Connectors::SendgridProvider,
+        "twilio_sms" => Connectors::TwilioSmsProvider,
+        "telegram_bot" => Connectors::TelegramBotProvider
       }
     end
 

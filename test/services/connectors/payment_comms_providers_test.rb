@@ -27,9 +27,19 @@ class Connectors::PaymentCommsProvidersTest < ActiveSupport::TestCase
 
   # --- catalogue ---
 
-  test "the registry now offers the easy batch" do
-    assert_equal %w[http_json slack_webhook msg91 razorpay].sort, Connectors::Registry.keys.sort
-    assert_equal 4, Connectors::Registry.descriptors.size
+  test "the registry offers the connector catalogue with well-formed descriptors" do
+    keys = Connectors::Registry.keys
+    %w[http_json slack_webhook msg91 razorpay whatsapp_cloud shopify stripe hubspot].each do |k|
+      assert_includes keys, k
+    end
+    assert_operator Connectors::Registry.descriptors.size, :>=, 12
+
+    # Every registered provider exposes a descriptor whose key matches its
+    # registry key (catches copy-paste drift) and a human name.
+    Connectors::Registry.providers.each do |key, klass|
+      assert_equal key, klass.descriptor.key, "registry key #{key} != #{klass}.descriptor.key"
+      assert klass.descriptor.name.present?, "#{key} descriptor missing a name"
+    end
   end
 
   # --- MSG91 (citizen comms → confirm) ---
