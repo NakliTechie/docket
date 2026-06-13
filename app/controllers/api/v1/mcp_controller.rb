@@ -10,6 +10,8 @@ module Api
 
       def handle
         message = parse_body
+        return render(json: error(nil, -32700, "Parse error")) if message == :parse_error
+
         if message.is_a?(Array)
           responses = message.filter_map { |m| dispatch_message(m) }
           responses.empty? ? head(:accepted) : render(json: responses)
@@ -24,7 +26,7 @@ module Api
       def parse_body
         JSON.parse(request.raw_post)
       rescue JSON::ParserError
-        {}
+        :parse_error # distinct from a valid notification → JSON-RPC -32700 (L4)
       end
 
       # → a JSON-RPC response Hash, or nil for a notification (no id).

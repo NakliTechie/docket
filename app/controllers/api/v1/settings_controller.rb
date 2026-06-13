@@ -6,14 +6,7 @@ module Api
 
       def show
         require_settings_access!("config:read")
-        # Every :secret-typed key is masked — not just llm_api_key. The
-        # SSO client secrets are secrets too and must never leave.
-        data = Admin::SettingsController::EDITABLE.to_h do |key, type|
-          value = Setting.get(key)
-          value = (value.present? ? SECRET_MASK : nil) if type == :secret
-          [ key, value ]
-        end
-        render json: { data: data }
+        render json: { data: settings_payload }
       end
 
       def update
@@ -28,10 +21,22 @@ module Api
           value = coerce(raw, type)
           value.nil? ? Setting.unset(key) : Setting.set(key, value)
         end
-        show
+        # Render directly — do NOT route through show, whose config:read gate
+        # would 403 a config:write-only token after a successful write (M4).
+        render json: { data: settings_payload }
       end
 
       private
+
+      # Every :secret-typed key is masked — not just llm_api_key. The SSO client
+      # secrets are secrets too and must never leave.
+      def settings_payload
+        Admin::SettingsController::EDITABLE.to_h do |key, type|
+          value = Setting.get(key)
+          value = (value.present? ? SECRET_MASK : nil) if type == :secret
+          [ key, value ]
+        end
+      end
 
       def require_settings_access!(scope)
         if current_user

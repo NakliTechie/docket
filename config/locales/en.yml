@@ -246,6 +246,7 @@ en:
     assign:
       assigned: "Case assigned to %{name}."
       unassigned: "Case unassigned."
+      invalid_assignee: "That user can't be assigned (unknown or inactive)."
     run_agent:
       queued: "AI agent “%{name}” started on this case — refresh in a moment to see its steps."
       unavailable: "No AI effector agent is configured. Set one under Settings → AI."

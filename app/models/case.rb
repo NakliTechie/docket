@@ -96,7 +96,7 @@ class Case < ApplicationRecord
     TRANSITIONS.fetch(status, []).include?(new_status.to_s)
   end
 
-  def transition_to!(new_status, actor: nil)
+  def transition_to!(new_status)
     new_status = new_status.to_s
     return self if status == new_status
 
@@ -126,8 +126,8 @@ class Case < ApplicationRecord
     @transitioning = false
   end
 
-  def transition_to(new_status, actor: nil)
-    transition_to!(new_status, actor: actor)
+  def transition_to(new_status)
+    transition_to!(new_status)
   rescue InvalidTransition, ActiveRecord::RecordInvalid
     false
   end

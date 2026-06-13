@@ -20,6 +20,8 @@ module Api
           # Machine-filed citizen messages are inbound; otherwise the
           # integration speaks for the operator (outbound).
           message.direction = message.author ? :inbound : :outbound
+          # A citizen-authored message can't be a staff-only internal note (L3).
+          message.kind = :public_reply if message.author.is_a?(Contact)
         end
         message.direction = :outbound if current_user
         message.files = extract_attachments(params[:message])
