@@ -50,7 +50,7 @@ module Api
 
       def require_webhook_access!
         if current_user
-          raise Pundit::NotAuthorizedError unless current_user.role_admin?
+          raise Pundit::NotAuthorizedError unless current_user.can?("webhook:manage")
         else
           raise ScopeDenied, "webhooks:manage" unless current_access_token.scope?("webhooks:manage")
         end

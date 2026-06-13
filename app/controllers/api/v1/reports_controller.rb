@@ -13,7 +13,7 @@ module Api
 
       def require_report_access!
         if current_user
-          raise Pundit::NotAuthorizedError unless current_user.role_admin?
+          raise Pundit::NotAuthorizedError unless current_user.can?("audit:read")
         else
           raise ScopeDenied, "audit:read" unless current_access_token.scope?("audit:read")
         end

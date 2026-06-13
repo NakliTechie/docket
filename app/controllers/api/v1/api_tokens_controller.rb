@@ -28,7 +28,7 @@ module Api
       private
 
       def require_admin_human!
-        raise ScopeDenied, "admin" unless current_user&.role_admin?
+        raise ScopeDenied, "api_token:manage" unless current_user&.can?("api_token:manage")
       end
 
       def token_params

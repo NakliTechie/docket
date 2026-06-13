@@ -48,7 +48,7 @@ module Api
       private
 
       def require_admin_human!
-        raise ScopeDenied, "admin" unless current_user&.role_admin?
+        raise ScopeDenied, "service_account:manage" unless current_user&.can?("service_account:manage")
       end
 
       def set_account
