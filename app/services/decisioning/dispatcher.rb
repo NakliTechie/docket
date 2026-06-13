@@ -35,6 +35,10 @@ module Decisioning
           action: (proposal.action.presence || "label"), action_params: proposal.action_params
         )
         decision
+      rescue ActiveRecord::RecordNotUnique
+        # Lost the upsert race with a concurrent run! — return the row the other
+        # run created instead of a duplicate / 500 (M3).
+        Decision.find_by(rule: proposal.rule, subject_type: proposal.subject_type, subject_id: proposal.subject_id)
       end
     end
 
@@ -49,8 +53,8 @@ module Decisioning
     end
 
     # Best-effort reversal of an applied decision's effect (used by the appeal
-    # overturn path). Labels and enrollments reverse cleanly; a re-route can't be
-    # undone without the prior queue, so it's left as a no-op.
+    # overturn path). Labels and enrollments reverse cleanly; a re-route restores
+    # the queue captured at apply time (M6).
     def reverse!(decision)
       subject = decision.subject
       case decision.action
@@ -58,7 +62,10 @@ module Decisioning
         sequence_id = decision.action_params&.dig("sequence_id")
         SequenceEnrollment.where(enrollable: subject, sequence_id: sequence_id)
                           .find_each { |e| e.update!(status: :cancelled) }
-      when "route_case" then nil # no prior queue recorded
+      when "route_case"
+        if subject.respond_to?(:queue_id=) && decision.action_params&.key?("previous_queue_id")
+          subject.update!(queue_id: decision.action_params["previous_queue_id"])
+        end
       else subject&.try(:remove_label, decision.signal)
       end
       decision
@@ -69,7 +76,11 @@ module Decisioning
       case decision.action
       when "route_case"
         queue_id = decision.action_params&.dig("queue_id")
-        subject.update!(queue_id: queue_id) if queue_id && subject.respond_to?(:queue_id=)
+        if queue_id && subject.respond_to?(:queue_id=)
+          # Capture the prior queue so an overturned appeal can restore it (M6).
+          decision.update_column(:action_params, (decision.action_params || {}).merge("previous_queue_id" => subject.queue_id))
+          subject.update!(queue_id: queue_id)
+        end
       when "enroll_lead"
         sequence = Sequence.find_by(id: decision.action_params&.dig("sequence_id"))
         if sequence && subject && !SequenceEnrollment.exists?(sequence: sequence, enrollable: subject)

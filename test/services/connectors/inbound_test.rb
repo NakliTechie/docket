@@ -120,6 +120,14 @@ class Connectors::InboundTest < ActiveSupport::TestCase
     assert_not_equal a.id, b.id
   end
 
+  test "an inbound sender does NOT thread onto a verified contact by bare phone (M2)" do
+    wa = whatsapp
+    verified = Contact.create!(name: "Verified Asha", phone: "9198", external_id: "crm:asha")
+    kase = Connectors::Inbound.process(wa, wa_payload("hi", from: "9198", name: "WA Asha")).first
+    assert_not_equal verified, kase.contact, "must not hijack a contact verified through another channel"
+    assert_equal "whatsapp:9198", kase.contact.external_id
+  end
+
   # --- reply-out --------------------------------------------------------------
 
   test "Reply.dispatch maps each channel to its provider send action" do

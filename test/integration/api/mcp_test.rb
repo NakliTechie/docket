@@ -83,6 +83,13 @@ module Api
         assert_equal(-32601, res.dig("error", "code"))
       end
 
+      test "a malformed JSON body is a JSON-RPC parse error, not a silent 202 (L4)" do
+        post "/api/v1/mcp", params: "{ not valid json",
+             headers: { "CONTENT_TYPE" => "application/json" }.merge(auth_header(@admin))
+        assert_response :success
+        assert_equal(-32700, response.parsed_body.dig("error", "code"))
+      end
+
       test "a notification (no id) gets no body" do
         post "/api/v1/mcp", params: { jsonrpc: "2.0", method: "notifications/initialized" }.to_json,
              headers: { "CONTENT_TYPE" => "application/json" }.merge(auth_header(@admin))

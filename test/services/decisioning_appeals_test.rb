@@ -57,4 +57,17 @@ class DecisioningAppealsTest < ActiveSupport::TestCase
       Decisioning::Dispatcher.overturn_appeal!(appeal, reviewer: users(:admin), reason: "x")
     end
   end
+
+  test "overturning a route_case decision restores the prior queue (M6)" do
+    kase = Case.create!(subject: "Routed", contact: contacts(:asha), queue: queues(:pensions))
+    decision = Decision.create!(rule: "route", version: "1", subject: kase, signal: "route_case",
+                                decision_class: "of_record", status: :proposed, action: "route_case",
+                                action_params: { "queue_id" => queues(:sanitation).id })
+    Decisioning::Dispatcher.apply!(decision)
+    assert_equal queues(:sanitation), kase.reload.queue, "applied → routed away"
+
+    appeal = Decisioning::Dispatcher.file_appeal!(decision, grounds: "misrouted")
+    Decisioning::Dispatcher.overturn_appeal!(appeal, reviewer: users(:admin), reason: "wrong queue")
+    assert_equal queues(:pensions), kase.reload.queue, "overturn restored the original queue"
+  end
 end

@@ -33,7 +33,11 @@ module Connectors
       sender = msg[:sender] || {}
       ext = "#{msg[:channel]}:#{sender[:external_id]}"
       existing = Contact.find_by(external_id: ext)
-      existing ||= Contact.find_by(phone: sender[:phone]) if sender[:phone].present?
+      # Fall back to a bare-phone match ONLY for unverified contacts (no
+      # external_id) — never thread a spoofable inbound number onto a contact
+      # verified through another channel (SSO/portal/sync identity) (M2). Mirrors
+      # Connectors::Sync#find_contact.
+      existing ||= Contact.where(external_id: nil).find_by(phone: sender[:phone]) if sender[:phone].present?
       existing || Contact.create!(
         name: sender[:name].presence || ext,
         phone: sender[:phone].presence,

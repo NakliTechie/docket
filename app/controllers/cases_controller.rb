@@ -84,7 +84,10 @@ class CasesController < ApplicationController
 
   def assign
     authorize @case
-    assignee = params[:assignee_id].presence && User.active.find(params[:assignee_id])
+    assignee = params[:assignee_id].presence && User.active.find_by(id: params[:assignee_id])
+    if params[:assignee_id].present? && assignee.nil? # unknown / inactive / other tenant (L2)
+      return redirect_to @case, alert: t(".invalid_assignee"), status: :see_other
+    end
     @case.update!(assignee: assignee)
     redirect_to @case, notice: assignee ? t(".assigned", name: assignee.name) : t(".unassigned")
   end

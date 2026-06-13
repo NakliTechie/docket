@@ -62,7 +62,7 @@ class Lead < ApplicationRecord
   end
 
   def value_estimate=(amount)
-    self.value_estimate_cents = amount.present? ? (amount.to_f * 100).round : nil
+    self.value_estimate_cents = Cents.from(amount)
   end
 
   private

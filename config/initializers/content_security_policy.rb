@@ -20,8 +20,10 @@ Rails.application.configure do
     policy.object_src  :none
   end
 
-  config.content_security_policy_nonce_generator = ->(request) {
-    request.session.id.to_s.presence || SecureRandom.base64(16)
-  }
+  # A fresh random nonce per request (Rails memoizes it within the request, so
+  # every emitted <script> shares it and matches the header). Not derived from
+  # the session id, which would be stable across the session's responses and
+  # thus more predictable/reusable (L12).
+  config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
   config.content_security_policy_nonce_directives = %w[script-src]
 end

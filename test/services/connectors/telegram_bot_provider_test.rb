@@ -45,6 +45,7 @@ class Connectors::TelegramBotProviderTest < ActiveSupport::TestCase
       obs = provider.invoke("send_message", { "text" => "Build green" })
       assert obs["ok"]
       assert_equal 42, obs["result"]["result"]["message_id"]
+      assert_equal 42, obs["message_id"], "the sent message id is surfaced for the reply-out loop (L5)"
 
       req = reqs.last.last
       assert_instance_of Net::HTTP::Post, req

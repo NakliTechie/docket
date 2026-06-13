@@ -76,7 +76,10 @@ module Api
 
       def assign
         authorize_api!(@case, :assign?, scope: "cases:write")
-        assignee = params[:assignee_id].presence && User.active.find(params[:assignee_id])
+        assignee = params[:assignee_id].presence && User.active.find_by(id: params[:assignee_id])
+        if params[:assignee_id].present? && assignee.nil? # unknown / inactive / other tenant (L2)
+          return render_error("invalid_assignee", detail: "no active user with that id", status: :unprocessable_entity)
+        end
         @case.update!(assignee: assignee)
         render json: { data: Serialize.kase(@case) }
       end

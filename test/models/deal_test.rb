@@ -24,6 +24,11 @@ class DealTest < ActiveSupport::TestCase
     assert_in_delta 2500.75, deal.value, 0.001
   end
 
+  test "a non-numeric value is rejected (nil), not silently zeroed (L8)" do
+    assert_nil Deal.new(name: "x", pipeline: @pipeline, value: "not a number").value_cents
+    assert_nil Deal.new(name: "y", pipeline: @pipeline, value: "").value_cents
+  end
+
   test "moving to a won stage derives won status and stamps closed_at" do
     deal = Deal.create!(name: "Winner", pipeline: @pipeline)
     deal.move_to_stage!(@won_stage)

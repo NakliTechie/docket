@@ -59,6 +59,18 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     assert_equal 1, delivery.attempts
   end
 
+  test "4xx/3xx responses fail fast without retrying (L7)" do
+    stub_request(:post, "https://receiver.example.in/hook").to_return(status: 404)
+    delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })
+
+    assert_no_enqueued_jobs do
+      WebhookDeliveryJob.perform_now(delivery) # no DeliveryError raised → no retry scheduled
+    end
+    assert delivery.reload.status_failed?
+    assert_equal 404, delivery.response_code
+    assert_equal 1, delivery.attempts
+  end
+
   test "connection errors retry too" do
     stub_request(:post, "https://receiver.example.in/hook").to_raise(Errno::ECONNREFUSED)
     delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })

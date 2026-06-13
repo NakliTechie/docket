@@ -85,6 +85,12 @@ class Connectors::InvokeTest < ActiveSupport::TestCase
     assert_nil inv.result
   end
 
+  test "approve! fails clearly when the action is no longer offered (L9)" do
+    inv = Connectors::Invoke.call(connector, "post_json", args: args, principal: agent)
+    inv.update_column(:action, "removed_action") # provider catalogue changed since parking
+    assert_raises(Connectors::Error) { Connectors::Invoke.approve!(inv, approver: staff) }
+  end
+
   # --- idempotency ---
 
   test "the same idempotency key returns the original invocation, never a duplicate" do
