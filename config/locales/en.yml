@@ -17,6 +17,7 @@ en:
       categories: "Categories"
       sla_policies: "SLA policies"
       macros: "Macros"
+      routing_rules: "Routing rules"
       leads: "Leads"
       deals: "Deals"
       sales_report: "Sales report"
@@ -851,6 +852,66 @@ en:
     destroy:
       deleted: "Macro deleted."
 
+  routing_rules:
+    fields:
+      name: "Name"
+      active: "Active"
+      if_channel: "Channel"
+      if_priority: "Priority"
+      match_category: "Category"
+      if_subject_contains: "Subject contains"
+      then_queue: "Route to queue"
+      then_category: "Set category"
+      then_priority: "Set priority"
+      then_assignment: "Assign to"
+      then_assignee: "Specific agent"
+    enum:
+      then_assignment:
+        keep: "Leave unassigned"
+        round_robin: "Round-robin across queue members"
+        least_loaded: "Least-loaded queue member"
+        specific_user: "A specific agent"
+    form:
+      any: "Any"
+      keep: "Keep / unchanged"
+      unassigned: "Unassigned"
+      active_hint: "Inactive rules are kept but skipped during routing."
+      conditions_legend: "When a case matches…"
+      conditions_hint: "A rule matches when ALL the conditions you set hold. Leave a condition blank to mean “any”."
+      actions_hint: "Set what the matched case should become. Leave a field blank to keep the case's value."
+      actions_legend: "…then route it"
+      keyword_hint: "Case-insensitive match against the subject and description."
+      assignment_hint: "Round-robin and least-loaded pick from the target queue's active members."
+    index:
+      title: "Routing rules"
+      new_rule: "New rule"
+      intro: "Deterministic, ordered rules that classify and assign cases on intake — evaluated top to bottom; the first matching active rule wins, and the AI triage handles anything left unmatched."
+      any: "Any case"
+      active: "Active"
+      inactive: "Inactive"
+      move_up: "Move up"
+      move_down: "Move down"
+      confirm_delete: "Delete this routing rule? Cases already routed by it keep their queue and assignee."
+      columns:
+        order: "#"
+        name: "Name"
+        conditions: "When"
+        actions: "Then"
+        status: "Status"
+      empty:
+        title: "No routing rules yet"
+        hint: "Add a rule to deterministically route cases — for example, send any case whose subject mentions “ATM” to the Card disputes queue."
+    new:
+      title: "New routing rule"
+    edit:
+      title: "Edit routing rule %{name}"
+    create:
+      created: "Routing rule created."
+    update:
+      updated: "Routing rule updated."
+    destroy:
+      deleted: "Routing rule deleted."
+
   help:
     title: "Keyboard shortcuts"
     close: "Close"
@@ -1615,6 +1676,11 @@ en:
               must_use_state_machine: "transitions must go through the case state machine"
             assignee:
               inactive: "must be an active user"
+        routing_rule:
+          attributes:
+            base:
+              needs_condition: "needs at least one condition (channel, priority, category, or subject keyword)"
+              needs_action: "needs at least one action (set a queue, category, priority, or assignment)"
         reference_doc:
           attributes:
             file:

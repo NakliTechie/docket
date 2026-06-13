@@ -33,6 +33,13 @@ class CaseAgent
   private
 
   def route
+    # A declarative routing rule already classified this case — keep its routing,
+    # skip the LLM classification, just complete triage.
+    if kase.routed_by_rule_id.present?
+      kase.transition_to!(:triaged) if kase.status_new?
+      return { "routed_by" => "rule", "rule_id" => kase.routed_by_rule_id }
+    end
+
     prompt = <<~PROMPT
       [TASK:route]
       You triage citizen grievances for a public service desk. Classify the case below.

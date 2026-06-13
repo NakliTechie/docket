@@ -25,6 +25,11 @@ Rails.application.routes.draw do
   end
   resources :sla_policies, except: :show
   resources :macros, except: :show
+  resources :routing_rules, except: :show do
+    member do
+      patch :move
+    end
+  end
 
   # Sales funnel (v1.2 CRM)
   resources :leads do

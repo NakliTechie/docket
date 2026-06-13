@@ -50,6 +50,7 @@ class Case < ApplicationRecord
   before_validation :ensure_tracking_id, on: :create
   before_validation :apply_default_sla_policy, on: :create
   before_save :compute_sla_due_dates, if: :sla_inputs_changed?
+  after_create_commit :apply_routing_rules
   after_create_commit :enqueue_agent_triage
   after_create_commit :publish_created_webhook
 
@@ -190,12 +191,28 @@ class Case < ApplicationRecord
     errors.add(:assignee, :inactive) unless assignee&.active?
   end
 
-  # Citizen-originated cases get the AI triage/draft/resolve loop when a
-  # model endpoint is configured; silently nothing otherwise.
-  def enqueue_agent_triage
-    return unless channel_web_portal? || channel_email? || channel_api?
-    CaseAgentJob.perform_later(self) if Llm.enabled?
+  # First-match declarative routing (CaseRouting) — deterministic, runs before
+  # the AI triage and wins over it. No-op when no rule matches.
+  def apply_routing_rules
+    CaseRouting.apply(self)
   end
+
+  # Citizen-originated cases get the AI triage/draft/resolve loop when a model
+  # endpoint is configured; silently nothing otherwise.
+  def enqueue_agent_triage
+    CaseAgentJob.perform_later(self) if ai_triage_eligible?
+  end
+
+  public
+
+  # Whether the AI triage/draft/resolve loop will run for this case — used both
+  # to enqueue it and (in CaseRouting) to decide whether a rule must complete
+  # triage itself.
+  def ai_triage_eligible?
+    Llm.enabled? && (channel_web_portal? || channel_email? || channel_api?)
+  end
+
+  private
 
   def publish_created_webhook
     Webhooks.publish("case.created", Webhooks.case_payload(self))

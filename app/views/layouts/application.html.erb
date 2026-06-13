@@ -37,12 +37,15 @@
 
           <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? || policy(ConnectorInvocation).index? %>
             <%= nav_group t("layout.nav.service_desk"),
-                  active: %w[case_queues categories sla_policies macros reference_docs connector_invocations decision_appeals].include?(controller_name) do %>
+                  active: %w[case_queues categories sla_policies macros routing_rules reference_docs connector_invocations decision_appeals].include?(controller_name) do %>
               <% if policy(CaseQueue).create? %>
                 <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                 <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
                 <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
                 <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
+              <% end %>
+              <% if policy(RoutingRule).index? %>
+                <%= nav_link t("layout.nav.routing_rules"), routing_rules_path, active: controller_name == "routing_rules" %>
               <% end %>
               <% if policy(ReferenceDoc).index? %>
                 <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
