@@ -469,6 +469,9 @@ en:
       no_connectors: "No connectors configured."
       needs_attention: "Needs attention"
       all_healthy: "All connectors healthy."
+      records_by_connector: "Records by connector"
+      no_sourced_records: "No connector-sourced records yet."
+      unknown_connector: "(unknown)"
       effector: "Agent accountability"
       agent_accountability: "Agent actions (now & window)"
       approval_queue_depth: "Awaiting approval (now)"
@@ -490,6 +493,7 @@ en:
         decision_class: "Decision class"
         actions: "Actions"
         istatus: "Status"
+        records: "Records"
   sales_reports:
     index:
       title: "Sales report"

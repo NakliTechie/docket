@@ -8,6 +8,8 @@ class Contact < ApplicationRecord
   LANGUAGES = %w[en hi].freeze
 
   belongs_to :organisation, -> { with_deleted }, optional: true
+  # Which connector ingested this record (nil for portal/manual/API-created).
+  belongs_to :source_connector, class_name: "Connector", optional: true
   has_many :cases, dependent: :restrict_with_error
   has_many :messages, as: :author, dependent: nil
 

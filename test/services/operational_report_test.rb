@@ -84,6 +84,20 @@ class OperationalReportTest < ActiveSupport::TestCase
     assert(attention.any? { |row| row[:overdue] })
   end
 
+  test "records_per_connector counts contacts by sourcing connector, biggest first" do
+    a = connector
+    b = connector
+    Contact.create!(name: "c1", email: "c1@x.com", source_connector_id: a.id)
+    Contact.create!(name: "c2", email: "c2@x.com", source_connector_id: a.id)
+    Contact.create!(name: "c3", email: "c3@x.com", source_connector_id: b.id)
+    Contact.create!(name: "manual", email: "m@x.com") # no provenance → excluded
+    rows = report.records_per_connector
+    assert_equal 2, rows.length
+    assert_equal a.id, rows.first[:connector].id
+    assert_equal 2, rows.first[:count]
+    assert_equal 1, rows.last[:count]
+  end
+
   # --- Effector / accountability plane ---
 
   def invocation(decision_class:, status:, approved_by: nil, action: "send")

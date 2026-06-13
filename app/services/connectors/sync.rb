@@ -48,10 +48,15 @@ module Connectors
 
       contact = find_contact(attrs)
       if contact
-        contact.update!(attrs.compact)
+        save_attrs = attrs.compact
+        # Stamp provenance only if unset — keep the first connector that sourced it.
+        save_attrs[:source_connector_id] = connector.id if contact.source_connector_id.nil?
+        contact.update!(save_attrs)
         :updated
       else
-        Contact.create!(attrs.compact.reverse_merge(name: attrs[:external_id] || attrs[:email]))
+        Contact.create!(attrs.compact
+          .reverse_merge(name: attrs[:external_id] || attrs[:email])
+          .merge(source_connector_id: connector.id))
         :created
       end
     end

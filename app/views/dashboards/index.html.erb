@@ -175,6 +175,27 @@
         <p class="muted"><%= t(".all_healthy") %></p>
       <% end %>
     </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".records_by_connector") %></h2>
+      <% if op.records_per_connector.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><%= t(".columns.connector") %></th><th><%= t(".columns.records") %></th></tr></thead>
+            <tbody>
+              <% op.records_per_connector.each do |row| %>
+                <tr>
+                  <td><%= row[:connector]&.name || t(".unknown_connector") %></td>
+                  <td><%= row[:count] %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_sourced_records") %></p>
+      <% end %>
+    </div>
   </aside>
 </div>
 

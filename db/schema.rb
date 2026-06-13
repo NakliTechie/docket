@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_063117) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_130000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -208,12 +208,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_063117) do
     t.string "phone"
     t.string "preferred_language", default: "en", null: false
     t.boolean "sms_consent", default: false, null: false
+    t.integer "source_connector_id"
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_contacts_on_deleted_at"
     t.index ["email"], name: "index_contacts_on_email"
     t.index ["external_id"], name: "index_contacts_on_external_id", unique: true, where: "external_id IS NOT NULL AND deleted_at IS NULL"
     t.index ["organisation_id"], name: "index_contacts_on_organisation_id"
     t.index ["phone"], name: "index_contacts_on_phone"
+    t.index ["source_connector_id"], name: "index_contacts_on_source_connector_id"
   end
 
   create_table "deals", force: :cascade do |t|
@@ -230,6 +232,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_063117) do
     t.integer "owner_id"
     t.integer "pipeline_id", null: false
     t.integer "pipeline_stage_id", null: false
+    t.integer "source_connector_id"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "value_cents"
@@ -241,6 +244,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_063117) do
     t.index ["pipeline_id", "pipeline_stage_id"], name: "index_deals_on_pipeline_id_and_pipeline_stage_id"
     t.index ["pipeline_id"], name: "index_deals_on_pipeline_id"
     t.index ["pipeline_stage_id"], name: "index_deals_on_pipeline_stage_id"
+    t.index ["source_connector_id"], name: "index_deals_on_source_connector_id"
     t.index ["status"], name: "index_deals_on_status"
   end
 
@@ -258,6 +262,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_063117) do
     t.string "phone"
     t.boolean "sms_consent", default: false, null: false
     t.integer "source", default: 2, null: false
+    t.integer "source_connector_id"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "value_estimate_cents"
@@ -266,6 +271,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_063117) do
     t.index ["deleted_at"], name: "index_leads_on_deleted_at"
     t.index ["email"], name: "index_leads_on_email"
     t.index ["owner_id"], name: "index_leads_on_owner_id"
+    t.index ["source_connector_id"], name: "index_leads_on_source_connector_id"
     t.index ["status"], name: "index_leads_on_status"
   end
 

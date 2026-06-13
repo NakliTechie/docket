@@ -21,6 +21,8 @@ class Deal < ApplicationRecord
   belongs_to :contact, -> { with_deleted }, optional: true
   belongs_to :organisation, -> { with_deleted }, optional: true
   belongs_to :lead, -> { with_deleted }, optional: true
+  # Which connector ingested this record (nil for portal/manual/API-created).
+  belongs_to :source_connector, class_name: "Connector", optional: true
 
   validates :name, presence: true
   validate :stage_belongs_to_pipeline

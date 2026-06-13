@@ -123,6 +123,17 @@ class OperationalReport
     end
   end
 
+  # Snapshot: how many contacts each connector has sourced (provenance), biggest
+  # first — the "value per connector" view unlocked by source_connector_id.
+  def records_per_connector
+    @records_per_connector ||= begin
+      counts = Contact.where.not(source_connector_id: nil).group(:source_connector_id).count
+      connectors = Connector.where(id: counts.keys).index_by(&:id)
+      counts.map { |cid, count| { connector: connectors[cid], count: count } }
+            .sort_by { |row| -row[:count] }
+    end
+  end
+
   # --- Effector / agent-accountability plane --------------------------------
 
   # Windowed agent-action volume per decision_class (autonomous/confirm/of_record).

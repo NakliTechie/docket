@@ -469,6 +469,9 @@ hi:
       no_connectors: "कोई कनेक्टर कॉन्फ़िगर नहीं किया गया।"
       needs_attention: "ध्यान देने योग्य"
       all_healthy: "सभी कनेक्टर स्वस्थ हैं।"
+      records_by_connector: "कनेक्टर अनुसार रिकॉर्ड"
+      no_sourced_records: "अभी तक कोई कनेक्टर-स्रोत रिकॉर्ड नहीं।"
+      unknown_connector: "(अज्ञात)"
       effector: "एजेंट जवाबदेही"
       agent_accountability: "एजेंट कार्रवाई (अभी और अवधि)"
       approval_queue_depth: "अनुमोदन प्रतीक्षारत (अभी)"
@@ -490,6 +493,7 @@ hi:
         decision_class: "निर्णय वर्ग"
         actions: "कार्रवाई"
         istatus: "स्थिति"
+        records: "रिकॉर्ड"
   sales_reports:
     index:
       title: "बिक्री रिपोर्ट"

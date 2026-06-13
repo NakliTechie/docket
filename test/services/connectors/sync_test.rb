@@ -113,4 +113,29 @@ class Connectors::SyncTest < ActiveSupport::TestCase
       assert_raises(Connectors::Error) { conn.provider_instance.fetch }
     end
   end
+
+  # --- source_connector provenance ---
+
+  test "stamps the source connector on contacts it creates" do
+    conn = connector
+    stub_fetch(conn, [ { "id" => "CIF-7", "email" => "g@example.com", "name" => "Gamma" } ])
+    Connectors::Sync.run(conn)
+    assert_equal conn.id, Contact.find_by(external_id: "CIF-7").source_connector_id
+  end
+
+  test "stamps provenance on an update only when unset — keeps the first source" do
+    first = connector
+    Contact.create!(name: "Old", external_id: "CIF-9", email: "old@example.com", source_connector_id: first.id)
+    other = connector
+    stub_fetch(other, [ { "id" => "CIF-9", "email" => "new@example.com", "name" => "New" } ])
+    Connectors::Sync.run(other)
+    # Still attributed to the first connector that sourced it.
+    assert_equal first.id, Contact.find_by(external_id: "CIF-9").source_connector_id
+
+    # But a contact with no provenance gets stamped on update (backfill).
+    Contact.create!(name: "Unsourced", external_id: "CIF-10", email: "u@example.com")
+    stub_fetch(other, [ { "id" => "CIF-10", "email" => "u2@example.com", "name" => "U2" } ])
+    Connectors::Sync.run(other)
+    assert_equal other.id, Contact.find_by(external_id: "CIF-10").source_connector_id
+  end
 end

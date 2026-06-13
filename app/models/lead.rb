@@ -19,6 +19,8 @@ class Lead < ApplicationRecord
   belongs_to :owner, -> { with_deleted }, class_name: "User", optional: true
   belongs_to :contact, -> { with_deleted }, optional: true
   belongs_to :converted_deal, -> { with_deleted }, class_name: "Deal", optional: true
+  # Which connector ingested this record (nil for portal/manual/API-created).
+  belongs_to :source_connector, class_name: "Connector", optional: true
 
   normalizes :email, with: ->(e) { e.strip.downcase.presence }
   normalizes :phone, with: ->(p) { p.gsub(/[^\d+]/, "").presence }
