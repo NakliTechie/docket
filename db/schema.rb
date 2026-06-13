@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_160000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -538,6 +538,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_150000) do
     t.datetime "updated_at", null: false
     t.index ["sla_policy_id", "priority"], name: "index_sla_targets_on_sla_policy_id_and_priority", unique: true
     t.index ["sla_policy_id"], name: "index_sla_targets_on_sla_policy_id"
+  end
+
+  create_table "tenants", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.integer "status", default: 0, null: false
+    t.string "subdomain"
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_tenants_on_slug", unique: true
+    t.index ["subdomain"], name: "index_tenants_on_subdomain", unique: true
   end
 
   create_table "users", force: :cascade do |t|

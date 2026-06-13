@@ -4,6 +4,7 @@ module Api
     #   dkt_…  per-user token — full console parity via Pundit policies
     #   dkts_… service-account bearer (client credentials) — scope-gated
     class BaseController < ActionController::API
+      include TenantResolution
       include Pundit::Authorization
       include Pagy::Backend
 

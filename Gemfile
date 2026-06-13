@@ -22,6 +22,11 @@ gem "bcrypt", "~> 3.1.7"
 # Authorization policies (single authorisation layer, used everywhere)
 gem "pundit", "~> 2.3"
 
+# Tenant scoping for shared multi-tenant deploys. Pure Ruby (no runtime deps
+# beyond request_store), fail-closed on a missing tenant. Isolated deploys are
+# the degenerate single-tenant case. See plan/rbac-research-2026-06-13.md.
+gem "acts_as_tenant", "~> 1.0"
+
 # Public portal rate limiting
 gem "rack-attack", "~> 6.7"
 

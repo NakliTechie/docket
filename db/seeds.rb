@@ -1,5 +1,12 @@
-# Idempotent base seeds: a break-glass admin account and sensible
-# defaults. Rich demo data ships separately (db/seeds/demo.rb, G4).
+# Idempotent base seeds: the primary tenant, a break-glass admin account, and
+# sensible defaults. Rich demo data ships separately (db/seeds/demo.rb, G4).
+#
+# The primary tenant is the isolated-deploy singleton — every deployment has one
+# (a shared deploy provisions further tenants on top). Tenant scoping resolves
+# to it on the isolated path. No subdomain (isolated deploys serve a single host).
+Tenant.find_or_create_by!(slug: Tenant::PRIMARY_SLUG) do |t|
+  t.name = ENV["DOCKET_TENANT_NAME"].presence || "Docket"
+end
 #
 # The admin password comes from DOCKET_ADMIN_PASSWORD. If unset, we
 # generate a random one and print it ONCE on creation — never ship a
