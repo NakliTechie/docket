@@ -40,6 +40,17 @@ class DealTest < ActiveSupport::TestCase
     assert_nil deal.closed_at
   end
 
+  test "lost_reason is kept on a lost deal and cleared once it leaves lost" do
+    deal = Deal.create!(name: "Reason", pipeline: @pipeline)
+    deal.update!(pipeline_stage: @lost_stage, lost_reason: :price)
+    assert deal.reload.status_lost?
+    assert_equal "price", deal.lost_reason
+
+    deal.move_to_stage!(@new_stage) # reopen
+    assert deal.reload.status_open?
+    assert_nil deal.lost_reason
+  end
+
   test "a stage from another pipeline is rejected" do
     other = Pipeline.new(name: "Other")
     other.pipeline_stages.build(name: "Solo", position: 0)

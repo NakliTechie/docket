@@ -20,6 +20,13 @@ class DealsTest < ActionDispatch::IntegrationTest
     assert_equal 100_000, deal.value_cents
   end
 
+  test "an agent records a lost reason on a lost deal" do
+    sign_in_as users(:agent_a)
+    deal = Deal.create!(name: "Slipping", pipeline: pipelines(:sales), pipeline_stage: pipeline_stages(:sales_lost))
+    patch deal_path(deal), params: { deal: { lost_reason: "competitor" } }
+    assert_equal "competitor", deal.reload.lost_reason
+  end
+
   test "moving a deal to a won stage closes it (the kanban drag endpoint)" do
     sign_in_as users(:agent_a)
     deal = Deal.create!(name: "To win", pipeline: pipelines(:sales))

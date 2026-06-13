@@ -73,6 +73,7 @@ class DealsController < ApplicationController
 
   def deal_params
     params.require(:deal).permit(:name, :pipeline_id, :pipeline_stage_id, :owner_id,
-                                 :contact_id, :organisation_id, :value, :currency, :expected_close_on)
+                                 :contact_id, :organisation_id, :value, :currency, :expected_close_on,
+                                 :lost_reason)
   end
 end

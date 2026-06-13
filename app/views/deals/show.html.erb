@@ -17,6 +17,9 @@
   <dl class="meta-list">
     <dt><%= t("deals.fields.pipeline") %></dt><dd><%= @deal.pipeline.name %></dd>
     <dt><%= t("deals.fields.stage") %></dt><dd><%= @deal.pipeline_stage.name %></dd>
+    <% if @deal.status_lost? && @deal.lost_reason %>
+      <dt><%= t("deals.fields.lost_reason") %></dt><dd><%= @deal.human_lost_reason %></dd>
+    <% end %>
     <% if @deal.value_cents %>
       <dt><%= t("deals.fields.value") %></dt><dd><%= number_to_currency(@deal.value, unit: "₹") %></dd>
     <% end %>

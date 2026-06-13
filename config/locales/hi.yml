@@ -374,13 +374,22 @@ hi:
       expected_close_on: "अपेक्षित समापन"
       source_lead: "स्रोत लीड"
       status: "स्थिति"
+      lost_reason: "हार का कारण"
     form:
       pipeline_hint: "नए सौदे इस पाइपलाइन के पहले चरण में आते हैं।"
+      lost_reason_hint: "सौदा हारा हुआ चिह्नित करने पर दर्ज — बिक्री रिपोर्ट के हार-विश्लेषण में जाता है।"
     enum:
       status:
         open: "खुला"
         won: "जीता"
         lost: "हारा"
+      lost_reason:
+        price: "मूल्य"
+        competitor: "प्रतिस्पर्धी से हारे"
+        no_budget: "बजट नहीं"
+        no_decision: "कोई निर्णय / कोई प्रतिक्रिया नहीं"
+        timing: "समय"
+        other: "अन्य"
     index:
       title: "सौदे"
       new_deal: "नया सौदा"
@@ -421,10 +430,12 @@ hi:
       deals_created: "बनाए गए सौदे"
       lead_conversion: "लीड रूपांतरण"
       by_owner: "स्वामी अनुसार"
+      loss_reasons: "सौदे क्यों हारे"
       count_value: "%{count} · %{value}"
       percent: "%{value}%"
       unassigned: "(अनिर्दिष्ट)"
       no_open_deals: "कोई खुला सौदा नहीं।"
+      no_losses: "इस अवधि में दर्ज कारण वाला कोई हारा सौदा नहीं।"
       columns:
         stage: "चरण"
         deals: "सौदे"
@@ -432,6 +443,7 @@ hi:
         owner: "स्वामी"
         open: "खुले"
         won: "जीते"
+        reason: "कारण"
   pipelines:
     fields:
       name: "नाम"

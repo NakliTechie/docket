@@ -68,6 +68,20 @@ class SalesReport
     end
   end
 
+  # Why deals were lost in the window — count + value per reason, most
+  # common first. Only losses that recorded a reason are included.
+  def loss_reasons
+    @loss_reasons ||= begin
+      lost = Deal.with_deleted.status_lost.where(closed_at: range).where.not(lost_reason: nil)
+      counts = lost.group(:lost_reason).count
+      values = lost.group(:lost_reason).sum(:value_cents)
+      counts.map do |reason, count|
+        key = reason.is_a?(Integer) ? Deal.lost_reasons.key(reason) : reason.to_s
+        { reason: key, count: count, value_cents: values[reason] || 0 }
+      end.sort_by { |row| -row[:count] }
+    end
+  end
+
   # Rep leaderboard: open pipeline value (snapshot) + won value (windowed)
   # per owner, biggest contributor first.
   def by_owner
@@ -93,6 +107,9 @@ class SalesReport
       csv << [ "summary", "won", stats[:won_count], rupees(stats[:won_value_cents]), from, to ]
       csv << [ "summary", "lost", stats[:lost_count], rupees(stats[:lost_value_cents]), from, to ]
       csv << [ "summary", "win_rate_pct", nil, stats[:win_rate], from, to ]
+      loss_reasons.each do |row|
+        csv << [ "loss_reason", row[:reason], row[:count], rupees(row[:value_cents]), from, to ]
+      end
       by_owner.each do |row|
         csv << [ "owner", csv_safe(row[:owner]&.name), nil, rupees(row[:open_value_cents] + row[:won_value_cents]), from, to ]
       end

@@ -374,13 +374,22 @@ en:
       expected_close_on: "Expected close"
       source_lead: "Source lead"
       status: "Status"
+      lost_reason: "Lost reason"
     form:
       pipeline_hint: "New deals land in this pipeline's first stage."
+      lost_reason_hint: "Recorded when the deal is marked lost — feeds the sales report's loss breakdown."
     enum:
       status:
         open: "Open"
         won: "Won"
         lost: "Lost"
+      lost_reason:
+        price: "Price"
+        competitor: "Lost to competitor"
+        no_budget: "No budget"
+        no_decision: "No decision / no response"
+        timing: "Timing"
+        other: "Other"
     index:
       title: "Deals"
       new_deal: "New deal"
@@ -421,10 +430,12 @@ en:
       deals_created: "Deals created"
       lead_conversion: "Lead conversion"
       by_owner: "By owner"
+      loss_reasons: "Why deals are lost"
       count_value: "%{count} · %{value}"
       percent: "%{value}%"
       unassigned: "(unassigned)"
       no_open_deals: "No open deals."
+      no_losses: "No lost deals with a recorded reason in this period."
       columns:
         stage: "Stage"
         deals: "Deals"
@@ -432,6 +443,7 @@ en:
         owner: "Owner"
         open: "Open"
         won: "Won"
+        reason: "Reason"
   pipelines:
     fields:
       name: "Name"

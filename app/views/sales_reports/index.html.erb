@@ -107,5 +107,33 @@
         <p class="muted"><%= t(".no_open_deals") %></p>
       <% end %>
     </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".loss_reasons") %></h2>
+      <% if @report.loss_reasons.any? %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><%= t(".columns.reason") %></th>
+                <th><%= t(".columns.deals") %></th>
+                <th><%= t(".columns.value") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @report.loss_reasons.each do |row| %>
+                <tr>
+                  <td><%= t("deals.enum.lost_reason.#{row[:reason]}") %></td>
+                  <td><%= row[:count] %></td>
+                  <td><%= format_cents(row[:value_cents]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="muted"><%= t(".no_losses") %></p>
+      <% end %>
+    </div>
   </aside>
 </div>

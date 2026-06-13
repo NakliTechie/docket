@@ -36,6 +36,12 @@ class SalesReportTest < ActiveSupport::TestCase
     deal
   end
 
+  def lost_with_reason(reason, value, closed_at:)
+    deal = Deal.create!(name: "lost", pipeline: @pipeline, pipeline_stage: @lost, value: value, lost_reason: reason)
+    deal.update_column(:closed_at, closed_at)
+    deal
+  end
+
   test "pipeline_by_stage sums open deals per stage, ordered down the funnel" do
     open_deal(@new, 1000)
     open_deal(@qualified, 2000)
@@ -76,6 +82,20 @@ class SalesReportTest < ActiveSupport::TestCase
     assert_equal 2, stats[:leads_created]
     assert_equal 1, stats[:leads_converted]
     assert_equal 50.0, stats[:lead_conversion_rate]
+  end
+
+  test "loss_reasons breaks down lost deals by reason, windowed, most common first" do
+    lost_with_reason(:price, 1000, closed_at: 1.day.ago)
+    lost_with_reason(:price, 2000, closed_at: 2.days.ago)
+    lost_with_reason(:competitor, 5000, closed_at: 3.days.ago)
+    lost_with_reason(:price, 9999, closed_at: 30.days.ago) # outside the window — ignored
+    closed_deal(@lost, 4000, closed_at: 1.day.ago)         # lost without a reason — excluded
+
+    reasons = @report.loss_reasons
+    assert_equal [ "price", "competitor" ], reasons.map { |r| r[:reason] }
+    price = reasons.find { |r| r[:reason] == "price" }
+    assert_equal 2, price[:count]
+    assert_equal 300_000, price[:value_cents]
   end
 
   test "by_owner ranks reps by open + won value, skipping unassigned" do

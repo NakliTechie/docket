@@ -6,9 +6,14 @@ class Deal < ApplicationRecord
   include Audited
   include HumanEnums
 
-  humanizes_enums :status
+  humanizes_enums :status, :lost_reason
 
   enum :status, { open: 0, won: 1, lost: 2 }, default: :open, prefix: true
+  # Why a deal was lost — captured when it lands in a lost stage, so the
+  # sales report can break losses down. Nil until set; cleared if the deal
+  # leaves the lost state (see #derive_status_from_stage).
+  enum :lost_reason, { price: 0, competitor: 1, no_budget: 2, no_decision: 3, timing: 4, other: 5 },
+       prefix: :lost_reason
 
   belongs_to :pipeline, -> { with_deleted }
   belongs_to :pipeline_stage, -> { with_deleted }
@@ -51,6 +56,7 @@ class Deal < ApplicationRecord
     implied = pipeline_stage&.implied_status || :open
     self.status = implied
     self.closed_at = implied == :open ? nil : (closed_at || Time.current)
+    self.lost_reason = nil unless implied == :lost
   end
 
   def stage_belongs_to_pipeline
