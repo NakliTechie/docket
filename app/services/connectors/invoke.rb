@@ -37,6 +37,12 @@ module Connectors
           status: gated_status(connector, action)
         )
         execute!(invocation, action) if invocation.status_approved?
+      rescue ActiveRecord::RecordNotUnique
+        # Lost an idempotency-key race with a concurrent call — return the
+        # winner instead of bubbling a 500 (M7). Only safe for a real key
+        # (nil keys are distinct in the unique index, so this can't be one).
+        raise unless idempotency_key.present?
+        invocation = connector.invocations.find_by(idempotency_key: idempotency_key)
       end
       invocation
     end
@@ -52,6 +58,9 @@ module Connectors
       invocation.update!(status: :approved, approved_by: approver, approved_at: Time.current,
                          decision_reason: reason.presence)
       action = invocation.connector.provider_action(invocation.action)
+      # The provider catalogue can change between parking and approval (action
+      # renamed/removed) — fail clearly instead of NoMethodError in execute! (L9).
+      raise Connectors::Error, "action no longer offered: #{invocation.action}" unless action
       execute!(invocation, action)
       invocation
     end

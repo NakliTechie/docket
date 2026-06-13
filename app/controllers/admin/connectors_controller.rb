@@ -96,6 +96,11 @@ module Admin
     end
 
     def connector_params
+      # NOTE (S5): effector exposure — enabled_actions / auto_approve_actions /
+      # action_budget(_window_minutes) — is intentionally NOT settable here. It's
+      # managed via console/seed only (a deliberate, audited step before an agent
+      # may invoke a connector); the model's enabled_actions_are_known /
+      # auto_approve_within_enabled validations guard that path, not this form.
       params.require(:connector).permit(:name, :provider, :target, :schedule_interval_minutes,
                                         :shared_credential_id, config: {}, field_mapping: {})
     end

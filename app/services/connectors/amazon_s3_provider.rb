@@ -45,7 +45,11 @@ module Connectors
       content_type = (args["content_type"] || args[:content_type]).to_s.strip.presence || "text/plain"
 
       host = "#{require_config('bucket')}.s3.#{require_config('region')}.amazonaws.com"
-      uri = build_uri("https://#{host}", "/#{key}")
+      # RFC3986-encode each key segment (preserving "/") so a key with a space
+      # or special char produces a path that matches the SigV4 canonical path —
+      # otherwise SignatureDoesNotMatch (L6).
+      encoded_key = key.split("/", -1).map { |seg| ERB::Util.url_encode(seg) }.join("/")
+      uri = build_uri("https://#{host}", "/#{encoded_key}")
       resp = signed_request("PUT", uri, service: "s3", payload: content,
                             signed_headers: { "x-amz-content-sha256" => AwsSigv4.hashed_payload(content) },
                             unsigned_headers: { "Content-Type" => content_type })

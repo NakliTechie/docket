@@ -87,7 +87,9 @@ module Connectors
       uri = build_uri(base, "/bot#{require_secret('bot_token')}/sendMessage")
       resp = post_json(uri, { "chat_id" => chat_id, "text" => text })
       ensure_ok!(resp, "Telegram")
-      { "ok" => true, "result" => parse_json(resp.body) }
+      body = parse_json(resp.body)
+      # Surface the sent message id so the reply-out loop can record it (L5).
+      { "ok" => true, "message_id" => (body.dig("result", "message_id") if body.is_a?(Hash)), "result" => body }
     end
 
     def chat_id_for(args)
