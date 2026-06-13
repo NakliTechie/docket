@@ -20,7 +20,26 @@ class SequenceTest < ActiveSupport::TestCase
     enr = seq.enroll!(lead)
     assert enr.status_active?
     assert_equal 0, enr.current_step_position
+    assert_equal seq.ordered_steps.first, enr.current_step
     assert_operator enr.next_run_at, :<=, Time.current # delay_days 0
+  end
+
+  test "deleting an earlier step doesn't shift an in-flight enrollment onto the wrong step (M5)" do
+    seq = Sequence.new(name: "Three step")
+    seq.sequence_steps.build(position: 0, delay_days: 0, subject: "S0", body: "b0")
+    seq.sequence_steps.build(position: 1, delay_days: 0, subject: "S1", body: "b1")
+    seq.sequence_steps.build(position: 2, delay_days: 0, subject: "S2", body: "b2")
+    seq.save!
+    s0, s1, s2 = seq.ordered_steps
+    enr = seq.enroll!(Lead.create!(name: "Mid", email: "mid.seq@example.com"))
+
+    assert_equal s0, enr.due_step
+    enr.advance! # delivers s0 → points at s1
+    assert_equal s1, enr.reload.current_step
+
+    s0.destroy! # an earlier step is removed mid-flight
+    assert_equal s1, enr.reload.due_step, "still on s1, not shifted onto s2 by the deletion"
+    assert_not_equal s2, enr.due_step
   end
 
   test "step interpolation fills {{vars}} and leaves unknown tokens" do
