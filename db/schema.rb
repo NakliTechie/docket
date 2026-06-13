@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_180000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -543,7 +543,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_170000) do
     t.integer "tenant_id"
     t.datetime "updated_at", null: false
     t.json "value"
-    t.index ["key"], name: "index_settings_on_key", unique: true
+    t.index ["key"], name: "index_settings_on_key_global", unique: true, where: "tenant_id IS NULL"
+    t.index ["tenant_id", "key"], name: "index_settings_on_tenant_id_and_key", unique: true, where: "tenant_id IS NOT NULL"
     t.index ["tenant_id"], name: "index_settings_on_tenant_id"
   end
 
