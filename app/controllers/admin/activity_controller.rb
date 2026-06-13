@@ -7,7 +7,7 @@ module Admin
       authorize :activity, policy_class: AdminAreaPolicy
       @from = parse_date(params[:from]) || 30.days.ago.to_date
       @to = parse_date(params[:to]) || Date.current
-      @report = ActivityReport.new(from: @from, to: @to)
+      @report = ActivityReport.new(from: @from, to: @to, viewer: Current.user)
 
       respond_to do |format|
         format.html

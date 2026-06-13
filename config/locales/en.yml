@@ -1770,6 +1770,7 @@ en:
       show:
         title: "Audit chain"
         chain_status: "Chain verification"
+        verification_platform_only: "The audit chain spans every tenant, so end-to-end verification is available to platform administrators. The entry count below is scoped to your tenant."
         intact: "Chain intact"
         intact_detail: "All %{count} entries verify end-to-end."
         broken: "Chain broken"

@@ -20,6 +20,18 @@ class AuditEntry < ApplicationRecord
 
   validates :action, :previous_sha, :sha, presence: true
 
+  # The hash-chain is global, but the per-tenant audit/activity READ surfaces
+  # must not cross tenants in shared mode (C1). super_admin — the cross-tenant
+  # platform tier — sees the whole chain; an isolated deployment has one tenant
+  # so the filter is a no-op; everyone else sees only their tenant's entries.
+  def self.global_view?(user)
+    Tenant.isolated_deployment? || !!user&.role_super_admin?
+  end
+
+  def self.visible_to(user)
+    global_view?(user) ? all : where(tenant_id: ActsAsTenant.current_tenant&.id)
+  end
+
   # Append-only: no updates, no deletes — at the model layer too.
   def readonly?
     persisted?
