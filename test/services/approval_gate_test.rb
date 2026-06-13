@@ -75,4 +75,23 @@ class ApprovalGateTest < ActiveSupport::TestCase
     refute ApprovalProcess.new(name: "x", trigger_type: :case_transition, trigger_key: "nonsense").valid?
     assert ApprovalProcess.new(name: "x", trigger_type: :case_transition, trigger_key: "closed").valid?
   end
+
+  test "an approval is consumed, so a later guarded transition needs fresh sign-off (H4)" do
+    closure_process
+    kase = resolved_case
+    req = ApprovalGate.submit_transition!(kase, "closed", requested_by: users(:agent_a))
+    ApprovalGate.approve!(req, approver: users(:client_admin), reason: "First closure verified.")
+    assert kase.reload.status_closed?
+    assert req.reload.consumed_at.present?, "the acted-on approval is marked spent"
+
+    # The spent approval must NOT clear a future closure.
+    refute ApprovalGate.transition_cleared?(kase, "closed")
+
+    # Reopen → re-resolve so it's closable again; a brand-new request is required.
+    kase.transition_to!(:reopened)
+    kase.transition_to!(:resolved)
+    fresh = ApprovalGate.submit_transition!(kase, "closed", requested_by: users(:agent_a))
+    assert fresh.status_pending?
+    assert_not_equal req.id, fresh.id, "the second closure needs its own sign-off, not the spent one"
+  end
 end

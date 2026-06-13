@@ -15,12 +15,14 @@ module ApprovalGate
     ApprovalProcess.for_transition(to_status).present?
   end
 
-  # Already approved (so the guarded transition may proceed)? True when nothing
-  # guards it.
+  # Already approved AND not yet spent (so the guarded transition may proceed)?
+  # True when nothing guards it. An approval is consumed when its action is
+  # carried out, so each occurrence of a guarded transition needs its own
+  # sign-off — a stale approval can't clear a later re-close (H4).
   def transition_cleared?(kase, to_status)
     process = ApprovalProcess.for_transition(to_status)
     return true unless process
-    kase.approval_requests.status_approved
+    kase.approval_requests.status_approved.where(consumed_at: nil)
         .exists?(approval_process_id: process.id, requested_action: to_status.to_s)
   end
 
@@ -60,7 +62,10 @@ module ApprovalGate
     raise Error, "a reasoned order is required to approve" if reason.to_s.strip.blank?
 
     ApprovalRequest.transaction do
-      request.update!(status: :approved, decided_by: approver, reason: reason, decided_at: Time.current)
+      # consumed_at is set atomically with the approval: if perform! raises, the
+      # whole transaction rolls back, so an approval only counts once it acted.
+      request.update!(status: :approved, decided_by: approver, reason: reason,
+                      decided_at: Time.current, consumed_at: Time.current)
       perform!(request, approver)
     end
     request
