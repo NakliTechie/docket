@@ -1791,6 +1791,10 @@ en:
               must_use_state_machine: "transitions must go through the case state machine"
             assignee:
               inactive: "must be an active user"
+        user:
+          attributes:
+            role:
+              exceeds_assigner: "is higher than your own — you can't grant a role above your own authority"
         routing_rule:
           attributes:
             base:

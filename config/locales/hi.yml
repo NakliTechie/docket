@@ -1791,6 +1791,10 @@ hi:
               must_use_state_machine: "परिवर्तन केवल मामला स्थिति-तंत्र के माध्यम से ही हो सकते हैं"
             assignee:
               inactive: "सक्रिय उपयोगकर्ता होना चाहिए"
+        user:
+          attributes:
+            role:
+              exceeds_assigner: "आपके अपने स्तर से ऊँची है — आप अपने अधिकार से ऊपर की भूमिका नहीं दे सकते"
         routing_rule:
           attributes:
             base:

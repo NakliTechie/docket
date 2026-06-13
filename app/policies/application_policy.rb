@@ -18,18 +18,11 @@ class ApplicationPolicy
 
   private
 
-  # The matrix chokepoint every policy authorises through.
+  # The matrix chokepoint every policy authorises through. (The legacy
+  # admin?/supervisor?/agent?/can_work?/staff? shims were removed once the
+  # cutover left them unreferenced — S1; they also referenced retired enum
+  # predicates and would have raised if called.)
   def permit?(permission) = user&.can?(permission)
-
-  # Legacy role shims — retained only while the 21 policies are migrated onto
-  # permit?; delete once nothing references them.
-  def admin?      = user&.role_admin?
-  def supervisor? = user&.role_supervisor?
-  def agent?      = user&.role_agent?
-
-  # Anyone signed into the console; mutations still gated per permission.
-  def staff?      = user.present?
-  def can_work?   = admin? || supervisor? || agent?
 
   class Scope
     attr_reader :user, :scope
@@ -46,8 +39,5 @@ class ApplicationPolicy
     private
 
     def permit?(permission) = user&.can?(permission)
-
-    def admin?      = user&.role_admin?
-    def supervisor? = user&.role_supervisor?
   end
 end

@@ -11,10 +11,8 @@ class SsoSessionsController < ApplicationController
   # lattice — finance/technical rank above sales/customer_service so a conflict
   # errs toward the more-privileged. Every User.roles key MUST appear here
   # (asserted in test) or an SSO-asserted role is mis-ranked or unassignable.
-  ROLE_RANK = {
-    "super_admin" => 6, "client_admin" => 5, "finance" => 4, "technical" => 3,
-    "sales" => 2, "customer_service" => 1, "readonly" => 0
-  }.freeze
+  # Canonical map lives on User (shared with the role-grant guard, C2).
+  ROLE_RANK = User::ROLE_RANK
   DEFAULT_SSO_ROLE = "customer_service".freeze
 
   def create

@@ -32,4 +32,40 @@ class UserTest < ActiveSupport::TestCase
     refute user.valid?
     assert user.errors[:email_address].any?
   end
+
+  # C2 — a user can only be granted a role at or below the assigner's rank.
+  def new_user(role)
+    User.new(name: "N", email_address: "n#{role}@t.test", password: "password1234", role: role)
+  end
+
+  test "a client_admin assigner cannot grant a role above its own rank" do
+    Current.actor = users(:client_admin)
+    refute new_user(:super_admin).valid?, "client_admin must not mint a super_admin"
+    assert new_user(:client_admin).valid?, "a peer-rank role is allowed"
+    assert new_user(:customer_service).valid?
+  ensure
+    Current.actor = nil
+  end
+
+  test "a super_admin assigner may grant super_admin" do
+    Current.actor = users(:super_admin)
+    assert new_user(:super_admin).valid?
+  ensure
+    Current.actor = nil
+  end
+
+  test "system/seed context (no acting user) is unconstrained" do
+    Current.actor = nil
+    assert new_user(:super_admin).valid?
+  end
+
+  test "changing an existing user's role above the assigner's rank is rejected" do
+    Current.actor = users(:client_admin)
+    target = users(:customer_service)
+    target.role = :super_admin
+    refute target.valid?
+    assert target.errors[:role].any?
+  ensure
+    Current.actor = nil
+  end
 end
