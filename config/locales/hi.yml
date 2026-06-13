@@ -268,8 +268,10 @@ hi:
       organisation: "संगठन"
       preferred_language: "पसंदीदा भाषा"
       notes: "टिप्पणियाँ"
+      sms_consent: "SMS सहमति"
     form:
       external_id_hint: "संचालक का अपना ग्राहक पहचानकर्ता (जैसे बैंक CIF)। एकीकृत प्रणालियों द्वारा दर्ज मामलों को जोड़ने के लिए प्रयुक्त।"
+      sms_consent_hint: "केवल सहमति देने वाले संपर्कों को SMS अनुक्रम चरण मिलते हैं (DPDP / TRAI-DLT सहमति)।"
     index:
       title: "संपर्क"
       new_contact: "नया संपर्क"
@@ -311,8 +313,10 @@ hi:
       contact: "संपर्क"
       notes: "टिप्पणियाँ"
       status: "स्थिति"
+      sms_consent: "SMS सहमति"
     form:
       value_hint: "अनुमानित सौदा मूल्य रुपयों में।"
+      sms_consent_hint: "केवल सहमति देने वाली लीड्स को SMS अनुक्रम चरण मिलते हैं (DPDP / TRAI-DLT सहमति)।"
     enum:
       status:
         new: "नया"
@@ -490,17 +494,22 @@ hi:
       steps: "चरण"
       position: "क्रम"
       delay_days: "देरी (दिन)"
+      channel: "माध्यम"
       subject: "विषय"
       body: "संदेश"
       remove: "हटाएं"
     form:
-      steps_hint: "हर चरण अपनी देरी के बाद लक्ष्य को आपके मेल गेटवे से ईमेल भेजता है।"
+      steps_hint: "हर चरण अपनी देरी के बाद लक्ष्य तक आपके मेल या SMS गेटवे से पहुँचता है।"
       body_hint: "व्यक्तिगत करने के लिए {{contact_name}} और {{company_name}} का उपयोग करें।"
+      channel_hint: "SMS चरण आपके MSG91 कनेक्टर के DLT टेम्पलेट को संपर्क के वेरिएबल्स के साथ भेजते हैं, और केवल उन संपर्कों तक पहुँचते हैं जिन्होंने सहमति दी है।"
     enum:
       status:
         active: "सक्रिय"
         completed: "पूर्ण"
         cancelled: "रद्द"
+      channel:
+        email: "ईमेल"
+        sms: "SMS"
     index:
       title: "अनुक्रम"
       new_sequence: "नया अनुक्रम"

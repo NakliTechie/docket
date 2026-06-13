@@ -58,4 +58,35 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     assert_no_enqueued_emails { SequenceRunnerJob.perform_now }
     assert_equal 1, enr.reload.current_step_position
   end
+
+  def sms_sequence
+    seq = Sequence.new(name: "SMS welcome")
+    seq.sequence_steps.build(position: 0, delay_days: 0, channel: :sms, body: "SMS step")
+    seq.save!
+    seq
+  end
+
+  def active_sms_connector
+    c = Connector.create!(name: "SMS", provider: "msg91", status: :active, config: { "template_id" => "T1" })
+    c.credentials_hash = { "authkey" => "k" }
+    c.save!
+    c
+  end
+
+  test "an SMS step enqueues delivery for a consenting recipient when a connector is wired" do
+    active_sms_connector
+    seq = sms_sequence
+    lead = Lead.create!(name: "Opted In", phone: "+919900000001", sms_consent: true)
+    seq.enroll!(lead)
+    assert_enqueued_with(job: SmsDeliveryJob) { SequenceRunnerJob.perform_now }
+  end
+
+  test "an SMS step is skipped without consent, but the enrollment still advances" do
+    active_sms_connector
+    seq = sms_sequence
+    lead = Lead.create!(name: "No Consent", phone: "+919900000002", sms_consent: false)
+    enr = seq.enroll!(lead)
+    assert_no_enqueued_jobs(only: SmsDeliveryJob) { SequenceRunnerJob.perform_now }
+    assert_equal 1, enr.reload.current_step_position
+  end
 end

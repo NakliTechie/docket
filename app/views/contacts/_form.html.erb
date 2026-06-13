@@ -18,6 +18,11 @@
     <%= f.telephone_field :phone %>
   </div>
 
+  <div class="form-row">
+    <label><%= f.check_box :sms_consent %> <%= t("contacts.fields.sms_consent") %></label>
+    <p class="form-hint"><%= t("contacts.form.sms_consent_hint") %></p>
+  </div>
+
   <div class="form-row <%= "field-error" if contact.errors[:external_id].any? %>">
     <%= f.label :external_id, t("contacts.fields.external_id") %>
     <%= f.text_field :external_id %>

@@ -53,7 +53,7 @@ class ContactsController < ApplicationController
     @contact = Contact.find(params[:id])
   end
 
-  EDITABLE_ATTRS = %i[name email phone organisation_id preferred_language notes].freeze
+  EDITABLE_ATTRS = %i[name email phone organisation_id preferred_language notes sms_consent].freeze
 
   def contact_params
     params.require(:contact).permit(*EDITABLE_ATTRS, :external_id)

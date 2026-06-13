@@ -28,6 +28,11 @@
           <% end %>
         </div>
         <div class="form-row">
+          <%= sf.label :channel, t("sequences.fields.channel") %>
+          <%= sf.select :channel, SequenceStep.channels.keys.map { |c| [ t("sequences.enum.channel.#{c}"), c ] } %>
+          <p class="form-hint"><%= t("sequences.form.channel_hint") %></p>
+        </div>
+        <div class="form-row">
           <%= sf.label :subject, t("sequences.fields.subject") %>
           <%= sf.text_field :subject %>
         </div>

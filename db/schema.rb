@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_041203) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_042442) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -206,6 +206,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_041203) do
     t.integer "organisation_id"
     t.string "phone"
     t.string "preferred_language", default: "en", null: false
+    t.boolean "sms_consent", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_contacts_on_deleted_at"
     t.index ["email"], name: "index_contacts_on_email"
@@ -254,6 +255,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_041203) do
     t.text "notes"
     t.integer "owner_id"
     t.string "phone"
+    t.boolean "sms_consent", default: false, null: false
     t.integer "source", default: 2, null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false

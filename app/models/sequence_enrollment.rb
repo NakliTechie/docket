@@ -40,6 +40,14 @@ class SequenceEnrollment < ApplicationRecord
     enrollable.try(:email)
   end
 
+  def recipient_phone
+    enrollable.try(:phone)
+  end
+
+  def recipient_sms_consent?
+    !!enrollable.try(:sms_consent)
+  end
+
   def interpolation_vars
     {
       "contact_name" => enrollable.try(:name),
@@ -54,7 +62,24 @@ class SequenceEnrollment < ApplicationRecord
   end
 
   def deliver(step)
-    return if recipient_email.blank? || !step.channel_email?
+    step.channel_sms? ? deliver_sms(step) : deliver_email(step)
+  end
+
+  def deliver_email(step)
+    return if recipient_email.blank?
     CrmMailer.sequence_step(self, step).deliver_later
+  end
+
+  # Marketing SMS is consent-gated (DPDP / TRAI-DLT): send only to a recipient
+  # who has a phone AND has opted in, and only if an SMS connector is wired.
+  # A missing channel is a silent skip — it must not stall the enrollment, which
+  # still advances to the next step (handled by the caller).
+  def deliver_sms(step)
+    return unless recipient_phone.present? && recipient_sms_consent?
+
+    connector = Comms::SmsGateway.default_connector
+    return unless connector
+
+    SmsDeliveryJob.perform_later(connector.id, recipient_phone, interpolation_vars)
   end
 end

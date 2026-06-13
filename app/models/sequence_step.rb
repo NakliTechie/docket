@@ -1,14 +1,15 @@
 # One step of a sequence: wait delay_days, then send a templated message
-# through the channel (email only in v1; the enum leaves room for the
-# v1.1 SMS gateway adapter). Body/subject support {{var}} interpolation,
-# same syntax as Macros.
+# through the channel. Email sends the rendered body; SMS fires the MSG91
+# connector's DLT template via Comms::SmsGateway (the body is the operator-
+# facing description). Body/subject support {{var}} interpolation, same
+# syntax as Macros.
 class SequenceStep < ApplicationRecord
   include SoftDeletable
   include Audited
 
   VARIABLES = %w[contact_name company_name].freeze
 
-  enum :channel, { email: 0 }, default: :email, prefix: true
+  enum :channel, { email: 0, sms: 1 }, default: :email, prefix: true
 
   belongs_to :sequence, -> { with_deleted }, inverse_of: :sequence_steps
 
