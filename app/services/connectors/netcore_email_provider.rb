@@ -3,12 +3,11 @@ module Connectors
   # credential. Sending is :confirm — citizen/customer-facing comms get a human
   # review. Effector-only. Per-channel decomposition (email/SMS/WhatsApp are
   # separate providers) matches the catalogue convention and Netcore's three
-  # distinct hosts + auth schemes. See plan/netcore-research-2026-06-13.md.
+  # distinct hosts + auth schemes.
   #
-  # Auth wrinkle settled at runtime: Netcore's own V6 docs disagree on the header
-  # (quick-start says `Authorization: x-api-key <key>`, the OpenAPI says plain
-  # bearer). We send x-api-key and transparently retry as bearer on a 401 — so
-  # whichever the account expects, one call succeeds.
+  # Auth: V6 uses `Authorization: Bearer <API_KEY>` (the legacy v5 `api_key:`
+  # header is a different generation). Confirmed against Netcore's official
+  # api-summary (email-api.md §0/§1).
   class NetcoreEmailProvider < HttpProvider
     DEFAULT_BASE = "https://emailapi.netcorecloud.net/v6".freeze
 
@@ -64,9 +63,7 @@ module Connectors
       }
 
       uri = build_uri(base, "/mail/send")
-      resp = post_json(uri, body, headers: { "Authorization" => "x-api-key #{require_secret('api_key')}" })
-      resp = post_json(uri, body, headers: { "Authorization" => bearer(require_secret("api_key")) }) if resp.code.to_i == 401
-      ensure_ok!(resp, "Netcore Email")
+      resp = ensure_ok!(post_json(uri, body, headers: { "Authorization" => bearer(require_secret("api_key")) }), "Netcore Email")
       { "ok" => true, "result" => parse_json(resp.body) }
     end
 

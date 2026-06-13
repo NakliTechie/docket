@@ -1,11 +1,12 @@
 module Connectors
-  # Netcore Cloud WhatsApp (Pepipost WA API v2). Static auth-key credential,
-  # Bearer header. Two sends, both :confirm: a pre-approved template message and
-  # a free-form text reply (only valid inside the 24-hour customer-service
-  # window). Phone numbers carry the country code with no '+', e.g. 919869566055.
-  # Effector-only. See plan/netcore-research-2026-06-13.md.
+  # Netcore Cloud WhatsApp (CPaaS WA API v2). Static auth-key credential, Bearer
+  # header. Sends POST to cpaaswa.netcorecloud.net/api/v2/message/nc. Two sends,
+  # both :confirm: a pre-approved template message and a free-form text reply
+  # (only valid inside the 24-hour customer-service window). Phone numbers carry
+  # the country code with no '+', e.g. 919869566055. Effector-only. Host/path +
+  # body confirmed against Netcore's official api-summary (channels §2).
   class NetcoreWhatsappProvider < HttpProvider
-    DEFAULT_BASE = "https://waapi.pepipost.com/api/v2".freeze
+    DEFAULT_BASE = "https://cpaaswa.netcorecloud.net/api/v2".freeze
 
     def self.descriptor
       Descriptor.new(
@@ -91,7 +92,7 @@ module Connectors
     end
 
     def send_message(message)
-      uri = build_uri(base, "/message/")
+      uri = build_uri(base, "/message/nc")
       headers = { "Authorization" => bearer(require_secret("auth_key")) }
       resp = ensure_ok!(post_json(uri, { "message" => [ message ] }, headers: headers), "Netcore WhatsApp")
       body = parse_json(resp.body)

@@ -1,15 +1,15 @@
 module Connectors
   # Netcore Cloud SMS, via the CPaaS Deflector multi-channel send. Static
-  # API-key credential. Sending is :confirm. India TRAI-DLT applies: the send
-  # needs a DLT-approved template (dlt_template_id) + a registered sender_id, and
-  # the text must match the approved template exactly. Effector-only.
+  # API-key credential (`api-key` header). Sending is :confirm. India TRAI-DLT
+  # applies: the send needs a DLT-approved template (dlt_template_id) + a
+  # registered sender_id, and the text must match the approved template exactly.
+  # Effector-only.
   #
-  # ⚠️ UNVERIFIED ENDPOINT (see plan/netcore-research-2026-06-13.md): Netcore's
-  # standalone-SMS host/method/field-names could not be extracted from the
-  # client-rendered docs. This implements the confirmed Deflector send contract
-  # as the working assumption; the auth header (api-key vs api_key) is tried both
-  # ways (one 401 retry). Settle with one authenticated live call before relying
-  # on it in production, then doc-verify like the rest of the catalogue.
+  # Host/endpoint/auth + body confirmed against Netcore's official api-summary
+  # (channels §4 Deflector): POST cpass-deflector.netcorecloud.net/messages/send
+  # with a JSON array of message objects. (Netcore's direct SMS API —
+  # smsapi.netcorecloud.net/BulkSms/v2/JsonSingleApi with username/password/feedid
+  # in the body — is the alternative if you don't want the multichannel router.)
   class NetcoreSmsProvider < HttpProvider
     DEFAULT_BASE = "https://cpass-deflector.netcorecloud.net".freeze
 
@@ -49,16 +49,15 @@ module Connectors
     private
 
     def send_sms(args)
-      body = {
+      # Deflector wants a JSON ARRAY of message objects; flow is [{ channel }].
+      body = [ {
         "to" => [ { "phoneNumber" => require_arg(args, "mobile") } ],
         "sms" => { "From" => require_config("sender_id"), "Text" => require_arg(args, "text") },
-        "flow" => [ [ { "channel" => "SMS" } ] ]
-      }
+        "flow" => [ { "channel" => "SMS" } ]
+      } ]
 
       uri = build_uri(base, "/messages/send")
-      resp = post_json(uri, body, headers: { "api-key" => require_secret("api_key") })
-      resp = post_json(uri, body, headers: { "api_key" => require_secret("api_key") }) if resp.code.to_i == 401
-      ensure_ok!(resp, "Netcore SMS")
+      resp = ensure_ok!(post_json(uri, body, headers: { "api-key" => require_secret("api_key") }), "Netcore SMS")
       { "ok" => true, "result" => parse_json(resp.body) }
     end
 

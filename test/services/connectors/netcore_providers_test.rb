@@ -1,10 +1,9 @@
 require "test_helper"
 
 # Netcore Cloud — the per-channel Email / WhatsApp / SMS providers. Static
-# credentials (HttpProvider), all sends :confirm. Covers the documented wire
-# contracts plus the two runtime auth fallbacks the research flagged: Netcore
-# Email retries bearer on an x-api-key 401, and Netcore SMS retries api_key on
-# an api-key 401.
+# credentials (HttpProvider), all sends :confirm. Wire contracts confirmed
+# against Netcore's official api-summary: Email V6 = Bearer, WhatsApp =
+# cpaaswa.netcorecloud.net/api/v2/message/nc, SMS = the Deflector array body.
 class Connectors::NetcoreProvidersTest < ActiveSupport::TestCase
   class FakeResponse
     def initialize(code, body) = (@code = code; @body = body)
@@ -55,23 +54,12 @@ class Connectors::NetcoreProvidersTest < ActiveSupport::TestCase
       assert obs["ok"]
       req = reqs.last.last
       assert_equal "/v6/mail/send", req.path
-      assert_equal "x-api-key nk-secret", req["Authorization"]
+      assert_equal "Bearer nk-secret", req["Authorization"]
       sent = JSON.parse(req.body)
       assert_equal "a@b.com", sent["personalizations"][0]["to"][0]["email"]
       assert_equal "Ada", sent["personalizations"][0]["to"][0]["name"]
       assert_equal "noreply@acme.in", sent["from"]["email"]
       assert_equal "html", sent["content"][0]["type"]
-    end
-  end
-
-  test "netcore_email retries with a bearer header when x-api-key gets a 401" do
-    c = email_conn
-    with_responses([ 401, %({"error":"unauthorized"}) ], [ 202, %({"status":"success"}) ]) do |reqs|
-      obs = c.provider_instance.invoke("send_email", { "to" => "a@b.com", "subject" => "s", "body" => "b" })
-      assert obs["ok"]
-      first, second = reqs.first.last, reqs.last.last
-      assert_equal "x-api-key nk-secret", first["Authorization"]
-      assert_equal "Bearer nk-secret", second["Authorization"]
     end
   end
 
@@ -98,7 +86,7 @@ class Connectors::NetcoreProvidersTest < ActiveSupport::TestCase
         { "to" => "919869566055", "template_name" => "order_update", "variables" => [ "Ada", "5" ], "language" => "en" })
       assert_equal "uuid-1", obs["id"]
       req = reqs.last.last
-      assert_equal "/api/v2/message/", req.path
+      assert_equal "/api/v2/message/nc", req.path
       assert_equal "Bearer wa-key", req["Authorization"]
       msg = JSON.parse(req.body)["message"][0]
       assert_equal "919869566055", msg["recipient_whatsapp"]
@@ -142,19 +130,11 @@ class Connectors::NetcoreProvidersTest < ActiveSupport::TestCase
       assert_equal "/messages/send", req.path
       assert_equal "sms-key", req["api-key"]
       sent = JSON.parse(req.body)
-      assert_equal "919900000001", sent["to"][0]["phoneNumber"]
-      assert_equal "ACMEIN", sent["sms"]["From"]
-      assert_equal "Your OTP is 123", sent["sms"]["Text"]
-      assert_equal "SMS", sent["flow"][0][0]["channel"]
-    end
-  end
-
-  test "netcore_sms retries with an api_key header when api-key gets a 401" do
-    c = sms_conn
-    with_responses([ 401, %({"error":"unauthorized"}) ], [ 200, %({"status":"success"}) ]) do |reqs|
-      assert c.provider_instance.invoke("send_sms", { "mobile" => "919900000001", "text" => "Hi" })["ok"]
-      assert_equal "sms-key", reqs.first.last["api-key"]
-      assert_equal "sms-key", reqs.last.last["api_key"]
+      assert_kind_of Array, sent # Deflector wants a JSON array of message objects
+      assert_equal "919900000001", sent[0]["to"][0]["phoneNumber"]
+      assert_equal "ACMEIN", sent[0]["sms"]["From"]
+      assert_equal "Your OTP is 123", sent[0]["sms"]["Text"]
+      assert_equal "SMS", sent[0]["flow"][0]["channel"]
     end
   end
 
