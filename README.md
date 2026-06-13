@@ -1,12 +1,12 @@
 # Docket
 
-**Sovereign case-management and citizen/customer-360 platform with an in-deployment agentic resolution layer.**
+**Self-hosted, sovereign case-management + customer-360 platform — with an in-deployment agentic resolution layer.**
 
-Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites for the public sector: case intake (web portal, email, API), triage, SLA-tracked lifecycle, a keyboard-first staff console, a tamper-evident hash-chained audit log, a full REST API with machine-to-machine service accounts and signed webhooks, dual SSO (staff + customer identity planes), and an AI layer that runs on **your own model endpoint inside your deployment** — with English and Hindi throughout.
+Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites — for any organization that runs support, cases, or sales and wants to **own its stack**: case intake (web portal, email, API), triage, SLA-tracked lifecycle, a light CRM (contacts, organizations, leads, deals, email sequences), a keyboard-first staff console, a tamper-evident hash-chained audit log, a full REST API with machine-to-machine service accounts and signed webhooks, dual SSO (staff + customer identity planes), and an AI layer that runs on **your own model endpoint inside your deployment** — with English and Hindi throughout. Private-sector support desks and sales teams work out of the box; government/PSU grievance redressal is a first-class vertical (`DOCKET_SEED_SCENARIO=gov`).
 
 Three guarantees, by construction:
 
-1. **Public funds → public code.** AGPL-3.0. Read, audit, and fork what runs on citizen data.
+1. **Open by construction.** AGPL-3.0 — read, audit, and fork what runs on your customers' data. (For public bodies: public funds → public code.)
 2. **Data sovereignty.** Single-tenant, self-hosted, operator-owned models. **No telemetry, no phone-home, no update checks, no analytics — ever.** The only outbound connections Docket makes are the LLM endpoint *you* configure and the mail gateway *you* configure.
 3. **Zero per-seat licensing.** There is no seat counting anywhere in the code.
 
@@ -23,12 +23,12 @@ git clone <this-repo> docket && cd docket
 DOCKET_SEED_DEMO=true DOCKET_FORCE_SSL=false docker compose up --build
 ```
 
-First boot migrates Postgres, seeds a fictional demo (a Directorate of Public Grievances and a bank branch: 8 staff, ~60 cases, knowledge docs), and serves:
+First boot migrates Postgres and seeds a fictional demo — by default **Acme Cloud**, a SaaS support desk (8 staff, dozens of cases across queues, plus leads, deals and knowledge docs). Pick a vertical with `DOCKET_SEED_SCENARIO=saas|retail|gov` (default `saas`; `gov` seeds a Directorate of Public Grievances + a bank branch). It then serves:
 
 | Surface | URL | Credentials |
 | --- | --- | --- |
 | Staff console | http://localhost:3000 | `arjun@docket.local` / `docket-demo` (admin) |
-| Citizen portal | http://localhost:3000/portal | none needed |
+| Customer portal | http://localhost:3000/portal | none needed |
 | API | http://localhost:3000/api/v1 | see [API access](#api-access) |
 | OpenAPI spec | http://localhost:3000/api/v1/openapi.json | public |
 
@@ -64,9 +64,9 @@ Development and test run on SQLite; no services needed. System tests use Cuprite
 
 ---
 
-## Portal walkthrough (citizen side)
+## Portal walkthrough (customer side)
 
-- **File a grievance** at `/portal` — name + email or phone, subject, description, attachments. No account. The confirmation screen (and email, if email was given) carries an unguessable tracking ID like `DKT-7F3K-92QX`.
+- **Submit a request** at `/portal` — name + email or phone, subject, description, attachments. No account. The confirmation screen (and email, if email was given) carries an unguessable tracking ID like `DKT-7F3K-92QX`.
 - **Track a case** at `/portal/track` — tracking ID **plus** the email or phone used at filing (a verification challenge; wrong pairs get one generic error). The status page shows public replies only — internal notes never appear — and accepts replies and attachments.
 - **Customer SSO** (when configured): a "Log in with your account" button appears; signed-in customers get **My cases** — their full case list and pre-attributed filing with no tracking-ID dance. The anonymous flow always remains available.
 - **Email intake**: mail to your configured inbound address opens a case (attachments included); replies keeping the tracking ID in the subject thread onto the case *only when the sender address matches the case contact*.
@@ -97,7 +97,7 @@ What turns on:
 
 - **route** (always on with AI): new portal/email/API cases are classified into queue/category/priority and triaged, above a confidence threshold you control.
 - **draft** (default on): the agent drafts a grounded reply as an *internal note* for human review — one click inserts it into the composer.
-- **resolve** (off by default, earned): only for categories where an admin explicitly flips *AI auto-resolve* (Categories page — a deliberate action with its own confirmation and audit entry), and only above the resolve-confidence threshold. Auto-resolved replies always tell the citizen how to reach a human, and any reply reopens the conversation with staff.
+- **resolve** (off by default, earned): only for categories where an admin explicitly flips *AI auto-resolve* (Categories page — a deliberate action with its own confirmation and audit entry), and only above the resolve-confidence threshold. Auto-resolved replies always tell the customer how to reach a human, and any reply reopens the conversation with staff.
 
 Grounding = your uploaded **Knowledge** docs (PDF/text/markdown — text is extracted for retrieval) + previously resolved cases. Every agent step is logged on the case with its full prompt and response. Demo mode (`fake` provider) ships canned outputs so you can see the flow with no model at all.
 

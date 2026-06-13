@@ -36,3 +36,24 @@ if defined?(Pipeline) && Pipeline.none?
   pipeline.save!
   puts "Seeded default pipeline: #{pipeline.name} (#{pipeline.pipeline_stages.size} stages)"
 end
+
+# Minimal ticketing floor, so a fresh deploy can take tickets on day one —
+# not just deals. These only fire on a truly empty install (.none?): they
+# never override an operator who has already set up their own queues/SLA,
+# and re-running seeds is a no-op. Categories are intentionally left empty
+# (opt-in, OFF by default). Rich per-scenario setup ships in db/seeds/demo.rb.
+if defined?(CaseQueue) && CaseQueue.none?
+  queue = CaseQueue.create!(name: "General", description: "Default queue for incoming requests.")
+  Setting.set("default_queue_id", queue.id)
+  puts "Seeded default queue: #{queue.name} (set as default)"
+end
+
+if defined?(SlaPolicy) && SlaPolicy.none?
+  sla = SlaPolicy.create!(name: "Standard", description: "Default first-response and resolution targets.")
+  # [priority, first_response_minutes, resolution_minutes] — 8h/7d down to 30m/8h.
+  [ [ :low, 480, 10080 ], [ :normal, 240, 4320 ], [ :high, 60, 1440 ], [ :urgent, 30, 480 ] ].each do |priority, fr, res|
+    sla.sla_targets.create!(priority: priority, first_response_minutes: fr, resolution_minutes: res)
+  end
+  Setting.set("default_sla_policy_id", sla.id)
+  puts "Seeded default SLA policy: #{sla.name} (#{sla.sla_targets.size} targets, set as default)"
+end
