@@ -10,11 +10,16 @@ class SequenceEnrollment < ApplicationRecord
 
   belongs_to :sequence, -> { with_deleted }
   belongs_to :enrollable, -> { with_deleted }, polymorphic: true
+  # Stable pointer to the next step to deliver (M5). Nullified if that step is
+  # deleted, so a removed step ends the run cleanly rather than shifting an
+  # index onto the wrong step. current_step_position is a display-only
+  # "steps delivered" counter.
+  belongs_to :current_step, class_name: "SequenceStep", optional: true
 
   scope :due, -> { status_active.where("next_run_at <= ?", Time.current) }
 
   def due_step
-    sequence.ordered_steps[current_step_position]
+    current_step
   end
 
   # Send the current step (if any), then schedule the next or complete.
@@ -24,8 +29,12 @@ class SequenceEnrollment < ApplicationRecord
     return complete! && false if step.nil?
 
     deliver(step)
-    next_step = sequence.ordered_steps[current_step_position + 1]
+    # Re-resolve "next" from the live ordered list, so a deletion elsewhere
+    # can't shift us onto the wrong step.
+    index = sequence.ordered_steps.index(step)
+    next_step = index ? sequence.ordered_steps[index + 1] : nil
     update!(
+      current_step: next_step,
       current_step_position: current_step_position + 1,
       next_run_at: next_step ? Time.current + next_step.delay_days.days : nil,
       status: next_step ? :active : :completed

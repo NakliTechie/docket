@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_260000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_263000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -560,6 +560,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_260000) do
 
   create_table "sequence_enrollments", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "current_step_id"
     t.integer "current_step_position", default: 0, null: false
     t.datetime "deleted_at"
     t.integer "enrollable_id", null: false
@@ -569,6 +570,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_260000) do
     t.integer "status", default: 0, null: false
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["current_step_id"], name: "index_sequence_enrollments_on_current_step_id"
     t.index ["deleted_at"], name: "index_sequence_enrollments_on_deleted_at"
     t.index ["enrollable_type", "enrollable_id"], name: "index_sequence_enrollments_on_enrollable"
     t.index ["sequence_id"], name: "index_sequence_enrollments_on_sequence_id"
@@ -792,6 +794,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_260000) do
   add_foreign_key "routing_rules", "tenants"
   add_foreign_key "routing_rules", "users", column: "then_assignee_id"
   add_foreign_key "security_events", "tenants"
+  add_foreign_key "sequence_enrollments", "sequence_steps", column: "current_step_id", on_delete: :nullify
   add_foreign_key "sequence_enrollments", "sequences"
   add_foreign_key "sequence_enrollments", "tenants"
   add_foreign_key "sequence_steps", "sequences"

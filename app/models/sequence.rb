@@ -24,6 +24,7 @@ class Sequence < ApplicationRecord
     first = ordered_steps.first
     sequence_enrollments.create!(
       enrollable: target,
+      current_step: first, # stable pointer to the next step to deliver (M5)
       current_step_position: 0,
       status: :active,
       next_run_at: first ? Time.current + first.delay_days.days : nil

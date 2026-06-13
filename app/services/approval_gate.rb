@@ -38,13 +38,6 @@ module ApprovalGate
     end
   end
 
-  def pending_transition(kase, to_status)
-    process = ApprovalProcess.for_transition(to_status)
-    return nil unless process
-    kase.approval_requests.status_pending
-        .find_by(approval_process_id: process.id, requested_action: to_status.to_s)
-  end
-
   # --- effector actions -------------------------------------------------------
 
   # Should this connector action be forced to human review (overriding the
