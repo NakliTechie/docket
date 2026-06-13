@@ -51,8 +51,23 @@ module Connectors
         "activecampaign" => Connectors::ActivecampaignProvider,
         "klaviyo" => Connectors::KlaviyoProvider,
         "mailgun" => Connectors::MailgunProvider,
+        # Netcore Cloud (India customer-engagement / CPaaS) — per-channel
+        "netcore_email" => Connectors::NetcoreEmailProvider,
+        "netcore_whatsapp" => Connectors::NetcoreWhatsappProvider,
+        "netcore_sms" => Connectors::NetcoreSmsProvider,
         # OAuth2 tier (Connectors::OauthProvider — browser connect + token refresh)
-        "google_calendar" => Connectors::GoogleCalendarProvider
+        "google_calendar" => Connectors::GoogleCalendarProvider,
+        "gmail" => Connectors::GmailProvider,
+        "google_sheets" => Connectors::GoogleSheetsProvider,
+        "google_drive" => Connectors::GoogleDriveProvider,
+        "microsoft365" => Connectors::Microsoft365Provider,
+        "salesforce" => Connectors::SalesforceProvider,
+        "zoho_crm" => Connectors::ZohoCrmProvider,
+        "hubspot_oauth" => Connectors::HubspotOauthProvider,
+        "dynamics365" => Connectors::Dynamics365Provider,
+        "docusign" => Connectors::DocusignProvider,
+        "box" => Connectors::BoxProvider,
+        "dropbox" => Connectors::DropboxProvider
       }
     end
 

@@ -59,6 +59,12 @@ module Connectors
       perform(req, uri)
     end
 
+    def patch_json(uri, body, headers: {})
+      req = Net::HTTP::Patch.new(uri.request_uri, base_headers.merge("Content-Type" => "application/json").merge(headers))
+      req.body = JSON.generate(body)
+      perform(req, uri)
+    end
+
     def perform(req, uri)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == "https"
