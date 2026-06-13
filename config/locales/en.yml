@@ -485,6 +485,12 @@ en:
       by_decision_class: "By decision class (window)"
       no_agent_actions: "No agent actions in this window."
       by_status: "By status (window)"
+      decisioning: "Decisioning"
+      decisioning_note: "Rule-based proposals over this deployment's own data — recommendations only; acting on them gates by accountability tier. Computed live."
+      decisions_autonomous: "Autonomous signals"
+      decisions_confirm: "Need confirmation"
+      decisions_of_record: "Decisions of record"
+      no_decisions: "No proposals right now."
       columns:
         status: "Status"
         cases: "Cases"
@@ -496,6 +502,10 @@ en:
         actions: "Actions"
         istatus: "Status"
         records: "Records"
+        rule: "Rule"
+        subject: "Subject"
+        recommendation: "Recommendation"
+        tier: "Tier"
   sales_reports:
     index:
       title: "Sales report"

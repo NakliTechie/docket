@@ -13,6 +13,17 @@ class DashboardOverview
     @operational = OperationalReport.new(from: from, to: to)
   end
 
+  # Rule-based decisioning proposals over the deployment's own data (live —
+  # computed on read; a rollup is the path if rule fan-out gets heavy). Each
+  # decision carries its accountability tier; surfacing them is :autonomous.
+  def decisions
+    @decisions ||= Decisioning::Engine.run
+  end
+
+  def decision_summary
+    @decision_summary ||= Decisioning::Engine.summary(decisions)
+  end
+
   # Headline KPIs across the four planes, one row each. All cells are fixed
   # labels or numbers (no user-supplied text), so no formula-injection guard is
   # needed here.

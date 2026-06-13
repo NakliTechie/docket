@@ -485,6 +485,12 @@ hi:
       by_decision_class: "निर्णय वर्ग अनुसार (अवधि)"
       no_agent_actions: "इस अवधि में कोई एजेंट कार्रवाई नहीं।"
       by_status: "स्थिति अनुसार (अवधि)"
+      decisioning: "निर्णयन"
+      decisioning_note: "इस परिनियोजन के अपने डेटा पर नियम-आधारित प्रस्ताव — केवल सिफ़ारिशें; उन पर कार्रवाई जवाबदेही स्तर के अनुसार गेट होती है। लाइव गणना।"
+      decisions_autonomous: "स्वायत्त संकेत"
+      decisions_confirm: "पुष्टि आवश्यक"
+      decisions_of_record: "अभिलेख के निर्णय"
+      no_decisions: "अभी कोई प्रस्ताव नहीं।"
       columns:
         status: "स्थिति"
         cases: "मामले"
@@ -496,6 +502,10 @@ hi:
         actions: "कार्रवाई"
         istatus: "स्थिति"
         records: "रिकॉर्ड"
+        rule: "नियम"
+        subject: "विषय"
+        recommendation: "सिफ़ारिश"
+        tier: "स्तर"
   sales_reports:
     index:
       title: "बिक्री रिपोर्ट"

@@ -257,3 +257,40 @@
     </div>
   </aside>
 </div>
+
+<%# ---- Decisioning (rule-based proposals) ---- %>
+<h2 class="panel-title"><%= t(".decisioning") %></h2>
+<div class="panel">
+  <p class="muted"><%= t(".decisioning_note") %></p>
+  <dl class="meta-list">
+    <dt><%= t(".decisions_autonomous") %></dt><dd><%= @overview.decision_summary[:autonomous].to_i %></dd>
+    <dt><%= t(".decisions_confirm") %></dt><dd><%= @overview.decision_summary[:confirm].to_i %></dd>
+    <dt><%= t(".decisions_of_record") %></dt><dd><%= @overview.decision_summary[:of_record].to_i %></dd>
+  </dl>
+  <% if @overview.decisions.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t(".columns.rule") %></th>
+            <th><%= t(".columns.subject") %></th>
+            <th><%= t(".columns.recommendation") %></th>
+            <th><%= t(".columns.tier") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @overview.decisions.first(10).each do |proposal| %>
+            <tr>
+              <td><%= proposal.rule.humanize %></td>
+              <td><%= proposal.subject_label %></td>
+              <td><%= proposal.recommendation %></td>
+              <td><%= proposal.decision_class.to_s.humanize %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".no_decisions") %></p>
+  <% end %>
+</div>
