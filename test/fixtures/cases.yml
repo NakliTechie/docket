@@ -1,4 +1,5 @@
 pension_case:
+  tenant: primary
   subject: Pension not credited for May
   description: My monthly pension was not credited this month.
   tracking_id: DKT-TEST-2345
@@ -10,6 +11,7 @@ pension_case:
   sla_policy: standard
 
 assigned_case:
+  tenant: primary
   subject: Garbage not collected
   tracking_id: DKT-TEST-3456
   channel: email
@@ -20,6 +22,7 @@ assigned_case:
   assignee: agent_a
 
 waiting_case:
+  tenant: primary
   subject: Streetlight broken
   tracking_id: DKT-TEST-4567
   channel: web_portal
@@ -29,6 +32,7 @@ waiting_case:
   contact: asha
 
 resolved_case:
+  tenant: primary
   subject: Water connection request
   tracking_id: DKT-TEST-5678
   channel: walk_in

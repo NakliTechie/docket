@@ -126,5 +126,27 @@ module Api
       get "/api/v1/webhook_endpoints", headers: auth_header(cases_token)
       assert_response :forbidden
     end
+
+    # Regression: these endpoints gate human tokens via the matrix (can?), not a
+    # bare role_admin? — so the functional super_admin role reaches them and a
+    # non-privileged functional role (finance) is refused.
+    test "functional super_admin token reaches the admin endpoints" do
+      token = api_token_for(users(:super_admin))
+      [ "/api/v1/users", "/api/v1/settings", "/api/v1/service_accounts",
+        "/api/v1/api_tokens", "/api/v1/webhook_endpoints",
+        "/api/v1/audit/verification", "/api/v1/reports/activity" ].each do |path|
+        get path, headers: auth_header(token)
+        assert_response :success, "super_admin should reach #{path}"
+      end
+    end
+
+    test "a finance token is refused the platform/admin endpoints" do
+      token = api_token_for(users(:finance))
+      [ "/api/v1/settings", "/api/v1/service_accounts", "/api/v1/api_tokens",
+        "/api/v1/webhook_endpoints" ].each do |path|
+        get path, headers: auth_header(token)
+        assert_response :forbidden, "finance should be refused #{path}"
+      end
+    end
   end
 end

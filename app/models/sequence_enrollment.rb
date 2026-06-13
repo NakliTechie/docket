@@ -2,6 +2,7 @@
 # advances it: send the due step, schedule the next, complete when steps
 # run out.
 class SequenceEnrollment < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 

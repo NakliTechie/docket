@@ -3,6 +3,7 @@
 # #transition_to!, which stamps lifecycle timestamps and validates the
 # move against TRANSITIONS.
 class Case < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
   include Labelable
@@ -53,7 +54,7 @@ class Case < ApplicationRecord
   after_create_commit :publish_created_webhook
 
   validates :subject, presence: true
-  validates :tracking_id, presence: true, uniqueness: true
+  validates :tracking_id, presence: true, uniqueness: { scope: :tenant_id }
   validate :status_changed_through_state_machine, on: :update
   # Only block ASSIGNING to an inactive user — a case keeps an assignee who
   # later goes inactive (unchanged assignee_id) so it stays editable.

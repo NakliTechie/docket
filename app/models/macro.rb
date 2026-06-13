@@ -2,12 +2,13 @@
 # (handoff §7). Inserted into the composer client-side; the message
 # saved is a plain Message — no special casing downstream.
 class Macro < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 
   VARIABLES = %w[contact_name tracking_id agent_name queue_name].freeze
 
-  validates :name, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } }
+  validates :name, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }
   validates :body, presence: true
 
   def render_for(kase, agent: nil)

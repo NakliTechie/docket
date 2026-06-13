@@ -4,6 +4,7 @@
 # of_record apply only after a human approves) or → rejected. Hash-chain audited
 # like every other mutation, so the who/why of each decision is tamper-evident.
 class Decision < ApplicationRecord
+  acts_as_tenant(:tenant)
   include Audited
 
   belongs_to :subject, polymorphic: true

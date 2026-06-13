@@ -34,11 +34,11 @@ module Admin
     }.freeze
 
     def show
-      authorize :settings, policy_class: AdminAreaPolicy
+      authorize :settings, policy_class: PlatformAreaPolicy
     end
 
     def update
-      authorize :settings, policy_class: AdminAreaPolicy
+      authorize :settings, policy_class: PlatformAreaPolicy
 
       EDITABLE.each do |key, type|
         next unless params.key?(key)

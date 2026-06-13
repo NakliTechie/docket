@@ -2,6 +2,7 @@
 # identifier (e.g. a bank CIF) — the join key for headless integration
 # and customer SSO (handoff §2).
 class Contact < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 
@@ -19,7 +20,7 @@ class Contact < ApplicationRecord
 
   validates :name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
-  validates :external_id, uniqueness: { conditions: -> { where(deleted_at: nil) } }, allow_nil: true
+  validates :external_id, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }, allow_nil: true
   validates :preferred_language, inclusion: { in: LANGUAGES }
   validate :reachable_somehow
 

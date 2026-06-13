@@ -23,6 +23,8 @@ en:
       pipelines: "Pipelines"
       sequences: "Sequences"
       users: "Users"
+      roles: "Roles"
+      tenants: "Tenants"
       activity: "Activity"
       audit: "Audit"
       security_events: "Security log"
@@ -813,10 +815,16 @@ en:
   users:
     enum:
       role:
+        super_admin: "Super admin"
+        client_admin: "Client admin"
+        finance: "Finance"
+        sales: "Sales"
+        customer_service: "Customer service"
+        technical: "Technical"
+        readonly: "Read-only"
         admin: "Admin"
         supervisor: "Supervisor"
         agent: "Agent"
-        readonly: "Read-only"
 
   macros:
     fields:
@@ -1495,6 +1503,43 @@ en:
         updated: "Reference document updated."
       destroy:
         deleted: "Reference document deleted."
+    roles:
+      index:
+        title: "Roles & permissions"
+        intro: "What each role may do. Permissions are resource:action; ✓ means granted. Roles are assigned per user under Users."
+        permission_column: "Permission"
+        granted: "Granted"
+        denied: "Not granted"
+    tenants:
+      index:
+        title: "Tenants"
+        intro: "The fleet of organisations on this deployment. An isolated deployment has just one; a shared deployment provisions more, each with its own data and subdomain."
+        provision: "Provision tenant"
+        admin_password_once: "New tenant admin password (shown once — give it to the tenant's admin):"
+        primary: "Primary"
+        suspend: "Suspend"
+        activate: "Activate"
+        columns:
+          name: "Name"
+          subdomain: "Subdomain"
+          status: "Status"
+          cases: "Cases"
+      new:
+        title: "Provision tenant"
+        submit: "Provision"
+        subdomain_hint: "Lowercase letters, digits and hyphens. The tenant is reached at this subdomain in a shared deployment."
+        admin_email_hint: "Optional. Creates the tenant's first client-admin and shows a one-time password."
+        fields:
+          name: "Organisation name"
+          subdomain: "Subdomain"
+          admin_email: "Admin email"
+      create:
+        created: "Tenant %{name} provisioned."
+      suspend:
+        suspended: "Tenant %{name} suspended."
+        cannot_suspend_primary: "The primary tenant cannot be suspended."
+      activate:
+        activated: "Tenant %{name} activated."
     activity:
       index:
         title: "Activity & Usage"

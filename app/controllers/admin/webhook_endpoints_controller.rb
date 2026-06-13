@@ -3,17 +3,17 @@ module Admin
     before_action :set_endpoint, only: %i[edit update destroy deliveries]
 
     def index
-      authorize :webhooks, policy_class: AdminAreaPolicy
+      authorize :webhooks, policy_class: PlatformAreaPolicy
       @endpoints = WebhookEndpoint.order(:name)
     end
 
     def new
-      authorize :webhooks, policy_class: AdminAreaPolicy
+      authorize :webhooks, policy_class: PlatformAreaPolicy
       @endpoint = WebhookEndpoint.new
     end
 
     def create
-      authorize :webhooks, policy_class: AdminAreaPolicy
+      authorize :webhooks, policy_class: PlatformAreaPolicy
       @endpoint = WebhookEndpoint.new(endpoint_params)
       if @endpoint.save
         flash[:webhook_secret] = @endpoint.secret
@@ -24,11 +24,11 @@ module Admin
     end
 
     def edit
-      authorize :webhooks, policy_class: AdminAreaPolicy
+      authorize :webhooks, policy_class: PlatformAreaPolicy
     end
 
     def update
-      authorize :webhooks, policy_class: AdminAreaPolicy
+      authorize :webhooks, policy_class: PlatformAreaPolicy
       if @endpoint.update(endpoint_params)
         redirect_to admin_webhook_endpoints_path, notice: t(".updated")
       else
@@ -37,13 +37,13 @@ module Admin
     end
 
     def destroy
-      authorize :webhooks, policy_class: AdminAreaPolicy
+      authorize :webhooks, policy_class: PlatformAreaPolicy
       @endpoint.destroy
       redirect_to admin_webhook_endpoints_path, notice: t(".deleted"), status: :see_other
     end
 
     def deliveries
-      authorize :webhooks, policy_class: AdminAreaPolicy
+      authorize :webhooks, policy_class: PlatformAreaPolicy
       @pagy, @deliveries = pagy(@endpoint.webhook_deliveries.recent_first)
     end
 

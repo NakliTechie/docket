@@ -19,6 +19,23 @@ class CasesMailboxTest < ActionMailbox::TestCase
     assert kase.messages.first.direction_inbound?
   end
 
+  test "intake resolves the tenant itself with no ambient context (production isolated path)" do
+    # Inbound mail runs outside any request/job, so no tenant is set — the
+    # mailbox must resolve it (the singleton in isolated mode), or scoped
+    # creates would fail. test_tenant masks this, so clear it here.
+    ActsAsTenant.test_tenant = nil
+    ActsAsTenant.current_tenant = nil
+    assert_difference "Case.count", 1 do
+      receive_inbound_email_from_mail(
+        from: "newperson@example.com", to: "grievances@docket.local",
+        subject: "No tenant set", body: "Body."
+      )
+    end
+    assert_equal tenants(:primary), Case.order(:id).last.tenant
+  ensure
+    ActsAsTenant.test_tenant = tenants(:primary)
+  end
+
   test "email from a known contact reuses the contact" do
     assert_no_difference "Contact.count" do
       receive_inbound_email_from_mail(

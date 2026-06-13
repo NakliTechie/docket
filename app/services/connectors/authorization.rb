@@ -3,7 +3,8 @@ module Connectors
   #   1. the connector must EXPOSE the action to agents (enabled_actions), and
   #   2. the principal must hold the authority to invoke.
   # An AI agent is a ServiceAccount; its authority is the existing OAuth
-  # scope `connectors:invoke`. Staff may invoke directly (admin/supervisor).
+  # scope `connectors:invoke`. Staff invoke via the matching console
+  # permission (`connector:invoke`), so the effector gate and the console agree.
   module Authorization
     class Forbidden < Connectors::Error; end
 
@@ -22,7 +23,7 @@ module Connectors
     def may_invoke?(principal)
       case principal
       when ServiceAccount then principal.scope?("connectors:invoke")
-      when User           then principal.role_admin? || principal.role_supervisor?
+      when User           then principal.can?("connector:invoke")
       else false
       end
     end

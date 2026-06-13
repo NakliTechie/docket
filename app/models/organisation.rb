@@ -1,4 +1,5 @@
 class Organisation < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 
@@ -10,6 +11,6 @@ class Organisation < ApplicationRecord
 
   has_many :contacts, dependent: nil
 
-  validates :name, presence: true, uniqueness: { conditions: -> { where(deleted_at: nil) } }
+  validates :name, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }
   validates :kind, inclusion: { in: KINDS }
 end

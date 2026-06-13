@@ -35,7 +35,7 @@ module Api
 
       def require_settings_access!(scope)
         if current_user
-          raise Pundit::NotAuthorizedError unless current_user.role_admin?
+          raise Pundit::NotAuthorizedError unless current_user.can?("settings:manage")
         else
           raise ScopeDenied, scope unless current_access_token.scope?(scope)
         end

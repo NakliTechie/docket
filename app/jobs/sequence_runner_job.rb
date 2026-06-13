@@ -7,7 +7,9 @@ class SequenceRunnerJob < ApplicationJob
 
   def perform
     Current.set(actor: nil) do
-      SequenceEnrollment.due.find_each(&:advance!)
+      each_active_tenant do
+        SequenceEnrollment.due.find_each(&:advance!)
+      end
     end
   end
 end

@@ -5,8 +5,10 @@ class ConnectorSchedulerJob < ApplicationJob
   queue_as :default
 
   def perform
-    Connector.active.find_each do |connector|
-      ConnectorSyncJob.perform_later(connector.id, trigger: "scheduled") if connector.due?
+    each_active_tenant do
+      Connector.active.find_each do |connector|
+        ConnectorSyncJob.perform_later(connector.id, trigger: "scheduled") if connector.due?
+      end
     end
   end
 end

@@ -14,8 +14,13 @@ class UserTest < ActiveSupport::TestCase
     assert_empty user.sessions.reload
   end
 
-  test "role enum stores locked role names" do
-    assert_equal %w[admin supervisor agent readonly], User.roles.keys
+  test "role enum stores the functional roles plus the legacy ones in transition" do
+    assert_equal %w[super_admin client_admin finance sales customer_service technical readonly admin supervisor agent],
+                 User.roles.keys
+  end
+
+  test "default role is the least-privilege customer_service" do
+    assert_equal "customer_service", User.new.role
   end
 
   test "sla target priorities mirror case priorities" do

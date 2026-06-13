@@ -1,13 +1,13 @@
 class ReferenceDocPolicy < ApplicationPolicy
-  def index?   = admin? || supervisor?
-  def show?    = admin? || supervisor?
-  def create?  = admin? || supervisor?
-  def update?  = admin? || supervisor?
-  def destroy? = admin? || supervisor?
+  def index?   = permit?("reference_doc:manage")
+  def show?    = permit?("reference_doc:manage")
+  def create?  = permit?("reference_doc:manage")
+  def update?  = permit?("reference_doc:manage")
+  def destroy? = permit?("reference_doc:manage")
 
   class Scope < Scope
     def resolve
-      user.present? ? scope.all : scope.none
+      permit?("reference_doc:manage") ? scope.all : scope.none
     end
   end
 end

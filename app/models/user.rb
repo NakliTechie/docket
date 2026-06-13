@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
   include HumanEnums
@@ -8,9 +9,18 @@ class User < ApplicationRecord
   has_secure_password
 
   # Method names prefixed (user.role_admin?) because a bare `readonly?`
-  # would collide with ActiveRecord; stored values stay admin/supervisor/
-  # agent/readonly for UI and API.
-  enum :role, { admin: 0, supervisor: 1, agent: 2, readonly: 3 }, default: :agent, prefix: true
+  # would collide with ActiveRecord; stored values are the role names below.
+  #
+  # The functional roles (super_admin … technical) are the target model; the
+  # legacy roles (admin/supervisor/agent) are kept live only through the
+  # transition (a data migration reassigns rows; a later step removes them).
+  # Authority for every role — legacy included — comes from Authz::ROLE_PERMISSIONS
+  # via #can?, never from a bare role name. See plan/rbac-research-2026-06-13.md.
+  enum :role, {
+    super_admin: 4, client_admin: 5, finance: 6, sales: 7,
+    customer_service: 8, technical: 9, readonly: 3,
+    admin: 0, supervisor: 1, agent: 2 # legacy — removed once prod rows migrate
+  }, default: :customer_service, prefix: true
 
   has_many :sessions, dependent: :destroy
   has_many :queue_memberships, dependent: :destroy
@@ -24,11 +34,23 @@ class User < ApplicationRecord
   # re-provisioned (e.g. an offboarded staffer returning via SSO). Matches
   # every other SoftDeletable model; the DB index is partial to match.
   validates :email_address, presence: true,
-            uniqueness: { conditions: -> { where(deleted_at: nil) } },
+            uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } },
             format: { with: URI::MailTo::EMAIL_REGEXP }
 
   scope :active, -> { where(active: true) }
-  scope :staff, -> { where(role: [ :admin, :supervisor, :agent ]) }
+  # Operational staff who can own records / staff queues — everyone except
+  # readonly. (Was [admin, supervisor, agent]; equivalent now that the legacy
+  # roles are the only other non-readonly roles, and it extends to the new
+  # functional roles for free.)
+  scope :staff, -> { where.not(role: :readonly) }
+
+  # The single authority chokepoint. Policies and the effector gate ask this,
+  # never a bare role name. When tenancy lands, a `tenant:` keyword is added
+  # here (super_admin is cross-tenant, client_admin per-tenant) — call sites
+  # pass no tenant today, so none of them change. See plan/rbac-research.
+  def can?(permission)
+    Authz.permissions_for(role).include?(permission.to_s)
+  end
 
   def deactivate!
     transaction do

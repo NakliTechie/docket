@@ -1,3 +1,4 @@
 pension_delay:
+  tenant: primary
   name: Pension delay
   ai_auto_resolve: false

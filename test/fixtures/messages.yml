@@ -1,4 +1,5 @@
 note_on_pension:
+  tenant: primary
   case: pension_case
   kind: internal_note
   direction: outbound

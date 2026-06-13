@@ -1,6 +1,7 @@
 class Current < ActiveSupport::CurrentAttributes
   attribute :session
   attribute :actor       # explicit audit actor (service account, portal contact)
+  attribute :tenant      # the resolved tenant (always set; the singleton in isolated mode)
   attribute :request_id, :ip_address, :on_behalf_of, :delegation_id
 
   delegate :user, to: :session, allow_nil: true

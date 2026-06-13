@@ -4,6 +4,7 @@
 # for free. args/result may carry PII or secrets and are redacted from the
 # chain (who/what/for-whom stays; the payload does not).
 class ConnectorInvocation < ApplicationRecord
+  acts_as_tenant(:tenant)
   include Audited
 
   belongs_to :connector

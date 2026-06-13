@@ -1,6 +1,7 @@
 # One sync attempt for a connector — the audit-friendly log the admin UI
 # shows. Append-only in spirit (a run is written once when it finishes).
 class ConnectorRun < ApplicationRecord
+  acts_as_tenant(:tenant)
   belongs_to :connector
 
   enum :trigger, { manual: 0, scheduled: 1, webhook: 2 }, prefix: true

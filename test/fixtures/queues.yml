@@ -3,9 +3,11 @@ _fixture:
   model_class: CaseQueue
 
 pensions:
+  tenant: primary
   name: Pensions
   slug: pensions
 
 sanitation:
+  tenant: primary
   name: Sanitation
   slug: sanitation

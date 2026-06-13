@@ -1,0 +1,36 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+</div>
+
+<p class="muted"><%= t(".intro") %></p>
+
+<div class="table-wrap">
+  <table class="roles-matrix">
+    <thead>
+      <tr>
+        <th scope="col"><%= t(".permission_column") %></th>
+        <% @roles.each do |role| %>
+          <th scope="col"><%= t("users.enum.role.#{role}") %></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% @permissions.each do |permission| %>
+        <tr>
+          <th scope="row" class="mono"><%= permission %></th>
+          <% @roles.each do |role| %>
+            <% granted = Authz::ROLE_PERMISSIONS.fetch(role, []).include?(permission) %>
+            <td class="<%= "is-granted" if granted %>">
+              <% if granted %>
+                <span aria-label="<%= t(".granted") %>">✓</span>
+              <% else %>
+                <span class="visually-hidden"><%= t(".denied") %></span>
+              <% end %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

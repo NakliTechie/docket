@@ -9,14 +9,32 @@ class CasesMailbox < ApplicationMailbox
   before_processing :ensure_sender
 
   def process
-    if existing_case && sender_matches?(existing_case)
-      thread_onto(existing_case)
-    else
-      open_new_case
+    ActsAsTenant.with_tenant(resolve_tenant) do
+      if existing_case && sender_matches?(existing_case)
+        thread_onto(existing_case)
+      else
+        open_new_case
+      end
     end
   end
 
   private
+
+  # Inbound mail has no request host, so the tenant comes from elsewhere:
+  # isolated deploys have one (the singleton); shared deploys read it from the
+  # recipient's subdomain (e.g. support@acme.docket.app → acme). The
+  # per-tenant inbound-address scheme is operator-configured; this is the v1.
+  def resolve_tenant
+    return Tenant.primary if Tenant.isolated_deployment?
+
+    sub = recipients.filter_map { |r| r.split("@").last&.split(".")&.first }.find(&:present?)
+    Tenant.active.find_by(subdomain: sub) ||
+      raise(ActiveRecord::RecordNotFound, "no tenant for inbound recipient #{sub.inspect}")
+  end
+
+  def recipients
+    (Array(mail.to) + Array(mail.cc)).compact.map { |a| a.to_s.strip.downcase }
+  end
 
   def ensure_sender
     # Bounce unless the From yields a genuinely valid email. A malformed

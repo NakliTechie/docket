@@ -1,6 +1,7 @@
 <% password_digest = BCrypt::Password.create("password") %>
 
 admin:
+  tenant: primary
   name: Anita Admin
   email_address: admin@example.com
   password_digest: <%= password_digest %>
@@ -8,6 +9,7 @@ admin:
   active: true
 
 supervisor:
+  tenant: primary
   name: Suresh Supervisor
   email_address: supervisor@example.com
   password_digest: <%= password_digest %>
@@ -15,6 +17,7 @@ supervisor:
   active: true
 
 agent_a:
+  tenant: primary
   name: Asha Agent
   email_address: agent.a@example.com
   password_digest: <%= password_digest %>
@@ -22,6 +25,7 @@ agent_a:
   active: true
 
 agent_b:
+  tenant: primary
   name: Bharat Agent
   email_address: agent.b@example.com
   password_digest: <%= password_digest %>
@@ -29,6 +33,7 @@ agent_b:
   active: true
 
 readonly:
+  tenant: primary
   name: Vinod Viewer
   email_address: readonly@example.com
   password_digest: <%= password_digest %>
@@ -36,8 +41,59 @@ readonly:
   active: true
 
 inactive:
+  tenant: primary
   name: Iqbal Inactive
   email_address: inactive@example.com
   password_digest: <%= password_digest %>
   role: agent
   active: false
+
+# Functional roles (the target model). Legacy admin/supervisor/agent above are
+# kept to prove the transition is authority-neutral.
+super_admin:
+  tenant: primary
+  name: Priya Platform
+  email_address: super.admin@example.com
+  password_digest: <%= password_digest %>
+  role: super_admin
+  active: true
+
+client_admin:
+  tenant: primary
+  name: Chetan ClientAdmin
+  email_address: client.admin@example.com
+  password_digest: <%= password_digest %>
+  role: client_admin
+  active: true
+
+finance:
+  tenant: primary
+  name: Farah Finance
+  email_address: finance@example.com
+  password_digest: <%= password_digest %>
+  role: finance
+  active: true
+
+sales:
+  tenant: primary
+  name: Sanjay Sales
+  email_address: sales@example.com
+  password_digest: <%= password_digest %>
+  role: sales
+  active: true
+
+customer_service:
+  tenant: primary
+  name: Kavya CustomerService
+  email_address: customer.service@example.com
+  password_digest: <%= password_digest %>
+  role: customer_service
+  active: true
+
+technical:
+  tenant: primary
+  name: Tarun Technical
+  email_address: technical@example.com
+  password_digest: <%= password_digest %>
+  role: technical
+  active: true

@@ -23,7 +23,7 @@ class SsoTest < ActionDispatch::IntegrationTest
     )
   end
 
-  test "staff oidc login JIT-provisions an agent and audits" do
+  test "staff oidc login JIT-provisions the default role and audits" do
     mock_staff_oidc(email: "newstaff@example.com", name: "New Staff")
     assert_difference [ "User.count" ] do
       assert_difference -> { AuditEntry.where(action: "user.login_sso").count } do
@@ -31,7 +31,7 @@ class SsoTest < ActionDispatch::IntegrationTest
       end
     end
     user = User.find_by(email_address: "newstaff@example.com")
-    assert_equal "agent", user.role
+    assert_equal "customer_service", user.role
     follow_redirect!
     assert_response :success
 
@@ -80,7 +80,7 @@ class SsoTest < ActionDispatch::IntegrationTest
     Setting.set("sso_staff_role_mapping", { "docket-admins" => "admin" }.to_json)
     mock_staff_oidc(email: user.email_address, groups: [ "everyone" ]) # no mapped group
     get "/auth/staff_oidc/callback"
-    assert_equal "agent", user.reload.role
+    assert_equal "customer_service", user.reload.role
   ensure
     Setting.unset("sso_staff_role_claim")
     Setting.unset("sso_staff_role_mapping")
@@ -197,7 +197,7 @@ class SsoTest < ActionDispatch::IntegrationTest
     Setting.set("sso_staff_role_mapping", "[1,2,3]") # valid JSON, wrong shape
     mock_staff_oidc(email: "robust@example.com", groups: [ "x" ])
     assert_nothing_raised { get "/auth/staff_oidc/callback" }
-    assert_equal "agent", User.find_by(email_address: "robust@example.com").role
+    assert_equal "customer_service", User.find_by(email_address: "robust@example.com").role
   ensure
     Setting.unset("sso_staff_role_claim")
     Setting.unset("sso_staff_role_mapping")
