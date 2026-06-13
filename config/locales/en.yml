@@ -18,6 +18,8 @@ en:
       sla_policies: "SLA policies"
       macros: "Macros"
       routing_rules: "Routing rules"
+      approval_processes: "Approval rules"
+      approval_requests: "Approvals"
       leads: "Leads"
       deals: "Deals"
       sales_report: "Sales report"
@@ -240,6 +242,7 @@ en:
       deleted: "Case deleted."
     transition:
       transitioned: "Case marked %{status}."
+      submitted_for_approval: "Submitted for approval — this change needs a checker's sign-off before it takes effect."
     assign:
       assigned: "Case assigned to %{name}."
       unassigned: "Case unassigned."
@@ -932,6 +935,51 @@ en:
       updated: "Routing rule updated."
     destroy:
       deleted: "Routing rule deleted."
+
+  approval_processes:
+    fields:
+      name: "Name"
+      trigger_type: "Trigger"
+      trigger_key: "When"
+      active: "Active"
+    enum:
+      trigger_type:
+        case_transition: "Case transition"
+        effector_action: "Connector action"
+    form:
+      trigger_type_hint: "What kind of action requires a second person's sign-off."
+      trigger_key_hint: "For a case transition, the target status (one of: %{statuses}). For a connector action, the action key (e.g. post_message)."
+    index:
+      title: "Approval rules"
+      new_process: "New approval rule"
+      intro: "Maker-checker: require a second person to approve a guarded action before it takes effect — for example, closing a case or sending a refund."
+      active: "Active"
+      inactive: "Inactive"
+      confirm_delete: "Delete this approval rule? In-flight requests are removed."
+      columns:
+        name: "Name"
+        trigger: "Requires approval to"
+        status: "Status"
+      empty:
+        title: "No approval rules yet"
+        hint: "Add a rule — for example, require sign-off before a case can be closed."
+    new:
+      title: "New approval rule"
+    edit:
+      title: "Edit approval rule %{name}"
+    create:
+      created: "Approval rule created."
+    update:
+      updated: "Approval rule updated."
+    destroy:
+      deleted: "Approval rule deleted."
+
+  approval_requests:
+    enum:
+      status:
+        pending: "Pending"
+        approved: "Approved"
+        rejected: "Rejected"
 
   help:
     title: "Keyboard shortcuts"
@@ -1667,6 +1715,27 @@ en:
         overturned: "Appeal upheld — the decision was reversed."
       deny:
         denied: "Appeal denied — the decision stands."
+    approval_requests:
+      index:
+        title: "Approvals"
+        intro: "Maker-checker requests awaiting your sign-off. Approving carries out the action (a reasoned order); rejecting blocks it."
+        pending: "Awaiting approval"
+        no_pending: "Nothing is awaiting approval."
+        recent: "Recently decided"
+        reason_placeholder: "Reasoned order (required to approve)"
+        reject_reason_placeholder: "Reason (optional)"
+        approve: "Approve"
+        reject: "Reject"
+        columns:
+          request: "Approval rule"
+          subject: "Subject"
+          requested_by: "Requested by"
+          decision: "Decision"
+          reason: "Reasoned order"
+      approve:
+        approved: "Approved — the action was carried out."
+      reject:
+        rejected: "Rejected — the action was blocked."
     activity:
       index:
         title: "Activity & Usage"
@@ -1726,6 +1795,10 @@ en:
             base:
               needs_condition: "needs at least one condition (channel, priority, category, or subject keyword)"
               needs_action: "needs at least one action (set a queue, category, priority, or assignment)"
+        approval_process:
+          attributes:
+            trigger_key:
+              not_a_status: "must be a valid case status for a case-transition trigger"
         reference_doc:
           attributes:
             file:

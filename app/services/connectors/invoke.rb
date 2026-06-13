@@ -64,8 +64,12 @@ module Connectors
 
     # Route by accountability tier: autonomous runs unattended; a decision of
     # record ALWAYS parks for a human (auto-approve cannot bypass it); confirm
-    # parks unless the connector auto-approves the action.
+    # parks unless the connector auto-approves the action. A maker-checker
+    # ApprovalProcess (PG4) escalates ANY covered action to review, overriding
+    # the connector's auto-approve.
     def gated_status(connector, action)
+      return :proposed if ApprovalGate.requires_action_review?(action.key)
+
       case action.effective_decision_class
       when :autonomous then :approved
       when :of_record  then :proposed

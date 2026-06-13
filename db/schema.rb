@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_240000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_243000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -58,6 +58,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_240000) do
     t.integer "user_id", null: false
     t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
     t.index ["user_id"], name: "index_api_tokens_on_user_id"
+  end
+
+  create_table "approval_processes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "tenant_id", null: false
+    t.string "trigger_key", null: false
+    t.integer "trigger_type", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "trigger_type", "trigger_key"], name: "index_approval_processes_on_tenant_and_trigger", unique: true
+    t.index ["tenant_id"], name: "index_approval_processes_on_tenant_id"
+  end
+
+  create_table "approval_requests", force: :cascade do |t|
+    t.integer "approval_process_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "decided_at"
+    t.integer "decided_by_id"
+    t.text "reason"
+    t.string "requested_action"
+    t.integer "requested_by_id"
+    t.integer "status", default: 0, null: false
+    t.integer "subject_id", null: false
+    t.string "subject_type", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approval_process_id"], name: "index_approval_requests_on_approval_process_id"
+    t.index ["decided_by_id"], name: "index_approval_requests_on_decided_by_id"
+    t.index ["requested_by_id"], name: "index_approval_requests_on_requested_by_id"
+    t.index ["subject_type", "subject_id"], name: "index_approval_requests_on_subject"
+    t.index ["tenant_id", "status"], name: "index_approval_requests_on_tenant_id_and_status"
+    t.index ["tenant_id"], name: "index_approval_requests_on_tenant_id"
   end
 
   create_table "audit_entries", force: :cascade do |t|
@@ -699,6 +732,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_240000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_tokens", "users"
+  add_foreign_key "approval_processes", "tenants"
+  add_foreign_key "approval_requests", "approval_processes"
+  add_foreign_key "approval_requests", "tenants"
+  add_foreign_key "approval_requests", "users", column: "decided_by_id"
+  add_foreign_key "approval_requests", "users", column: "requested_by_id"
   add_foreign_key "cases", "categories"
   add_foreign_key "cases", "contacts"
   add_foreign_key "cases", "queues"

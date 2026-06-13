@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       patch :move
     end
   end
+  resources :approval_processes, except: :show
 
   # Sales funnel (v1.2 CRM)
   resources :leads do
@@ -73,6 +74,12 @@ Rails.application.routes.draw do
       member do
         post :overturn
         post :deny
+      end
+    end
+    resources :approval_requests, only: %i[index] do
+      member do
+        post :approve
+        post :reject
       end
     end
     get "activity", to: "activity#index", as: :activity

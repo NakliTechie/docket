@@ -18,6 +18,8 @@ hi:
       sla_policies: "एसएलए नीतियाँ"
       macros: "मैक्रो"
       routing_rules: "रूटिंग नियम"
+      approval_processes: "अनुमोदन नियम"
+      approval_requests: "अनुमोदन"
       leads: "लीड्स"
       deals: "सौदे"
       sales_report: "बिक्री रिपोर्ट"
@@ -240,6 +242,7 @@ hi:
       deleted: "मामला हटाया गया।"
     transition:
       transitioned: "मामला %{status} चिह्नित किया गया।"
+      submitted_for_approval: "अनुमोदन हेतु प्रस्तुत — यह परिवर्तन प्रभावी होने से पहले एक चेकर की मंज़ूरी आवश्यक है।"
     assign:
       assigned: "मामला %{name} को सौंपा गया।"
       unassigned: "मामले से नियुक्ति हटाई गई।"
@@ -932,6 +935,51 @@ hi:
       updated: "रूटिंग नियम अद्यतन किया गया।"
     destroy:
       deleted: "रूटिंग नियम हटाया गया।"
+
+  approval_processes:
+    fields:
+      name: "नाम"
+      trigger_type: "ट्रिगर"
+      trigger_key: "कब"
+      active: "सक्रिय"
+    enum:
+      trigger_type:
+        case_transition: "मामला परिवर्तन"
+        effector_action: "कनेक्टर क्रिया"
+    form:
+      trigger_type_hint: "किस प्रकार की क्रिया के लिए दूसरे व्यक्ति की मंज़ूरी आवश्यक है।"
+      trigger_key_hint: "मामला परिवर्तन हेतु, लक्ष्य स्थिति (इनमें से एक: %{statuses})। कनेक्टर क्रिया हेतु, क्रिया कुंजी (जैसे post_message)।"
+    index:
+      title: "अनुमोदन नियम"
+      new_process: "नया अनुमोदन नियम"
+      intro: "मेकर-चेकर: किसी संरक्षित क्रिया के प्रभावी होने से पहले दूसरे व्यक्ति की मंज़ूरी आवश्यक करें — जैसे मामला बंद करना या रिफ़ंड भेजना।"
+      active: "सक्रिय"
+      inactive: "निष्क्रिय"
+      confirm_delete: "यह अनुमोदन नियम हटाएँ? लंबित अनुरोध हटा दिए जाते हैं।"
+      columns:
+        name: "नाम"
+        trigger: "अनुमोदन आवश्यक है"
+        status: "स्थिति"
+      empty:
+        title: "अभी कोई अनुमोदन नियम नहीं"
+        hint: "एक नियम जोड़ें — जैसे, मामला बंद होने से पहले मंज़ूरी आवश्यक करें।"
+    new:
+      title: "नया अनुमोदन नियम"
+    edit:
+      title: "अनुमोदन नियम %{name} संपादित करें"
+    create:
+      created: "अनुमोदन नियम बनाया गया।"
+    update:
+      updated: "अनुमोदन नियम अद्यतन किया गया।"
+    destroy:
+      deleted: "अनुमोदन नियम हटाया गया।"
+
+  approval_requests:
+    enum:
+      status:
+        pending: "लंबित"
+        approved: "अनुमोदित"
+        rejected: "अस्वीकृत"
 
   help:
     title: "कीबोर्ड शॉर्टकट"
@@ -1667,6 +1715,27 @@ hi:
         overturned: "अपील स्वीकृत — निर्णय उलट दिया गया।"
       deny:
         denied: "अपील अस्वीकृत — निर्णय कायम है।"
+    approval_requests:
+      index:
+        title: "अनुमोदन"
+        intro: "मेकर-चेकर अनुरोध जो आपकी मंज़ूरी की प्रतीक्षा में हैं। अनुमोदन क्रिया को पूरा करता है (एक सकारण आदेश); अस्वीकृति इसे रोकती है।"
+        pending: "अनुमोदन की प्रतीक्षा में"
+        no_pending: "अनुमोदन की प्रतीक्षा में कुछ नहीं।"
+        recent: "हाल ही में निर्णीत"
+        reason_placeholder: "सकारण आदेश (अनुमोदन हेतु आवश्यक)"
+        reject_reason_placeholder: "कारण (वैकल्पिक)"
+        approve: "अनुमोदित करें"
+        reject: "अस्वीकृत करें"
+        columns:
+          request: "अनुमोदन नियम"
+          subject: "विषय"
+          requested_by: "अनुरोधकर्ता"
+          decision: "निर्णय"
+          reason: "सकारण आदेश"
+      approve:
+        approved: "अनुमोदित — क्रिया पूरी की गई।"
+      reject:
+        rejected: "अस्वीकृत — क्रिया रोक दी गई।"
     activity:
       index:
         title: "गतिविधि और उपयोग"
@@ -1726,6 +1795,10 @@ hi:
             base:
               needs_condition: "कम से कम एक शर्त आवश्यक है (चैनल, प्राथमिकता, श्रेणी, या विषय कीवर्ड)"
               needs_action: "कम से कम एक क्रिया आवश्यक है (कतार, श्रेणी, प्राथमिकता, या असाइनमेंट सेट करें)"
+        approval_process:
+          attributes:
+            trigger_key:
+              not_a_status: "मामला-परिवर्तन ट्रिगर हेतु एक वैध मामला स्थिति होनी चाहिए"
         reference_doc:
           attributes:
             file:

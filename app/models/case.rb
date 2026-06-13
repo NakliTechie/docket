@@ -47,6 +47,7 @@ class Case < ApplicationRecord
 
   has_many :messages, dependent: nil, inverse_of: :case
   has_many :audit_entries, as: :auditable, dependent: nil
+  has_many :approval_requests, as: :subject, dependent: :destroy
 
   before_validation :ensure_tracking_id, on: :create
   before_validation :apply_default_sla_policy, on: :create
