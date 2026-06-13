@@ -8,7 +8,7 @@ class DealPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      user.present? ? scope.all : scope.none
+      permit?("deal:read") ? scope.all : scope.none
     end
   end
 end
