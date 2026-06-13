@@ -3,11 +3,8 @@ module Connectors
   # auth from key_id:key_secret (vaulted). Demonstrates the decision-class
   # range: fetch_payment is :autonomous (read), refund_payment is :of_record
   # (it moves money — a human of record + reasoned order, never auto-approved).
-  class RazorpayProvider < Provider
-    OPEN_TIMEOUT = 5
-    READ_TIMEOUT = 20
+  class RazorpayProvider < HttpProvider
     DEFAULT_BASE = "https://api.razorpay.com".freeze
-    NET_ERRORS = [ SocketError, SystemCallError, Net::OpenTimeout, Net::ReadTimeout, IOError ].freeze
 
     def self.descriptor
       Descriptor.new(
@@ -41,10 +38,6 @@ module Connectors
       ]
     end
 
-    def fetch
-      []
-    end
-
     def invoke(action_key, args, _context = {})
       case action_key.to_s
       when "fetch_payment"  then fetch_payment(args)
@@ -56,24 +49,17 @@ module Connectors
     private
 
     def fetch_payment(args)
-      uri = endpoint("/v1/payments/#{payment_id(args)}")
-      response = request(Net::HTTP::Get.new(uri.request_uri, auth_headers), uri)
-      ok_or_raise(response)
-      { "ok" => true, "payment" => parse(response.body) }
-    rescue *NET_ERRORS => e
-      raise Connectors::Error, "fetch_payment failed: #{e.class}: #{e.message}"
+      response = get(endpoint("/v1/payments/#{payment_id(args)}"), headers: auth_headers)
+      ensure_ok!(response, "Razorpay")
+      { "ok" => true, "payment" => parse_json(response.body) }
     end
 
     def refund_payment(args)
-      uri = endpoint("/v1/payments/#{payment_id(args)}/refund")
       amount = args["amount"] || args[:amount]
-      req = Net::HTTP::Post.new(uri.request_uri, auth_headers.merge("Content-Type" => "application/json"))
-      req.body = JSON.generate(amount.present? ? { amount: amount.to_i } : {})
-      response = request(req, uri)
-      ok_or_raise(response)
-      { "ok" => true, "refund" => parse(response.body) }
-    rescue *NET_ERRORS => e
-      raise Connectors::Error, "refund_payment failed: #{e.class}: #{e.message}"
+      body = amount.present? ? { amount: amount.to_i } : {}
+      response = post_json(endpoint("/v1/payments/#{payment_id(args)}/refund"), body, headers: auth_headers)
+      ensure_ok!(response, "Razorpay")
+      { "ok" => true, "refund" => parse_json(response.body) }
     end
 
     def payment_id(args)
@@ -83,42 +69,11 @@ module Connectors
     end
 
     def auth_headers
-      key_id = connector.secret("key_id").to_s
-      secret = connector.secret("key_secret").to_s
-      raise Connectors::Error, "key_id and key_secret are required" if key_id.blank? || secret.blank?
-      token = [ "#{key_id}:#{secret}" ].pack("m0")
-      { "Authorization" => "Basic #{token}", "Accept" => "application/json" }
+      { "Authorization" => basic_auth(require_secret("key_id"), require_secret("key_secret")) }
     end
 
     def endpoint(path)
-      base = connector.config_value("base_url").presence || DEFAULT_BASE
-      uri = URI.parse(base.chomp("/") + path)
-      raise Connectors::Error, "base_url must be http(s)" unless uri.is_a?(URI::HTTP)
-      if (reason = Docket::OutboundUrl.blocked_reason(uri.host))
-        raise Connectors::Error, "endpoint blocked: #{reason}"
-      end
-      uri
-    rescue URI::InvalidURIError
-      raise Connectors::Error, "base_url is not a valid URL"
-    end
-
-    def request(req, uri)
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == "https"
-      http.open_timeout = OPEN_TIMEOUT
-      http.read_timeout = READ_TIMEOUT
-      http.request(req)
-    end
-
-    def ok_or_raise(response)
-      return if response.code.to_i.between?(200, 299)
-      raise Connectors::Error, "Razorpay returned HTTP #{response.code}"
-    end
-
-    def parse(raw)
-      JSON.parse(raw)
-    rescue JSON::ParserError
-      raw
+      build_uri(connector.config_value("base_url").presence || DEFAULT_BASE, path)
     end
   end
 end

@@ -25,6 +25,23 @@ class ConnectorTest < ActiveSupport::TestCase
     assert c.errors[:field_mapping].any?
   end
 
+  test "enabled_actions must be actions the provider exposes" do
+    assert build_connector(enabled_actions: %w[post_json]).valid?, "post_json is a real http_json action"
+    c = build_connector(enabled_actions: %w[post_json nonsense])
+    assert_not c.valid?
+    assert c.errors[:enabled_actions].any?
+  end
+
+  test "auto_approve_actions must be a subset of enabled_actions" do
+    c = build_connector(enabled_actions: %w[post_json], auto_approve_actions: %w[other])
+    assert_not c.valid?
+    assert c.errors[:auto_approve_actions].any?
+  end
+
+  test "a negative per-connector action budget is rejected" do
+    assert_not build_connector(action_budget: -1).valid?
+  end
+
   test "credentials are encrypted at rest" do
     c = build_connector
     c.credentials_hash = { "api_key" => "topsecret-xyz" }

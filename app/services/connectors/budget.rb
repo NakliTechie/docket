@@ -24,5 +24,23 @@ module Connectors
 
       raise Exceeded, "action budget exhausted (#{used}/#{limit} in #{window} min)"
     end
+
+    # Per-connector cap: how many actions may flow through THIS connector in its
+    # window, regardless of which agent initiates them (e.g. ≤10 refunds/hour
+    # through the payments connector). nil budget = unlimited. Same fail-safe
+    # deny as the per-principal cap.
+    def enforce_connector!(connector)
+      return unless connector.respond_to?(:effector_budgeted?) && connector.effector_budgeted?
+
+      limit = connector.action_budget
+      window = connector.effector_budget_window_minutes
+      used = ConnectorInvocation
+               .where(connector: connector)
+               .where(created_at: window.minutes.ago..)
+               .count
+      return if used < limit
+
+      raise Exceeded, "connector action budget exhausted (#{used}/#{limit} in #{window} min)"
+    end
   end
 end

@@ -33,14 +33,25 @@ class Connector < ApplicationRecord
   # scope, so agents and the scheduler never touch it until it's activated.
   enum :status, { active: 0, paused: 1, error: 2, draft: 3 }, prefix: true
 
+  DEFAULT_BUDGET_WINDOW_MINUTES = 60
+
   validates :name, presence: true
   validates :target, inclusion: { in: TARGETS }
+  validates :action_budget, numericality: { greater_than: 0 }, allow_nil: true
+  validates :action_budget_window_minutes, numericality: { greater_than: 0 }, allow_nil: true
   validate :provider_is_known
   validate :sync_mapping_is_complete
+  validate :enabled_actions_are_known
+  validate :auto_approve_within_enabled
 
   before_validation :ensure_webhook_secret, on: :create
 
   scope :active, -> { where(status: :active) }
+
+  # Per-connector budgeted autonomy (mirrors ServiceAccount's per-agent cap):
+  # nil budget = unlimited.
+  def effector_budgeted? = action_budget.present?
+  def effector_budget_window_minutes = action_budget_window_minutes || DEFAULT_BUDGET_WINDOW_MINUTES
 
   def provider_instance
     Connectors::Registry.build(provider, self)
@@ -142,6 +153,22 @@ class Connector < ApplicationRecord
 
   def provider_is_known
     errors.add(:provider, :unknown) unless Connectors::Registry.key?(provider)
+  end
+
+  # An action can only be exposed to agents if the provider actually declares
+  # it (deny-by-default: you can't enable a phantom action).
+  def enabled_actions_are_known
+    return if enabled_actions.blank? || Connectors::Registry.klass(provider).blank?
+
+    unknown = enabled_actions.map(&:to_s) - provider_actions.map { |a| a.key.to_s }
+    errors.add(:enabled_actions, "include actions the provider does not expose: #{unknown.join(', ')}") if unknown.any?
+  end
+
+  # You can't auto-approve (skip the human gate on) an action that isn't even
+  # enabled.
+  def auto_approve_within_enabled
+    extra = auto_approve_actions.map(&:to_s) - enabled_actions.map(&:to_s)
+    errors.add(:auto_approve_actions, "include actions that aren't enabled: #{extra.join(', ')}") if extra.any?
   end
 
   # A pull is useless if nothing maps to an identity we can upsert on — but
