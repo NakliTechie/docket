@@ -31,16 +31,23 @@ module Connectors
     end
 
     def perform(connector, run)
-      records = Array(connector.provider_instance.fetch)
+      fetched = Array(connector.provider_instance.fetch)
+      records = fetched.first(MAX_RECORDS)
+      # No silent truncation: log when the provider returned more than the cap.
+      if fetched.size > records.size
+        Rails.logger.warn("Connectors::Sync capped connector #{connector.id}: #{fetched.size} fetched → #{MAX_RECORDS} processed")
+      end
+
       created = 0
       updated = 0
-      records.first(MAX_RECORDS).each do |raw|
+      records.each do |raw|
         case upsert(connector, raw)
         when :created then created += 1
         when :updated then updated += 1
         end
       end
       connector.update!(last_synced_at: Time.current, status: :active)
+      # records_in reflects what was actually processed (the capped set).
       run.update!(status: :success, finished_at: Time.current,
                   records_in: records.size, records_created: created, records_updated: updated)
     end

@@ -40,15 +40,28 @@ class WebhookDeliveryJob < ApplicationJob
 
     response = http.request(request)
     delivery.increment(:attempts)
-    if response.code.to_i.between?(200, 299)
-      delivery.update!(status: :delivered, response_code: response.code.to_i, delivered_at: Time.current)
+    code = response.code.to_i
+    if code.between?(200, 299)
+      delivery.update!(status: :delivered, response_code: code, delivered_at: Time.current)
+    elsif retryable_status?(code)
+      delivery.update!(status: :pending, response_code: code)
+      raise DeliveryError, "endpoint returned #{code}"
     else
-      delivery.update!(status: :pending, response_code: response.code.to_i)
-      raise DeliveryError, "endpoint returned #{response.code}"
+      # 3xx (Net::HTTP doesn't follow redirects) and 4xx (except 408/429) won't
+      # succeed on retry — fail fast instead of burning the retry budget (L7).
+      delivery.update!(status: :failed, response_code: code, last_error: "endpoint returned #{code}")
     end
   rescue SystemCallError, Net::OpenTimeout, Net::ReadTimeout, IOError, SocketError => e
     delivery.increment(:attempts)
     delivery.update!(status: :pending, last_error: e.message.truncate(250))
     raise DeliveryError, e.message
+  end
+
+  private
+
+  # Transient server-side conditions worth retrying; 3xx/4xx are the client's
+  # to fix (permanent), except the explicit "try later" codes.
+  def retryable_status?(code)
+    code >= 500 || [ 408, 429 ].include?(code)
   end
 end

@@ -145,7 +145,7 @@ class CaseAgentTest < ActiveSupport::TestCase
     message = Message.create!(case: cases(:pension_case), kind: :public_reply,
                               direction: :inbound, author: contacts(:asha),
                               body: "This is unacceptable, I am furious!")
-    SentimentJob.perform_now(message)
+    SentimentJob.perform_now(message.id)
     assert_equal "negative", message.reload.sentiment
   end
 

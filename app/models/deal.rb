@@ -40,7 +40,7 @@ class Deal < ApplicationRecord
   end
 
   def value=(amount)
-    self.value_cents = amount.present? ? (amount.to_f * 100).round : nil
+    self.value_cents = Cents.from(amount)
   end
 
   # Move the card to another stage (the kanban drag). Validates the stage

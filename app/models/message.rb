@@ -85,7 +85,9 @@ class Message < ApplicationRecord
   end
 
   def enqueue_sentiment_analysis
-    SentimentJob.perform_later(self) if direction_inbound? && Llm.enabled?
+    # Pass the id (not the record) — consistent with the other message jobs and
+    # safe if the message is gone by the time the job runs (S9).
+    SentimentJob.perform_later(id) if direction_inbound? && Llm.enabled?
   end
 
   # Internal notes never leave the deployment — not even as webhooks.
