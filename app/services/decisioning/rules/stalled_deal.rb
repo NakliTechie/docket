@@ -14,7 +14,7 @@ module Decisioning
           next unless current&.open?
 
           dwell = current.dwell_seconds
-          next if dwell < DWELL_LIMIT
+          next if dwell < DWELL_LIMIT.to_i # seconds vs seconds, not Numeric vs Duration (L11)
 
           days = (dwell / 86_400).round
           decision(

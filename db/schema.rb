@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_255000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_260000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -352,6 +352,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_255000) do
     t.index ["rule", "subject_type", "subject_id"], name: "index_decisions_on_rule_and_subject_type_and_subject_id"
     t.index ["status"], name: "index_decisions_on_status"
     t.index ["subject_type", "subject_id"], name: "index_decisions_on_subject_type_and_subject_id"
+    t.index ["tenant_id", "rule", "subject_type", "subject_id"], name: "index_decisions_unique_per_tenant_rule_subject", unique: true
     t.index ["tenant_id"], name: "index_decisions_on_tenant_id"
   end
 

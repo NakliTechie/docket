@@ -95,12 +95,13 @@ class DecisioningTest < ActiveSupport::TestCase
     assert_operator summary[:confirm], :>=, 1
   end
 
-  test "a decision carries versioned provenance" do
+  test "a proposal carries versioned provenance data and its accountability tier" do
     Lead.create!(name: "Hot", email: "h2@x.com", phone: "+91990000004",
                  company_name: "Acme", source: :referral, status: :new)
-    decision = decisions_for(Decisioning::Rules::LeadScore).first
-    assert_match(/\Alead_score@1 Lead#\d+\z/, decision.provenance)
-    assert decision.autonomous?
-    assert_not decision.requires_human?
+    proposal = decisions_for(Decisioning::Rules::LeadScore).first
+    assert_equal "lead_score", proposal.rule
+    assert_equal "1", proposal.version
+    assert_equal "Lead", proposal.subject_type
+    assert_equal :autonomous, proposal.decision_class
   end
 end

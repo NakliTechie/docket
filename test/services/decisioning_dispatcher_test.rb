@@ -68,4 +68,14 @@ class DecisioningDispatcherTest < ActiveSupport::TestCase
     @lead.remove_label("vip")
     assert_empty @lead.reload.labels
   end
+
+  test "a duplicate decision per (tenant, rule, subject) is rejected by the unique index (M3)" do
+    kase = Case.create!(subject: "Dup", contact: contacts(:asha))
+    Decision.create!(rule: "dup_rule", version: "1", subject: kase, signal: "x",
+                     decision_class: "autonomous", status: :proposed)
+    assert_raises(ActiveRecord::RecordNotUnique) do
+      Decision.create!(rule: "dup_rule", version: "1", subject: kase, signal: "y",
+                       decision_class: "autonomous", status: :proposed)
+    end
+  end
 end
