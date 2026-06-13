@@ -18,7 +18,27 @@ module Connectors
         "zendesk" => Connectors::ZendeskProvider,
         "sendgrid" => Connectors::SendgridProvider,
         "twilio_sms" => Connectors::TwilioSmsProvider,
-        "telegram_bot" => Connectors::TelegramBotProvider
+        "telegram_bot" => Connectors::TelegramBotProvider,
+        # Commercial lane — wave 2 (CPaaS, payments, support, CRM, marketing, e-commerce, forms, iPaaS bridges)
+        "msteams_webhook" => Connectors::MicrosoftTeamsWebhookProvider,
+        "googlechat_webhook" => Connectors::GoogleChatWebhookProvider,
+        "zapier_webhook" => Connectors::ZapierWebhookProvider,
+        "make_webhook" => Connectors::MakeWebhookProvider,
+        "n8n_webhook" => Connectors::N8nWebhookProvider,
+        "gupshup" => Connectors::GupshupProvider,
+        "plivo" => Connectors::PlivoProvider,
+        "exotel" => Connectors::ExotelProvider,
+        "kaleyra" => Connectors::KaleyraProvider,
+        "sinch" => Connectors::SinchProvider,
+        "cashfree" => Connectors::CashfreeProvider,
+        "freshdesk" => Connectors::FreshdeskProvider,
+        "intercom" => Connectors::IntercomProvider,
+        "pipedrive" => Connectors::PipedriveProvider,
+        "freshsales" => Connectors::FreshsalesProvider,
+        "mailchimp" => Connectors::MailchimpProvider,
+        "woocommerce" => Connectors::WoocommerceProvider,
+        "typeform" => Connectors::TypeformProvider,
+        "jotform" => Connectors::JotformProvider
       }
     end
 
