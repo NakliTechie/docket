@@ -38,7 +38,19 @@ module Connectors
         "mailchimp" => Connectors::MailchimpProvider,
         "woocommerce" => Connectors::WoocommerceProvider,
         "typeform" => Connectors::TypeformProvider,
-        "jotform" => Connectors::JotformProvider
+        "jotform" => Connectors::JotformProvider,
+        # Commercial lane — wave 3 (ITSM, work management, CRM, marketing, email)
+        "servicenow" => Connectors::ServicenowProvider,
+        "jira" => Connectors::JiraProvider,
+        "monday" => Connectors::MondayProvider,
+        "asana" => Connectors::AsanaProvider,
+        "clickup" => Connectors::ClickupProvider,
+        "trello" => Connectors::TrelloProvider,
+        "notion" => Connectors::NotionProvider,
+        "airtable" => Connectors::AirtableProvider,
+        "activecampaign" => Connectors::ActivecampaignProvider,
+        "klaviyo" => Connectors::KlaviyoProvider,
+        "mailgun" => Connectors::MailgunProvider
       }
     end
 
