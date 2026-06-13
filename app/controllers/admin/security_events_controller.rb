@@ -3,7 +3,7 @@ module Admin
   class SecurityEventsController < ApplicationController
     def index
       authorize :security_event, policy_class: AdminAreaPolicy
-      @pagy, @events = pagy(SecurityEvent.recent_first)
+      @pagy, @events = pagy(SecurityEvent.visible_to(Current.user).recent_first)
     end
   end
 end

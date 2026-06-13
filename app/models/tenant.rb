@@ -39,6 +39,14 @@ class Tenant < ApplicationRecord
     find_by(slug: PRIMARY_SLUG) || order(:id).first
   end
 
+  # The single source of truth for host→tenant resolution, shared by the
+  # request before_action (TenantResolution) and the CORS middleware (which
+  # runs before it and must read per-tenant settings — M1). isolated → the
+  # singleton; shared → the active tenant for the subdomain, or nil (unknown).
+  def self.resolve_by_subdomain(subdomain)
+    shared_deployment? ? active.find_by(subdomain: subdomain.presence) : primary
+  end
+
   def display_label
     name
   end

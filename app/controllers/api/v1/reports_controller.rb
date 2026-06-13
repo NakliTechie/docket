@@ -6,7 +6,7 @@ module Api
         require_report_access!
         from = parse_date(params[:from]) || 30.days.ago.to_date
         to = parse_date(params[:to]) || Date.current
-        render json: { data: ActivityReport.new(from: from, to: to).as_json }
+        render json: { data: ActivityReport.new(from: from, to: to, viewer: current_user).as_json }
       end
 
       private

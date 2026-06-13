@@ -4,9 +4,17 @@
 class ActivityReport
   attr_reader :from, :to
 
-  def initialize(from:, to:)
+  def initialize(from:, to:, viewer: nil)
     @from = from
     @to = to
+    @viewer = viewer
+  end
+
+  # Audit rows are tenant-scoped for this report unless the viewer is
+  # super_admin / an isolated deploy (C1). The Case/Message/User queries below
+  # are already tenant-scoped by acts_as_tenant.
+  def audit_entries
+    AuditEntry.visible_to(@viewer)
   end
 
   def range
@@ -15,7 +23,7 @@ class ActivityReport
 
   # { user_id => { action => count } }
   def actions_by_user
-    @actions_by_user ||= AuditEntry.where(created_at: range, actor_type: "User")
+    @actions_by_user ||= audit_entries.where(created_at: range, actor_type: "User")
                                    .group(:actor_id, :action).count
                                    .each_with_object({}) do |((user_id, action), count), acc|
       (acc[user_id] ||= {})[action] = count
@@ -27,7 +35,7 @@ class ActivityReport
   end
 
   def logins
-    @logins ||= AuditEntry.where(action: [ "user.login", "user.login_sso" ], created_at: range)
+    @logins ||= audit_entries.where(action: [ "user.login", "user.login_sso" ], created_at: range)
                           .order(id: :desc).limit(50).includes(:actor)
   end
 
@@ -69,7 +77,7 @@ class ActivityReport
   # match — both inflated the figure. Parse the json changeset and count
   # only `[_, true]` transitions (a single update flipping both flags = 2).
   def breach_events
-    AuditEntry.where(created_at: range, action: "case.update", auditable_type: "Case")
+    audit_entries.where(created_at: range, action: "case.update", auditable_type: "Case")
               .where("changeset LIKE ? OR changeset LIKE ?",
                      "%first_response_breached%", "%resolution_breached%")
               .sum { |entry| breach_flips(entry.changeset) }

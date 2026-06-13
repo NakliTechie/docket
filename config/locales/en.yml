@@ -1770,6 +1770,7 @@ en:
       show:
         title: "Audit chain"
         chain_status: "Chain verification"
+        verification_platform_only: "The audit chain spans every tenant, so end-to-end verification is available to platform administrators. The entry count below is scoped to your tenant."
         intact: "Chain intact"
         intact_detail: "All %{count} entries verify end-to-end."
         broken: "Chain broken"
@@ -1790,6 +1791,10 @@ en:
               must_use_state_machine: "transitions must go through the case state machine"
             assignee:
               inactive: "must be an active user"
+        user:
+          attributes:
+            role:
+              exceeds_assigner: "is higher than your own — you can't grant a role above your own authority"
         routing_rule:
           attributes:
             base:

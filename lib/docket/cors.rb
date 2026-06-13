@@ -14,7 +14,7 @@ module Docket
       origin = env["HTTP_ORIGIN"]
       return @app.call(env) unless origin && env["PATH_INFO"].to_s.start_with?("/api/")
 
-      if allowed?(origin)
+      if allowed?(origin, env)
         if env["REQUEST_METHOD"] == "OPTIONS"
           [ 204, cors_headers(origin).merge("Content-Length" => "0"), [] ]
         else
@@ -30,14 +30,22 @@ module Docket
 
     private
 
-    def allowed?(origin)
-      allowed_origins.include?(origin)
+    def allowed?(origin, env)
+      allowed_origins(env).include?(origin)
     rescue ActiveRecord::ActiveRecordError # NoDatabaseError is a subclass — covered.
       false
     end
 
-    def allowed_origins
-      Setting.get("cors_allowed_origins").to_s.split(",").map(&:strip).reject(&:blank?)
+    # CORS runs before TenantResolution, so resolve the tenant from the host
+    # here and read the allowlist in that tenant's scope — otherwise every
+    # tenant shares the global setting and one tenant's origin is honored on
+    # all subdomains (M1). Unknown subdomain (shared) → no app → no CORS.
+    def allowed_origins(env)
+      tenant = Tenant.resolve_by_subdomain(ActionDispatch::Request.new(env).subdomain)
+      return [] if tenant.nil?
+      ActsAsTenant.with_tenant(tenant) do
+        Setting.get("cors_allowed_origins").to_s.split(",").map(&:strip).reject(&:blank?)
+      end
     end
 
     def cors_headers(origin)

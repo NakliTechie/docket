@@ -2,7 +2,7 @@ require "test_helper"
 
 class DealsTest < ActionDispatch::IntegrationTest
   test "the kanban board renders stage columns for the default pipeline" do
-    sign_in_as users(:agent_a)
+    sign_in_as users(:sales) # deal:read holder (customer_service is correctly denied — H2)
     Deal.create!(name: "On the board", pipeline: pipelines(:sales))
     get deals_path
     assert_response :success

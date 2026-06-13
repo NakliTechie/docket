@@ -16,12 +16,8 @@ module TenantResolution
   private
 
   def resolve_tenant
-    if Tenant.shared_deployment?
-      tenant = Tenant.active.find_by(subdomain: request.subdomain.presence)
-      return head(:not_found) if tenant.nil? # unknown subdomain → no app here
-    else
-      tenant = Tenant.primary
-    end
+    tenant = Tenant.resolve_by_subdomain(request.subdomain)
+    return head(:not_found) if tenant.nil? && Tenant.shared_deployment? # unknown subdomain → no app here
 
     Current.tenant = tenant
     ActsAsTenant.current_tenant = tenant

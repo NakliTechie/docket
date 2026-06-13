@@ -8,7 +8,7 @@ class OrganisationPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      user.present? ? scope.all : scope.none
+      permit?("contact:read") ? scope.all : scope.none
     end
   end
 end

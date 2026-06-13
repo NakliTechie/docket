@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_243000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_255000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -74,6 +74,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_243000) do
 
   create_table "approval_requests", force: :cascade do |t|
     t.integer "approval_process_id", null: false
+    t.datetime "consumed_at"
     t.datetime "created_at", null: false
     t.datetime "decided_at"
     t.integer "decided_by_id"
@@ -549,9 +550,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_243000) do
     t.string "ip_address"
     t.string "kind", null: false
     t.json "metadata"
+    t.integer "tenant_id"
     t.string "user_agent"
     t.index ["created_at"], name: "index_security_events_on_created_at"
     t.index ["kind"], name: "index_security_events_on_kind"
+    t.index ["tenant_id"], name: "index_security_events_on_tenant_id"
   end
 
   create_table "sequence_enrollments", force: :cascade do |t|
@@ -787,6 +790,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_243000) do
   add_foreign_key "routing_rules", "queues", column: "then_queue_id"
   add_foreign_key "routing_rules", "tenants"
   add_foreign_key "routing_rules", "users", column: "then_assignee_id"
+  add_foreign_key "security_events", "tenants"
   add_foreign_key "sequence_enrollments", "sequences"
   add_foreign_key "sequence_enrollments", "tenants"
   add_foreign_key "sequence_steps", "sequences"

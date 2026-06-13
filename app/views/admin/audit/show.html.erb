@@ -5,7 +5,9 @@
 
 <div class="panel">
   <h2 class="panel-title"><%= t(".chain_status") %></h2>
-  <% if @verification[:ok] %>
+  <% if @verification.nil? %>
+    <p class="muted"><%= t(".verification_platform_only") %></p>
+  <% elsif @verification[:ok] %>
     <p>
       <span class="badge badge-sla sla-ok"><%= icon "shield" %> <%= t(".intact") %></span>
       <%= t(".intact_detail", count: @verification[:count]) %>
