@@ -94,4 +94,20 @@ class ApprovalGateTest < ActiveSupport::TestCase
     assert fresh.status_pending?
     assert_not_equal req.id, fresh.id, "the second closure needs its own sign-off, not the spent one"
   end
+
+  # W3 — model-driven transitions (citizen-reply auto-reopen) go through the gate.
+  test "a guarded reopen parks a citizen-reply reopen instead of bypassing the gate" do
+    ApprovalProcess.create!(name: "Reopen sign-off", trigger_type: :case_transition, trigger_key: "reopened")
+    kase = resolved_case
+    kase.messages.create!(kind: :public_reply, direction: :inbound, author: contacts(:asha), body: "still broken")
+
+    assert kase.reload.status_resolved?, "the guarded reopen parked — case stays resolved"
+    assert kase.approval_requests.status_pending.exists?(requested_action: "reopened")
+  end
+
+  test "without a guard, a citizen reply reopens the case as before" do
+    kase = resolved_case
+    kase.messages.create!(kind: :public_reply, direction: :inbound, author: contacts(:asha), body: "still broken")
+    assert kase.reload.status_reopened?
+  end
 end

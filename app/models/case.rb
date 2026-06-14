@@ -132,6 +132,21 @@ class Case < ApplicationRecord
     false
   end
 
+  # Maker-checker-aware transition (W3). If an ApprovalProcess guards this target
+  # status and there's no fresh approval, park a pending request and return
+  # false (the transition did NOT happen); otherwise transition and return true.
+  # Used by every HUMAN- or model-initiated transition (controller + the
+  # citizen-reply auto-reopen) so the gate isn't bypassable off the controller
+  # path. The approver's own apply calls transition_to! directly (no re-gate).
+  def guarded_transition_to(new_status, requested_by: nil)
+    if ApprovalGate.guarded_transition?(self, new_status) && !ApprovalGate.transition_cleared?(self, new_status)
+      ApprovalGate.submit_transition!(self, new_status, requested_by: requested_by)
+      return false
+    end
+    transition_to!(new_status)
+    true
+  end
+
   def open?
     OPEN_STATUSES.include?(status)
   end

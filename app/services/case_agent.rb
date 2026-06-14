@@ -57,7 +57,12 @@ class CaseAgent
     PROMPT
 
     result = hash_result(client.chat([ { role: "user", content: prompt } ], json: true))
+    # Only APPLY the queue/category/priority when confident; but always complete
+    # triage so a low-confidence case enters the human work flow instead of
+    # lingering in `new` with an unseen AI draft (L1). route is the single
+    # triage-completion point.
     apply_routing(result) if result["confidence"].to_f >= threshold("ai_route_confidence", ROUTE_CONFIDENCE_DEFAULT)
+    kase.transition_to!(:triaged) if kase.status_new?
     log_turn("route", prompt, result)
     result
   end
@@ -72,7 +77,6 @@ class CaseAgent
       category: category || kase.category,
       priority: priority || kase.priority
     })
-    kase.transition_to!(:triaged)
   end
 
   def draft

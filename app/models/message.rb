@@ -59,10 +59,14 @@ class Message < ApplicationRecord
   def reopen_conversation_on_citizen_reply
     return unless direction_inbound? && from_citizen?
 
+    # Route through the maker-checker gate (W3): if a tenant guards
+    # in_progress/reopened, the auto-reopen parks for approval instead of
+    # bypassing the gate off the controller path. Unguarded → transitions as
+    # before. requested_by nil = system/citizen-initiated.
     if self.case.status_waiting_on_citizen?
-      self.case.transition_to!(:in_progress)
+      self.case.guarded_transition_to(:in_progress)
     elsif self.case.status_resolved?
-      self.case.transition_to!(:reopened)
+      self.case.guarded_transition_to(:reopened)
     end
   end
 
