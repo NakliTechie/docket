@@ -171,4 +171,15 @@ class CaseAgentTest < ActiveSupport::TestCase
     # No routing/resolution applied, but the job survived.
     refute kase.reload.status_resolved?
   end
+
+  test "a low-confidence route still completes triage but applies no routing (L1)" do
+    kase = build_case
+    low = Object.new
+    def low.chat(_messages, **_opts)
+      { "queue_slug" => "pensions", "confidence" => 0.1, "rationale" => "unsure" }
+    end
+    CaseAgent.new(kase, client: low).send(:route)
+    assert kase.reload.status_triaged?, "low confidence → triaged, not left in new"
+    assert_nil kase.queue, "low confidence → no queue/category/priority applied"
+  end
 end
