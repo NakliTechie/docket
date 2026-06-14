@@ -46,13 +46,13 @@ class AssistsController < ApplicationController
     last_inbound = @case.messages.where(direction: :inbound).order(:created_at).last
     prompt = <<~PROMPT
       [TASK:suggest]
-      Draft a reply for a staff member to send to the citizen. Be concrete, polite, and grounded ONLY in the context provided. Do not invent case facts.
+      Draft a reply for a staff member to send to the customer. Be concrete, polite, and grounded ONLY in the context provided. Do not invent case facts.
       #{Llm.fence_instruction}
       Subject:
       #{Llm.fence(@case.subject)}
       Original request:
       #{Llm.fence(@case.description.presence || @case.messages.where(direction: :inbound).order(:created_at).first&.body || "")}
-      Latest citizen message:
+      Latest customer message:
       #{Llm.fence(last_inbound&.body&.truncate(1500) || "(none)")}
       Grounding:
       #{grounding.map { |g| "- #{g.title}: #{g.text.truncate(600)}" }.join("\n").presence || "(none)"}

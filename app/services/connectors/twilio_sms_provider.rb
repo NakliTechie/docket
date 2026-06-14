@@ -2,7 +2,7 @@ module Connectors
   # Effector-only provider: send an SMS via Twilio's REST API. Auth is HTTP
   # Basic with the Account SID as the user and the Auth Token as the password
   # (vaulted). The Messages endpoint is form-encoded and returns 201 Created on
-  # a successful enqueue. Sending a message to a citizen is :confirm — the AI
+  # a successful enqueue. Sending a message to a customer is :confirm — the AI
   # prepares the send and a human confirms before it goes out.
   class TwilioSmsProvider < HttpProvider
     DEFAULT_BASE = "https://api.twilio.com".freeze

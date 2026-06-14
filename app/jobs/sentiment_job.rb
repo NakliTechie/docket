@@ -1,4 +1,4 @@
-# Flags sentiment on inbound citizen messages (staff assist, §4).
+# Flags sentiment on inbound customer messages (staff assist, §4).
 # Stored in message metadata; rendered as a chip in the console.
 class SentimentJob < ApplicationJob
   queue_as :default
@@ -12,7 +12,7 @@ class SentimentJob < ApplicationJob
 
     prompt = <<~PROMPT
       [TASK:sentiment]
-      Classify the sentiment of this citizen message as positive, neutral, or negative.
+      Classify the sentiment of this customer message as positive, neutral, or negative.
       Message: #{message.body.truncate(2000)}
       Respond with JSON: {"sentiment": ..., "confidence": 0.0-1.0}
     PROMPT

@@ -35,7 +35,7 @@ module Portal
       # Case + initial message are created together: if a file is rejected
       # (disallowed type / oversize), the message raises RecordInvalid and
       # the whole thing rolls back, so we never persist an orphaned case or
-      # 500 the citizen (H7).
+      # 500 the customer (H7).
       Case.transaction do
         @case.save!
         @case.messages.create!(kind: :public_reply, direction: :inbound,

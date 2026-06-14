@@ -92,7 +92,7 @@ class CaseAgentTest < ActiveSupport::TestCase
     assert kase.messages.where(kind: :agent_turn).exists?, "the public reply must still be sent"
   end
 
-  test "citizen content is fenced as untrusted data in the prompts (M20)" do
+  test "customer content is fenced as untrusted data in the prompts (M20)" do
     captured = []
     stub = Object.new
     stub.define_singleton_method(:chat) do |messages, **|
@@ -108,8 +108,8 @@ class CaseAgentTest < ActiveSupport::TestCase
     CaseAgent.new(kase, client: stub).run
 
     captured.each do |prompt|
-      assert_includes prompt, Llm::FENCE_LABEL, "prompt should fence citizen input"
-      # the citizen text appears inside a fence, with the instruction present
+      assert_includes prompt, Llm::FENCE_LABEL, "prompt should fence customer input"
+      # the customer text appears inside a fence, with the instruction present
       assert_includes prompt, "untrusted"
     end
   end
@@ -149,14 +149,14 @@ class CaseAgentTest < ActiveSupport::TestCase
     assert_equal "negative", message.reload.sentiment
   end
 
-  test "retrieval grounds on reference docs only, never other citizens' cases (L)" do
+  test "retrieval grounds on reference docs only, never other customers' cases (L)" do
     ReferenceDoc.create!(title: "Pension SOP", body: "Pension arrears are corrected within 3 days.")
     # A resolved case mentioning the same terms must NOT be grounded — that
-    # would leak one citizen's case text into another's draft.
+    # would leak one customer's case text into another's draft.
     kase = Case.create!(subject: "Pension arrears delay", description: "pension arrears unpaid",
                         contact: contacts(:asha), status: :resolved)
     kase.messages.create!(kind: :public_reply, direction: :outbound, author: users(:agent_a),
-                          body: "Resolution mentions a sensitive citizen detail")
+                          body: "Resolution mentions a sensitive customer detail")
 
     results = Retrieval.grounding_for("pension arrears delay")
     assert results.any? { |r| r.source == "reference_doc" && r.title == "Pension SOP" }

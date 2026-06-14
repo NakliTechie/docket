@@ -13,10 +13,10 @@ module Api
         assert_equal "https://app.test", response.parsed_body.dig("data", "cors_allowed_origins")
       end
 
-      # L3 — a citizen (on_behalf_of) message can't be filed as a staff-only
+      # L3 — a customer (on_behalf_of) message can't be filed as a staff-only
       # internal note; it's forced to a public reply.
       test "an on-behalf-of message can't be an internal note" do
-        kase = Case.create!(subject: "Citizen reply", channel: :web_portal, contact: contacts(:asha))
+        kase = Case.create!(subject: "Customer reply", channel: :web_portal, contact: contacts(:asha))
         token = service_token_for(%w[cases:write contacts:write])
         post "/api/v1/cases/#{kase.id}/messages",
              params: { on_behalf_of: "cust-1", contact: { name: "Cust" },

@@ -1,4 +1,4 @@
-# A citizen/customer. +external_id+ is the operator's own customer
+# A customer/customer. +external_id+ is the operator's own customer
 # identifier (e.g. a bank CIF) — the join key for headless integration
 # and customer SSO (handoff §2).
 class Contact < ApplicationRecord

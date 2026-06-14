@@ -17,7 +17,7 @@ class ConnectorInvocationsTest < ActionDispatch::IntegrationTest
   def propose(on_behalf_of: "case:1")
     Connectors::Invoke.call(connector, "post_json",
       args: { "body" => { "x" => 1 } }, principal: agent,
-      on_behalf_of: on_behalf_of, reasoning: "citizen requested it")
+      on_behalf_of: on_behalf_of, reasoning: "customer requested it")
   end
 
   # --- network stub ---
@@ -51,7 +51,7 @@ class ConnectorInvocationsTest < ActionDispatch::IntegrationTest
 
     get admin_connector_invocation_path(inv)
     assert_response :success
-    assert_match "citizen requested it", response.body
+    assert_match "customer requested it", response.body
   end
 
   test "admin approves a proposed action and it executes as the human-of-record" do

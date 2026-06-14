@@ -1,6 +1,6 @@
 require "test_helper"
 
-# PG3 — the knowledge-base product surfaces: the public citizen portal KB, the
+# PG3 — the knowledge-base product surfaces: the public customer portal KB, the
 # in-console staff search, and admin lifecycle controls.
 class KnowledgeBaseTest < ActionDispatch::IntegrationTest
   def public_article

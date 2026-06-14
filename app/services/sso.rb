@@ -39,7 +39,7 @@ module Sso
   end
 
   # JSON mapping of claim value → docket role, e.g.
-  # {"docket-admins": "client_admin", "grievance-leads": "technical"}
+  # {"docket-admins": "client_admin", "support-leads": "technical"}
   def staff_role_mapping
     raw = setting("sso_staff_role_mapping", "DOCKET_STAFF_ROLE_MAPPING")
     return {} if raw.blank?

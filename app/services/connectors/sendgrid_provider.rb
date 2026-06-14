@@ -2,7 +2,7 @@ module Connectors
   # Effector-only provider: send a transactional email via SendGrid's v3 API.
   # Auth is a Bearer API key (vaulted). The sender address is operator config
   # (from_email), so the agent only supplies recipient/subject/body. Emailing
-  # a citizen is rights-touching comms → :confirm (a human reviews before it
+  # a customer is rights-touching comms → :confirm (a human reviews before it
   # goes out). SendGrid signals success with HTTP 202; ensure_ok! accepts any
   # 2xx, which covers it.
   class SendgridProvider < HttpProvider

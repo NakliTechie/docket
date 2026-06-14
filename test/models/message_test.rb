@@ -22,21 +22,21 @@ class MessageTest < ActiveSupport::TestCase
     assert kase.reload.first_responded_at.present?
   end
 
-  test "citizen reply moves waiting case back to in_progress" do
+  test "customer reply moves waiting case back to in_progress" do
     kase = cases(:waiting_case)
     Message.create!(case: kase, kind: :public_reply, direction: :inbound,
                     author: contacts(:asha), body: "Here is the info you asked for.")
     assert_equal "in_progress", kase.reload.status
   end
 
-  test "citizen reply does not move other statuses" do
+  test "customer reply does not move other statuses" do
     kase = cases(:assigned_case)
     Message.create!(case: kase, kind: :public_reply, direction: :inbound,
                     author: contacts(:ravi), body: "Any update?")
     assert_equal "in_progress", kase.reload.status
   end
 
-  test "citizen reply on a resolved case reopens it (M13)" do
+  test "customer reply on a resolved case reopens it (M13)" do
     kase = cases(:resolved_case)
     Message.create!(case: kase, kind: :public_reply, direction: :inbound,
                     author: kase.contact, body: "This still isn't fixed.")

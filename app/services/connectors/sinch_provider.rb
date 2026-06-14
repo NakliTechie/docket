@@ -4,7 +4,7 @@ module Connectors
   # operator config; the service_plan_id is interpolated into the batches path.
   # Sinch's batch endpoint takes a JSON body whose `to` is an ARRAY of
   # recipients and returns 201 Created on a successful enqueue. Sending a
-  # message to a citizen is rights-touching comms → :confirm (the AI prepares
+  # message to a customer is rights-touching comms → :confirm (the AI prepares
   # the send and a human confirms before it goes out).
   class SinchProvider < HttpProvider
     DEFAULT_BASE = "https://us.sms.api.sinch.com".freeze

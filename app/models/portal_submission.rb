@@ -1,4 +1,4 @@
-# Form object for the anonymous portal: validates citizen input,
+# Form object for the anonymous portal: validates customer input,
 # upserts the Contact by email/phone, creates the Case and its initial
 # inbound message (which carries any attachments).
 class PortalSubmission

@@ -2,7 +2,7 @@ module Connectors
   # Effector-only provider: send WhatsApp messages to a customer via the Meta
   # WhatsApp Business Cloud API (Graph API). Auth is a Bearer access_token
   # (vaulted) in the Authorization header; the phone_number_id is a config
-  # value. Both sends are citizen-facing comms → :confirm (a human reviews the
+  # value. Both sends are customer-facing comms → :confirm (a human reviews the
   # outbound message before it goes out). Free-form text is only valid inside
   # the 24h customer-service window; a pre-approved template is the only way to
   # message outside it.

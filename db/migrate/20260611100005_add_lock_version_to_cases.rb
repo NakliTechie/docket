@@ -1,4 +1,4 @@
-# Optimistic locking on cases: two staff (or a staff edit racing a citizen
+# Optimistic locking on cases: two staff (or a staff edit racing a customer
 # reply) acting on the same case no longer silently clobber each other —
 # the stale write raises ActiveRecord::StaleObjectError, surfaced as a
 # "reload and retry" message (console) / 409 (API), and retried in jobs.

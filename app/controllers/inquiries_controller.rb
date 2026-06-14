@@ -1,5 +1,5 @@
 # Public, unauthenticated lead-capture form (v1.2 CRM) — a sales prospect
-# "get in touch" form, separate from the grievance portal. Rate-limited by
+# "get in touch" form, separate from the case/support portal. Rate-limited by
 # Rack::Attack. Lives outside the staff session/policy world.
 class InquiriesController < ApplicationController
   allow_unauthenticated_access

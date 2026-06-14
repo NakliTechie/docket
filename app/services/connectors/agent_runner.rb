@@ -134,7 +134,7 @@ module Connectors
 
     def system_message
       { role: "system", content: <<~SYS }
-        You are an AI case-handling agent for a public grievance service desk. You act on ONE case by
+        You are an AI case-handling agent for a customer service desk. You act on ONE case by
         calling the available tools. #{Llm.fence_instruction}
         Rules:
         - Call a tool only when it genuinely advances resolving THIS case.

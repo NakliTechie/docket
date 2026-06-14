@@ -1,7 +1,7 @@
 dpg:
   tenant: primary
-  name: Directorate of Public Grievances
-  kind: department
+  name: Northwind Trading Co.
+  kind: company
 
 branch:
   tenant: primary

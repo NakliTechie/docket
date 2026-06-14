@@ -1,6 +1,6 @@
 require "test_helper"
 
-# MSG91 (citizen SMS — confirm) and Razorpay (payment read — autonomous;
+# MSG91 (customer SMS — confirm) and Razorpay (payment read — autonomous;
 # refund — of_record). The easy batch, showcasing the decision-class range.
 class Connectors::PaymentCommsProvidersTest < ActiveSupport::TestCase
   # --- capturing HTTP stub ---
@@ -42,17 +42,17 @@ class Connectors::PaymentCommsProvidersTest < ActiveSupport::TestCase
     end
   end
 
-  # --- MSG91 (citizen comms → confirm) ---
+  # --- MSG91 (customer comms → confirm) ---
 
   def msg91
-    conn = Connector.create!(name: "Citizen SMS", provider: "msg91",
+    conn = Connector.create!(name: "Customer SMS", provider: "msg91",
       config: { "template_id" => "T123", "sender_id" => "DOCKET" })
     conn.credentials_hash = { "authkey" => "secret-key" }
     conn.save!
     conn
   end
 
-  test "msg91 send_sms is a confirm action (citizen-facing comms need review)" do
+  test "msg91 send_sms is a confirm action (customer-facing comms need review)" do
     assert_equal :confirm, Connectors::Msg91Provider.action("send_sms").effective_decision_class
   end
 

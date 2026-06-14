@@ -1,4 +1,4 @@
-# Outbound mail to citizens: submission confirmation and public-reply
+# Outbound mail to customers: submission confirmation and public-reply
 # notifications. Subjects carry the tracking ID so email replies thread
 # back onto the case (CasesMailbox). Localised to the contact's
 # preferred language.

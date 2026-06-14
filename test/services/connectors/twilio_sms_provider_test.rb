@@ -42,7 +42,7 @@ class Connectors::TwilioSmsProviderTest < ActiveSupport::TestCase
     assert_equal %w[account_sid from base_url], d.config_fields
   end
 
-  test "send_sms is a :confirm action (a human confirms before a citizen send goes out)" do
+  test "send_sms is a :confirm action (a human confirms before a customer send goes out)" do
     action = Connectors::TwilioSmsProvider.action("send_sms")
     assert_equal :confirm, action.effective_decision_class
     assert action.requires_approval?

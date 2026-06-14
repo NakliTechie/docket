@@ -85,7 +85,7 @@
     </div>
     <div class="form-row">
       <%= label_tag :outbound_email_from, t(".fields.outbound_email_from") %>
-      <%= text_field_tag :outbound_email_from, Setting.get("outbound_email_from"), placeholder: "grievances@example.gov.in" %>
+      <%= text_field_tag :outbound_email_from, Setting.get("outbound_email_from"), placeholder: "support@example.com" %>
     </div>
   </fieldset>
 
@@ -98,7 +98,7 @@
     </div>
     <div class="form-row">
       <%= label_tag :app_base_url, t(".fields.app_base_url") %>
-      <%= text_field_tag :app_base_url, Setting.get("app_base_url"), placeholder: "https://grievances.example.gov.in" %>
+      <%= text_field_tag :app_base_url, Setting.get("app_base_url"), placeholder: "https://support.example.com" %>
       <p class="form-hint"><%= t(".fields.app_base_url_hint") %></p>
     </div>
   </fieldset>
@@ -126,7 +126,7 @@
     <div class="form-row">
       <%= label_tag :sso_staff_role_mapping, t(".fields.role_mapping") %>
       <%= text_field_tag :sso_staff_role_mapping, Setting.get("sso_staff_role_mapping"),
-            placeholder: '{"docket-admins": "admin", "grievance-leads": "supervisor"}' %>
+            placeholder: '{"docket-admins": "client_admin", "support-leads": "technical"}' %>
       <p class="form-hint"><%= t(".fields.role_mapping_hint") %></p>
     </div>
     <div class="form-row">

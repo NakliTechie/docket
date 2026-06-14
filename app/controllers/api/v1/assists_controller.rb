@@ -26,7 +26,7 @@ module Api
       def suggest_reply
         authorize_api!(@case, :update?, scope: "cases:write")
         grounding = Retrieval.grounding_for("#{@case.subject} #{@case.description}")
-        prompt = "[TASK:suggest]\nDraft a grounded reply to the citizen.\nSubject: #{@case.subject}\nGrounding:\n#{grounding.map { |g| "- #{g.title}: #{g.text.truncate(600)}" }.join("\n")}"
+        prompt = "[TASK:suggest]\nDraft a grounded reply to the customer.\nSubject: #{@case.subject}\nGrounding:\n#{grounding.map { |g| "- #{g.title}: #{g.text.truncate(600)}" }.join("\n")}"
         render json: { data: { suggestion: client.chat([ { role: "user", content: prompt } ], read_timeout: INTERACTIVE_READ_TIMEOUT) } }
       rescue Llm::Error => e
         render_error("llm_failed", detail: e.message, status: :bad_gateway)

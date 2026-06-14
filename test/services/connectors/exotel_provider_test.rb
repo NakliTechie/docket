@@ -1,6 +1,6 @@
 require "test_helper"
 
-# Exotel transactional SMS (citizen-facing comms → confirm). HTTP Basic auth
+# Exotel transactional SMS (customer-facing comms → confirm). HTTP Basic auth
 # with api_key:api_token, POST /v1/Accounts/{account_sid}/Sms/send.json with a
 # form-encoded { From, To, Body }.
 class Connectors::ExotelProviderTest < ActiveSupport::TestCase
@@ -46,7 +46,7 @@ class Connectors::ExotelProviderTest < ActiveSupport::TestCase
     assert_equal %w[account_sid from base_url], d.config_fields
   end
 
-  test "send_sms is a :confirm action (a human confirms before a citizen send goes out)" do
+  test "send_sms is a :confirm action (a human confirms before a customer send goes out)" do
     action = Connectors::ExotelProvider.action("send_sms")
     assert_equal :write, action.effect
     assert_equal :confirm, action.effective_decision_class

@@ -43,7 +43,7 @@ class Connectors::SinchProviderTest < ActiveSupport::TestCase
     assert_equal %w[service_plan_id from base_url], d.config_fields
   end
 
-  test "send_sms is a :confirm action (a human confirms before a citizen send goes out)" do
+  test "send_sms is a :confirm action (a human confirms before a customer send goes out)" do
     action = Connectors::SinchProvider.action("send_sms")
     assert_equal :write, action.effect
     assert_equal :confirm, action.effective_decision_class

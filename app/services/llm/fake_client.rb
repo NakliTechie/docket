@@ -13,7 +13,7 @@ module Llm
       elsif json && text.include?("[TASK:sentiment]")
         sentiment_response(text)
       elsif text.include?("[TASK:summarise]")
-        "Summary: the citizen reports a service issue; the team has acknowledged it and the case is being processed. Next step: confirm resolution with the citizen."
+        "Summary: the customer reports a service issue; the team has acknowledged it and the case is being processed. Next step: confirm resolution with the customer."
       elsif text.include?("[TASK:suggest]")
         "Thank you for the details. We have reviewed your case and are taking the following steps to resolve it. We will update you here as soon as the action is complete."
       else

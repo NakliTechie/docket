@@ -4,7 +4,7 @@ module Connectors
   # ("docket") and the password is the vaulted api_key, per Mailchimp's
   # convention. The base is derived per-tenant from the datacenter
   # server_prefix (e.g. "us21"): https://{server_prefix}.api.mailchimp.com.
-  # Adding a member writes a citizen contact into a marketing audience, so it
+  # Adding a member writes a customer contact into a marketing audience, so it
   # defaults to :confirm — the AI drafts, a human confirms before the contact
   # is subscribed.
   class MailchimpProvider < HttpProvider

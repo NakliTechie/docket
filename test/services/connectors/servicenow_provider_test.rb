@@ -48,7 +48,7 @@ class Connectors::ServicenowProviderTest < ActiveSupport::TestCase
     assert_equal [], provider.fetch
   end
 
-  # --- decision class (citizen-facing ITSM write needs a human) ---
+  # --- decision class (customer-facing ITSM write needs a human) ---
 
   test "create_incident is a confirm-class write" do
     assert_equal :confirm, Connectors::ServicenowProvider.action("create_incident").effective_decision_class

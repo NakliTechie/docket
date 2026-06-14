@@ -26,7 +26,7 @@ waiting_case:
   subject: Streetlight broken
   tracking_id: DKT-TEST-4567
   channel: web_portal
-  status: waiting_on_citizen
+  status: waiting_on_customer
   priority: low
   queue: sanitation
   contact: asha

@@ -127,7 +127,7 @@ module DemoScenarios
       [ "General", "Everything not yet routed" ]
     ],
     categories: [ "Pension delay", "Garbage collection", "Water supply", "Street lighting", "Card services", "Account services", "Other" ],
-    sla: { standard: "Standard citizen service", priority: "Priority banking" },
+    sla: { standard: "Standard customer service", priority: "Priority banking" },
     kb: [
       [ "Pension disbursement SOP", "SOP-PEN-12: Missing or delayed monthly pension credits are reconciled with the disbursing bank within 3 working days. The pensioner is informed on the case thread once the credit is confirmed. Multi-month arrears are escalated to the pension cell with priority high." ],
       [ "Water tanker request procedure", "SOP-WAT-04: Localities reporting supply disruption longer than 24 hours are entitled to a free water tanker, dispatched within 12 hours of verification. Scheduled-maintenance disruptions are announced in advance and do not qualify." ],

@@ -125,7 +125,7 @@ module Docket
 
       crud(result, "cases", "Case",
            extra_params: %w[q status priority queue_id assignee_id contact_id contact_external_id],
-           create_note: "Service accounts may pass on_behalf_of (contact external_id) plus an optional contact{} for upsert, and message_body for the initial citizen message. case[attachments]/case[files] attach to that initial message. Cases are addressable by numeric id or tracking ID.")
+           create_note: "Service accounts may pass on_behalf_of (contact external_id) plus an optional contact{} for upsert, and message_body for the initial customer message. case[attachments]/case[files] attach to that initial message. Cases are addressable by numeric id or tracking ID.")
       result["/cases/{id}/transition"] = { post: op("Transition case status through the state machine",
         params: [ id_param ], request: { status: enum(Case.statuses.keys) },
         responses: { "200" => "Transitioned", "422" => "Illegal transition" }) }

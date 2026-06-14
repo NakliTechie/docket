@@ -10,8 +10,8 @@ class ReferenceDoc < ApplicationRecord
   MAX_EXTRACT_BYTES = 20.megabytes
 
   # Article lifecycle (PG3). Only published docs ground the AI or show anywhere;
-  # only published + public reach the citizen portal. Internal+published is the
-  # private knowledge base (grounds the agent, invisible to citizens).
+  # only published + public reach the customer portal. Internal+published is the
+  # private knowledge base (grounds the agent, invisible to customers).
   enum :status, { draft: 0, published: 1 }, default: :published, prefix: :status
   # `public` collides with Module#public, so the enum predicates are prefixed.
   enum :visibility, { internal: 0, public: 1 }, default: :internal, prefix: :visibility
@@ -30,7 +30,7 @@ class ReferenceDoc < ApplicationRecord
 
   # Grounds the AI (both visibilities). Drafts never ground.
   scope :grounding, -> { status_published }
-  # The citizen-facing knowledge base.
+  # The customer-facing knowledge base.
   scope :public_kb, -> { status_published.visibility_public.order(:title) }
 
   def file_is_extractable

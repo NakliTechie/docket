@@ -3,7 +3,7 @@ module Connectors
   # Auth is API-key Basic auth — the api_key (vaulted) is the username and the
   # literal "X" is the password, per Freshdesk's v2 convention. The base is
   # derived per-tenant from the account subdomain:
-  # https://{domain}.freshdesk.com. Both writes touch citizen-facing support
+  # https://{domain}.freshdesk.com. Both writes touch customer-facing support
   # records, so each defaults to :confirm — the AI drafts, a human confirms
   # before it lands in the helpdesk.
   class FreshdeskProvider < HttpProvider
