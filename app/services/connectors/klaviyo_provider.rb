@@ -5,7 +5,7 @@ module Connectors
   # response envelope stays stable; it defaults to "2024-10-15" and an admin
   # can override it via the optional `revision` config. The single action
   # creates a profile (a subscriber) via the JSON:API endpoint; it writes a
-  # citizen contact into a marketing list, so it defaults to :confirm — the AI
+  # customer contact into a marketing list, so it defaults to :confirm — the AI
   # drafts, a human confirms before the profile lands in Klaviyo.
   class KlaviyoProvider < HttpProvider
     DEFAULT_BASE = "https://a.klaviyo.com".freeze

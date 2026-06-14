@@ -46,7 +46,7 @@ class ApprovalGateTest < ActiveSupport::TestCase
 
     assert_raises(ApprovalGate::Error) { ApprovalGate.approve!(req, approver: users(:client_admin), reason: " ") }
 
-    ApprovalGate.approve!(req, approver: users(:client_admin), reason: "Verified resolution with citizen.")
+    ApprovalGate.approve!(req, approver: users(:client_admin), reason: "Verified resolution with customer.")
     assert req.reload.status_approved?
     assert_equal users(:client_admin), req.decided_by
     assert kase.reload.status_closed?, "approval performs the guarded transition"
@@ -95,8 +95,8 @@ class ApprovalGateTest < ActiveSupport::TestCase
     assert_not_equal req.id, fresh.id, "the second closure needs its own sign-off, not the spent one"
   end
 
-  # W3 — model-driven transitions (citizen-reply auto-reopen) go through the gate.
-  test "a guarded reopen parks a citizen-reply reopen instead of bypassing the gate" do
+  # W3 — model-driven transitions (customer-reply auto-reopen) go through the gate.
+  test "a guarded reopen parks a customer-reply reopen instead of bypassing the gate" do
     ApprovalProcess.create!(name: "Reopen sign-off", trigger_type: :case_transition, trigger_key: "reopened")
     kase = resolved_case
     kase.messages.create!(kind: :public_reply, direction: :inbound, author: contacts(:asha), body: "still broken")
@@ -105,7 +105,7 @@ class ApprovalGateTest < ActiveSupport::TestCase
     assert kase.approval_requests.status_pending.exists?(requested_action: "reopened")
   end
 
-  test "without a guard, a citizen reply reopens the case as before" do
+  test "without a guard, a customer reply reopens the case as before" do
     kase = resolved_case
     kase.messages.create!(kind: :public_reply, direction: :inbound, author: contacts(:asha), body: "still broken")
     assert kase.reload.status_reopened?

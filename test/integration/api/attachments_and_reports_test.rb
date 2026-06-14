@@ -108,7 +108,7 @@ module Api
       assert_equal "site.png", message["attachments"].first["filename"]
     end
 
-    test "on-behalf-of service account can attach citizen evidence" do
+    test "on-behalf-of service account can attach customer evidence" do
       token = service_token_for(%w[cases:write contacts:write])
       post "/api/v1/cases/#{cases(:waiting_case).id}/messages", params: {
         on_behalf_of: contacts(:ravi).external_id,

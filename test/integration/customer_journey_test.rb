@@ -1,12 +1,12 @@
 require "test_helper"
 
 # Gate G2 artifact: the full service loop —
-# citizen submits → agent replies → resolve → reopen.
-class CitizenJourneyTest < ActionDispatch::IntegrationTest
+# customer submits → agent replies → resolve → reopen.
+class CustomerJourneyTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
 
   test "full loop: submit, triage, reply, resolve, reopen" do
-    # Citizen files via the public portal.
+    # Customer files via the public portal.
     post portal_cases_path, params: { portal_submission: {
       name: "Kavita Sharma", email: "kavita@example.com",
       subject: "Pension arrears pending",
@@ -21,7 +21,7 @@ class CitizenJourneyTest < ActionDispatch::IntegrationTest
     post assign_case_path(kase), params: { assignee_id: users(:agent_a).id }
     post transition_case_path(kase), params: { status: "in_progress" }
 
-    # Agent replies publicly — citizen is emailed, first response stamped.
+    # Agent replies publicly — customer is emailed, first response stamped.
     assert_enqueued_emails 1 do
       post case_messages_path(kase), params: { message: {
         body: "Your arrears have been processed and will credit within 3 days.",
@@ -35,7 +35,7 @@ class CitizenJourneyTest < ActionDispatch::IntegrationTest
     assert_equal "resolved", kase.reload.status
     assert kase.resolved_at.present?
 
-    # Citizen disputes via the portal → reopen by staff.
+    # Customer disputes via the portal → reopen by staff.
     post portal_track_reply_path, params: {
       tracking_id: kase.tracking_id, contact_email: "kavita@example.com",
       body: "Credit has not arrived."

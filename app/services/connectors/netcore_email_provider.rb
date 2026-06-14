@@ -1,6 +1,6 @@
 module Connectors
   # Netcore Cloud transactional Email (Pepipost lineage), v6 API. Static API-key
-  # credential. Sending is :confirm — citizen/customer-facing comms get a human
+  # credential. Sending is :confirm — customer/customer-facing comms get a human
   # review. Effector-only. Per-channel decomposition (email/SMS/WhatsApp are
   # separate providers) matches the catalogue convention and Netcore's three
   # distinct hosts + auth schemes.

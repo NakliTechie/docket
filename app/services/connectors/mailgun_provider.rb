@@ -6,7 +6,7 @@ module Connectors
   # config, so the agent only supplies recipient/subject/body. The body is
   # form-encoded (Mailgun expects application/x-www-form-urlencoded), so we use
   # post_form. EU operators point base_url at https://api.eu.mailgun.net.
-  # Emailing a citizen is rights-touching comms → :confirm (a human reviews
+  # Emailing a customer is rights-touching comms → :confirm (a human reviews
   # before it goes out).
   class MailgunProvider < HttpProvider
     DEFAULT_BASE = "https://api.mailgun.net".freeze

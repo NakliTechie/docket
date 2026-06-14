@@ -3,7 +3,7 @@ module Connectors
   # Basic with the Auth ID as the user and the Auth Token as the password
   # (vaulted). The Message endpoint takes a JSON body { src, dst, text } and
   # returns 202 Accepted on a successful enqueue. Sending a message to a
-  # citizen is :confirm — the AI prepares the send and a human confirms
+  # customer is :confirm — the AI prepares the send and a human confirms
   # before it goes out.
   class PlivoProvider < HttpProvider
     DEFAULT_BASE = "https://api.plivo.com".freeze

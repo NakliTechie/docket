@@ -1,6 +1,6 @@
 # Docket — Vision & Roadmap
 
-**Sovereign case-management and citizen/customer-360 platform with an in-deployment agentic resolution layer. The free, public-code answer to Salesforce Service Cloud + Agentforce for the Indian public sector.**
+**Sovereign case-management and customer/customer-360 platform with an in-deployment agentic resolution layer. The free, public-code answer to Salesforce Service Cloud + Agentforce for the Indian public sector.**
 
 Track: standalone commercial venture (open-core). Sibling product to Parley — shared chassis and support-agent primitive, separate product, separate datastore, separate deployment story.
 
@@ -8,11 +8,11 @@ Track: standalone commercial venture (open-core). Sibling product to Parley — 
 
 ## 1. Why now
 
-Salesforce India has a dedicated public-sector unit, has launched Agentforce for Public Sector, is in talks with governments on agentic AI for citizen services, and is actively pitching PSBs on agentic layers for customer service (Bhattacharya, IANS, June 2026). The deal shape they are chasing with public money is **service + case management + AI agent** — not pipeline CRM.
+Salesforce India has a dedicated public-sector unit, has launched Agentforce for Public Sector, is in talks with governments on agentic AI for customer services, and is actively pitching PSBs on agentic layers for customer service (Bhattacharya, IANS, June 2026). The deal shape they are chasing with public money is **service + case management + AI agent** — not pipeline CRM.
 
 Docket contests exactly that deal shape with three arguments procurement cannot ignore:
 
-1. **Public funds → public code.** AGPL-3.0 core. Any department or bank can read, audit, and fork what runs on citizen data.
+1. **Public funds → public code.** AGPL-3.0 core. Any department or bank can read, audit, and fork what runs on customer data.
 2. **Data sovereignty by construction.** Self-hosted single-tenant on the buyer's infrastructure (MeghRaj/NIC cloud, bank datacenter, on-prem). The AI layer runs operator-owned models inside the deployment. Zero data egress to any foreign SaaS — not as policy, as architecture.
 3. **Zero per-seat licensing.** The line item Salesforce monetises is the line item Docket deletes from the RFP.
 
@@ -21,7 +21,7 @@ Docket contests exactly that deal shape with three arguments procurement cannot 
 One product, three capabilities:
 
 - **Case management** — intake, triage, lifecycle, SLA, escalation, closure, full audit trail. Grievances, service requests, support tickets: same object, different vocabulary per deployment.
-- **Citizen/customer 360** — every contact's full interaction history in one timeline: cases, communications, resolutions. The "single view" Salesforce sells as Customer 360.
+- **Customer/customer 360** — every contact's full interaction history in one timeline: cases, communications, resolutions. The "single view" Salesforce sells as Customer 360.
 - **Agentic resolution** — tier-1 cases resolved conversationally by an agent running on models inside the deployment (Ollama/vLLM endpoint), with confidence gating: resolve / draft-for-human-review / route-to-queue. BYOK frontier escape hatch available but off by default in sovereign deployments. Resolve-don't-deflect — Parley's locked principle, inherited.
 
 What Docket is **not** (not contested): forecasting, CPQ, territory management, AppExchange-style marketplace, marketing automation, Salesforce's integration sprawl. Sales-CRM objects arrive in v1.2 as a module, not the anchor.
@@ -49,7 +49,7 @@ What Docket is **not** (not contested): forecasting, CPQ, territory management, 
 - Core objects: Case, Contact, Organisation/Department, Queue, SLA policy, User/Role.
 - Intake: web portal form (public, no-login grievance submission with tracking ID) + inbound email.
 - Case lifecycle: statuses, assignment, queues, SLA timers, escalation rules, internal notes, public replies.
-- Citizen/customer 360 timeline per contact.
+- Customer/customer 360 timeline per contact.
 - Agentic resolution layer: in-deployment model endpoint (Ollama/vLLM, OpenAI-compatible API), knowledge grounded on closed-case corpus + uploaded docs, confidence-gated actions, full conversation log on the case.
 - Staff agent console: keyboard-first unified workspace — next-case hotkey, macros/canned responses, case + 360 side-by-side.
 - AI assist for staff: thread summarisation, sentiment flag, suggested reply in the console (same in-deployment model).
@@ -68,7 +68,7 @@ What Docket is **not** (not contested): forecasting, CPQ, territory management, 
 - **Assignment/workflow rules** — declarative routing (if category/priority/channel → queue, assignee, notify). Simple rules table, deliberately not a visual flow builder.
 - Knowledge base (public + internal articles; the agent's grounding corpus becomes a product surface).
 - CPGRAMS-compatible import/export.
-- Dashboards (department head view), escalation matrices, citizen satisfaction (CSAT) capture.
+- Dashboards (department head view), escalation matrices, customer satisfaction (CSAT) capture.
 - SMS intake/notification via pluggable gateway adapter (Netcore adapter = reference implementation).
 
 ### v1.2 — the CRM module + the fleet

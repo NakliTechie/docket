@@ -2,7 +2,7 @@ module Connectors
   # Effector-only provider: send an SMS via Exotel's REST API (a CPaaS popular
   # across India). Auth is HTTP Basic with the API key as the user and the API
   # token as the password (both vaulted); the account SID sits in the path and
-  # the Sms/send endpoint is form-encoded. Sending a message to a citizen is
+  # the Sms/send endpoint is form-encoded. Sending a message to a customer is
   # :confirm — the AI prepares the send and a human confirms before it goes out.
   class ExotelProvider < HttpProvider
     DEFAULT_BASE = "https://api.exotel.com".freeze

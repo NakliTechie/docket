@@ -198,7 +198,7 @@ td.actions, th.actions { text-align: right; white-space: nowrap; }
 .badge-status.status-new { background: var(--color-info-soft); color: var(--color-info); }
 .badge-status.status-triaged { background: var(--color-primary-soft); color: var(--color-primary); }
 .badge-status.status-in-progress { background: var(--color-warning-soft); color: var(--color-warning); }
-.badge-status.status-waiting-on-citizen { background: var(--color-paper-deep); color: var(--color-ink-soft); }
+.badge-status.status-waiting-on-customer { background: var(--color-paper-deep); color: var(--color-ink-soft); }
 .badge-status.status-resolved { background: var(--color-success-soft); color: var(--color-success); }
 .badge-status.status-closed { background: var(--color-paper-deep); color: var(--color-ink-faint); }
 .badge-status.status-reopened { background: var(--color-danger-soft); color: var(--color-danger); }

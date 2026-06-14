@@ -137,7 +137,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"case\": {\n    \"subject\": \"Pension not credited\",\n    \"contact_id\": 1,\n    \"priority\": \"high\",\n    \"queue_id\": 1,\n    \"message_body\": \"Citizen reports missing pension credit for May.\"\n  }\n}"
+              "raw": "{\n  \"case\": {\n    \"subject\": \"Pension not credited\",\n    \"contact_id\": 1,\n    \"priority\": \"high\",\n    \"queue_id\": 1,\n    \"message_body\": \"Customer reports missing pension credit for May.\"\n  }\n}"
             }
           }
         },

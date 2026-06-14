@@ -62,7 +62,7 @@ class ApprovalsTest < ActionDispatch::IntegrationTest
     assert kase.reload.status_resolved?, "the case is parked, not closed"
 
     req = kase.approval_requests.status_pending.last
-    post approve_admin_approval_request_path(req, reason: "Confirmed resolution with citizen.")
+    post approve_admin_approval_request_path(req, reason: "Confirmed resolution with customer.")
     assert kase.reload.status_closed?, "approval performs the guarded transition"
     assert req.reload.status_approved?
   end
@@ -73,7 +73,7 @@ class ApprovalsTest < ActionDispatch::IntegrationTest
     req = ApprovalGate.submit_transition!(kase, "closed", requested_by: users(:agent_a))
 
     sign_in_as users(:client_admin)
-    post reject_admin_approval_request_path(req, reason: "Citizen still disputes the outcome.")
+    post reject_admin_approval_request_path(req, reason: "Customer still disputes the outcome.")
     assert kase.reload.status_resolved?
     assert req.reload.status_rejected?
   end

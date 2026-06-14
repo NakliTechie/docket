@@ -53,7 +53,7 @@ class Connectors::WhatsappCloudProviderTest < ActiveSupport::TestCase
     assert_equal [], provider.fetch
   end
 
-  test "send_text_message is a confirm action (citizen-facing comms)" do
+  test "send_text_message is a confirm action (customer-facing comms)" do
     action = Connectors::WhatsappCloudProvider.action("send_text_message")
     assert_equal :confirm, action.effective_decision_class
     assert action.requires_approval?

@@ -1,6 +1,6 @@
 require "test_helper"
 
-# SendGrid transactional email (citizen-facing comms → confirm). Bearer API
+# SendGrid transactional email (customer-facing comms → confirm). Bearer API
 # key, POST /v3/mail/send, success is HTTP 202.
 class Connectors::SendgridProviderTest < ActiveSupport::TestCase
   class FakeResponse
@@ -33,7 +33,7 @@ class Connectors::SendgridProviderTest < ActiveSupport::TestCase
 
   # --- decision class ---
 
-  test "send_email is a confirm action (citizen-facing email needs review)" do
+  test "send_email is a confirm action (customer-facing email needs review)" do
     assert_equal :confirm, Connectors::SendgridProvider.action("send_email").effective_decision_class
     assert Connectors::SendgridProvider.action("send_email").requires_approval?
   end

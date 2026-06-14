@@ -1,6 +1,6 @@
 require "test_helper"
 
-# Mailgun transactional email (citizen-facing comms → confirm). Basic auth
+# Mailgun transactional email (customer-facing comms → confirm). Basic auth
 # "api":api_key, POST /v3/{domain}/messages, form-encoded body. domain + from
 # come from operator config; EU operators override base_url.
 class Connectors::MailgunProviderTest < ActiveSupport::TestCase
@@ -34,7 +34,7 @@ class Connectors::MailgunProviderTest < ActiveSupport::TestCase
 
   # --- decision class ---
 
-  test "send_email is a confirm action (citizen-facing email needs review)" do
+  test "send_email is a confirm action (customer-facing email needs review)" do
     assert_equal :confirm, Connectors::MailgunProvider.action("send_email").effective_decision_class
     assert Connectors::MailgunProvider.action("send_email").requires_approval?
   end

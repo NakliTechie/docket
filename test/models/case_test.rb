@@ -1,7 +1,7 @@
 require "test_helper"
 
 class CaseTest < ActiveSupport::TestCase
-  test "generates citizen-friendly unguessable tracking id on create" do
+  test "generates customer-friendly unguessable tracking id on create" do
     kase = Case.create!(subject: "Test", contact: contacts(:asha))
     assert_match(/\ADKT-[A-Z2-9]{4}-[A-Z2-9]{4}\z/, kase.tracking_id)
     refute_match(/[01OILU]/, kase.tracking_id.delete_prefix("DKT-"))
@@ -33,7 +33,7 @@ class CaseTest < ActiveSupport::TestCase
 
   test "walks the locked happy path" do
     kase = cases(:pension_case)
-    %w[triaged in_progress waiting_on_citizen in_progress resolved closed].each do |status|
+    %w[triaged in_progress waiting_on_customer in_progress resolved closed].each do |status|
       kase.transition_to!(status)
       assert_equal status, kase.reload.status
     end

@@ -2,7 +2,7 @@ module Connectors
   # Effector-only provider: open a ServiceNow incident via the Table API.
   # Auth is Basic auth (username:password, both vaulted). The base is derived
   # per-tenant from the instance name: https://{instance}.service-now.com.
-  # Opening an incident touches a citizen-facing ITSM record of work, so the
+  # Opening an incident touches a customer-facing ITSM record of work, so the
   # single write defaults to :confirm — the AI drafts, a human confirms before
   # it lands in the service desk.
   class ServicenowProvider < HttpProvider

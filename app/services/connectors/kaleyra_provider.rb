@@ -2,7 +2,7 @@ module Connectors
   # Effector-only provider: send an SMS via Kaleyra's v1 API (a CPaaS popular
   # across India / MENA). Auth is the `api-key` header (vaulted); the account
   # SID sits in the path and the Messages endpoint is form-encoded. Sending a
-  # message to a citizen is :confirm — the AI prepares the send and a human
+  # message to a customer is :confirm — the AI prepares the send and a human
   # confirms before it goes out.
   class KaleyraProvider < HttpProvider
     DEFAULT_BASE = "https://api.kaleyra.io".freeze

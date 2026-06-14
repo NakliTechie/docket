@@ -22,7 +22,7 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert_operator ConnectorInvocation.status_proposed.count, :>=, 2
     assert Sequence.exists?(name: "New-lead welcome")
 
-    %w[new triaged in_progress waiting_on_citizen resolved closed reopened].each do |status|
+    %w[new triaged in_progress waiting_on_customer resolved closed reopened].each do |status|
       assert Case.where(status: status).exists?, "expected at least one #{status} case"
     end
   end

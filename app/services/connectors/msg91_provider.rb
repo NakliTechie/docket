@@ -1,6 +1,6 @@
 module Connectors
-  # Effector-only provider: send a templated SMS to a citizen via MSG91 (the
-  # dominant India CPaaS). Auth is the `authkey` header (vaulted). Citizen-
+  # Effector-only provider: send a templated SMS to a customer via MSG91 (the
+  # dominant India CPaaS). Auth is the `authkey` header (vaulted). Customer-
   # facing comms default to :confirm — a human reviews before it goes out
   # (the connector can auto-approve it if the operator trusts the template).
   class Msg91Provider < HttpProvider
@@ -16,7 +16,7 @@ module Connectors
       [
         Action.new(
           key: "send_sms", name: "Send SMS",
-          summary: "Send a DLT-templated SMS to a citizen's mobile number via MSG91.",
+          summary: "Send a DLT-templated SMS to a customer's mobile number via MSG91.",
           params: {
             "type" => "object",
             "properties" => {

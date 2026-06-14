@@ -129,7 +129,7 @@ hi:
         new: "नया"
         triaged: "वर्गीकृत"
         in_progress: "प्रगति पर"
-        waiting_on_citizen: "ग्राहक की प्रतीक्षा में"
+        waiting_on_customer: "ग्राहक की प्रतीक्षा में"
         resolved: "समाधानित"
         closed: "बंद"
         reopened: "पुनः खोला गया"

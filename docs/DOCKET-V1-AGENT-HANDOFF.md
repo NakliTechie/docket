@@ -31,16 +31,16 @@ Operating rules:
 
 ## 2. Core objects (locked schema shape; columns are agent's call)
 
-- **Contact** — a citizen/customer. Identity fields, channel handles (email, phone), org link optional, `external_id` (unique, nullable) for the operator's own customer identifier (e.g. a bank CIF) — the join key for headless integration and customer SSO.
+- **Contact** — a customer/customer. Identity fields, channel handles (email, phone), org link optional, `external_id` (unique, nullable) for the operator's own customer identifier (e.g. a bank CIF) — the join key for headless integration and customer SSO.
 - **Organisation** — department/branch/company a contact belongs to.
-- **Case** — the anchor object. Subject, description, channel of origin, status, priority, category, queue, assignee, SLA policy, public tracking ID (unguessable, citizen-friendly format e.g. `DKT-7F3K-92QX`).
+- **Case** — the anchor object. Subject, description, channel of origin, status, priority, category, queue, assignee, SLA policy, public tracking ID (unguessable, customer-friendly format e.g. `DKT-7F3K-92QX`).
 - **Queue** — routing bucket with membership.
 - **SLAPolicy** — first-response + resolution targets per priority; timers and breach flags.
 - **Message** — threaded on Case: public reply, internal note, or agent (AI) turn. Direction + author type recorded.
 - **User** — staff. Roles: `admin`, `supervisor`, `agent`, `readonly`. Enforce via a single authorisation layer (Pundit or hand-rolled policy objects — agent's call, pick one, use it everywhere).
 - **AuditEntry** — see §6.
 
-Case statuses (locked): `new → triaged → in_progress → waiting_on_citizen → resolved → closed`, plus `reopened`. Transitions enforced in one state-machine location.
+Case statuses (locked): `new → triaged → in_progress → waiting_on_customer → resolved → closed`, plus `reopened`. Transitions enforced in one state-machine location.
 
 ## 3. Intake channels (v1.0: exactly two)
 
@@ -123,7 +123,7 @@ Config for both lives in admin settings (issuer URL, client ID/secret, claim map
 The forward pass is part of the gate, not optional hygiene: a gate is incomplete until its forward pass is clean.
 
 - **G1 — Foundation**: schema + migrations, auth, RBAC, Case/Contact/Org CRUD, queues, state machine. Artifacts: passing model+policy tests, `DECISIONS.md` started.
-- **G2 — Service loop**: public portal, email intake, messaging/replies, agent console (keyboard workspace + macros), SLA timers + breach flags, audit chain + verification task, Activity & Usage admin view. Artifacts: request/system tests covering citizen-submits→agent-replies→resolve→reopen; keyboard-nav system test; chain-verify task green.
+- **G2 — Service loop**: public portal, email intake, messaging/replies, agent console (keyboard workspace + macros), SLA timers + breach flags, audit chain + verification task, Activity & Usage admin view. Artifacts: request/system tests covering customer-submits→agent-replies→resolve→reopen; keyboard-nav system test; chain-verify task green.
 - **G3 — Intelligence + integration surface**: LlmClient + FakeLlmClient, grounding, route/draft/resolve gating, staff AI assist (summarise / sentiment / suggested reply), full REST API, service accounts + scopes + on-behalf-of, outbound webhooks, dual SSO (Keycloak-tested), OpenAPI, NakliPoster collection. Artifacts: API tests for every endpoint incl. M2M and on-behalf-of; webhook signing/retry tests; OIDC + SAML staff login and OIDC customer login green against containerised Keycloak; agent-flow and assist tests against FakeLlmClient.
 - **G4 — Ship packaging**: docker-compose, seed data (fictional "Directorate of Public Grievances" + a fictional PSB branch: ~8 users, ~60 cases across statuses, KB-style reference docs), `bin/smoke` script (boots, hits portal, files a case, replies via API, verifies audit chain, prints PASS/FAIL summary), README, in-app help modal. Artifacts: clean-clone → one command → seeded working instance, smoke PASS.
 

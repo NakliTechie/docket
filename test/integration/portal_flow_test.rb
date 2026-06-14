@@ -3,7 +3,7 @@ require "test_helper"
 class PortalFlowTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
 
-  test "citizen files a grievance anonymously and receives a tracking id" do
+  test "customer files a case anonymously and receives a tracking id" do
     assert_difference [ "Case.count", "Contact.count", "Message.count" ], 1 do
       assert_enqueued_emails 1 do
         post portal_cases_path, params: { portal_submission: {
@@ -25,7 +25,7 @@ class PortalFlowTest < ActionDispatch::IntegrationTest
   test "string file params are ignored (no attach-by-reference or 500) (M12)" do
     assert_difference "Case.count", 1 do
       post portal_cases_path, params: { portal_submission: {
-        name: "Citizen", email: "filecitizen@example.com",
+        name: "Customer", email: "filecustomer@example.com",
         subject: "Has bad file param", description: "Body",
         files: [ "some-active-storage-signed-id-or-garbage" ]
       } }
@@ -79,7 +79,7 @@ class PortalFlowTest < ActionDispatch::IntegrationTest
     assert_no_match messages(:note_on_pension).body, response.body
   end
 
-  test "citizen reply lands on the case and reopens the conversation" do
+  test "customer reply lands on the case and reopens the conversation" do
     kase = cases(:waiting_case)
     assert_difference "kase.messages.count" do
       post portal_track_reply_path, params: {

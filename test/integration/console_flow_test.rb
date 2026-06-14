@@ -23,7 +23,7 @@ class ConsoleFlowTest < ActionDispatch::IntegrationTest
     sign_in_as users(:admin)
 
     post cases_path, params: { case: {
-      subject: "New grievance", contact_id: contacts(:asha).id,
+      subject: "New case", contact_id: contacts(:asha).id,
       queue_id: queues(:pensions).id, priority: "high",
       sla_policy_id: sla_policies(:standard).id
     } }

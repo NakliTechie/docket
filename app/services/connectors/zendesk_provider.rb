@@ -2,7 +2,7 @@ module Connectors
   # Effector-only provider: open a Zendesk support ticket or append a comment.
   # Auth is API-token Basic auth — username "<email>/token", password the
   # api_token (vaulted). The base is derived per-tenant from the subdomain:
-  # https://{subdomain}.zendesk.com. Both writes touch citizen-facing support
+  # https://{subdomain}.zendesk.com. Both writes touch customer-facing support
   # records, so each defaults to :confirm — the AI drafts, a human confirms
   # before it lands in the helpdesk.
   class ZendeskProvider < HttpProvider

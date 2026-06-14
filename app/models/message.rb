@@ -21,7 +21,7 @@ class Message < ApplicationRecord
   validates :body, presence: true
 
   after_create :stamp_first_response
-  after_create :reopen_conversation_on_citizen_reply
+  after_create :reopen_conversation_on_customer_reply
   after_create_commit :notify_contact_by_email
   after_create_commit :deliver_via_messaging_connector
   after_create_commit :enqueue_sentiment_analysis
@@ -32,7 +32,7 @@ class Message < ApplicationRecord
     author.respond_to?(:name) ? author.name : author.to_s
   end
 
-  def from_citizen?
+  def from_customer?
     author_type == "Contact"
   end
 
@@ -53,17 +53,17 @@ class Message < ApplicationRecord
     self.case.record_first_response!(at: created_at)
   end
 
-  # A citizen reply re-engages staff: while we wait on them it goes back to
+  # A customer reply re-engages staff: while we wait on them it goes back to
   # in_progress; on an already-resolved case it reopens it — otherwise the
   # reply lands silently on a resolved case and staff never see it (M13).
-  def reopen_conversation_on_citizen_reply
-    return unless direction_inbound? && from_citizen?
+  def reopen_conversation_on_customer_reply
+    return unless direction_inbound? && from_customer?
 
     # Route through the maker-checker gate (W3): if a tenant guards
     # in_progress/reopened, the auto-reopen parks for approval instead of
     # bypassing the gate off the controller path. Unguarded → transitions as
-    # before. requested_by nil = system/citizen-initiated.
-    if self.case.status_waiting_on_citizen?
+    # before. requested_by nil = system/customer-initiated.
+    if self.case.status_waiting_on_customer?
       self.case.guarded_transition_to(:in_progress)
     elsif self.case.status_resolved?
       self.case.guarded_transition_to(:reopened)

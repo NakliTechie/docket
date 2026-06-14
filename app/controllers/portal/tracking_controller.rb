@@ -52,7 +52,7 @@ module Portal
       contact = kase.contact
 
       # Constant-time compare so the challenge can't be turned into a timing
-      # oracle to recover a citizen's email/phone character by character.
+      # oracle to recover a customer's email/phone character by character.
       matches = (email && contact.email.present? && secure_match?(contact.email, email)) ||
                 (phone && contact.phone.present? && secure_match?(contact.phone, phone))
       matches ? kase : nil
@@ -62,7 +62,7 @@ module Portal
       ActiveSupport::SecurityUtils.secure_compare(a.to_s, b.to_s)
     end
 
-    # Citizens see public replies and agent turns — never internal notes.
+    # Customers see public replies and agent turns — never internal notes.
     def public_thread(kase)
       kase.messages.where(kind: [ :public_reply, :agent_turn ])
           .with_attached_files.includes(:author).order(:created_at)

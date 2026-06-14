@@ -2,8 +2,8 @@
 # search where available, keyword overlap scoring on SQLite. Source: the
 # admin-curated reference-doc knowledge base ONLY. No vector DB.
 #
-# Other citizens' resolved-case text is deliberately NOT a grounding source
-# — pulling one case's personal details into another citizen's AI draft is
+# Other customers' resolved-case text is deliberately NOT a grounding source
+# — pulling one case's personal details into another customer's AI draft is
 # a privacy leak. The knowledge base is the intended, reviewed source.
 module Retrieval
   Result = Struct.new(:source, :title, :text, keyword_init: true)

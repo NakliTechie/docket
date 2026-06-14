@@ -5,7 +5,7 @@ module Connectors
   #
   #   inv = Connectors::Invoke.call(connector, "post_json",
   #           args: { "body" => { ... } }, principal: agent,
-  #           on_behalf_of: "case:#{case.id}", reasoning: "citizen requested status",
+  #           on_behalf_of: "case:#{case.id}", reasoning: "customer requested status",
   #           idempotency_key: "case-123-status")
   #
   # A :read action runs immediately. A :write / :irreversible action is parked

@@ -48,7 +48,7 @@ class Connectors::ZendeskProviderTest < ActiveSupport::TestCase
     assert_equal [], provider.fetch
   end
 
-  # --- decision classes (citizen-facing support writes need a human) ---
+  # --- decision classes (customer-facing support writes need a human) ---
 
   test "create_ticket is a confirm-class write" do
     assert_equal :confirm, Connectors::ZendeskProvider.action("create_ticket").effective_decision_class

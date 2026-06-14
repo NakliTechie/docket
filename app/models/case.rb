@@ -13,24 +13,24 @@ class Case < ApplicationRecord
 
   class InvalidTransition < StandardError; end
 
-  # Citizen-friendly, unguessable: no 0/O/1/I/L/U ambiguity or lookalikes.
+  # Customer-friendly, unguessable: no 0/O/1/I/L/U ambiguity or lookalikes.
   TRACKING_ALPHABET = %w[A B C D E F G H J K M N P Q R S T V W X Y Z 2 3 4 5 6 7 8 9].freeze
 
-  # Locked lifecycle: new → triaged → in_progress → waiting_on_citizen →
+  # Locked lifecycle: new → triaged → in_progress → waiting_on_customer →
   # resolved → closed, plus reopened (handoff §2).
   TRANSITIONS = {
     "new"                => %w[triaged in_progress],
-    "triaged"            => %w[in_progress waiting_on_citizen resolved],
-    "in_progress"        => %w[waiting_on_citizen resolved],
-    "waiting_on_citizen" => %w[in_progress resolved],
+    "triaged"            => %w[in_progress waiting_on_customer resolved],
+    "in_progress"        => %w[waiting_on_customer resolved],
+    "waiting_on_customer" => %w[in_progress resolved],
     "resolved"           => %w[closed reopened],
     "closed"             => %w[reopened],
-    "reopened"           => %w[in_progress waiting_on_citizen resolved]
+    "reopened"           => %w[in_progress waiting_on_customer resolved]
   }.freeze
 
-  OPEN_STATUSES = %w[new triaged in_progress waiting_on_citizen reopened].freeze
+  OPEN_STATUSES = %w[new triaged in_progress waiting_on_customer reopened].freeze
 
-  enum :status, { new: 0, triaged: 1, in_progress: 2, waiting_on_citizen: 3,
+  enum :status, { new: 0, triaged: 1, in_progress: 2, waiting_on_customer: 3,
                   resolved: 4, closed: 5, reopened: 6 }, default: :new, prefix: true
   enum :priority, { low: 0, normal: 1, high: 2, urgent: 3 }, default: :normal, prefix: true
   enum :channel, { web_portal: 0, email: 1, api: 2, staff: 3, phone: 4, walk_in: 5,
@@ -136,7 +136,7 @@ class Case < ApplicationRecord
   # status and there's no fresh approval, park a pending request and return
   # false (the transition did NOT happen); otherwise transition and return true.
   # Used by every HUMAN- or model-initiated transition (controller + the
-  # citizen-reply auto-reopen) so the gate isn't bypassable off the controller
+  # customer-reply auto-reopen) so the gate isn't bypassable off the controller
   # path. The approver's own apply calls transition_to! directly (no re-gate).
   def guarded_transition_to(new_status, requested_by: nil)
     if ApprovalGate.guarded_transition?(self, new_status) && !ApprovalGate.transition_cleared?(self, new_status)
@@ -214,7 +214,7 @@ class Case < ApplicationRecord
     CaseRouting.apply(self)
   end
 
-  # Citizen-originated cases get the AI triage/draft/resolve loop when a model
+  # Customer-originated cases get the AI triage/draft/resolve loop when a model
   # endpoint is configured; silently nothing otherwise.
   def enqueue_agent_triage
     CaseAgentJob.perform_later(self) if ai_triage_eligible?

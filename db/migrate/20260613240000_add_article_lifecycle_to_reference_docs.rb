@@ -1,6 +1,6 @@
 # PG3 — promote the grounding corpus to a knowledge-base article product.
 # status: draft|published — only published docs ground the AI / show anywhere.
-# visibility: internal|public — only public+published reach the citizen portal.
+# visibility: internal|public — only public+published reach the customer portal.
 # slug: stable portal URL key. category: optional grouping.
 #
 # Default status = published so the existing corpus keeps grounding exactly as

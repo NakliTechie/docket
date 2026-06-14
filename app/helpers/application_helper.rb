@@ -72,7 +72,7 @@ module ApplicationHelper
   # Single-key status shortcuts on the case view; documented in the
   # in-app help modal.
   TRANSITION_SHORTCUTS = {
-    "triaged" => "t", "in_progress" => "s", "waiting_on_citizen" => "w",
+    "triaged" => "t", "in_progress" => "s", "waiting_on_customer" => "w",
     "resolved" => "r", "closed" => "c", "reopened" => "o"
   }.freeze
 

@@ -5,7 +5,7 @@ class PortalSubmissionTest < ActiveSupport::TestCase
     PortalSubmission.new(name: name, email: email, phone: phone, subject: subject, description: description).save
   end
 
-  test "requires name, subject, description and a way to reach the citizen" do
+  test "requires name, subject, description and a way to reach the customer" do
     assert_not PortalSubmission.new(name: "X", subject: "S", description: "D").save # no email/phone
     assert submit(name: "Reachable", email: "reachable@example.com")
   end

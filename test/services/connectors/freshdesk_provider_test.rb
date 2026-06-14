@@ -50,7 +50,7 @@ class Connectors::FreshdeskProviderTest < ActiveSupport::TestCase
     assert_equal [], provider.fetch
   end
 
-  # --- decision classes (citizen-facing support writes need a human) ---
+  # --- decision classes (customer-facing support writes need a human) ---
 
   test "create_ticket is a confirm-class write" do
     action = Connectors::FreshdeskProvider.action("create_ticket")

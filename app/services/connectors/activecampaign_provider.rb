@@ -3,7 +3,7 @@ module Connectors
   # Auth is the static `Api-Token` header carrying the vaulted account API
   # token. The base is the per-account API URL the admin supplies
   # (e.g. https://youraccount.api-us1.com), derived from config — there is no
-  # shared default. Creating a contact writes a citizen record into a marketing
+  # shared default. Creating a contact writes a customer record into a marketing
   # account, so it defaults to :confirm — the AI drafts, a human confirms
   # before the contact lands.
   class ActivecampaignProvider < HttpProvider

@@ -17,10 +17,10 @@ module Api
         else
           authorize_api!(message, nil, scope: "cases:write")
           message.author = resolve_on_behalf_contact!
-          # Machine-filed citizen messages are inbound; otherwise the
+          # Machine-filed customer messages are inbound; otherwise the
           # integration speaks for the operator (outbound).
           message.direction = message.author ? :inbound : :outbound
-          # A citizen-authored message can't be a staff-only internal note (L3).
+          # A customer-authored message can't be a staff-only internal note (L3).
           message.kind = :public_reply if message.author.is_a?(Contact)
         end
         message.direction = :outbound if current_user

@@ -112,7 +112,7 @@ Current.set(actor: nil) do
   templates = scenario[:templates]
   places = scenario[:places]
   status_plan = (
-    [ :new ] * 5 + [ :triaged ] * 6 + [ :in_progress ] * 9 + [ :waiting_on_citizen ] * 4 +
+    [ :new ] * 5 + [ :triaged ] * 6 + [ :in_progress ] * 9 + [ :waiting_on_customer ] * 4 +
     [ :resolved ] * 8 + [ :closed ] * 5 + [ :reopened ] * 2
   )
 
@@ -134,7 +134,7 @@ Current.set(actor: nil) do
     agent = agent_pool[rng.rand(agent_pool.size)]
     path = {
       new: [], triaged: [ :triaged ], in_progress: [ :triaged, :in_progress ],
-      waiting_on_citizen: [ :triaged, :in_progress, :waiting_on_citizen ],
+      waiting_on_customer: [ :triaged, :in_progress, :waiting_on_customer ],
       resolved: [ :triaged, :in_progress, :resolved ],
       closed: [ :triaged, :in_progress, :resolved, :closed ],
       reopened: [ :triaged, :in_progress, :resolved, :reopened ]
@@ -155,7 +155,7 @@ Current.set(actor: nil) do
         end
       end
     end
-    if path.include?(:waiting_on_citizen)
+    if path.include?(:waiting_on_customer)
       Current.set(actor: agent) do
         kase.messages.create!(kind: :public_reply, direction: :outbound, author: agent,
           body: "We need one more detail to proceed — please reply here with the requested information.")

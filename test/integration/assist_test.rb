@@ -24,7 +24,7 @@ class AssistTest < ActionDispatch::IntegrationTest
     kase = cases(:pension_case)
     80.times do |i|
       kase.messages.create!(kind: :public_reply, direction: :inbound,
-                            author: kase.contact, body: "Citizen message #{i} " * 200)
+                            author: kase.contact, body: "Customer message #{i} " * 200)
     end
     post case_assist_summarise_path(kase)
     assert_response :success # capped prompt, no context-window blow-up

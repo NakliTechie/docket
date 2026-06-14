@@ -5,7 +5,7 @@ module Connectors
   # API version so the response envelope stays stable; it defaults to "2.11"
   # and an admin can override it via the optional `intercom_version` config.
   # The single action creates a contact (an Intercom "user"); it touches a
-  # citizen-facing support record, so it defaults to :confirm — the AI drafts,
+  # customer-facing support record, so it defaults to :confirm — the AI drafts,
   # a human confirms before it lands in Intercom.
   class IntercomProvider < HttpProvider
     DEFAULT_BASE = "https://api.intercom.io".freeze

@@ -42,7 +42,7 @@ class CaseAgent
 
     prompt = <<~PROMPT
       [TASK:route]
-      You triage citizen grievances for a public service desk. Classify the case below.
+      You triage customer support cases for a service desk. Classify the case below.
       #{Llm.fence_instruction}
       QUEUE_OPTIONS:#{CaseQueue.order(:name).pluck(:slug).join(", ")}
       CATEGORY_OPTIONS:#{Category.order(:name).pluck(:name).join(", ")}
@@ -83,7 +83,7 @@ class CaseAgent
     grounding = Retrieval.grounding_for("#{kase.subject} #{initial_body}")
     prompt = <<~PROMPT
       [TASK:draft]
-      You resolve tier-1 citizen cases for a public service desk. Use ONLY the grounding context; if it does not contain the answer, say a staff member will follow up and set fully_resolves to false. Always tell the citizen they can reply to reach a human.
+      You resolve tier-1 customer cases for a public service desk. Use ONLY the grounding context; if it does not contain the answer, say a staff member will follow up and set fully_resolves to false. Always tell the customer they can reply to reach a human.
       #{Llm.fence_instruction}
 
       Case subject:
@@ -113,7 +113,7 @@ class CaseAgent
     # routing — so it can fire on a case that routing left as `new` (low
     # route confidence). `new` can't transition straight to `resolved`, so
     # move it through a valid intermediate state FIRST. Doing this before
-    # creating the public reply means we never email the citizen and then
+    # creating the public reply means we never email the customer and then
     # raise InvalidTransition, leaving the case stuck (M19).
     kase.reload
     kase.transition_to!(:triaged) if kase.status_new?
