@@ -44,7 +44,7 @@ gem "pdf-reader", "~> 2.12"
 
 # Dual SSO (handoff §5A): staff OIDC + SAML, customer OIDC
 gem "omniauth", "~> 2.1"
-gem "omniauth-rails_csrf_protection", "~> 1.0"
+gem "omniauth-rails_csrf_protection", "~> 2.0"
 gem "omniauth_openid_connect", "~> 0.8"
 gem "omniauth-saml", "~> 2.2"
 
