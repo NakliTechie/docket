@@ -213,6 +213,80 @@ Current.set(actor: nil) do
     end
   end
 
+  # --- Sales pipeline deals (populate the Sales report: open funnel, weighted
+  # forecast, won/lost + win rate, loss reasons, by-owner, velocity). Values in
+  # ₹; the demo runs 7 open / 5 won / 4 lost. Created dates are aged into the
+  # last ~30 days so the report's default window is populated.
+  #
+  # Won/lost deliberately keep closed_at ≈ now: the stage-dwell timeline is
+  # reconstructed from the append-only, hash-chained audit log, whose entries
+  # are stamped at seed time — a *past* closed_at would read as negative dwell.
+  # avg-days-to-win measures created_at → closed_at, so ageing created_at alone
+  # gives a realistic headline without corrupting the audit-mined dwell.
+  # Stages are resolved by their won/lost flags and position (not by name), so
+  # this works against whatever the deployment's default pipeline looks like.
+  pipe = Pipeline.default
+  open_stages = pipe&.pipeline_stages&.select { |s| s.implied_status == :open }&.sort_by(&:position) || []
+  won_stage   = pipe&.pipeline_stages&.find(&:is_won?)
+  lost_stage  = pipe&.pipeline_stages&.find(&:is_lost?)
+  if Deal.none? && open_stages.any?
+    reps = [ users["Priya Nair"], users["Sunita Rao"], users["Rohan Gupta"],
+             users["Fatima Khan"], users["Arjun Mehta"] ].compact
+    deal_nouns = %w[Expansion Renewal Onboarding Upgrade Add-on Rollout Pilot
+                    Contract Seats Integration Platform Migration]
+    open_at = ->(i) { open_stages[[ i, open_stages.size - 1 ].min] } # clamp to funnel depth
+    # [target, value₹, created_days_ago, lost_reason|nil, expected_close_in_days|nil]
+    #   target: an integer indexes the open funnel (0 = first); :won / :lost hit the terminal stages.
+    deal_plan = [
+      [ 3, 450_000, 14, nil, 12 ],
+      [ 2, 880_000, 12, nil, 25 ],
+      [ 3, 620_000,  6, nil,  8 ],
+      [ 2, 280_000, 10, nil, 20 ],
+      [ 1, 210_000,  3, nil, 18 ],
+      [ 1, 150_000,  8, nil, 30 ],
+      [ 0,  95_000,  4, nil, 45 ],
+      [ :won,  540_000, 28, nil, nil ],
+      [ :won,  410_000, 22, nil, nil ],
+      [ :won,  320_000, 26, nil, nil ],
+      [ :won,  275_000, 29, nil, nil ],
+      [ :won,  120_000, 20, nil, nil ],
+      [ :lost, 700_000, 27, :price,      nil ],
+      [ :lost, 480_000, 24, :competitor, nil ],
+      [ :lost, 360_000, 19, :no_budget,  nil ],
+      [ :lost, 230_000, 15, :timing,     nil ]
+    ]
+    deal_plan.each_with_index do |(target, value, created_days_ago, lost_reason, close_in), i|
+      stage = case target
+              when :won  then won_stage
+              when :lost then lost_stage
+              else open_at.call(target)
+              end
+      next if stage.nil? # pipeline lacks a won/lost stage — skip that deal
+
+      contact = contacts[i % contacts.size]
+      org = contact.organisation || orgs[i % orgs.size]
+      deal = Deal.new(
+        name: "#{org.name} — #{deal_nouns[i % deal_nouns.size]}",
+        pipeline: pipe, pipeline_stage: stage,
+        owner: reps[i % reps.size], contact: contact, organisation: org,
+        value: value, expected_close_on: close_in && (Date.current + close_in)
+      )
+      deal.save!
+      deal.update_columns(created_at: created_days_ago.days.ago)
+      unless stage.implied_status == :open
+        # Re-stamp closed_at strictly after the create-audit entry (keeps the
+        # audit-mined stage dwell non-negative); record the loss reason.
+        deal.update_columns(closed_at: Time.current)
+        deal.update_columns(lost_reason: Deal.lost_reasons.fetch(lost_reason)) if lost_reason
+      end
+    end
+
+    # One converted lead so the lead-conversion metric reads a real rate.
+    if (converted = Lead.where(status: :qualified).first)
+      converted.update_columns(status: Lead.statuses.fetch("converted"), converted_at: Time.current)
+    end
+  end
+
   # --- AI effector layer (connector + designated agent + approval queue) ---
   effector_agent = ServiceAccount.find_or_create_by!(name: "Support effector agent") do |sa|
     sa.scopes = %w[contacts:read cases:read connectors:invoke]
@@ -261,4 +335,5 @@ puts "Demo data ready (brand: #{scenario[:brand]}):"
 puts "  staff login: arjun@docket.local / #{ENV.fetch('DOCKET_DEMO_PASSWORD', 'docket-demo')} (admin)"
 puts "  also: sunita@ (supervisor), priya@/rohan@/fatima@/deepak@ (agents), meena@ (read-only)"
 puts "  cases: #{Case.count}, contacts: #{Contact.count}, leads: #{Lead.count}, " \
+     "deals: #{Deal.count} (#{Deal.status_open.count} open/#{Deal.status_won.count} won/#{Deal.status_lost.count} lost), " \
      "connectors: #{Connector.count}, pending agent actions: #{ConnectorInvocation.status_proposed.count}"
