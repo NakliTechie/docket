@@ -35,9 +35,12 @@ trap cleanup EXIT
 if [ -z "${SMOKE_BASE_URL:-}" ]; then
   echo "Booting throwaway instance on :$PORT (fresh database)…"
   export RAILS_ENV=development
+  # Isolate on a throwaway DB so the smoke run never touches the developer's
+  # working storage/development.sqlite3. Exported (not just set inline on seed)
+  # so the seed, the server boot, and the step-4 token mint all read the same DB.
+  export DATABASE_PATH=storage/smoke.sqlite3
   rm -f storage/smoke.sqlite3*
-  DATABASE_PATH=storage/smoke.sqlite3 bin/rails db:prepare db:seed demo:seed > /dev/null 2>&1 \
-    || bin/rails db:prepare db:seed demo:seed > /dev/null 2>&1
+  bin/rails db:prepare db:seed demo:seed > /dev/null 2>&1
   bin/rails server -p "$PORT" -P tmp/pids/smoke.pid -d > /dev/null 2>&1
   BOOTED=1
   for _ in $(seq 1 30); do
@@ -76,8 +79,9 @@ HTTP=$(curl -s -A "$UA" -b "$JAR" -o /tmp/smoke_status.html -w "%{http_code}" -X
 
 # --- 4. staff API: token, reply, transition ----------------------------------
 # The token must be minted in the database the TARGET instance reads. Self-boot
-# mode shares this checkout's database; a remote target (SMOKE_BASE_URL) does not —
-# mint inside the compose app container there, or pass SMOKE_API_TOKEN explicitly.
+# mode shares the throwaway smoke DB (DATABASE_PATH is exported above, so runner
+# hits it too); a remote target (SMOKE_BASE_URL) does not — mint inside the compose
+# app container there, or pass SMOKE_API_TOKEN explicitly.
 MINT='admin = User.where(role: :admin).order(:id).first; print ApiToken.create!(user: admin, name: "smoke-#{Time.now.to_i}").raw_token'
 if [ -n "${SMOKE_API_TOKEN:-}" ]; then
   API_TOKEN="$SMOKE_API_TOKEN"

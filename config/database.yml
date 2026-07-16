@@ -8,11 +8,11 @@ default: &default
 
 development:
   <<: *default
-  database: storage/development.sqlite3
+  database: <%= ENV.fetch("DATABASE_PATH", "storage/development.sqlite3") %>
 
 test:
   <<: *default
-  database: storage/test.sqlite3
+  database: <%= ENV.fetch("DATABASE_PATH", "storage/test.sqlite3") %>
 
 production:
   primary: &production_primary
