@@ -31,7 +31,7 @@ gem "acts_as_tenant", "~> 1.0"
 gem "rack-attack", "~> 6.7"
 
 # Pagination — dependency-free
-gem "pagy", "~> 9.4"
+gem "pagy", "~> 43.6"
 
 # Locale data (Hindi base translations for AR errors, dates, numbers)
 gem "rails-i18n", "~> 8.0"
