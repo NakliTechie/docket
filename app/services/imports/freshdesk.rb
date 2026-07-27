@@ -29,11 +29,13 @@ module Imports
         return @result
       end
 
-      ActiveRecord::Base.transaction do
-        organisations = import_companies
-        contacts = import_contacts(organisations)
-        import_tickets(contacts)
-        raise ActiveRecord::Rollback if @dry_run
+      Mode.run do
+        ActiveRecord::Base.transaction do
+          organisations = import_companies
+          contacts = import_contacts(organisations)
+          import_tickets(contacts)
+          raise ActiveRecord::Rollback if @dry_run
+        end
       end
       @result
     end
@@ -102,15 +104,48 @@ module Imports
         )
         # Status is assigned directly rather than through the state machine: an
         # import is reconstructing history, not transitioning through it.
-        kase.status = STATUS_MAP.fetch(row["status"]) { report_unmapped(:status, row["status"]) || :new }
+        # Freshdesk custom statuses are ints >= 8 and every desk of any size has
+        # them. Falling back to :new turned a closed archive into an open
+        # backlog, so an unknown status resolves by the ticket's own resolution
+        # data before it guesses.
+        kase.status = STATUS_MAP.fetch(row["status"]) { status_for_unmapped(row) }
 
         if kase.save
+          # Keep the ticket's real dates. Stamping every case with the migration
+          # date destroys backlog age, trend lines and every SLA history number.
+          stamp_timestamps(kase, row)
           was_new ? @result.create!("cases") : @result.update!("cases")
           import_conversations(kase, row)
         else
           @result.error!("ticket #{row['id']}: #{kase.errors.full_messages.to_sentence}")
         end
       end
+    end
+
+    # created_at/updated_at are attr_readonly-ish in practice (set on insert), so
+    # write them straight through rather than fighting AR.
+    def stamp_timestamps(record, row)
+      created = parse_time(row["created_at"])
+      updated = parse_time(row["updated_at"]) || created
+      return if created.nil?
+
+      record.update_columns(created_at: created, updated_at: updated)
+    end
+
+    def parse_time(value)
+      value.present? ? Time.zone.parse(value.to_s) : nil
+    rescue ArgumentError
+      nil
+    end
+
+    def status_for_unmapped(row)
+      report_unmapped(:status, row["status"])
+      # A ticket Freshdesk considers resolved/closed says so in its own fields
+      # even under a custom status.
+      return :closed if row["closed_at"].present?
+      return :resolved if row["resolved_at"].present?
+
+      :new
     end
 
     def contact_from_ticket(row)
@@ -127,7 +162,16 @@ module Imports
         body = strip_html(conv["body_text"].presence || conv["body"].to_s)
         next if body.blank? || kase.messages.exists?(body: body)
 
-        kase.messages.create!(body: body, kind: conv["private"] ? :internal_note : :public_reply)
+        # `incoming` is Freshdesk's flag for "the customer wrote this". Without
+        # it every imported reply defaults to outbound and reads as though staff
+        # said it — and outbound public replies are what trigger customer email.
+        incoming = conv["incoming"]
+        message = kase.messages.create!(
+          body: body,
+          kind: conv["private"] ? :internal_note : :public_reply,
+          direction: incoming ? :inbound : :outbound
+        )
+        stamp_timestamps(message, conv)
         @result.create!("messages")
       end
     end

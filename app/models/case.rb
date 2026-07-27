@@ -91,7 +91,12 @@ class Case < ApplicationRecord
   scope :search, ->(q) {
     next all if q.blank?
     term = "%#{sanitize_sql_like(q.strip.downcase)}%"
-    where("LOWER(cases.subject) LIKE :t OR LOWER(cases.tracking_id) LIKE :t OR LOWER(cases.description) LIKE :t", t: term)
+    # external_id is in here deliberately: after a migration, the ticket ids in
+    # a customer's inbox and an agent's muscle memory are the OLD system's.
+    # Contact#external_id was already searchable; Case's was write-only, so
+    # pasting "12345" on day one returned nothing.
+    where("LOWER(cases.subject) LIKE :t OR LOWER(cases.tracking_id) LIKE :t " \
+          "OR LOWER(cases.description) LIKE :t OR LOWER(cases.external_id) LIKE :t", t: term)
   }
 
   def self.generate_tracking_id
@@ -218,12 +223,16 @@ class Case < ApplicationRecord
   # First-match declarative routing (CaseRouting) — deterministic, runs before
   # the AI triage and wins over it. No-op when no rule matches.
   def apply_routing_rules
+    return if Imports::Mode.running?
+
     CaseRouting.apply(self)
   end
 
   # Customer-originated cases get the AI triage/draft/resolve loop when a model
   # endpoint is configured; silently nothing otherwise.
   def enqueue_agent_triage
+    return if Imports::Mode.running?
+
     CaseAgentJob.perform_later(self) if ai_triage_eligible?
   end
 
@@ -239,6 +248,8 @@ class Case < ApplicationRecord
   private
 
   def publish_created_webhook
+    return if Imports::Mode.running?
+
     Webhooks.publish("case.created", Webhooks.case_payload(self))
   end
 

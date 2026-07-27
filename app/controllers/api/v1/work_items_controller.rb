@@ -6,6 +6,7 @@ module Api
 
       def index
         scope = api_scope(WorkItem, scope: "work:read").includes(:workflow_state, :project)
+                                                        .search(params[:q])
         scope = scope.where(project_id: params[:project_id]) if params[:project_id].present?
         scope = scope.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
         scope = scope.where(sprint_id: params[:sprint_id]) if params[:sprint_id].present?
