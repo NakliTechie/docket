@@ -32,7 +32,8 @@ class Project < ApplicationRecord
 
   validates :name, presence: true
   validates :key, presence: true, format: { with: KEY_FORMAT },
-            uniqueness: { scope: :tenant_id, case_sensitive: false }
+            uniqueness: { scope: :tenant_id, case_sensitive: false,
+                          conditions: -> { where(deleted_at: nil) } }
 
   normalizes :key, with: ->(key) { key.to_s.strip.upcase }
 

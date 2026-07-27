@@ -15,7 +15,12 @@ class WorkflowState < ApplicationRecord
 
   has_many :work_items, dependent: :restrict_with_error
 
-  validates :name, presence: true, uniqueness: { scope: :project_id, case_sensitive: false }
+  # Soft-deleted columns must NOT reserve their name: without the condition,
+  # deleting "Done" and creating a new "Done" is rejected by a row nobody can
+  # see. (Same soft-delete/uniqueness trap the forward-pass flagged as W1.)
+  validates :name, presence: true,
+            uniqueness: { scope: :project_id, case_sensitive: false,
+                          conditions: -> { where(deleted_at: nil) } }
   validates :wip_limit, numericality: { greater_than: 0 }, allow_nil: true
 
   scope :ordered, -> { order(:position) }
