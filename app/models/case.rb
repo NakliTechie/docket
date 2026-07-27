@@ -91,7 +91,12 @@ class Case < ApplicationRecord
   scope :search, ->(q) {
     next all if q.blank?
     term = "%#{sanitize_sql_like(q.strip.downcase)}%"
-    where("LOWER(cases.subject) LIKE :t OR LOWER(cases.tracking_id) LIKE :t OR LOWER(cases.description) LIKE :t", t: term)
+    # external_id is in here deliberately: after a migration, the ticket ids in
+    # a customer's inbox and an agent's muscle memory are the OLD system's.
+    # Contact#external_id was already searchable; Case's was write-only, so
+    # pasting "12345" on day one returned nothing.
+    where("LOWER(cases.subject) LIKE :t OR LOWER(cases.tracking_id) LIKE :t " \
+          "OR LOWER(cases.description) LIKE :t OR LOWER(cases.external_id) LIKE :t", t: term)
   }
 
   def self.generate_tracking_id

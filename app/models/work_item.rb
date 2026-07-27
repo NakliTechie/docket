@@ -54,6 +54,15 @@ class WorkItem < ApplicationRecord
   scope :open, -> { joins(:workflow_state).where.not(workflow_states: { category: :done }) }
   scope :closed, -> { joins(:workflow_state).where(workflow_states: { category: :done }) }
   scope :assigned_to, ->(user) { where(assignee: user) }
+  # A tracker you cannot search is not usable for a day. source_key is included
+  # so a migrated Jira key (PROJ-123) still finds its item.
+  scope :search, ->(q) {
+    next all if q.blank?
+
+    term = "%#{sanitize_sql_like(q.strip.downcase)}%"
+    where("LOWER(work_items.title) LIKE :t OR LOWER(work_items.description) LIKE :t " \
+          "OR LOWER(work_items.source_key) LIKE :t", t: term)
+  }
 
   def reference = "#{project.key}-#{number}"
 

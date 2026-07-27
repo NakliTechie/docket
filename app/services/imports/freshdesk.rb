@@ -104,7 +104,11 @@ module Imports
         )
         # Status is assigned directly rather than through the state machine: an
         # import is reconstructing history, not transitioning through it.
-        kase.status = STATUS_MAP.fetch(row["status"]) { report_unmapped(:status, row["status"]) || :new }
+        # Freshdesk custom statuses are ints >= 8 and every desk of any size has
+        # them. Falling back to :new turned a closed archive into an open
+        # backlog, so an unknown status resolves by the ticket's own resolution
+        # data before it guesses.
+        kase.status = STATUS_MAP.fetch(row["status"]) { status_for_unmapped(row) }
 
         if kase.save
           # Keep the ticket's real dates. Stamping every case with the migration
@@ -132,6 +136,16 @@ module Imports
       value.present? ? Time.zone.parse(value.to_s) : nil
     rescue ArgumentError
       nil
+    end
+
+    def status_for_unmapped(row)
+      report_unmapped(:status, row["status"])
+      # A ticket Freshdesk considers resolved/closed says so in its own fields
+      # even under a custom status.
+      return :closed if row["closed_at"].present?
+      return :resolved if row["resolved_at"].present?
+
+      :new
     end
 
     def contact_from_ticket(row)

@@ -13,6 +13,10 @@
 
 <%= form_with url: project_work_items_path(@project), method: :get, class: "filter-bar" do |f| %>
   <div class="form-row">
+    <%= f.label :q, t("filters.search") %>
+    <%= f.search_field :q, value: params[:q] %>
+  </div>
+  <div class="form-row">
     <%= f.label :assignee_id, t("filters.assignee") %>
     <%= f.collection_select :assignee_id, User.staff.order(:name), :id, :name,
           { include_blank: t("filters.any"), selected: params[:assignee_id] } %>
