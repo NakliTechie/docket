@@ -52,6 +52,9 @@ class ServiceAccount < ApplicationRecord
   DEFAULT_BUDGET_WINDOW_MINUTES = 60
 
   validates :name, presence: true
+  # DELIBERATELY not scoped to live rows: reissuing a deleted account's
+  # client_id would let a credential someone still holds resolve to a different
+  # principal. An identifier that was ever issued is never reused.
   validates :client_id, presence: true, uniqueness: true
   validates :scopes, presence: true
   validate :scopes_are_known
