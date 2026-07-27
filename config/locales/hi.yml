@@ -9,6 +9,7 @@ hi:
       cases: "मामले"
       dashboard: "डैशबोर्ड"
       crm: "सीआरएम"
+      work: "कार्य"
       service_desk: "सेवा डेस्क"
       admin: "प्रशासन"
       contacts: "संपर्क"
@@ -1813,6 +1814,124 @@ hi:
         entries: "प्रविष्टियाँ"
         latest: "नवीनतम प्रविष्टि"
         cli_hint: "सीएलआई: bin/rails audit:verify"
+
+  projects:
+    fields:
+      key: "परियोजना कुंजी"
+      key_hint: "बड़े अक्षर और अंक, 2–10 वर्ण। कार्य आइटम KEY-1, KEY-2 इस क्रम में क्रमांकित होते हैं।"
+      name: "परियोजना नाम"
+      description: "विवरण"
+      lead: "परियोजना प्रमुख"
+    index:
+      title: "परियोजनाएँ"
+      new_project: "नई परियोजना"
+      show_active: "सक्रिय"
+      show_archived: "संग्रहीत"
+      backlog: "बैकलॉग"
+      archive: "संग्रह करें"
+      unarchive: "संग्रह से निकालें"
+      columns:
+        key: "कुंजी"
+        name: "नाम"
+        lead: "प्रमुख"
+        open_items: "खुले आइटम"
+      empty:
+        title: "अभी कोई परियोजना नहीं"
+        hint: "परियोजना एक कार्यक्षेत्र है जिसका अपना बोर्ड, बैकलॉग और आइटम क्रमांकन होता है।"
+    new:
+      title: "नई परियोजना"
+    edit:
+      title: "%{key} संपादित करें"
+    create:
+      created: "परियोजना %{key} बनाई गई।"
+    update:
+      updated: "परियोजना अद्यतन हुई।"
+    archive:
+      archived: "परियोजना %{key} संग्रहीत की गई।"
+      unarchived: "परियोजना %{key} पुनर्स्थापित की गई।"
+    destroy:
+      deleted: "परियोजना हटाई गई।"
+
+  boards:
+    show:
+      title: "%{key} बोर्ड"
+      backlog: "बैकलॉग"
+      new_item: "नया आइटम"
+      empty_column: "यहाँ कुछ नहीं"
+      scoped_to_sprint: "सक्रिय स्प्रिंट दिखाया जा रहा है: %{name}।"
+      show_all: "सभी आइटम दिखाएँ"
+
+  work_items:
+    unassigned: "अनासाइन"
+    enum:
+      kind:
+        task: "कार्य"
+        story: "स्टोरी"
+        bug: "बग"
+        epic: "एपिक"
+      priority:
+        low: "निम्न"
+        normal: "सामान्य"
+        high: "उच्च"
+        urgent: "अत्यावश्यक"
+    fields:
+      title: "शीर्षक"
+      description: "विवरण"
+      kind: "प्रकार"
+      priority: "प्राथमिकता"
+      state: "स्थिति"
+      assignee: "असाइनी"
+      reporter: "रिपोर्टर"
+      estimate: "अनुमान"
+      due_on: "नियत तिथि"
+      parent: "मूल आइटम"
+      sprint: "स्प्रिंट"
+    index:
+      title: "%{key} बैकलॉग"
+      board: "बोर्ड"
+      new_item: "नया आइटम"
+      open_only: "केवल खुले"
+      columns:
+        reference: "संदर्भ"
+        title: "शीर्षक"
+        kind: "प्रकार"
+        state: "स्थिति"
+        priority: "प्राथमिकता"
+        assignee: "असाइनी"
+        due: "नियत"
+      empty:
+        title: "कोई कार्य आइटम नहीं"
+        hint: "पहला आइटम बनाएँ, या ऊपर फ़िल्टर बदलें।"
+    new:
+      title: "%{key} में नया आइटम"
+    edit:
+      title: "%{reference} संपादित करें"
+    show:
+      board: "बोर्ड"
+      watch: "अनुसरण करें"
+      unwatch: "अनुसरण छोड़ें"
+      description: "विवरण"
+      no_description: "अभी कोई विवरण नहीं।"
+      children: "उप-आइटम"
+      comments: "टिप्पणियाँ"
+      no_comments: "अभी कोई टिप्पणी नहीं।"
+      add_comment: "टिप्पणी जोड़ें"
+      comment_placeholder: "टीम के लिए कोई नोट लिखें…"
+      post_comment: "टिप्पणी करें"
+      status: "स्थिति"
+      details: "विवरण"
+    create:
+      created: "%{reference} बनाया गया।"
+    update:
+      updated: "कार्य आइटम अद्यतन हुआ।"
+    transition:
+      moved: "%{state} में ले जाया गया।"
+    destroy:
+      deleted: "कार्य आइटम हटाया गया।"
+
+  work_comments:
+    create:
+      created: "टिप्पणी जोड़ी गई।"
 
   activerecord:
     errors:

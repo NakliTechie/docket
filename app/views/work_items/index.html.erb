@@ -1,0 +1,64 @@
+<% page_title t(".title", key: @project.key) %>
+<div class="page-header">
+  <h1><%= t(".title", key: @project.key) %></h1>
+  <div class="page-actions">
+    <%= link_to t(".board"), project_board_path(@project), class: "btn" %>
+    <% if policy(WorkItem).create? %>
+      <%= link_to new_project_work_item_path(@project), class: "btn btn-primary" do %>
+        <%= icon "plus" %><%= t(".new_item") %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%= form_with url: project_work_items_path(@project), method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row">
+    <%= f.label :assignee_id, t("filters.assignee") %>
+    <%= f.collection_select :assignee_id, User.staff.order(:name), :id, :name,
+          { include_blank: t("filters.any"), selected: params[:assignee_id] } %>
+  </div>
+  <div class="form-row">
+    <%= f.label :state_id, t("work_items.fields.state") %>
+    <%= f.collection_select :state_id, @project.workflow_states.ordered, :id, :name,
+          { include_blank: t("filters.any"), selected: params[:state_id] } %>
+  </div>
+  <div class="form-row">
+    <%= f.label :open, t(".open_only") %>
+    <%= f.check_box :open, checked: params[:open] == "1" %>
+  </div>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+<% end %>
+
+<% if @items.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.reference") %></th>
+          <th><%= t(".columns.title") %></th>
+          <th><%= t(".columns.kind") %></th>
+          <th><%= t(".columns.state") %></th>
+          <th><%= t(".columns.priority") %></th>
+          <th><%= t(".columns.assignee") %></th>
+          <th><%= t(".columns.due") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @items.each do |item| %>
+          <tr>
+            <td class="mono"><%= link_to item.reference, work_item_path(item) %></td>
+            <td><%= link_to item.title, work_item_path(item) %></td>
+            <td><%= item.human_kind %></td>
+            <td><%= item.workflow_state.name %></td>
+            <td><span class="badge badge-<%= item.priority %>"><%= item.human_priority %></span></td>
+            <td><%= item.assignee&.name || t("work_items.unassigned") %></td>
+            <td><%= item.due_on ? l(item.due_on, format: :long) : "—" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <%= render "shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+<% end %>

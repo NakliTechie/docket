@@ -1,0 +1,73 @@
+<% page_title t(".title", key: @project.key) %>
+<div class="page-header">
+  <h1><%= link_to @project.key, projects_path, class: "mono" %> <%= @project.name %></h1>
+  <div class="page-actions">
+    <%= link_to t(".backlog"), project_work_items_path(@project), class: "btn" %>
+    <% if policy(WorkItem).create? %>
+      <%= link_to new_project_work_item_path(@project), class: "btn btn-primary" do %>
+        <%= icon "plus" %><%= t(".new_item") %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<% if @sprint %>
+  <p class="muted">
+    <%= t(".scoped_to_sprint", name: @sprint.name) %>
+    <%= link_to t(".show_all"), project_board_path(@project, sprint: "all") %>
+  </p>
+<% end %>
+
+<%= form_with url: project_board_path(@project), method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row">
+    <%= f.label :assignee_id, t("filters.assignee") %>
+    <%= f.collection_select :assignee_id, User.staff.order(:name), :id, :name,
+          { include_blank: t("filters.any"), selected: params[:assignee_id] } %>
+  </div>
+  <div class="form-row">
+    <%= f.label :kind, t("work_items.fields.kind") %>
+    <%= f.select :kind,
+          options_for_select(WorkItem.kinds.keys.map { |k| [ t("work_items.enum.kind.#{k}"), k ] }, params[:kind]),
+          include_blank: t("filters.any") %>
+  </div>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+  <%= link_to t("filters.clear"), project_board_path(@project), class: "btn" %>
+<% end %>
+
+<div class="board">
+  <% @states.each do |state| %>
+    <% items = @items_by_state[state.id] || [] %>
+    <section class="board-column" aria-label="<%= state.name %>">
+      <header class="board-column-header">
+        <h2><%= state.name %></h2>
+        <span class="badge"><%= items.size %></span>
+      </header>
+      <div class="board-column-items">
+        <% items.each do |item| %>
+          <article class="board-card">
+            <div class="board-card-head">
+              <%= link_to item.reference, work_item_path(item), class: "mono" %>
+              <span class="badge badge-<%= item.priority %>"><%= item.human_priority %></span>
+            </div>
+            <%= link_to item.title, work_item_path(item), class: "board-card-title" %>
+            <footer class="board-card-foot">
+              <span class="muted"><%= item.human_kind %></span>
+              <span class="muted"><%= item.assignee&.name || t("work_items.unassigned") %></span>
+            </footer>
+            <% if policy(item).transition? %>
+              <div class="board-card-move">
+                <% @states.reject { |s| s.id == state.id }.each do |target| %>
+                  <%= button_to target.name, transition_work_item_path(item, workflow_state_id: target.id),
+                        class: "btn btn-xs", form: { data: { turbo: false } } %>
+                <% end %>
+              </div>
+            <% end %>
+          </article>
+        <% end %>
+        <% if items.empty? %>
+          <p class="muted board-column-empty"><%= t(".empty_column") %></p>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>

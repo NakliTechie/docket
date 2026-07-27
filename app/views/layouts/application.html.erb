@@ -43,6 +43,11 @@
             <% end %>
           <% end %>
 
+          <% if feature?("work") && policy(Project).index? %>
+            <%= nav_link t("layout.nav.work"), projects_path,
+                  active: %w[projects boards work_items].include?(controller_name) %>
+          <% end %>
+
           <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? || policy(ConnectorInvocation).index? %>
             <%= nav_group t("layout.nav.service_desk"),
                   active: %w[case_queues categories sla_policies macros routing_rules approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>

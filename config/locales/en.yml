@@ -9,6 +9,7 @@ en:
       cases: "Cases"
       dashboard: "Dashboard"
       crm: "CRM"
+      work: "Work"
       service_desk: "Service desk"
       admin: "Admin"
       contacts: "Contacts"
@@ -1813,6 +1814,124 @@ en:
         entries: "Entries"
         latest: "Latest entry"
         cli_hint: "CLI: bin/rails audit:verify"
+
+  projects:
+    fields:
+      key: "Project key"
+      key_hint: "Uppercase letters and digits, 2–10 characters. Work items are numbered KEY-1, KEY-2 and so on."
+      name: "Project name"
+      description: "Description"
+      lead: "Project lead"
+    index:
+      title: "Projects"
+      new_project: "New project"
+      show_active: "Active"
+      show_archived: "Archived"
+      backlog: "Backlog"
+      archive: "Archive"
+      unarchive: "Unarchive"
+      columns:
+        key: "Key"
+        name: "Name"
+        lead: "Lead"
+        open_items: "Open items"
+      empty:
+        title: "No projects yet"
+        hint: "A project is a workspace with its own board, backlog and item numbering."
+    new:
+      title: "New project"
+    edit:
+      title: "Edit %{key}"
+    create:
+      created: "Project %{key} created."
+    update:
+      updated: "Project updated."
+    archive:
+      archived: "Project %{key} archived."
+      unarchived: "Project %{key} restored."
+    destroy:
+      deleted: "Project deleted."
+
+  boards:
+    show:
+      title: "%{key} board"
+      backlog: "Backlog"
+      new_item: "New item"
+      empty_column: "Nothing here"
+      scoped_to_sprint: "Showing the active sprint: %{name}."
+      show_all: "Show all items"
+
+  work_items:
+    unassigned: "Unassigned"
+    enum:
+      kind:
+        task: "Task"
+        story: "Story"
+        bug: "Bug"
+        epic: "Epic"
+      priority:
+        low: "Low"
+        normal: "Normal"
+        high: "High"
+        urgent: "Urgent"
+    fields:
+      title: "Title"
+      description: "Description"
+      kind: "Type"
+      priority: "Priority"
+      state: "Status"
+      assignee: "Assignee"
+      reporter: "Reporter"
+      estimate: "Estimate"
+      due_on: "Due date"
+      parent: "Parent"
+      sprint: "Sprint"
+    index:
+      title: "%{key} backlog"
+      board: "Board"
+      new_item: "New item"
+      open_only: "Open only"
+      columns:
+        reference: "Ref"
+        title: "Title"
+        kind: "Type"
+        state: "Status"
+        priority: "Priority"
+        assignee: "Assignee"
+        due: "Due"
+      empty:
+        title: "No work items"
+        hint: "Create the first item, or adjust the filters above."
+    new:
+      title: "New item in %{key}"
+    edit:
+      title: "Edit %{reference}"
+    show:
+      board: "Board"
+      watch: "Watch"
+      unwatch: "Unwatch"
+      description: "Description"
+      no_description: "No description yet."
+      children: "Child items"
+      comments: "Comments"
+      no_comments: "No comments yet."
+      add_comment: "Add a comment"
+      comment_placeholder: "Leave a note for the team…"
+      post_comment: "Comment"
+      status: "Status"
+      details: "Details"
+    create:
+      created: "%{reference} created."
+    update:
+      updated: "Work item updated."
+    transition:
+      moved: "Moved to %{state}."
+    destroy:
+      deleted: "Work item deleted."
+
+  work_comments:
+    create:
+      created: "Comment added."
 
   activerecord:
     errors:
