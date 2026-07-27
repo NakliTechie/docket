@@ -63,9 +63,12 @@ module Api
       end
 
       def item_params
-        params.require(:work_item).permit(:project_id, :title, :description, :kind, :priority,
-                                          :assignee_id, :workflow_state_id, :parent_id,
-                                          :sprint_id, :estimate, :due_on, labels: [])
+        permitted = %i[project_id title description kind priority assignee_id
+                       workflow_state_id parent_id estimate due_on]
+        # sprint_id only when the tenant actually has sprints — otherwise a
+        # disabled sub-feature stays writable through the item payload.
+        permitted << :sprint_id if feature?("work.sprints")
+        params.require(:work_item).permit(*permitted, labels: [])
       end
     end
   end

@@ -20,6 +20,11 @@ module Imports
     def call
       return @result if @board.blank?
 
+      unless Features.enabled?("work")
+        @result.error!("the work module is not enabled for this tenant")
+        return @result
+      end
+
       ActiveRecord::Base.transaction do
         project = build_project
         states = build_states(project)

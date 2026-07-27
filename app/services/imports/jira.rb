@@ -41,6 +41,14 @@ module Imports
     end
 
     def call
+      # The rake task resolves a tenant before calling, so the entitlement is
+      # answerable — nobody was asking. An import must not conjure a module the
+      # tenant does not have.
+      unless Features.enabled?("work")
+        @result.error!("the work module is not enabled for this tenant")
+        return @result
+      end
+
       ActiveRecord::Base.transaction do
         @issues.each do |issue|
         next @result.error!("skipped an entry that is not an issue object") unless issue.is_a?(Hash)
