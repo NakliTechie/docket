@@ -109,7 +109,7 @@ jobs:
           bundler-cache: true
 
       - name: Set up Chrome
-        uses: browser-actions/setup-chrome@v1
+        uses: browser-actions/setup-chrome@v2
         id: chrome
 
       - name: Run System Tests
@@ -141,7 +141,7 @@ jobs:
           bundler-cache: true
 
       - name: Set up Chrome
-        uses: browser-actions/setup-chrome@v1
+        uses: browser-actions/setup-chrome@v2
         id: chrome
 
       - name: Boot Keycloak with the docket-test realm
