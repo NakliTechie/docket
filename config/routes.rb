@@ -42,6 +42,12 @@ Rails.application.routes.draw do
     end
     resource :board, only: :show
     resources :work_items, only: %i[index new create]
+    resources :sprints, except: :show do
+      member do
+        post :start
+        post :close
+      end
+    end
   end
   resources :work_items, only: %i[show edit update destroy] do
     member do
@@ -202,6 +208,16 @@ Rails.application.routes.draw do
       resources :sequence_enrollments, only: %i[index show create] do
         member { post :cancel }
       end
+      # Work module (WM5)
+      resources :projects, only: %i[index show create update destroy]
+      resources :work_items, only: %i[index show create update destroy] do
+        member { post :transition }
+        resources :work_comments, only: %i[index create], controller: "work_comments"
+      end
+      resources :sprints, only: %i[index show create update] do
+        member { post :close }
+      end
+
       resources :queues, only: %i[index show create update destroy]
       resources :categories, only: %i[index show create update destroy] do
         member do

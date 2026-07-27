@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_170000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -865,6 +865,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_160000) do
     t.integer "project_id", null: false
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.integer "wip_limit"
     t.index ["deleted_at"], name: "index_workflow_states_on_deleted_at"
     t.index ["project_id", "position"], name: "index_workflow_states_on_project_id_and_position"
     t.index ["project_id"], name: "index_workflow_states_on_project_id"

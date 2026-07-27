@@ -1819,6 +1819,10 @@ hi:
 
   projects:
     fields:
+      columns: "बोर्ड कॉलम"
+      columns_hint: "कॉलम का नाम बदलें या सुझावित कार्य-प्रगति सीमा तय करें। सीमा पार करने पर चेतावनी मिलती है, रोक नहीं।"
+      column_name: "कॉलम नाम"
+      wip_limit: "WIP सीमा"
       key: "परियोजना कुंजी"
       key_hint: "बड़े अक्षर और अंक, 2–10 वर्ण। कार्य आइटम KEY-1, KEY-2 इस क्रम में क्रमांकित होते हैं।"
       name: "परियोजना नाम"
@@ -1856,12 +1860,58 @@ hi:
 
   boards:
     show:
+      sprints: "स्प्रिंट"
+      filter: "फ़िल्टर"
+      filter_placeholder: "कार्ड हाइलाइट करने के लिए लिखें…"
+      filter_hint: "मेल न खाने वाले कार्ड गायब नहीं होते, धुँधले पड़ते हैं — बोर्ड का आकार बना रहता है।"
+      toggle_column: "%{name} को समेटें या खोलें"
+      wip_title: "सुझावित कार्य-प्रगति सीमा: %{limit}"
+      over_wip: "कार्य-प्रगति सीमा %{limit} से अधिक।"
       title: "%{key} बोर्ड"
       backlog: "बैकलॉग"
       new_item: "नया आइटम"
       empty_column: "यहाँ कुछ नहीं"
       scoped_to_sprint: "सक्रिय स्प्रिंट दिखाया जा रहा है: %{name}।"
       show_all: "सभी आइटम दिखाएँ"
+
+  sprints:
+    fields:
+      name: "स्प्रिंट नाम"
+      goal: "लक्ष्य"
+      starts_on: "प्रारंभ"
+      ends_on: "समाप्ति"
+    index:
+      title: "%{key} स्प्रिंट"
+      board: "बोर्ड"
+      new_sprint: "नया स्प्रिंट"
+      backlog_count: "बैकलॉग में %{count} खुले आइटम (कोई स्प्रिंट नहीं)।"
+      start: "शुरू करें"
+      close: "बंद करें"
+      roll_to: "अधूरे काम को %{name} में ले जाएँ"
+      roll_to_backlog: "अधूरा → बैकलॉग"
+      columns:
+        name: "स्प्रिंट"
+        status: "स्थिति"
+        dates: "तिथियाँ"
+        items: "आइटम"
+      empty:
+        title: "अभी कोई स्प्रिंट नहीं"
+        hint: "स्प्रिंट एक समय-सीमा है; चलने के दौरान बोर्ड सक्रिय स्प्रिंट तक सीमित रहता है।"
+    new:
+      title: "%{key} में नया स्प्रिंट"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "स्प्रिंट %{name} बनाया गया।"
+    update:
+      updated: "स्प्रिंट अद्यतन हुआ।"
+    start:
+      started: "स्प्रिंट %{name} शुरू हुआ।"
+    close:
+      closed: "%{name} बंद; %{count} अधूरे आइटम %{destination} में भेजे गए।"
+      backlog: "बैकलॉग"
+    destroy:
+      deleted: "स्प्रिंट हटाया गया।"
 
   work_items:
     unassigned: "अनासाइन"

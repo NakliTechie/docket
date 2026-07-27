@@ -12,6 +12,9 @@ class WebhookEndpoint < ApplicationRecord
     case.message_added
     case.sla_breached
     case.resolved
+    work_item.created
+    work_item.transitioned
+    work_item.commented
   ].freeze
 
   has_many :webhook_deliveries, dependent: :delete_all

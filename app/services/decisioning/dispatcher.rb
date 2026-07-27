@@ -66,6 +66,10 @@ module Decisioning
         if subject.respond_to?(:queue_id=) && decision.action_params&.key?("previous_queue_id")
           subject.update!(queue_id: decision.action_params["previous_queue_id"])
         end
+      when "open_work_item"
+        # Overturning removes the work the agent opened. Soft-delete, so the
+        # audit trail of what it did survives the reversal.
+        WorkItem.where(id: decision.action_params&.dig("work_item_id")).find_each(&:destroy)
       else subject&.try(:remove_label, decision.signal)
       end
       decision
@@ -85,6 +89,19 @@ module Decisioning
         sequence = Sequence.find_by(id: decision.action_params&.dig("sequence_id"))
         if sequence && subject && !SequenceEnrollment.exists?(sequence: sequence, enrollable: subject)
           sequence.enroll!(subject)
+        end
+      when "open_work_item"
+        # The agent may PROPOSE engineering work off a case; a human releases it
+        # (decision_class :confirm — never autonomous, per the WM plan). Reuses
+        # the same escalation path a staff member clicks, so the case gets its
+        # internal note and the link is identical either way.
+        project = Project.find_by(id: decision.action_params&.dig("project_id"))
+        if project && subject.is_a?(Case) && subject.work_items.empty?
+          result = Work::Escalation.call(kase: subject, project: project, actor: nil,
+                                         title: decision.action_params&.dig("title"),
+                                         kind: decision.action_params&.dig("kind") || :bug)
+          decision.update_column(:action_params,
+                                 (decision.action_params || {}).merge("work_item_id" => result.work_item.id))
         end
       else # "label" — attach the reversible segment tag (the default)
         subject&.try(:add_label, decision.signal)

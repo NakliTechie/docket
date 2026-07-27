@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docket — What's Built</title>
+<style>
+  :root{
+    --navy:#13294a; --navy2:#1b3a5c; --ink:#1a2430; --muted:#5b6b7c;
+    --line:#e3e8ee; --bg:#f5f7fa; --card:#ffffff;
+    --accent:#2f6f9f; --accent2:#3b5bdb; --good:#1f9d6b; --warn:#c47d12;
+    --chipbg:#eef3f8; --chipbd:#d6e1ec;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  header.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:56px 0 44px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:26px;letter-spacing:.3px}
+  .brand .dot{width:14px;height:14px;border-radius:4px;background:#7fb2da;display:inline-block}
+  .hero h1{font-size:34px;line-height:1.2;margin:18px 0 10px;font-weight:800}
+  .hero p.lead{font-size:17px;color:#d7e3ef;max-width:760px;margin:0}
+  .tagline{display:inline-block;margin-top:14px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:#9fc1dd;border:1px solid #345d80;border-radius:999px;padding:5px 12px}
+
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:32px 0 0}
+  .stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:16px 14px;text-align:center}
+  .stat b{display:block;font-size:26px;font-weight:800;color:#fff}
+  .stat span{font-size:12px;color:#bcd1e4;letter-spacing:.02em}
+
+  section{padding:44px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  h2{font-size:22px;margin:0 0 6px;font-weight:800;color:var(--navy)}
+  h2 .num{color:var(--accent);font-weight:800}
+  .sub{color:var(--muted);margin:0 0 22px;max-width:760px}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px 16px;
+    box-shadow:0 1px 2px rgba(16,40,70,.04)}
+  .card h3{margin:0 0 6px;font-size:15.5px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .card h3 .ic{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+  .card p{margin:0;font-size:13.5px;color:var(--muted)}
+  .card .tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:11px;background:var(--chipbg);border:1px solid var(--chipbd);color:#3a5168;border-radius:6px;padding:2px 8px}
+
+  /* parity */
+  .pg{display:grid;grid-template-columns:64px 1fr;gap:16px;align-items:start;padding:14px 0;border-top:1px dashed var(--line)}
+  .pg:first-child{border-top:none}
+  .pg .badge{background:var(--navy);color:#fff;border-radius:10px;text-align:center;padding:10px 0;font-weight:800;font-size:13px}
+  .pg .badge small{display:block;font-weight:600;font-size:10px;color:#9fc1dd;margin-top:2px}
+  .pg h3{margin:0 0 3px;font-size:15.5px}
+  .pg p{margin:0;font-size:13.5px;color:var(--muted)}
+
+  /* integrations */
+  .intro-row{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 24px}
+  .pill{font-size:12.5px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 13px;color:#3a5168}
+  .pill b{color:var(--navy)}
+  .catblock{margin:0 0 22px}
+  .cathead{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+  .cathead h3{margin:0;font-size:15px;color:var(--navy);font-weight:800}
+  .cathead .c{font-size:12px;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);
+    border-radius:9px;padding:7px 11px;font-size:13px;color:var(--ink)}
+  .chip .b{font-size:10px;font-weight:700;letter-spacing:.03em;border-radius:5px;padding:1px 6px;text-transform:uppercase}
+  .b.in{background:#e7f4ec;color:#137a4f;border:1px solid #c7e6d5}
+  .b.sync{background:#eaf1f9;color:#2563a8;border:1px solid #cfe0f3}
+  .b.in_{display:none}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 22px;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:4px;display:inline-block}
+
+  footer{padding:30px 0 50px;color:var(--muted);font-size:12.5px}
+  .note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;
+    padding:14px 16px;font-size:13.5px;color:#3c4a5a;margin:18px 0 0}
+  .kpis{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .kpi{font-size:12px;color:#3a5168;background:var(--chipbg);border:1px solid var(--chipbd);border-radius:7px;padding:4px 10px}
+  @media (max-width:760px){
+    .stats{grid-template-columns:repeat(2,1fr)} .grid,.grid3{grid-template-columns:1fr}
+    .hero h1{font-size:27px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> Docket</div>
+    <h1>A sovereign, agent-native case-management &amp; CRM platform</h1>
+    <p class="lead">Open-core service desk built to compete with Salesforce Service Cloud + Agentforce — self-hostable, bilingual, with an AI agent that <em>acts</em> on cases (not just chats), a tamper-evident audit trail, and 65 first-party integrations. Runs single-tenant (your data, your DB) or multi-tenant on shared infrastructure from one codebase.</p>
+    <span class="tagline">Rails 8 · Hotwire · self-hosted · private-first</span>
+
+    <div class="stats">
+      <div class="stat"><b>65</b><span>integrations</span></div>
+      <div class="stat"><b>2</b><span>deployment modes</span></div>
+      <div class="stat"><b>7</b><span>functional roles</span></div>
+      <div class="stat"><b>EN&nbsp;/&nbsp;हि</b><span>bilingual UI + API</span></div>
+      <div class="stat"><b>1,277</b><span>tests green</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- PILLARS -->
+<section>
+  <div class="wrap">
+    <h2>The platform</h2>
+    <p class="sub">Everything routes through one accountable spine: a locked case state-machine, a permission matrix, and a hash-chained audit log that every mutation passes through.</p>
+    <div class="grid">
+
+      <div class="card">
+        <h3><span class="ic"></span>Case management</h3>
+        <p>The anchor object: enforced status lifecycle (new → triaged → in&nbsp;progress → waiting&nbsp;on&nbsp;customer → resolved → closed/reopened), SLA policies &amp; breach tracking, queues, categories, a full message timeline, and unguessable tracking IDs.</p>
+        <div class="tags"><span class="tag">State machine</span><span class="tag">SLA targets</span><span class="tag">Queues</span><span class="tag">Timeline</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>Agentic AI resolution</h3>
+        <p>An AI agent that <strong>routes → drafts → resolves</strong>, grounded only on the curated knowledge base. Every action carries an accountability tier — <em>autonomous</em>, <em>confirm</em>, or <em>of-record</em> (a human must give a reasoned order) — and always offers a human handoff.</p>
+        <div class="tags"><span class="tag">Route / draft / resolve</span><span class="tag">Grounded</span><span class="tag">Decision classes</span><span class="tag">Sentiment</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>RBAC permission matrix</h3>
+        <p>Seven least-privilege functional roles (super_admin → readonly) resolved through a single <code>can?</code> chokepoint and Pundit policies. Role grants are rank-bounded — a tenant admin can't mint a platform super-admin.</p>
+        <div class="tags"><span class="tag">7 roles</span><span class="tag">Pundit</span><span class="tag">Separation of duties</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>Multi-tenancy (dual topology)</h3>
+        <p>One codebase, two deployment shapes: <strong>isolated</strong> (one DB per client — the sovereign procurement asset) and <strong>shared</strong> (many tenants, resolved by subdomain). Fail-closed tenant scoping; a super-admin platform console spans tenants.</p>
+        <div class="tags"><span class="tag">Isolated</span><span class="tag">Shared / subdomain</span><span class="tag">acts_as_tenant</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>Tamper-evident audit</h3>
+        <p>An append-only, SHA-256 hash-chained log — every mutation links to the previous entry; the chain verifies end-to-end. Per-tenant filtered reads, with the global chain reserved for platform admins.</p>
+        <div class="tags"><span class="tag">Hash chain</span><span class="tag">verify_chain</span><span class="tag">Non-repudiable</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>Decisioning engine</h3>
+        <p>Declarative rules over the deployment's own data (lead scoring, stale-lead re-engagement, SLA-at-risk, stalled deals) → proposals gated by accountability tier, with a contest/appeal path for decisions of record.</p>
+        <div class="tags"><span class="tag">4 rules</span><span class="tag">Reasoned orders</span><span class="tag">Appeals</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>CRM</h3>
+        <p>Leads, deals on a drag-and-drop kanban pipeline, drip sequences, organisations and contacts — the same accountable object model, with a sales report and forecast-lite velocity.</p>
+        <div class="tags"><span class="tag">Leads / Deals</span><span class="tag">Pipelines</span><span class="tag">Sequences</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>Customer portal</h3>
+        <p>A public, no-login surface to file a case (returns a tracking ID), check status by ID + email/phone challenge, plus optional customer SSO and a self-service knowledge base.</p>
+        <div class="tags"><span class="tag">Anonymous intake</span><span class="tag">Tracking</span><span class="tag">Customer SSO</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>API + MCP + SSO</h3>
+        <p>A full REST <code>api/v1</code> (OpenAPI-documented) with per-user tokens and scoped service-account bearers; an <strong>MCP server</strong> exposing every operation as an agent tool; staff OIDC/SAML and customer OIDC sign-on.</p>
+        <div class="tags"><span class="tag">REST v1</span><span class="tag">MCP server</span><span class="tag">OAuth / OIDC / SAML</span><span class="tag">Webhooks</span></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="ic"></span>Bilingual everywhere</h3>
+        <p>Full English / हिन्दी across the staff console, the customer portal, and API error strings — enforced at parity in the test suite.</p>
+        <div class="tags"><span class="tag">EN / HI</span><span class="tag">Tested parity</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PARITY GAPS -->
+<section>
+  <div class="wrap">
+    <h2>Service-Cloud parity — the five gaps closed</h2>
+    <p class="sub">A focused build to reach parity-or-better against Salesforce Service Cloud on the surfaces that matter, each on existing infrastructure.</p>
+
+    <div class="pg"><div class="badge">PG1<small>routing</small></div>
+      <div><h3>Declarative routing &amp; assignment rules</h3>
+      <p>Deterministic, ordered rules that classify and assign cases on intake (channel / priority / category / keyword → queue, category, priority, assignee). Rules win; the AI is the fallback. Round-robin, least-loaded, and specific-agent assignment strategies.</p></div></div>
+
+    <div class="pg"><div class="badge">PG2<small>omnichannel</small></div>
+      <div><h3>Inbound omnichannel → case</h3>
+      <p>Messaging channels are now two-way: a customer's <strong>WhatsApp</strong> or <strong>Telegram</strong> message opens (or threads onto) a case, and staff replies route back out the same channel. Per-provider signature verification, tenant-aware.</p></div></div>
+
+    <div class="pg"><div class="badge">PG3<small>knowledge</small></div>
+      <div><h3>Knowledge-base product surface</h3>
+      <p>The grounding corpus became an article product: draft/published lifecycle, internal/public visibility, slugs. A public portal KB, plus in-console article search staff can insert into a reply.</p></div></div>
+
+    <div class="pg"><div class="badge">PG4<small>approvals</small></div>
+      <div><h3>Approval processes (maker-checker)</h3>
+      <p>Configurable approval chains — "banks live on maker-checker." A guarded case transition (e.g. closure) or an escalated effector action parks for a checker's reasoned order before it takes effect; each approval is consumed once.</p></div></div>
+
+    <div class="pg"><div class="badge">PG5<small>MCP</small></div>
+      <div><h3>MCP server face</h3>
+      <p>A JSON-RPC Model Context Protocol endpoint that exposes the whole API as agent tools — auto-derived from the OpenAPI spec, re-enforcing the same auth, tenancy, and scopes. No new authority.</p></div></div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section>
+  <div class="wrap">
+    <h2>Security &amp; quality</h2>
+    <p class="sub">A whole-app fresh-eyes audit was run and fully resolved — 2 Critical, 4 High, 7 Medium, 12 Low, and the stray-code cleanup, each fixed with tests.</p>
+    <div class="grid3">
+      <div class="card"><h3><span class="ic"></span>Tenant isolation</h3><p>Audit, activity, security-event and CORS reads are tenant-scoped in shared mode; the global chain stays a super-admin view.</p></div>
+      <div class="card"><h3><span class="ic"></span>Privilege boundary</h3><p>Role grants capped at the actor's own rank; over-broad policy scopes gated on read permission.</p></div>
+      <div class="card"><h3><span class="ic"></span>Effector safety</h3><p>SSRF allowlist, fail-closed webhook HMAC, idempotency-race handling, encrypted credential vault, per-agent budgets.</p></div>
+      <div class="card"><h3><span class="ic"></span>Maker-checker integrity</h3><p>Approvals are consumed once — repeat closures need fresh sign-off; model-driven transitions go through the gate too.</p></div>
+      <div class="card"><h3><span class="ic"></span>Decisioning robustness</h3><p>Unique-per-(tenant,rule,subject) decisions; an overturned re-route restores the prior queue.</p></div>
+      <div class="card"><h3><span class="ic"></span>Verified</h3><p>1,277 tests green · RuboCop clean · Brakeman 0 security warnings · EN/HI i18n parity.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTEGRATIONS -->
+<section>
+  <div class="wrap">
+    <h2>Integrations — <span class="num">65</span> connectors</h2>
+    <p class="sub">Each connector is both an inbound sync source <em>and</em> an outbound effector the AI agent can invoke (gated by accountability tier). Built for the Indian SMB / mid-market lane first — note the deep payments &amp; messaging coverage — but globally applicable.</p>
+
+    <div class="intro-row">
+      <span class="pill"><b>18</b> Communications</span>
+      <span class="pill"><b>10</b> Productivity</span>
+      <span class="pill"><b>8</b> CRM &amp; Sales</span>
+      <span class="pill"><b>5</b> Payments</span>
+      <span class="pill"><b>5</b> Support &amp; Ticketing</span>
+      <span class="pill"><b>4</b> Storage &amp; Files</span>
+      <span class="pill"><b>4</b> Forms &amp; Surveys</span>
+      <span class="pill"><b>3</b> Marketing</span>
+      <span class="pill"><b>3</b> Automation</span>
+      <span class="pill"><b>2</b> E-commerce</span>
+      <span class="pill">+ BI, e-sign, generic HTTP</span>
+    </div>
+
+    <div class="legend">
+      <span><span class="sw" style="background:#e7f4ec;border:1px solid #c7e6d5"></span> inbound → opens cases</span>
+      <span><span class="sw" style="background:#eaf1f9;border:1px solid #cfe0f3"></span> pull-sync source</span>
+      <span><span class="sw" style="background:#fff;border:1px solid var(--line)"></span> outbound effector</span>
+    </div>
+
+    <div class="catblock"><div class="cathead"><h3>Communications</h3><span class="c">18 — SMS, WhatsApp, email, chat</span></div><div class="chips">
+      <span class="chip">WhatsApp Business (Cloud API) <span class="b in">inbound</span></span>
+      <span class="chip">Telegram (bot) <span class="b in">inbound</span></span>
+      <span class="chip">Twilio (SMS)</span><span class="chip">MSG91 (SMS / WhatsApp)</span><span class="chip">Gupshup (WhatsApp)</span>
+      <span class="chip">Kaleyra (SMS/WhatsApp)</span><span class="chip">Exotel (SMS)</span><span class="chip">Plivo (SMS)</span><span class="chip">Sinch (SMS)</span>
+      <span class="chip">Netcore SMS</span><span class="chip">Netcore WhatsApp</span><span class="chip">Netcore Email</span>
+      <span class="chip">SendGrid (email)</span><span class="chip">Mailgun (email)</span><span class="chip">Amazon SES</span>
+      <span class="chip">Slack (webhook)</span><span class="chip">Microsoft Teams (webhook)</span><span class="chip">Google Chat (webhook)</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Productivity</h3><span class="c">10 — calendars, docs, tasks</span></div><div class="chips">
+      <span class="chip">Google Calendar</span><span class="chip">Google Sheets</span><span class="chip">Gmail (send)</span>
+      <span class="chip">Microsoft 365 (Outlook)</span><span class="chip">Notion</span><span class="chip">Airtable</span>
+      <span class="chip">Asana</span><span class="chip">Trello</span><span class="chip">ClickUp</span><span class="chip">Calendly</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>CRM &amp; Sales</h3><span class="c">8</span></div><div class="chips">
+      <span class="chip">Salesforce</span><span class="chip">HubSpot (CRM) <span class="b sync">sync</span></span><span class="chip">HubSpot (OAuth)</span>
+      <span class="chip">Zoho CRM</span><span class="chip">Pipedrive</span><span class="chip">Freshsales</span>
+      <span class="chip">Microsoft Dynamics 365</span><span class="chip">monday.com</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Payments</h3><span class="c">5 — India-first</span></div><div class="chips">
+      <span class="chip">Razorpay</span><span class="chip">Stripe</span><span class="chip">PayU (India)</span><span class="chip">Cashfree</span><span class="chip">PhonePe</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Support &amp; Ticketing</h3><span class="c">5</span></div><div class="chips">
+      <span class="chip">Zendesk</span><span class="chip">Freshdesk</span><span class="chip">Intercom</span><span class="chip">Jira (issues)</span><span class="chip">ServiceNow (ITSM)</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Storage &amp; Files</h3><span class="c">4</span></div><div class="chips">
+      <span class="chip">Amazon S3</span><span class="chip">Google Drive</span><span class="chip">Dropbox</span><span class="chip">Box</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Forms &amp; Surveys</h3><span class="c">4</span></div><div class="chips">
+      <span class="chip">Typeform <span class="b sync">sync</span></span><span class="chip">Jotform <span class="b sync">sync</span></span><span class="chip">SurveyMonkey</span><span class="chip">Qualtrics</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Marketing</h3><span class="c">3</span></div><div class="chips">
+      <span class="chip">Mailchimp</span><span class="chip">Klaviyo</span><span class="chip">ActiveCampaign</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Automation</h3><span class="c">3</span></div><div class="chips">
+      <span class="chip">Zapier (catch hook)</span><span class="chip">Make (webhook)</span><span class="chip">n8n (webhook)</span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>E-commerce</h3><span class="c">2</span></div><div class="chips">
+      <span class="chip">Shopify <span class="b sync">sync</span></span><span class="chip">WooCommerce <span class="b sync">sync</span></span>
+    </div></div>
+
+    <div class="catblock"><div class="cathead"><h3>Data, e-sign &amp; generic</h3><span class="c">3</span></div><div class="chips">
+      <span class="chip">Metabase (BI)</span><span class="chip">DocuSign (e-signature)</span><span class="chip">HTTP JSON API (generic) <span class="b sync">sync</span></span>
+    </div></div>
+
+    <div class="note"><b>How an integration works:</b> the operator wires it with their own keys (vaulted, encrypted, never logged). The AI agent may then <em>invoke</em> its actions — send a WhatsApp, issue a Razorpay refund, create a Jira issue, post to Slack — but a write/irreversible action parks for a human unless explicitly auto-approved, and an outbound URL is SSRF-checked at the egress point.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div><strong>Docket</strong> — sovereign open-core case management &amp; CRM. Generated from the codebase on 2026-06-15.</div>
+    <div class="kpis">
+      <span class="kpi">Rails 8 + Hotwire</span>
+      <span class="kpi">65 integrations</span>
+      <span class="kpi">REST API + MCP</span>
+      <span class="kpi">isolated &amp; shared tenancy</span>
+      <span class="kpi">hash-chained audit</span>
+      <span class="kpi">EN / हिन्दी</span>
+      <span class="kpi">1,277 tests · Brakeman 0</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

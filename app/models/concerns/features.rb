@@ -96,7 +96,8 @@ module Features
     "reports" => "service_desk",
     "reference_docs" => "service_desk.kb",
     "leads" => "crm", "deals" => "crm", "pipelines" => "crm",
-    "sequences" => "crm.sequences", "sequence_enrollments" => "crm.sequences"
+    "sequences" => "crm.sequences", "sequence_enrollments" => "crm.sequences",
+    "projects" => "work", "work_items" => "work", "sprints" => "work.sprints"
   }.freeze
 
   def owner_of_api_path(path)

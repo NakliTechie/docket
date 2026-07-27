@@ -21,6 +21,9 @@ class Project < ApplicationRecord
   belongs_to :lead, -> { with_deleted }, class_name: "User", optional: true
 
   has_many :workflow_states, -> { order(:position) }, dependent: :destroy, inverse_of: :project
+  # Board columns are edited inline on the project form (name, order, soft WIP
+  # limit); creating/removing columns is a separate deliberate act.
+  accepts_nested_attributes_for :workflow_states, update_only: true
   has_many :work_items, dependent: :destroy
   has_many :sprints, dependent: :destroy
   has_many :project_memberships, dependent: :destroy
@@ -29,7 +32,8 @@ class Project < ApplicationRecord
 
   validates :name, presence: true
   validates :key, presence: true, format: { with: KEY_FORMAT },
-            uniqueness: { scope: :tenant_id, case_sensitive: false }
+            uniqueness: { scope: :tenant_id, case_sensitive: false,
+                          conditions: -> { where(deleted_at: nil) } }
 
   normalizes :key, with: ->(key) { key.to_s.strip.upcase }
 

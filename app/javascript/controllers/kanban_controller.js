@@ -1,13 +1,21 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Drag a deal card between stage columns; persist the move to the server.
-// Optimistic: the card moves immediately, reverting (reload) on failure.
+// Drag a card between columns and persist the move. Optimistic: the card moves
+// immediately and the page reloads if the server refuses.
+//
+// Generic over what is being dragged — the deal pipeline and the work board
+// both use it. The card carries data-item-id, the column carries
+// data-target-id, and the caller supplies the URL template and the parameter
+// name the server expects:
+//
+//   data-kanban-url-template-value="/deals/:id/move"
+//   data-kanban-param-value="pipeline_stage_id"
 export default class extends Controller {
   static targets = ["column", "card"]
-  static values = { moveUrl: String }
+  static values = { urlTemplate: String, param: String }
 
   dragstart(event) {
-    this.draggedId = event.target.dataset.dealId
+    this.draggedId = event.target.dataset.itemId
     event.dataTransfer.effectAllowed = "move"
     event.target.classList.add("is-dragging")
   }
@@ -29,23 +37,42 @@ export default class extends Controller {
     event.preventDefault()
     const column = event.currentTarget
     column.classList.remove("is-drag-over")
-    const stageId = column.dataset.stageId
-    const card = this.element.querySelector(`.kanban-card[data-deal-id="${this.draggedId}"]`)
-    if (!card || !stageId) return
+    const targetId = column.dataset.targetId
+    const card = this.element.querySelector(`.kanban-card[data-item-id="${this.draggedId}"]`)
+    if (!card || !targetId) return
+
     column.querySelector(".kanban-cards").appendChild(card)
-    this.persist(this.draggedId, stageId)
+    this.recount()
+    this.persist(this.draggedId, targetId)
   }
 
-  persist(dealId, stageId) {
+  // Counts and WIP flags are rendered server-side; keep them honest after an
+  // optimistic move instead of waiting for a reload.
+  recount() {
+    this.element.querySelectorAll(".kanban-column").forEach((column) => {
+      const count = column.querySelectorAll(".kanban-card").length
+      const badge = column.querySelector(".kanban-count")
+      if (badge) badge.textContent = count
+
+      const limit = parseInt(column.dataset.wipLimit || "", 10)
+      if (!isNaN(limit)) column.classList.toggle("is-over-wip", count > limit)
+    })
+  }
+
+  persist(itemId, targetId) {
     const token = document.querySelector("meta[name='csrf-token']")?.content
-    fetch(`${this.moveUrlValue}/${dealId}/move`, {
+    const url = this.urlTemplateValue.replace(":id", itemId)
+    const body = {}
+    body[this.paramValue] = targetId
+
+    fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRF-Token": token,
         "Accept": "application/json"
       },
-      body: JSON.stringify({ pipeline_stage_id: stageId })
+      body: JSON.stringify(body)
     }).then((response) => {
       if (!response.ok) window.location.reload()
     }).catch(() => window.location.reload())

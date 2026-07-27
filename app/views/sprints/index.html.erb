@@ -1,0 +1,66 @@
+<% page_title t(".title", key: @project.key) %>
+<div class="page-header">
+  <h1><%= t(".title", key: @project.key) %></h1>
+  <div class="page-actions">
+    <%= link_to t(".board"), project_board_path(@project), class: "btn" %>
+    <% if policy(Sprint).create? %>
+      <%= link_to new_project_sprint_path(@project), class: "btn btn-primary" do %>
+        <%= icon "plus" %><%= t(".new_sprint") %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<p class="muted"><%= t(".backlog_count", count: @backlog_count) %></p>
+
+<% if @sprints.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th><%= t(".columns.dates") %></th>
+          <th><%= t(".columns.items") %></th>
+          <th><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @sprints.each do |sprint| %>
+          <tr>
+            <td>
+              <strong><%= sprint.name %></strong>
+              <% if sprint.goal.present? %><div class="muted"><%= sprint.goal %></div><% end %>
+            </td>
+            <td><span class="badge"><%= sprint.human_status %></span></td>
+            <td class="table-meta">
+              <%= sprint.starts_on ? l(sprint.starts_on, format: :long) : "—" %>
+              →
+              <%= sprint.ends_on ? l(sprint.ends_on, format: :long) : "—" %>
+            </td>
+            <td><%= @counts[sprint.id].to_i %></td>
+            <td class="table-actions">
+              <% if policy(sprint).start? && sprint.status_planned? %>
+                <%= button_to t(".start"), start_project_sprint_path(@project, sprint), class: "btn btn-sm" %>
+              <% end %>
+              <% if policy(sprint).close? && sprint.status_active? %>
+                <%= form_with url: close_project_sprint_path(@project, sprint), class: "inline-form" do |f| %>
+                  <%= f.select :roll_to,
+                        options_for_select(@sprints.reject { |s| s.id == sprint.id || s.status_closed? }
+                                                   .map { |s| [ t(".roll_to", name: s.name), s.id ] }),
+                        include_blank: t(".roll_to_backlog") %>
+                  <%= f.submit t(".close"), class: "btn btn-sm" %>
+                <% end %>
+              <% end %>
+              <% if policy(sprint).update? %>
+                <%= link_to t("actions.edit"), edit_project_sprint_path(@project, sprint), class: "btn btn-sm" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+<% end %>

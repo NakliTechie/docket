@@ -474,3 +474,38 @@ kbd {
 .badge-working, .badge-qualified { background: var(--color-warning-soft); color: var(--color-warning); }
 .badge-converted, .badge-won { background: var(--color-success-soft); color: var(--color-success); }
 .badge-unqualified, .badge-lost { background: var(--color-danger-soft); color: var(--color-danger); }
+
+/* ── Work board (WM2) — extends the sales kanban above ────────────────
+   Filtering DIMS rather than hides: a board that hides cards lies about its
+   own shape, because the column counts stop matching what you can see. */
+.kanban-card.is-dimmed { opacity: 0.25; }
+.kanban-card.is-dimmed:hover { opacity: 0.6; }
+.kanban-card-head { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; }
+
+/* Soft WIP limit: flagged, never blocked. */
+.kanban-wip { font-size: var(--text-xs); color: var(--color-ink-faint); }
+.kanban-wip.is-over { color: var(--color-danger); font-weight: 600; }
+.kanban-column.is-over-wip { border-color: var(--color-danger); }
+.board-wip-warning {
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  margin: 0 0 0.5rem;
+}
+
+/* Collapsed columns shrink to a strip; the title stays readable. */
+.board-collapse {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; color: inherit; text-align: left;
+}
+.board-collapse:hover { text-decoration: underline; }
+.kanban-column.is-collapsed { flex-basis: 3.5rem; }
+.kanban-column.is-collapsed .kanban-cards,
+.kanban-column.is-collapsed .kanban-count,
+.kanban-column.is-collapsed .kanban-wip,
+.kanban-column.is-collapsed .board-wip-warning { display: none; }
+.kanban-column.is-collapsed .kanban-column-title {
+  writing-mode: vertical-rl;
+  margin: 0;
+  height: 8rem;
+}
+.board-column-empty { font-size: var(--text-xs); padding: 0.5rem 0; }

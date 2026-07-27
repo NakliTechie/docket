@@ -65,6 +65,7 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:key, :name, :description, :lead_id)
+    params.require(:project).permit(:key, :name, :description, :lead_id,
+                                    workflow_states_attributes: %i[id name position wip_limit])
   end
 end

@@ -14,5 +14,14 @@ class WorkComment < ApplicationRecord
 
   validates :body, presence: true
 
+  after_create_commit :publish_commented
+
   def display_label = "comment on #{work_item&.reference}"
+
+  private
+
+  def publish_commented
+    Webhooks.publish("work_item.commented",
+                     Webhooks.work_item_payload(work_item).merge(comment_id: id, author_id: author_id))
+  end
 end
