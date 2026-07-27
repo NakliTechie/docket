@@ -10,6 +10,23 @@ module Sso
     ENV[env_key].presence || Setting.get(key).presence
   end
 
+  # OmniAuth's setup phase runs as Rack MIDDLEWARE — before TenantResolution
+  # has put a tenant in scope. Settings resolve tenant-first with a global
+  # fallback, so without this every per-tenant SSO setting is invisible to the
+  # setup phase and the provider reports "not configured": SSO is dead for any
+  # tenant that configured it on its own row rather than globally.
+  #
+  # Same fix, same reason, as Docket::Cors#allowed_origins — any middleware
+  # that reads per-tenant Settings has to resolve the tenant from the host
+  # itself. Unknown subdomain in a shared deploy → no tenant → the block runs
+  # unscoped and the provider fails closed, which is correct.
+  def with_request_tenant(env)
+    tenant = Tenant.resolve_by_subdomain(ActionDispatch::Request.new(env).subdomain)
+    return yield if tenant.nil?
+
+    ActsAsTenant.with_tenant(tenant) { yield }
+  end
+
   # -- staff OIDC --------------------------------------------------------
 
   def staff_oidc_enabled?
