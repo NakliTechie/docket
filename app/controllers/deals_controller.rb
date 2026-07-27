@@ -1,5 +1,8 @@
 class DealsController < ApplicationController
   require_feature "crm"
+
+  # A pipeline is a working surface, not a report. See the deal list for all.
+  STAGE_LIMIT = 50
   before_action :set_deal, only: %i[show edit update destroy move]
 
   # Kanban board: open deals grouped by stage for the selected pipeline.
@@ -8,8 +11,17 @@ class DealsController < ApplicationController
     @pipeline = (params[:pipeline_id].present? && Pipeline.find_by(id: params[:pipeline_id])) || Pipeline.default
     if @pipeline
       @stages = @pipeline.pipeline_stages.order(:position)
-      deals = policy_scope(Deal).where(pipeline: @pipeline).includes(:owner, :contact).order(updated_at: :desc)
-      @deals_by_stage = deals.group_by(&:pipeline_stage_id)
+      # Same per-column cap as the work board, for the same reason: this loaded
+      # every open deal in the pipeline and grouped in Ruby.
+      scope = policy_scope(Deal).where(pipeline: @pipeline).includes(:owner, :contact)
+      @stage_limit = STAGE_LIMIT
+      @totals_by_stage = scope.reorder(nil).group(:pipeline_stage_id).count
+      @deals_by_stage = @stages.each_with_object({}) do |stage, acc|
+        acc[stage.id] = scope.where(pipeline_stage_id: stage.id)
+                             .order(updated_at: :desc)
+                             .limit(STAGE_LIMIT)
+                             .to_a
+      end
     else
       @stages = []
       @deals_by_stage = {}

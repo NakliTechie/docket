@@ -52,7 +52,8 @@
                   aria-label="<%= t(".toggle_column", name: state.name) %>">
             <%= state.name %>
           </button>
-          <span class="kanban-count"><%= items.size %></span>
+          <% total = @totals_by_state[state.id].to_i %>
+          <span class="kanban-count"><%= total %></span>
           <% if state.wip_limit.present? %>
             <span class="kanban-wip<%= " is-over" if over %>"
                   title="<%= t(".wip_title", limit: state.wip_limit) %>">/ <%= state.wip_limit %></span>
@@ -79,6 +80,11 @@
           <% end %>
           <% if items.empty? %>
             <p class="muted board-column-empty"><%= t(".empty_column") %></p>
+          <% elsif total > items.size %>
+            <p class="muted board-column-empty">
+              <%= t(".truncated", shown: items.size, total: total) %>
+              <%= link_to t(".see_all"), project_work_items_path(@project, state_id: state.id) %>
+            </p>
           <% end %>
         </div>
       </section>
