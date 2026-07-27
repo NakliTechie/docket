@@ -123,4 +123,47 @@ class WorkModuleTest < ActionDispatch::IntegrationTest
     refute users(:admin).can?("work:read")
     refute users(:admin).can?("project:manage")
   end
+
+  # ── Regressions from the 2026-07-28 adversarial review ────────────────────
+  test "the agent effector cannot open work for a tenant without the module" do
+    kase = cases(:pension_case)
+    decision = Decision.create!(rule: "needs_eng", version: "1", subject: kase, signal: "defect",
+                                decision_class: "confirm", status: :proposed, action: "open_work_item",
+                                action_params: { "project_id" => projects(:pep).id })
+    ActsAsTenant.current_tenant.set_feature!("work", false)
+
+    assert_no_difference "WorkItem.count" do
+      Decisioning::Dispatcher.perform_action!(decision)
+    end
+  end
+
+  test "the project form cannot smuggle in a new board column" do
+    sign_in_as users(:admin)
+    project = projects(:pep)
+    before = project.workflow_states.count
+
+    patch project_path(project), params: { project: {
+      name: project.name,
+      workflow_states_attributes: { "0" => { name: "Injected column", position: 9 } }
+    } }
+
+    assert_equal before, project.reload.workflow_states.count,
+                 "editing a board is not the same act as designing one"
+    refute project.workflow_states.exists?(name: "Injected column")
+  end
+
+  test "an existing column can still be renamed and given a WIP limit" do
+    sign_in_as users(:admin)
+    project = projects(:pep)
+    state = project.workflow_states.ordered.first
+
+    patch project_path(project), params: { project: {
+      name: project.name,
+      workflow_states_attributes: { "0" => { id: state.id, name: "Inbox", wip_limit: 4 } }
+    } }
+
+    state.reload
+    assert_equal "Inbox", state.name
+    assert_equal 4, state.wip_limit
+  end
 end

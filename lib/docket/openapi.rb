@@ -154,7 +154,7 @@ module Docket
       # Work module (WM5). Documented here is what makes these reachable as MCP
       # tools too — the catalogue is derived from this document.
       crud(result, "projects", "Project", extra_params: %w[archived],
-           create_note: "key is uppercase and unique per tenant; a new project seeds its default board columns.")
+           create_note: "key is uppercase and unique per tenant; a new project seeds its default board columns. Service accounts need the work:manage scope for create/update/delete — configuring a workspace sits a tier above doing the work in it.")
       crud(result, "work_items", "WorkItem",
            extra_params: %w[project_id assignee_id sprint_id open],
            create_note: "work_item[project_id] is required on create. Identity is KEY-123, minted per project.")
@@ -167,7 +167,7 @@ module Docket
                  request: { work_comment: :object }, schema: "WorkComment")
       }
       crud(result, "sprints", "Sprint", extra_params: %w[project_id], only: %i[index show create update],
-           create_note: "sprint[project_id] is required on create. One sprint may be active per project.")
+           create_note: "sprint[project_id] is required on create. One sprint may be active per project. status is NOT settable here — close through POST /sprints/{id}/close so unfinished work is dealt with.")
       result["/sprints/{id}/close"] = { post: op("Close a sprint; unfinished items go to the backlog or roll into roll_to",
         params: [ id_param ], request: { roll_to: :integer },
         responses: { "200" => "Closed, with moved_items count" }) }

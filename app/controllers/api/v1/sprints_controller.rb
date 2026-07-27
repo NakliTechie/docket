@@ -50,7 +50,11 @@ module Api
       end
 
       def sprint_params
-        params.require(:sprint).permit(:project_id, :name, :goal, :status, :starts_on, :ends_on)
+        # :status is deliberately NOT permitted. Closing must go through
+        # Sprints::Closeout, which decides what happens to unfinished work;
+        # setting it here would strand items in a closed sprint and falsify
+        # every velocity number computed from it. Use POST /sprints/:id/close.
+        params.require(:sprint).permit(:project_id, :name, :goal, :starts_on, :ends_on)
       end
     end
   end

@@ -10,6 +10,18 @@
 module DemoScenarios
   SAAS = {
     brand: "Acme Cloud",
+    project: { key: "PLAT", name: "Platform Engineering",
+               goal: "Ship the billing-webhook rebuild",
+               items: [
+                 [ "Billing webhook retries stop after one attempt", :bug, :urgent, 5 ],
+                 [ "Rate-limit the public API per token", :story, :high, 8 ],
+                 [ "Upgrade the queue workers", :task, :normal, 3 ],
+                 [ "SSO: support group-to-role mapping", :story, :high, 5 ],
+                 [ "Flaky checkout test in CI", :bug, :normal, 2 ],
+                 [ "Add per-tenant audit export", :story, :normal, 8 ],
+                 [ "Document the webhook payloads", :task, :low, 1 ],
+                 [ "Investigate slow dashboard query", :bug, :high, 3 ]
+               ] },
     orgs: [
       [ "Acme Cloud Inc.", "company", "ACME-HQ" ],
       [ "Globex Corp", "company", "GLOBEX-77" ],
@@ -62,6 +74,18 @@ module DemoScenarios
 
   RETAIL = {
     brand: "ShopNova",
+    project: { key: "SHOP", name: "Storefront Squad",
+               goal: "Cut checkout drop-off before the sale",
+               items: [
+                 [ "Checkout fails on saved UPI handles", :bug, :urgent, 5 ],
+                 [ "Wishlist sync across devices", :story, :normal, 8 ],
+                 [ "Refund flow: partial refunds", :story, :high, 8 ],
+                 [ "Product images slow on 3G", :bug, :high, 3 ],
+                 [ "Restock alerts for out-of-stock items", :story, :normal, 5 ],
+                 [ "Clean up legacy coupon codes", :task, :low, 2 ],
+                 [ "Order-status page copy review", :task, :low, 1 ],
+                 [ "Duplicate orders on double-tap", :bug, :urgent, 3 ]
+               ] },
     orgs: [
       [ "ShopNova Retail", "company", "SHOPNOVA-HQ" ],
       [ "Metro Wholesale", "company", "METRO-44" ],
@@ -114,6 +138,18 @@ module DemoScenarios
 
   GOV = {
     brand: "Public Grievance Portal",
+    project: { key: "PORTAL", name: "Portal Modernisation",
+               goal: "Accessibility and regional-language coverage",
+               items: [
+                 [ "Screen-reader labels on the grievance form", :bug, :urgent, 5 ],
+                 [ "Odia and Bengali translations", :story, :high, 13 ],
+                 [ "SMS status updates for tracked grievances", :story, :high, 8 ],
+                 [ "Officer dashboard load time", :bug, :normal, 3 ],
+                 [ "Bulk-export for RTI requests", :story, :normal, 5 ],
+                 [ "Retire the legacy tracking page", :task, :low, 2 ],
+                 [ "Printable acknowledgement receipt", :task, :normal, 3 ],
+                 [ "Duplicate submissions from one mobile", :bug, :high, 3 ]
+               ] },
     orgs: [
       [ "Directorate of Public Grievances", "department", nil ],
       [ "Bharat National Bank — Karol Bagh Branch", "branch", "BNB-KB-014" ],

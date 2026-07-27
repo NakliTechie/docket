@@ -20,7 +20,7 @@ module Api
       end
 
       def create
-        authorize_api!(Project.new, :create?, scope: "work:write")
+        authorize_api!(Project.new, :create?, scope: "work:manage")
         project = Project.new(project_params)
         if project.save
           render json: { data: Serialize.project(project) }, status: :created
@@ -30,7 +30,7 @@ module Api
       end
 
       def update
-        authorize_api!(@project, :update?, scope: "work:write")
+        authorize_api!(@project, :update?, scope: "work:manage")
         if @project.update(project_params)
           render json: { data: Serialize.project(@project) }
         else
@@ -39,7 +39,7 @@ module Api
       end
 
       def destroy
-        authorize_api!(@project, :destroy?, scope: "work:write")
+        authorize_api!(@project, :destroy?, scope: "work:manage")
         @project.destroy
         head :no_content
       end

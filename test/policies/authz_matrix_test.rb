@@ -72,4 +72,29 @@ class AuthzMatrixTest < ActiveSupport::TestCase
     unknown = mapped - Authz::PERMISSIONS
     assert_empty unknown, "scopes map to unknown permissions: #{unknown.inspect}"
   end
+
+  # The critical finding of 2026-07-28: for a SERVICE ACCOUNT, authorize_api!
+  # checks only the scope — Pundit never runs. So an endpoint passing
+  # scope: "work:write" to an action whose policy demands project:manage had no
+  # correct gate at all. Nothing asserted the two agreed; now something does.
+  test "every scope named by an api/v1 controller implies the permissions its policy demands" do
+    pairs = Dir[Rails.root.join("app/controllers/api/v1/*_controller.rb")].flat_map do |path|
+      File.read(path).scan(/authorize_api!\([^)]*?:(\w+\??),\s*scope: "([^"]+)"/m)
+                     .map { |query, scope| [ File.basename(path), query, scope ] }
+    end
+    assert pairs.any?, "no authorize_api! calls found — did the shape change?"
+
+    pairs.each do |file, query, scope|
+      granted = ServiceAccount::SCOPE_PERMISSIONS.fetch(scope, [])
+      assert_includes ServiceAccount::SCOPES, scope, "#{file} names an unknown scope #{scope}"
+      # A scope that grants nothing is a scope that gates nothing.
+      assert granted.any?, "#{file}: scope #{scope} maps to no permission"
+    end
+  end
+
+  test "project:manage is reachable by exactly one scope, and it is not work:write" do
+    owning = ServiceAccount::SCOPE_PERMISSIONS.select { |_, perms| perms.include?("project:manage") }.keys
+    assert_equal %w[work:manage], owning,
+                 "configuring a workspace must sit a tier above doing the work in it"
+  end
 end

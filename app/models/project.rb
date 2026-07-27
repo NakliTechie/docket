@@ -22,8 +22,12 @@ class Project < ApplicationRecord
 
   has_many :workflow_states, -> { order(:position) }, dependent: :destroy, inverse_of: :project
   # Board columns are edited inline on the project form (name, order, soft WIP
-  # limit); creating/removing columns is a separate deliberate act.
-  accepts_nested_attributes_for :workflow_states, update_only: true
+  # limit). `update_only:` does nothing on a has_many, so reject_if is what
+  # actually stops the form creating columns — editing a board is not the same
+  # act as designing one, and a nested payload should not be able to smuggle a
+  # new column in. (No allow_destroy either: removal stays explicit.)
+  accepts_nested_attributes_for :workflow_states,
+                                reject_if: ->(attrs) { attrs["id"].blank? }
   has_many :work_items, dependent: :destroy
   has_many :sprints, dependent: :destroy
   has_many :project_memberships, dependent: :destroy

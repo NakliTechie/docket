@@ -51,7 +51,7 @@ module Api
       end
 
       def destroy
-        authorize_api!(@item, :destroy?, scope: "work:write")
+        authorize_api!(@item, :destroy?, scope: "work:manage")
         @item.destroy
         head :no_content
       end
