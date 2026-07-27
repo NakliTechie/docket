@@ -1,0 +1,23 @@
+<%= form_with model: [ project, sprint ], class: "form" do |f| %>
+  <%= render "shared/form_errors", record: sprint %>
+  <div class="form-row">
+    <%= f.label :name, t("sprints.fields.name") %>
+    <%= f.text_field :name, required: true %>
+  </div>
+  <div class="form-row">
+    <%= f.label :goal, t("sprints.fields.goal") %>
+    <%= f.text_area :goal, rows: 2 %>
+  </div>
+  <div class="form-row">
+    <%= f.label :starts_on, t("sprints.fields.starts_on") %>
+    <%= f.date_field :starts_on %>
+  </div>
+  <div class="form-row">
+    <%= f.label :ends_on, t("sprints.fields.ends_on") %>
+    <%= f.date_field :ends_on %>
+  </div>
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), project_sprints_path(project), class: "btn" %>
+  </div>
+<% end %>

@@ -42,6 +42,12 @@ Rails.application.routes.draw do
     end
     resource :board, only: :show
     resources :work_items, only: %i[index new create]
+    resources :sprints, except: :show do
+      member do
+        post :start
+        post :close
+      end
+    end
   end
   resources :work_items, only: %i[show edit update destroy] do
     member do

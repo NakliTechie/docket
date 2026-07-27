@@ -1819,6 +1819,10 @@ en:
 
   projects:
     fields:
+      columns: "Board columns"
+      columns_hint: "Rename a column or set a soft work-in-progress limit. Over-limit columns are flagged, never blocked."
+      column_name: "Column name"
+      wip_limit: "WIP limit"
       key: "Project key"
       key_hint: "Uppercase letters and digits, 2–10 characters. Work items are numbered KEY-1, KEY-2 and so on."
       name: "Project name"
@@ -1856,12 +1860,58 @@ en:
 
   boards:
     show:
+      sprints: "Sprints"
+      filter: "Filter"
+      filter_placeholder: "Type to highlight cards…"
+      filter_hint: "Non-matching cards dim rather than disappear, so the board keeps its shape."
+      toggle_column: "Collapse or expand %{name}"
+      wip_title: "Soft work-in-progress limit: %{limit}"
+      over_wip: "Over the work-in-progress limit of %{limit}."
       title: "%{key} board"
       backlog: "Backlog"
       new_item: "New item"
       empty_column: "Nothing here"
       scoped_to_sprint: "Showing the active sprint: %{name}."
       show_all: "Show all items"
+
+  sprints:
+    fields:
+      name: "Sprint name"
+      goal: "Goal"
+      starts_on: "Starts"
+      ends_on: "Ends"
+    index:
+      title: "%{key} sprints"
+      board: "Board"
+      new_sprint: "New sprint"
+      backlog_count: "%{count} open items in the backlog (no sprint)."
+      start: "Start"
+      close: "Close"
+      roll_to: "Roll unfinished into %{name}"
+      roll_to_backlog: "Unfinished → backlog"
+      columns:
+        name: "Sprint"
+        status: "Status"
+        dates: "Dates"
+        items: "Items"
+      empty:
+        title: "No sprints yet"
+        hint: "A sprint is a time-box; the board scopes to the active one while it runs."
+    new:
+      title: "New sprint in %{key}"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Sprint %{name} created."
+    update:
+      updated: "Sprint updated."
+    start:
+      started: "Sprint %{name} started."
+    close:
+      closed: "Closed %{name}; moved %{count} unfinished items to %{destination}."
+      backlog: "the backlog"
+    destroy:
+      deleted: "Sprint deleted."
 
   work_items:
     unassigned: "Unassigned"

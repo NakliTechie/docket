@@ -23,6 +23,21 @@
           { include_blank: t("forms.none") } %>
   </div>
 
+  <% if project.persisted? %>
+    <fieldset class="fieldset">
+      <legend><%= t("projects.fields.columns") %></legend>
+      <p class="muted"><%= t("projects.fields.columns_hint") %></p>
+      <%= f.fields_for :workflow_states do |sf| %>
+        <div class="form-row form-row-inline">
+          <%= sf.label :name, t("projects.fields.column_name"), class: "sr-only" %>
+          <%= sf.text_field :name %>
+          <%= sf.label :wip_limit, t("projects.fields.wip_limit") %>
+          <%= sf.number_field :wip_limit, min: 1, placeholder: t("forms.none") %>
+        </div>
+      <% end %>
+    </fieldset>
+  <% end %>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), projects_path, class: "btn" %>

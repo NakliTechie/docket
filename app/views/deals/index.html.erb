@@ -15,10 +15,12 @@
 </div>
 
 <% if @pipeline %>
-  <div class="kanban" data-controller="kanban" data-kanban-move-url-value="<%= deals_path %>">
+  <div class="kanban" data-controller="kanban"
+       data-kanban-url-template-value="<%= deals_path %>/:id/move"
+       data-kanban-param-value="pipeline_stage_id">
     <% @stages.each do |stage| %>
       <% stage_deals = @deals_by_stage[stage.id] || [] %>
-      <section class="kanban-column" data-stage-id="<%= stage.id %>"
+      <section class="kanban-column" data-target-id="<%= stage.id %>"
                data-action="dragover->kanban#dragover drop->kanban#drop dragleave->kanban#dragleave">
         <h2 class="kanban-column-title">
           <%= stage.name %>
@@ -26,7 +28,7 @@
         </h2>
         <div class="kanban-cards">
           <% stage_deals.each do |deal| %>
-            <article class="kanban-card" draggable="true" data-deal-id="<%= deal.id %>"
+            <article class="kanban-card" draggable="true" data-item-id="<%= deal.id %>"
                      data-action="dragstart->kanban#dragstart dragend->kanban#dragend">
               <%= link_to deal.name, deal_path(deal), class: "kanban-card-title" %>
               <% if deal.value_cents %>
