@@ -76,6 +76,18 @@ What Docket is **not** (not contested): forecasting, CPQ, territory management, 
 - Connector framework (commerce-platform connector as reference; same interface discipline as ShopifyCloneConnector).
 - **Fleet console (operator product)**: provisions, upgrades, monitors, and backs up the fleet — either N **isolated** single-tenant instances (Kamal/K8s, one client one database) or **shared**-instance tenants (provisioned via `Tenants::Provisioner` / the in-app super_admin platform console at `/admin/tenants`). Multi-tenancy is delivered both ways: dedicated-instance isolation for sovereign buyers, shared-tenant for SMBs who can't fund a dedicated instance.
 
+### v1.3 — the third pillar + packaging *(amendment, 2026-07-27)*
+
+Docket becomes one platform for the whole customer-facing business, not a service desk with a CRM bolted on. This section AMENDS the roadmap above; nothing earlier is reversed.
+
+- **Work module** (Jira/Linear-class): `Project` with per-project board columns, `WorkItem` identified `KEY-123`, `Sprint`, `WorkComment`, watchers. Kanban board with soft WIP limits, collapsible columns, drag-and-drop, and filtering that **dims rather than hides** (a board that hides cards lies about its own shape). Sprint close-out must decide what happens to unfinished work; velocity is completed *estimate*, cycle time a *median*.
+  - Vocabulary is deliberate: a **work item**, never an "issue" or "ticket". A ticket is a `Case` — a customer asking for something. Conflating the two is how a service desk and a tracker end up as one incoherent table.
+  - The seam that makes this ONE product: `WorkLink` + `Work::Escalation`. A case hands work to engineering without transitioning — escalating is not a status change — carrying priority across, noting it **internally** (the customer never asked for a work item), and echoing the item's state back onto the case timeline.
+- **Entitlements**: modules and features are per-tenant switches over a static `Features` registry — `service_desk` / `crm` / `work`, plus `decisioning`, `connectors`, `mcp` and sub-features. A module that is off is *absent*, not merely hidden: pages 404, the API answers `403 feature_disabled`, no role holds its permissions, recurring sweeps skip the tenant, and agent tools are not advertised. Everything defaults ON, so an existing isolated deploy is unchanged.
+  - This is what makes the two SKUs one codebase rather than two: **shared SaaS** sets entitlements per tenant at provisioning; a **dedicated server** uses the same screen as the operator's own switchboard.
+- **Migration in**: file-based importers from Freshdesk (→ cases), Jira (→ work items, keeping the issue number so existing links survive) and KanZen (→ a project). Export-file based so they need no vendor credentials, **dry-run by default**, idempotent, and an unrecognised status or priority is *reported, never guessed*.
+- Out of scope, still: forecasting, field service, CPQ/territory, marketing automation (§2 holds).
+
 ### v1.x candidates (unscheduled)
 - IVR intake adapter. DigiLocker/API Setu integration (API-ready in v1.0 schema; integration deferred — no Aadhaar data handling until explicitly scoped with legal posture).
 - Additional Indian languages.
