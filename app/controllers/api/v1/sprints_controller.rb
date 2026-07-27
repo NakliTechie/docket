@@ -41,6 +41,8 @@ module Api
         target = params[:roll_to].presence && @sprint.project.sprints.find_by(id: params[:roll_to])
         moved = Sprints::Closeout.call(sprint: @sprint, roll_to: target)
         render json: { data: Serialize.sprint(@sprint.reload), moved_items: moved }
+      rescue ArgumentError => e
+        render_error("invalid_closeout", detail: e.message, status: :unprocessable_entity)
       end
 
       private

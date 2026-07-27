@@ -61,6 +61,10 @@ class SprintsController < ApplicationController
     redirect_to project_sprints_path(@project),
                 notice: t(".closed", name: @sprint.name, count: moved,
                           destination: target&.name || t(".backlog"))
+  rescue ArgumentError => e
+    # Closeout refuses the nonsense cases (rolling into itself, into another
+    # project, into a closed sprint, re-closing). Say so rather than 500.
+    redirect_to project_sprints_path(@project), alert: e.message
   end
 
   def destroy

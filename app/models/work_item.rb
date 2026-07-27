@@ -9,6 +9,7 @@ class WorkItem < ApplicationRecord
   include Audited
   include Labelable
   include HumanEnums
+  include TenantReferentialIntegrity
 
   humanizes_enums :kind, :priority
 
@@ -24,7 +25,10 @@ class WorkItem < ApplicationRecord
   belongs_to :parent, -> { with_deleted }, class_name: "WorkItem", optional: true
   belongs_to :sprint, -> { with_deleted }, optional: true
 
-  has_many :children, class_name: "WorkItem", foreign_key: :parent_id, dependent: :nullify,
+  # dependent: nil for the same reason as Sprint#work_items — soft-deleting a
+  # parent used to permanently flatten the hierarchy, and restoring it left the
+  # parent childless.
+  has_many :children, class_name: "WorkItem", foreign_key: :parent_id, dependent: nil,
            inverse_of: :parent
   has_many :work_comments, -> { order(:created_at) }, dependent: :destroy
   has_many :work_links, dependent: :destroy
@@ -36,6 +40,8 @@ class WorkItem < ApplicationRecord
   validates :title, presence: true
   validates :estimate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validate :parent_is_not_self_or_descendant
+  validates_same_tenant :assignee, :reporter, :parent, :sprint, :workflow_state
+  validate :parent_belongs_to_project
   validate :state_belongs_to_project
   validate :sprint_belongs_to_project
 
@@ -98,6 +104,13 @@ class WorkItem < ApplicationRecord
   end
 
   def parent_is_not_self_or_descendant
+    # On create, parent_id is still blank for `item.parent = item` — the FK is
+    # written after the id exists — so check the OBJECT too or the record saves
+    # as its own parent and any ancestor walk never terminates.
+    if parent.present? && parent.equal?(self)
+      errors.add(:parent, :cannot_be_self)
+      return
+    end
     return if parent_id.blank?
 
     if parent_id == id
@@ -115,6 +128,13 @@ class WorkItem < ApplicationRecord
       seen << node.id
       node = node.parent
     end
+  end
+
+  def parent_belongs_to_project
+    return if parent.blank? || project_id.blank?
+    return if parent.project_id == project_id
+
+    errors.add(:parent, :not_in_project)
   end
 
   def state_belongs_to_project

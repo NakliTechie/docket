@@ -42,7 +42,11 @@ module Imports
 
     def call
       ActiveRecord::Base.transaction do
-        @issues.each { |issue| import_issue(issue) }
+        @issues.each do |issue|
+        next @result.error!("skipped an entry that is not an issue object") unless issue.is_a?(Hash)
+
+        import_issue(issue)
+      end
         raise ActiveRecord::Rollback if @dry_run
       end
       @result
@@ -61,15 +65,27 @@ module Imports
     def import_issue(issue)
       fields = issue["fields"] || {}
       key = issue["key"].to_s
+      return @result.skip!("issues") if key.blank?
+
       project = @project || project_for(key, fields)
       return @result.skip!("issues") if project.nil?
 
       state = state_for(project, fields)
-      # Carry the Jira number across so JIRA-123 stays 123 here — the whole
-      # point of the migration is that existing links and muscle memory survive.
-      number = key.split("-").last.to_i
-      item = project.work_items.with_deleted.find_by(number: number) if number.positive?
+
+      # Idempotency is on the SOURCE KEY, never the trailing number. Keyed on
+      # the number, importing AAA-1, BBB-1 and CCC-1 into one project collapsed
+      # all three onto number 1 and silently overwrote whatever already held it
+      # — reported as a clean "updated". Only tombstones are excluded: writing
+      # into a soft-deleted row tells the operator it updated something that is
+      # invisible everywhere in the product.
+      item = project.work_items.find_by(source_key: key)
       existing = item.present?
+
+      # Carry the Jira number across where it is free, so JIRA-123 stays 123 and
+      # existing links survive. If it is already taken by an unrelated item, the
+      # allocator assigns the next one rather than clobbering.
+      number = key.split("-").last.to_i
+      number = nil unless number.positive? && !project.work_items.with_deleted.exists?(number: number)
 
       attrs = {
         title: fields["summary"].presence || key,
@@ -82,7 +98,7 @@ module Imports
         reporter: @actor
       }
 
-      item ||= project.work_items.new(number: number.positive? ? number : nil)
+      item ||= project.work_items.new(number: number, source_key: key)
       item.assign_attributes(attrs)
       if item.save
         existing ? @result.update!("issues") : @result.create!("issues")
@@ -97,6 +113,11 @@ module Imports
       return nil if prefix.blank?
 
       Project.find_or_create_by!(key: prefix) { |p| p.name = prefix.titleize }
+    rescue ActiveRecord::RecordInvalid => e
+      # One unusable key must not abort the whole migration (it used to escape
+      # the transaction and lose every good row with it).
+      @result.error!("#{key}: #{e.record.errors.full_messages.to_sentence}")
+      nil
     end
 
     def state_for(project, fields)

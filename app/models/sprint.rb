@@ -13,7 +13,11 @@ class Sprint < ApplicationRecord
 
   belongs_to :project
 
-  has_many :work_items, dependent: :nullify
+  # NOT dependent: :nullify — SoftDeletable#destroy runs destroy callbacks, so
+  # nullify would permanently strip sprint_id from every item and a restore
+  # could not recover it (taking the sprint's velocity history with it). A
+  # soft-deleted sprint simply stops being visible; its items keep the pointer.
+  has_many :work_items, dependent: nil
   has_many :audit_entries, as: :auditable, dependent: nil
 
   validates :name, presence: true

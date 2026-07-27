@@ -103,4 +103,53 @@ class WorkItemTest < ActiveSupport::TestCase
     item.estimate = -1
     refute item.valid?
   end
+
+  # ── Regressions from the 2026-07-28 adversarial review ────────────────────
+  test "deleting a project that holds work items does not raise" do
+    assert_nothing_raised { project.destroy }
+    assert project.reload.deleted?, "soft-deleted, not blocked"
+    assert_equal 2, WorkItem.with_deleted.where(project: project).count,
+                  "the items stay intact behind the hidden project"
+  end
+
+  test "soft-deleting a sprint does not strip its items' sprint_id" do
+    sprint = project.sprints.create!(name: "S1")
+    item = work_items(:pep_one)
+    item.update!(sprint: sprint)
+
+    sprint.destroy
+    assert_equal sprint.id, item.reload.sprint_id,
+                 "a restore must be able to recover the sprint's history"
+
+    sprint.restore!
+    assert_equal sprint, item.reload.sprint
+  end
+
+  test "soft-deleting a parent does not permanently flatten the hierarchy" do
+    parent = work_items(:pep_one)
+    child = work_items(:pep_two)
+    child.update!(parent: parent)
+
+    parent.destroy
+    assert_equal parent.id, child.reload.parent_id
+    parent.restore!
+    assert_includes parent.reload.children, child
+  end
+
+  test "an item cannot be its own parent on CREATE either" do
+    item = project.work_items.new(title: "self", reporter: users(:admin))
+    item.parent = item
+    refute item.valid?, "parent_id is blank on an unsaved record — the object must be checked too"
+    assert item.errors.of_kind?(:parent, :cannot_be_self)
+  end
+
+  test "a parent from another project is rejected" do
+    other = Project.create!(key: "OTH", name: "Other")
+    foreign = other.work_items.create!(title: "elsewhere", reporter: users(:admin))
+
+    item = work_items(:pep_one)
+    item.parent = foreign
+    refute item.valid?, "a work item tree must not span projects"
+    assert item.errors.of_kind?(:parent, :not_in_project)
+  end
 end

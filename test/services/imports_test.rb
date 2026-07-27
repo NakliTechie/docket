@@ -142,4 +142,56 @@ class ImportsTest < ActiveSupport::TestCase
     assert result.errors.any?
     assert_match(/could not parse/, result.errors.first)
   end
+
+  # ── Regressions from the 2026-07-28 adversarial review ────────────────────
+  test "issues from different Jira projects do not collapse onto one item" do
+    payload = { "issues" => [
+      { "key" => "AAA-1", "fields" => { "summary" => "from AAA", "status" => { "name" => "To Do" } } },
+      { "key" => "BBB-1", "fields" => { "summary" => "from BBB", "status" => { "name" => "To Do" } } },
+      { "key" => "CCC-1", "fields" => { "summary" => "from CCC", "status" => { "name" => "To Do" } } }
+    ] }
+    before = projects(:pep).work_items.find_by(number: 1).title
+
+    result = Imports::Jira.call(payload: payload, project: projects(:pep), actor: users(:admin))
+
+    assert_equal 3, result.created["issues"], "three distinct issues are three items"
+    assert_equal before, projects(:pep).work_items.find_by(number: 1).reload.title,
+                 "a pre-existing item must never be overwritten by an import"
+    %w[AAA-1 BBB-1 CCC-1].each do |key|
+      assert projects(:pep).work_items.exists?(source_key: key), "#{key} was lost"
+    end
+  end
+
+  test "an import never writes into a soft-deleted row" do
+    Imports::Jira.call(payload: jira_export, project: projects(:pep), actor: users(:admin))
+    projects(:pep).work_items.find_by(source_key: "PEP-77").destroy
+
+    result = Imports::Jira.call(payload: jira_export("summary" => "second run"),
+                                project: projects(:pep), actor: users(:admin))
+
+    assert_equal 1, result.created["issues"], "a tombstone is not an existing row to update"
+    assert projects(:pep).work_items.exists?(title: "second run"), "the re-import must be visible"
+  end
+
+  test "a malformed key reports an error instead of aborting the whole import" do
+    payload = { "issues" => [
+      { "key" => "GOOD-1", "fields" => { "summary" => "keep me" } },
+      { "key" => "1BAD-2", "fields" => { "summary" => "bad key" } },
+      { "key" => "GOOD-2", "fields" => { "summary" => "keep me too" } }
+    ] }
+
+    result = nil
+    assert_nothing_raised { result = Imports::Jira.call(payload: payload, actor: users(:admin)) }
+    assert result.errors.any?, "the bad row must be reported"
+    assert_equal 2, result.created["issues"], "one bad row must not lose the good ones"
+  end
+
+  test "a Jira key with no number still imports and stays idempotent" do
+    payload = { "issues" => [ { "key" => "NONUM", "fields" => { "summary" => "keyless" } } ] }
+    Imports::Jira.call(payload: payload, project: projects(:pep), actor: users(:admin))
+    second = Imports::Jira.call(payload: payload, project: projects(:pep), actor: users(:admin))
+
+    assert_equal 1, second.updated["issues"], "re-running must not duplicate"
+    assert_equal 1, projects(:pep).work_items.where(source_key: "NONUM").count
+  end
 end

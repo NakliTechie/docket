@@ -21,6 +21,16 @@ module Work
     end
 
     def call
+      # This service is the shared seam under the console action AND the agent
+      # effector, and it used to trust both. It now guards itself: callers that
+      # forget (the dispatcher did) no longer open work for a tenant without
+      # the module, and a case/project from different tenants is refused rather
+      # than copying one tenant's case body into the other's work item.
+      raise ArgumentError, "work module is not enabled for this tenant" unless Features.enabled?("work")
+      if @case.tenant_id != @project.tenant_id
+        raise ArgumentError, "case and project belong to different tenants"
+      end
+
       item = nil
       link = nil
 
