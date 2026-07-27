@@ -48,6 +48,9 @@ class Case < ApplicationRecord
   has_many :messages, dependent: nil, inverse_of: :case
   has_many :audit_entries, as: :auditable, dependent: nil
   has_many :approval_requests, as: :subject, dependent: :destroy
+  # Engineering work escalated from this case (WM4).
+  has_many :work_links, as: :linkable, dependent: :destroy
+  has_many :work_items, through: :work_links
 
   before_validation :ensure_tracking_id, on: :create
   before_validation :apply_default_sla_policy, on: :create

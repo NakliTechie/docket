@@ -1,4 +1,5 @@
 class CaseQueuesController < ApplicationController
+  require_feature "service_desk"
   before_action :set_queue, only: %i[edit update destroy]
 
   def index

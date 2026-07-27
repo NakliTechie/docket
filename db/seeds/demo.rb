@@ -257,10 +257,10 @@ Current.set(actor: nil) do
     ]
     deal_plan.each_with_index do |(target, value, created_days_ago, lost_reason, close_in), i|
       stage = case target
-              when :won  then won_stage
-              when :lost then lost_stage
-              else open_at.call(target)
-              end
+      when :won  then won_stage
+      when :lost then lost_stage
+      else open_at.call(target)
+      end
       next if stage.nil? # pipeline lacks a won/lost stage — skip that deal
 
       contact = contacts[i % contacts.size]

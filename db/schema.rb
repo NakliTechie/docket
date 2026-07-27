@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_263000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_160000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -479,6 +479,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_263000) do
     t.index ["tenant_id"], name: "index_pipelines_on_tenant_id"
   end
 
+  create_table "project_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "project_id", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["project_id", "user_id"], name: "index_project_memberships_on_project_id_and_user_id", unique: true
+    t.index ["project_id"], name: "index_project_memberships_on_project_id"
+    t.index ["tenant_id"], name: "index_project_memberships_on_tenant_id"
+    t.index ["user_id"], name: "index_project_memberships_on_user_id"
+  end
+
+  create_table "projects", force: :cascade do |t|
+    t.boolean "archived", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.text "description"
+    t.string "key", null: false
+    t.integer "last_item_number", default: 0, null: false
+    t.integer "lead_id"
+    t.string "name", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_projects_on_deleted_at"
+    t.index ["lead_id"], name: "index_projects_on_lead_id"
+    t.index ["tenant_id", "key"], name: "index_projects_on_tenant_id_and_key", unique: true
+    t.index ["tenant_id"], name: "index_projects_on_tenant_id"
+  end
+
   create_table "queue_memberships", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "queue_id", null: false
@@ -677,8 +706,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_263000) do
     t.index ["sla_policy_id"], name: "index_sla_targets_on_sla_policy_id"
   end
 
+  create_table "sprints", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.date "ends_on"
+    t.text "goal"
+    t.string "name", null: false
+    t.integer "project_id", null: false
+    t.date "starts_on"
+    t.integer "status", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_sprints_on_deleted_at"
+    t.index ["project_id"], name: "index_sprints_on_project_id"
+    t.index ["tenant_id"], name: "index_sprints_on_tenant_id"
+  end
+
   create_table "tenants", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.json "entitlements", default: {}, null: false
     t.string "name", null: false
     t.string "slug", null: false
     t.integer "status", default: 0, null: false
@@ -735,6 +781,96 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_263000) do
     t.index ["tenant_id"], name: "index_webhook_endpoints_on_tenant_id"
   end
 
+  create_table "work_comments", force: :cascade do |t|
+    t.integer "author_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "work_item_id", null: false
+    t.index ["author_id"], name: "index_work_comments_on_author_id"
+    t.index ["deleted_at"], name: "index_work_comments_on_deleted_at"
+    t.index ["tenant_id"], name: "index_work_comments_on_tenant_id"
+    t.index ["work_item_id"], name: "index_work_comments_on_work_item_id"
+  end
+
+  create_table "work_items", force: :cascade do |t|
+    t.integer "assignee_id"
+    t.datetime "closed_at"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.text "description"
+    t.date "due_on"
+    t.decimal "estimate", precision: 6, scale: 2
+    t.integer "kind", default: 0, null: false
+    t.json "labels"
+    t.integer "number", null: false
+    t.integer "parent_id"
+    t.integer "position", default: 0, null: false
+    t.integer "priority", default: 1, null: false
+    t.integer "project_id", null: false
+    t.integer "reporter_id"
+    t.integer "sprint_id"
+    t.integer "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.integer "workflow_state_id", null: false
+    t.index ["assignee_id"], name: "index_work_items_on_assignee_id"
+    t.index ["deleted_at"], name: "index_work_items_on_deleted_at"
+    t.index ["parent_id"], name: "index_work_items_on_parent_id"
+    t.index ["project_id", "number"], name: "index_work_items_on_project_id_and_number", unique: true
+    t.index ["project_id"], name: "index_work_items_on_project_id"
+    t.index ["reporter_id"], name: "index_work_items_on_reporter_id"
+    t.index ["sprint_id"], name: "index_work_items_on_sprint_id"
+    t.index ["tenant_id"], name: "index_work_items_on_tenant_id"
+    t.index ["workflow_state_id"], name: "index_work_items_on_workflow_state_id"
+  end
+
+  create_table "work_links", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.integer "linkable_id", null: false
+    t.string "linkable_type", null: false
+    t.integer "relation", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "work_item_id", null: false
+    t.index ["created_by_id"], name: "index_work_links_on_created_by_id"
+    t.index ["linkable_type", "linkable_id"], name: "index_work_links_on_linkable"
+    t.index ["linkable_type", "linkable_id"], name: "index_work_links_on_linkable_type_and_linkable_id"
+    t.index ["tenant_id"], name: "index_work_links_on_tenant_id"
+    t.index ["work_item_id", "linkable_type", "linkable_id"], name: "index_work_links_uniqueness", unique: true
+    t.index ["work_item_id"], name: "index_work_links_on_work_item_id"
+  end
+
+  create_table "work_watches", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.integer "work_item_id", null: false
+    t.index ["tenant_id"], name: "index_work_watches_on_tenant_id"
+    t.index ["user_id"], name: "index_work_watches_on_user_id"
+    t.index ["work_item_id", "user_id"], name: "index_work_watches_on_work_item_id_and_user_id", unique: true
+    t.index ["work_item_id"], name: "index_work_watches_on_work_item_id"
+  end
+
+  create_table "workflow_states", force: :cascade do |t|
+    t.integer "category", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "project_id", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_workflow_states_on_deleted_at"
+    t.index ["project_id", "position"], name: "index_workflow_states_on_project_id_and_position"
+    t.index ["project_id"], name: "index_workflow_states_on_project_id"
+    t.index ["tenant_id"], name: "index_workflow_states_on_tenant_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_tokens", "users"
@@ -783,6 +919,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_263000) do
   add_foreign_key "organisations", "tenants"
   add_foreign_key "pipeline_stages", "pipelines"
   add_foreign_key "pipelines", "tenants"
+  add_foreign_key "project_memberships", "projects"
+  add_foreign_key "project_memberships", "tenants"
+  add_foreign_key "project_memberships", "users"
+  add_foreign_key "projects", "tenants"
+  add_foreign_key "projects", "users", column: "lead_id"
   add_foreign_key "queue_memberships", "queues"
   add_foreign_key "queue_memberships", "users"
   add_foreign_key "queues", "tenants"
@@ -803,7 +944,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_263000) do
   add_foreign_key "sessions", "users"
   add_foreign_key "sla_policies", "tenants"
   add_foreign_key "sla_targets", "sla_policies"
+  add_foreign_key "sprints", "projects"
+  add_foreign_key "sprints", "tenants"
   add_foreign_key "users", "tenants"
   add_foreign_key "webhook_deliveries", "webhook_endpoints"
   add_foreign_key "webhook_endpoints", "tenants"
+  add_foreign_key "work_comments", "tenants"
+  add_foreign_key "work_comments", "users", column: "author_id"
+  add_foreign_key "work_comments", "work_items"
+  add_foreign_key "work_items", "projects"
+  add_foreign_key "work_items", "sprints"
+  add_foreign_key "work_items", "tenants"
+  add_foreign_key "work_items", "users", column: "assignee_id"
+  add_foreign_key "work_items", "users", column: "reporter_id"
+  add_foreign_key "work_items", "work_items", column: "parent_id"
+  add_foreign_key "work_items", "workflow_states"
+  add_foreign_key "work_links", "tenants"
+  add_foreign_key "work_links", "users", column: "created_by_id"
+  add_foreign_key "work_links", "work_items"
+  add_foreign_key "work_watches", "tenants"
+  add_foreign_key "work_watches", "users"
+  add_foreign_key "work_watches", "work_items"
+  add_foreign_key "workflow_states", "projects"
+  add_foreign_key "workflow_states", "tenants"
 end

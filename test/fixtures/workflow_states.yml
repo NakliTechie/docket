@@ -1,0 +1,29 @@
+# Fixtures bypass model callbacks, so a fixture project gets no seeded states —
+# these are the explicit board columns the tests use for PEP.
+pep_backlog:
+  tenant: primary
+  project: pep
+  name: Backlog
+  category: 0
+  position: 0
+
+pep_in_progress:
+  tenant: primary
+  project: pep
+  name: In progress
+  category: 1
+  position: 1
+
+pep_done:
+  tenant: primary
+  project: pep
+  name: Done
+  category: 2
+  position: 2
+
+acme_backlog:
+  tenant: acme
+  project: acme_proj
+  name: Backlog
+  category: 0
+  position: 0

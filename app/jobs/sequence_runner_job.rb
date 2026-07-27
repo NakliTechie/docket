@@ -7,7 +7,7 @@ class SequenceRunnerJob < ApplicationJob
 
   def perform
     Current.set(actor: nil) do
-      each_active_tenant do
+      each_tenant_with_feature("crm.sequences") do
         SequenceEnrollment.due.find_each(&:advance!)
       end
     end

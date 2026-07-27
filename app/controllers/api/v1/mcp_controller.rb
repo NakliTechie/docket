@@ -6,6 +6,7 @@ module Api
     # tools/call is forwarded back through the real API (Mcp::Dispatch), so no
     # new authority is introduced here.
     class McpController < BaseController
+      require_feature "mcp"
       PROTOCOL_VERSION = "2025-06-18".freeze
 
       def handle

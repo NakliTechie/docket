@@ -1,0 +1,49 @@
+<%= form_with model: item, url: url, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: item %>
+
+  <div class="form-row">
+    <%= f.label :title, t("work_items.fields.title") %>
+    <%= f.text_field :title, required: true %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :description, t("work_items.fields.description") %>
+    <%= f.text_area :description, rows: 6 %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :kind, t("work_items.fields.kind") %>
+    <%= f.select :kind, WorkItem.kinds.keys.map { |k| [ t("work_items.enum.kind.#{k}"), k ] } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :priority, t("work_items.fields.priority") %>
+    <%= f.select :priority, WorkItem.priorities.keys.map { |p| [ t("work_items.enum.priority.#{p}"), p ] } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :workflow_state_id, t("work_items.fields.state") %>
+    <%= f.collection_select :workflow_state_id, project.workflow_states.ordered, :id, :name %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :assignee_id, t("work_items.fields.assignee") %>
+    <%= f.collection_select :assignee_id, User.staff.order(:name), :id, :name,
+          { include_blank: t("work_items.unassigned") } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :estimate, t("work_items.fields.estimate") %>
+    <%= f.number_field :estimate, step: 0.5, min: 0 %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :due_on, t("work_items.fields.due_on") %>
+    <%= f.date_field :due_on %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), project_board_path(project), class: "btn" %>
+  </div>
+<% end %>

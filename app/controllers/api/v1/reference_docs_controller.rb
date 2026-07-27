@@ -1,6 +1,7 @@
 module Api
   module V1
     class ReferenceDocsController < BaseController
+      require_feature "service_desk.kb"
       before_action :set_doc, only: %i[show update destroy]
 
       def index

@@ -1,6 +1,7 @@
 module Api
   module V1
     class SequencesController < BaseController
+      require_feature "crm.sequences"
       before_action :set_sequence, only: %i[show update destroy]
 
       def index

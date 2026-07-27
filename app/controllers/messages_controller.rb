@@ -1,4 +1,5 @@
 class MessagesController < ApplicationController
+  require_feature "service_desk"
   def create
     @case = Case.find(params[:case_id])
     @message = @case.messages.build(message_params)

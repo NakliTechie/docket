@@ -9,6 +9,7 @@ en:
       cases: "Cases"
       dashboard: "Dashboard"
       crm: "CRM"
+      work: "Work"
       service_desk: "Service desk"
       admin: "Admin"
       contacts: "Contacts"
@@ -37,6 +38,19 @@ en:
       connectors: "Connectors"
       agent_actions: "Agent actions"
       decision_appeals: "Appeals"
+
+  features:
+    service_desk: "Service desk"
+    service_desk.kb: "Knowledge base"
+    service_desk.approvals: "Approval chains"
+    service_desk.portal: "Public portal"
+    crm: "CRM"
+    crm.sequences: "Sequences"
+    work: "Work"
+    work.sprints: "Sprints"
+    decisioning: "Decisioning"
+    connectors: "Connectors"
+    mcp: "MCP server"
 
   locales:
     en: "English"
@@ -243,6 +257,8 @@ en:
     transition:
       transitioned: "Case marked %{status}."
       submitted_for_approval: "Submitted for approval — this change needs a checker's sign-off before it takes effect."
+    escalate:
+      escalated: "Escalated to engineering as %{reference}."
     assign:
       assigned: "Case assigned to %{name}."
       unassigned: "Case unassigned."
@@ -1670,6 +1686,7 @@ en:
         provision: "Provision tenant"
         admin_password_once: "New tenant admin password (shown once — give it to the tenant's admin):"
         primary: "Primary"
+        modules: "%{count} of %{total}"
         suspend: "Suspend"
         activate: "Activate"
         columns:
@@ -1677,6 +1694,7 @@ en:
           subdomain: "Subdomain"
           status: "Status"
           cases: "Cases"
+          modules: "Modules"
       new:
         title: "Provision tenant"
         submit: "Provision"
@@ -1693,6 +1711,22 @@ en:
         cannot_suspend_primary: "The primary tenant cannot be suspended."
       activate:
         activated: "Tenant %{name} activated."
+      entitlements:
+        title: "Modules — %{name}"
+        back: "Back to tenants"
+        intro: "What this tenant has bought. Turning a module off removes it from the product for them: its pages stop existing, its API returns feature_disabled, and no role can reach it. On a dedicated deployment this is the operator's own switchboard."
+        presets: "Presets"
+        presets_hint: "Apply a named packaging, then fine-tune below."
+        preset:
+          full: "Full (all modules)"
+          service_only: "Service desk only"
+          crm_only: "CRM only"
+          work_only: "Work only"
+        depends_on: "needs %{module}"
+        save: "Save modules"
+      update_entitlements:
+        updated: "Modules updated for %{name}."
+        preset_applied: "Applied the %{preset} preset."
     decision_appeals:
       index:
         title: "Decision appeals"
@@ -1783,9 +1817,144 @@ en:
         latest: "Latest entry"
         cli_hint: "CLI: bin/rails audit:verify"
 
+  projects:
+    fields:
+      key: "Project key"
+      key_hint: "Uppercase letters and digits, 2–10 characters. Work items are numbered KEY-1, KEY-2 and so on."
+      name: "Project name"
+      description: "Description"
+      lead: "Project lead"
+    index:
+      title: "Projects"
+      new_project: "New project"
+      show_active: "Active"
+      show_archived: "Archived"
+      backlog: "Backlog"
+      archive: "Archive"
+      unarchive: "Unarchive"
+      columns:
+        key: "Key"
+        name: "Name"
+        lead: "Lead"
+        open_items: "Open items"
+      empty:
+        title: "No projects yet"
+        hint: "A project is a workspace with its own board, backlog and item numbering."
+    new:
+      title: "New project"
+    edit:
+      title: "Edit %{key}"
+    create:
+      created: "Project %{key} created."
+    update:
+      updated: "Project updated."
+    archive:
+      archived: "Project %{key} archived."
+      unarchived: "Project %{key} restored."
+    destroy:
+      deleted: "Project deleted."
+
+  boards:
+    show:
+      title: "%{key} board"
+      backlog: "Backlog"
+      new_item: "New item"
+      empty_column: "Nothing here"
+      scoped_to_sprint: "Showing the active sprint: %{name}."
+      show_all: "Show all items"
+
+  work_items:
+    unassigned: "Unassigned"
+    enum:
+      kind:
+        task: "Task"
+        story: "Story"
+        bug: "Bug"
+        epic: "Epic"
+      priority:
+        low: "Low"
+        normal: "Normal"
+        high: "High"
+        urgent: "Urgent"
+    fields:
+      title: "Title"
+      description: "Description"
+      kind: "Type"
+      priority: "Priority"
+      state: "Status"
+      assignee: "Assignee"
+      reporter: "Reporter"
+      estimate: "Estimate"
+      due_on: "Due date"
+      parent: "Parent"
+      sprint: "Sprint"
+    index:
+      title: "%{key} backlog"
+      board: "Board"
+      new_item: "New item"
+      open_only: "Open only"
+      columns:
+        reference: "Ref"
+        title: "Title"
+        kind: "Type"
+        state: "Status"
+        priority: "Priority"
+        assignee: "Assignee"
+        due: "Due"
+      empty:
+        title: "No work items"
+        hint: "Create the first item, or adjust the filters above."
+    new:
+      title: "New item in %{key}"
+    edit:
+      title: "Edit %{reference}"
+    show:
+      board: "Board"
+      watch: "Watch"
+      unwatch: "Unwatch"
+      description: "Description"
+      no_description: "No description yet."
+      children: "Child items"
+      comments: "Comments"
+      no_comments: "No comments yet."
+      add_comment: "Add a comment"
+      comment_placeholder: "Leave a note for the team…"
+      post_comment: "Comment"
+      status: "Status"
+      details: "Details"
+    create:
+      created: "%{reference} created."
+    update:
+      updated: "Work item updated."
+    transition:
+      moved: "Moved to %{state}."
+    destroy:
+      deleted: "Work item deleted."
+
+  work_comments:
+    create:
+      created: "Comment added."
+
+  work:
+    escalation:
+      from_case: "Escalated from case %{tracking_id}."
+      case_note: "Escalated to engineering as %{reference}: %{title}"
+      state_echo: "%{reference} moved to %{state}."
+      panel_title: "Engineering work"
+      escalate: "Escalate to engineering"
+      project: "Project"
+      no_projects: "No active projects to escalate into."
+      linked_none: "No linked work."
+
   activerecord:
     errors:
       models:
+        tenant:
+          attributes:
+            entitlements:
+              unknown_features: "refer to features that do not exist: %{keys}"
+              cannot_be_nil: "must be a set of feature switches, not empty"
+              non_boolean_values: "must be true or false for: %{keys}"
         case:
           attributes:
             status:

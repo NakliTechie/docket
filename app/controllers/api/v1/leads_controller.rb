@@ -1,6 +1,7 @@
 module Api
   module V1
     class LeadsController < BaseController
+      require_feature "crm"
       before_action :set_lead, only: %i[show update destroy convert]
 
       def index

@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::Base
   include TenantResolution
   include Authentication
+  include FeatureGating
   include Pundit::Authorization
   include Pagy::Backend
 

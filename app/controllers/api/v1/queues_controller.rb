@@ -1,6 +1,7 @@
 module Api
   module V1
     class QueuesController < BaseController
+      require_feature "service_desk"
       before_action :set_queue, only: %i[show update destroy]
 
       def index

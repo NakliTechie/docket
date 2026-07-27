@@ -1,0 +1,110 @@
+<% page_title @item.display_label %>
+<div class="page-header">
+  <h1>
+    <span class="mono"><%= @item.reference %></span>
+    <%= @item.title %>
+  </h1>
+  <div class="page-actions">
+    <%= link_to t(".board"), project_board_path(@item.project), class: "btn" %>
+    <% if policy(@item).update? %>
+      <%= link_to t("actions.edit"), edit_work_item_path(@item), class: "btn" %>
+    <% end %>
+    <%= button_to @item.watchers.include?(Current.user) ? t(".unwatch") : t(".watch"),
+          watch_work_item_path(@item), class: "btn" %>
+  </div>
+</div>
+
+<div class="workspace">
+  <div class="workspace-main">
+    <section class="panel">
+      <h2><%= t(".description") %></h2>
+      <% if @item.description.present? %>
+        <div class="prose"><%= simple_format @item.description %></div>
+      <% else %>
+        <p class="muted"><%= t(".no_description") %></p>
+      <% end %>
+    </section>
+
+    <% if @item.children.any? %>
+      <section class="panel">
+        <h2><%= t(".children") %></h2>
+        <ul class="linked-list">
+          <% @item.children.each do |child| %>
+            <li>
+              <%= link_to child.reference, work_item_path(child), class: "mono" %>
+              <%= child.title %>
+              <span class="muted"><%= child.workflow_state.name %></span>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <section class="panel">
+      <h2><%= t(".comments") %></h2>
+      <% if @item.work_comments.any? %>
+        <ol class="thread">
+          <% @item.work_comments.each do |comment| %>
+            <li class="thread-message">
+              <header class="thread-message-head">
+                <strong><%= comment.author.name %></strong>
+                <span class="muted"><%= l comment.created_at, format: :long %></span>
+              </header>
+              <div class="prose"><%= simple_format comment.body %></div>
+            </li>
+          <% end %>
+        </ol>
+      <% else %>
+        <p class="muted"><%= t(".no_comments") %></p>
+      <% end %>
+
+      <% if policy(WorkComment.new(work_item: @item)).create? %>
+        <%= form_with model: @comment, url: work_item_work_comments_path(@item), class: "form" do |f| %>
+          <div class="form-row">
+            <%= f.label :body, t(".add_comment") %>
+            <%= f.text_area :body, rows: 3, required: true,
+                  placeholder: t(".comment_placeholder") %>
+          </div>
+          <%= f.submit t(".post_comment"), class: "btn btn-primary" %>
+        <% end %>
+      <% end %>
+    </section>
+  </div>
+
+  <aside class="workspace-side">
+    <section class="panel">
+      <h2><%= t(".status") %></h2>
+      <p><strong><%= @item.workflow_state.name %></strong></p>
+      <% if policy(@item).transition? %>
+        <div class="table-actions">
+          <% @item.project.workflow_states.ordered.reject { |s| s.id == @item.workflow_state_id }.each do |state| %>
+            <%= button_to state.name, transition_work_item_path(@item, workflow_state_id: state.id),
+                  class: "btn btn-sm" %>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="panel">
+      <h2><%= t(".details") %></h2>
+      <dl class="detail-list">
+        <dt><%= t("work_items.fields.kind") %></dt><dd><%= @item.human_kind %></dd>
+        <dt><%= t("work_items.fields.priority") %></dt><dd><%= @item.human_priority %></dd>
+        <dt><%= t("work_items.fields.assignee") %></dt>
+        <dd><%= @item.assignee&.name || t("work_items.unassigned") %></dd>
+        <dt><%= t("work_items.fields.reporter") %></dt>
+        <dd><%= @item.reporter&.name || "—" %></dd>
+        <dt><%= t("work_items.fields.estimate") %></dt><dd><%= @item.estimate || "—" %></dd>
+        <dt><%= t("work_items.fields.due_on") %></dt>
+        <dd><%= @item.due_on ? l(@item.due_on, format: :long) : "—" %></dd>
+        <% if @item.parent %>
+          <dt><%= t("work_items.fields.parent") %></dt>
+          <dd><%= link_to @item.parent.reference, work_item_path(@item.parent), class: "mono" %></dd>
+        <% end %>
+        <% if @item.sprint %>
+          <dt><%= t("work_items.fields.sprint") %></dt><dd><%= @item.sprint.name %></dd>
+        <% end %>
+      </dl>
+    </section>
+  </aside>
+</div>

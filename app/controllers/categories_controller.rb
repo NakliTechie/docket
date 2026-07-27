@@ -1,4 +1,5 @@
 class CategoriesController < ApplicationController
+  require_feature "service_desk"
   before_action :set_category, only: %i[edit update destroy]
 
   def index

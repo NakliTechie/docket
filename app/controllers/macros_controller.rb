@@ -1,4 +1,5 @@
 class MacrosController < ApplicationController
+  require_feature "service_desk"
   before_action :set_macro, only: %i[edit update destroy]
 
   def index

@@ -1,0 +1,46 @@
+<% page_title t(".title", name: @tenant.name) %>
+<div class="page-header">
+  <h1><%= t(".title", name: @tenant.name) %></h1>
+  <%= link_to t(".back"), admin_tenants_path, class: "btn" %>
+</div>
+
+<p class="muted"><%= t(".intro") %></p>
+
+<%= form_with url: entitlements_admin_tenant_path(@tenant), method: :patch, class: "form" do %>
+  <fieldset class="fieldset">
+    <legend><%= t(".presets") %></legend>
+    <p class="muted"><%= t(".presets_hint") %></p>
+    <div class="table-actions">
+      <% Features::PRESETS.each_key do |preset| %>
+        <%= button_tag t(".preset.#{preset}"), name: "preset", value: preset, class: "btn btn-sm" %>
+      <% end %>
+    </div>
+  </fieldset>
+<% end %>
+
+<%= form_with url: entitlements_admin_tenant_path(@tenant), method: :patch, class: "form" do %>
+  <% @grouped.each do |module_key, sub_keys| %>
+    <fieldset class="fieldset">
+      <legend><%= t("features.#{module_key}") %></legend>
+      <div class="field field-check">
+        <%# No hidden companion: this form treats "absent" as OFF on purpose, so a
+            hidden "0" would be dead weight — the controller rebuilds the whole set
+            from what was submitted. %>
+        <%= check_box_tag "features[]", module_key, @tenant.feature?(module_key), id: "feature_#{module_key.parameterize.underscore}" %>
+        <%= label_tag "feature_#{module_key.parameterize.underscore}", t("features.#{module_key}") %>
+      </div>
+
+      <% sub_keys.each do |key| %>
+        <div class="field field-check field-nested">
+          <%= check_box_tag "features[]", key, @tenant.feature?(key), id: "feature_#{key.parameterize.underscore}" %>
+          <%= label_tag "feature_#{key.parameterize.underscore}", t("features.#{key}") %>
+          <span class="muted"><%= t(".depends_on", module: t("features.#{module_key}")) %></span>
+        </div>
+      <% end %>
+    </fieldset>
+  <% end %>
+
+  <div class="form-actions">
+    <%= submit_tag t(".save"), class: "btn btn-primary" %>
+  </div>
+<% end %>

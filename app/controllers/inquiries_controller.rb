@@ -2,6 +2,7 @@
 # "get in touch" form, separate from the case/support portal. Rate-limited by
 # Rack::Attack. Lives outside the staff session/policy world.
 class InquiriesController < ApplicationController
+  require_feature "crm"
   allow_unauthenticated_access
   layout "public"
 

@@ -7,7 +7,7 @@ class DecisioningRunJob < ApplicationJob
 
   def perform
     Current.set(actor: nil) do
-      each_active_tenant { Decisioning::Dispatcher.run! }
+      each_tenant_with_feature("decisioning") { Decisioning::Dispatcher.run! }
     end
   end
 end

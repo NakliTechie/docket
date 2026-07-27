@@ -1,4 +1,5 @@
 class LeadsController < ApplicationController
+  require_feature "crm"
   before_action :set_lead, only: %i[show edit update destroy convert mark_unqualified]
 
   def index

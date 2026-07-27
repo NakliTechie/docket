@@ -17,22 +17,35 @@
       <header class="app-header">
         <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
           <%= link_to brand_name, root_path, class: "brand" %>
-          <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
+          <% if feature?("service_desk") %>
+            <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
+          <% end %>
           <% if policy(:dashboard).index? %>
             <%= nav_link t("layout.nav.dashboard"), dashboard_path, active: controller_name == "dashboards" %>
           <% end %>
 
           <%= nav_group t("layout.nav.crm"),
                 active: %w[contacts organisations leads deals pipelines sequences sales_reports].include?(controller_name) do %>
+            <%# contacts + organisations are shared by every module, so they are not
+                entitlement-gated — the CRM group survives with just these two. %>
             <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
             <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>
-            <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
-            <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
-            <%= nav_link t("layout.nav.sales_report"), sales_report_path, active: controller_name == "sales_reports" %>
-            <% if policy(Pipeline).create? %>
-              <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
-              <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
+            <% if feature?("crm") %>
+              <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
+              <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
+              <%= nav_link t("layout.nav.sales_report"), sales_report_path, active: controller_name == "sales_reports" %>
+              <% if policy(Pipeline).create? %>
+                <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
+                <% if feature?("crm.sequences") %>
+                  <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
+                <% end %>
+              <% end %>
             <% end %>
+          <% end %>
+
+          <% if feature?("work") && policy(Project).index? %>
+            <%= nav_link t("layout.nav.work"), projects_path,
+                  active: %w[projects boards work_items].include?(controller_name) %>
           <% end %>
 
           <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? || policy(ConnectorInvocation).index? %>

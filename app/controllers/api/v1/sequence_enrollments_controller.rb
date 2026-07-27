@@ -1,6 +1,7 @@
 module Api
   module V1
     class SequenceEnrollmentsController < BaseController
+      require_feature "crm.sequences"
       before_action :set_enrollment, only: %i[show cancel]
 
       def index

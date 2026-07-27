@@ -7,6 +7,13 @@ class ContactsController < ApplicationController
 
   def show
     authorize @contact
+    # Contacts are shared by every module, so this page is NOT entitlement-gated
+    # — but the case history on it belongs to the service desk. Without this a
+    # tenant that never bought the desk could browse every case, subject line
+    # and tracking ID through the contact record.
+    @cases = Case.none
+    return unless feature?("service_desk") && policy(Case).index?
+
     @pagy, @cases = pagy(@contact.cases.includes(:queue, :assignee).order(created_at: :desc))
   end
 

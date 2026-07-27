@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  root "cases#index"
+  root "home#index"
 
   resource :session
   resources :passwords, param: :token
@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       post :transition
       post :assign
       post :run_agent
+      post :escalate
     end
     resources :messages, only: :create
     post "assist/summarise", to: "assists#summarise", as: :assist_summarise
@@ -33,6 +34,23 @@ Rails.application.routes.draw do
       patch :move
     end
   end
+  # Work module (WM). Items are reachable by their own id at /work_items/:id so
+  # a KEY-123 link survives a project rename; creation and listing stay nested.
+  resources :projects do
+    member do
+      post :archive
+    end
+    resource :board, only: :show
+    resources :work_items, only: %i[index new create]
+  end
+  resources :work_items, only: %i[show edit update destroy] do
+    member do
+      post :transition
+      post :watch
+    end
+    resources :work_comments, only: :create
+  end
+
   resources :approval_processes, except: :show
 
   # Sales funnel (v1.2 CRM)
@@ -68,6 +86,8 @@ Rails.application.routes.draw do
       member do
         post :suspend
         post :activate
+        get :entitlements
+        patch :entitlements, action: :update_entitlements
       end
     end
     resources :decision_appeals, only: %i[index create] do

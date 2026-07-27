@@ -1,6 +1,7 @@
 # Admin CRUD for maker-checker rules (PG4). Each process declares an entry
 # criterion — a guarded case transition or an escalated effector action.
 class ApprovalProcessesController < ApplicationController
+  require_feature "service_desk.approvals"
   before_action :set_process, only: %i[edit update destroy]
 
   def index

@@ -3,6 +3,7 @@ module Admin
   # human-of-record approves or rejects the write/irreversible ones an agent
   # proposed. Reads execute without ever landing here.
   class ConnectorInvocationsController < ApplicationController
+    require_feature "connectors"
     before_action :set_invocation, only: %i[show approve reject]
 
     def index
