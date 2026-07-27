@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Restore a Docket backup taken by bin/backup, then PROVE it restored intact.
+#
+#   bin/restore /var/backups/docket/docket-20260728T031500Z
+#
+# The last step is `rails audit:verify`, which walks the audit hash chain. A
+# partial or tampered restore breaks the chain and is DETECTED here rather than
+# discovered months later. A backup nobody has restored is a hope, not a backup.
+set -euo pipefail
+
+SRC="${1:-}"
+if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
+  echo "usage: bin/restore <backup-directory>" >&2
+  exit 64
+fi
+
+: "${DATABASE_URL:?DATABASE_URL must be set}"
+CACHE_URL="${CACHE_DATABASE_URL:-${DATABASE_URL}_cache}"
+QUEUE_URL="${QUEUE_DATABASE_URL:-${DATABASE_URL}_queue}"
+CABLE_URL="${CABLE_DATABASE_URL:-${DATABASE_URL}_cable}"
+STORAGE_DIR="${DOCKET_STORAGE_DIR:-storage}"
+
+if [ "${DOCKET_RESTORE_CONFIRM:-}" != "yes" ]; then
+  echo "This OVERWRITES the databases at DATABASE_URL and its cache/queue/cable siblings." >&2
+  echo "Re-run with DOCKET_RESTORE_CONFIRM=yes to proceed." >&2
+  exit 65
+fi
+
+load() {
+  local name="$1" url="$2"
+  [ -f "$SRC/$name.dump" ] || { echo "  missing $name.dump" >&2; return 1; }
+  echo "  restoring $name"
+  pg_restore --clean --if-exists --no-owner --no-acl --dbname="$url" "$SRC/$name.dump"
+}
+
+echo "Docket restore <- $SRC"
+load primary "$DATABASE_URL"
+load cache   "$CACHE_URL"
+load queue   "$QUEUE_URL"
+load cable   "$CABLE_URL"
+
+if [ -f "$SRC/storage.tar.gz" ]; then
+  echo "  restoring attachments"
+  tar -xzf "$SRC/storage.tar.gz" -C "$(dirname "$STORAGE_DIR")"
+else
+  echo "  WARNING: backup contains no storage archive — attachments NOT restored" >&2
+fi
+
+echo "Verifying the audit chain (a partial restore breaks it)…"
+bin/rails audit:verify
+echo "OK  restore complete and audit chain verified."
