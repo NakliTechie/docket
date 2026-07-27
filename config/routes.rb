@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  # /up stays Rails' trivial boot check (the compose healthcheck uses it).
+  # /healthz is the operator one: database, queue, storage, sweep freshness.
+  get "healthz", to: "health#show"
+
   root "home#index"
 
   resource :session

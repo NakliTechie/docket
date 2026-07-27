@@ -18,6 +18,33 @@ class ApplicationJob < ActiveJob::Base
     end
   end
 
+  # A recurring sweep that stops running is silent — the handoff says so
+  # outright ("if they don't run, nothing tells you"). Each sweep stamps its own
+  # completion so /healthz can answer "when did this last work?" without a new
+  # dependency. Global (not tenant-scoped): it is about the SCHEDULER, and the
+  # scheduler is per deployment.
+  def record_sweep_success!(name = self.class.name)
+    ActsAsTenant.without_tenant do
+      key = "job_last_success.#{name}"
+      now = Time.current.iso8601
+      # Written WITHOUT the audit callbacks on purpose. This is a heartbeat, not
+      # a business action: at five sweeps on five-minute-to-hourly schedules it
+      # would append well over a thousand entries a day to the hash chain and
+      # dilute the thing the chain exists for. update_columns/insert_all skip
+      # Audited; the value is operational, not accountable.
+      existing = Setting.where(tenant_id: nil, key: key).first
+      if existing
+        existing.update_columns(value: now, updated_at: Time.current)
+      else
+        Setting.insert_all([ { tenant_id: nil, key: key, value: now,
+                               created_at: Time.current, updated_at: Time.current } ])
+      end
+    end
+  rescue StandardError => e
+    # Never let bookkeeping fail the sweep it is reporting on.
+    Rails.logger.warn("could not record sweep success for #{name}: #{e.message}")
+  end
+
   private
 
   # Run a block once per active tenant, scoped to it. The recurring scheduler

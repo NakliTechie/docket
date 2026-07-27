@@ -10,5 +10,6 @@ class ConnectorSchedulerJob < ApplicationJob
         ConnectorSyncJob.perform_later(connector.id, trigger: "scheduled") if connector.due?
       end
     end
+    record_sweep_success!
   end
 end

@@ -9,5 +9,6 @@ class DecisioningRunJob < ApplicationJob
     Current.set(actor: nil) do
       each_tenant_with_feature("decisioning") { Decisioning::Dispatcher.run! }
     end
+    record_sweep_success!
   end
 end
