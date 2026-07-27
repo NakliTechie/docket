@@ -10,7 +10,11 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
     "/usr/bin/chromium",
     "/usr/bin/chromium-browser",
-    "/usr/bin/google-chrome"
+    "/usr/bin/google-chrome",
+    # macOS (developer machines) — without these the whole system suite
+    # silently skips locally and only ever runs in CI.
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium"
   ].compact.freeze
 
   def self.browser_path
