@@ -41,6 +41,8 @@ module Api
         target = params[:roll_to].presence && @sprint.project.sprints.find_by(id: params[:roll_to])
         moved = Sprints::Closeout.call(sprint: @sprint, roll_to: target)
         render json: { data: Serialize.sprint(@sprint.reload), moved_items: moved }
+      rescue ArgumentError => e
+        render_error("invalid_closeout", detail: e.message, status: :unprocessable_entity)
       end
 
       private
@@ -50,7 +52,11 @@ module Api
       end
 
       def sprint_params
-        params.require(:sprint).permit(:project_id, :name, :goal, :status, :starts_on, :ends_on)
+        # :status is deliberately NOT permitted. Closing must go through
+        # Sprints::Closeout, which decides what happens to unfinished work;
+        # setting it here would strand items in a closed sprint and falsify
+        # every velocity number computed from it. Use POST /sprints/:id/close.
+        params.require(:sprint).permit(:project_id, :name, :goal, :starts_on, :ends_on)
       end
     end
   end

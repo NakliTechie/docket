@@ -95,7 +95,10 @@ module Decisioning
         # (decision_class :confirm — never autonomous, per the WM plan). Reuses
         # the same escalation path a staff member clicks, so the case gets its
         # internal note and the link is identical either way.
-        project = Project.find_by(id: decision.action_params&.dig("project_id"))
+        # The console path re-checks the entitlement before escalating; this one
+        # did not, so an agent could open engineering work for a tenant that
+        # never bought the work module.
+        project = Features.enabled?("work") ? Project.find_by(id: decision.action_params&.dig("project_id")) : nil
         if project && subject.is_a?(Case) && subject.work_items.empty?
           result = Work::Escalation.call(kase: subject, project: project, actor: nil,
                                          title: decision.action_params&.dig("title"),

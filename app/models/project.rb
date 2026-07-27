@@ -5,6 +5,7 @@ class Project < ApplicationRecord
   acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
+  include TenantReferentialIntegrity
 
   KEY_FORMAT = /\A[A-Z][A-Z0-9]{1,9}\z/
 
@@ -20,12 +21,20 @@ class Project < ApplicationRecord
 
   belongs_to :lead, -> { with_deleted }, class_name: "User", optional: true
 
-  has_many :workflow_states, -> { order(:position) }, dependent: :destroy, inverse_of: :project
+  # dependent: nil, not :destroy — cascading into workflow_states hit their
+  # restrict_with_error guard and SoftDeletable#destroy! re-raised it, so
+  # deleting any project that held work items was a 500. Soft-deleting a
+  # project hides it and everything under it stays intact behind it.
+  has_many :workflow_states, -> { order(:position) }, dependent: nil, inverse_of: :project
   # Board columns are edited inline on the project form (name, order, soft WIP
-  # limit); creating/removing columns is a separate deliberate act.
-  accepts_nested_attributes_for :workflow_states, update_only: true
-  has_many :work_items, dependent: :destroy
-  has_many :sprints, dependent: :destroy
+  # limit). `update_only:` does nothing on a has_many, so reject_if is what
+  # actually stops the form creating columns — editing a board is not the same
+  # act as designing one, and a nested payload should not be able to smuggle a
+  # new column in. (No allow_destroy either: removal stays explicit.)
+  accepts_nested_attributes_for :workflow_states,
+                                reject_if: ->(attrs) { attrs["id"].blank? }
+  has_many :work_items, dependent: nil
+  has_many :sprints, dependent: nil
   has_many :project_memberships, dependent: :destroy
   has_many :members, through: :project_memberships, source: :user
   has_many :audit_entries, as: :auditable, dependent: nil
@@ -36,6 +45,8 @@ class Project < ApplicationRecord
                           conditions: -> { where(deleted_at: nil) } }
 
   normalizes :key, with: ->(key) { key.to_s.strip.upcase }
+
+  validates_same_tenant :lead
 
   after_create :seed_default_states
 

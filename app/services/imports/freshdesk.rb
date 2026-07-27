@@ -24,6 +24,11 @@ module Imports
     end
 
     def call
+      unless Features.enabled?("service_desk")
+        @result.error!("the service desk module is not enabled for this tenant")
+        return @result
+      end
+
       ActiveRecord::Base.transaction do
         organisations = import_companies
         contacts = import_contacts(organisations)

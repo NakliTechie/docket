@@ -104,4 +104,49 @@ class SprintsTest < ActionDispatch::IntegrationTest
     post start_project_sprint_path(project, sprint)
     assert sprint.reload.status_active?, "a team lead runs their own cadence"
   end
+
+  # ── Regressions from the 2026-07-28 adversarial review ────────────────────
+  test "a closed sprint still reports what it COMMITTED to, not just what survived" do
+    sprint = project.sprints.create!(name: "S1", status: :active)
+    done = work_items(:pep_two)
+    unfinished = work_items(:pep_one)
+    done.update!(sprint: sprint, estimate: 5)
+    unfinished.update!(sprint: sprint, estimate: 8)
+    done.transition_to!(workflow_states(:pep_done))
+
+    Sprints::Closeout.call(sprint: sprint)
+
+    row = Sprints::Velocity.call(project: project)[:sprints].find { |r| r[:name] == "S1" }
+    assert_equal 2, row[:committed], "the rolled-out item is still part of the commitment"
+    assert_equal 1, row[:completed]
+    assert_equal 13.0, row[:committed_estimate]
+    assert_equal 5.0, row[:completed_estimate]
+    refute_equal row[:committed], row[:completed],
+                 "counting only survivors made every closed sprint show 100% delivery"
+  end
+
+  test "close-out refuses the nonsense cases instead of silently lying" do
+    sprint = project.sprints.create!(name: "S1", status: :active)
+    other_project = Project.create!(key: "OTH", name: "Other")
+
+    assert_raises(ArgumentError) { Sprints::Closeout.call(sprint: sprint, roll_to: sprint) }
+    assert_raises(ArgumentError) do
+      Sprints::Closeout.call(sprint: sprint, roll_to: other_project.sprints.create!(name: "X"))
+    end
+    closed = project.sprints.create!(name: "Old", status: :closed)
+    assert_raises(ArgumentError) { Sprints::Closeout.call(sprint: sprint, roll_to: closed) }
+
+    Sprints::Closeout.call(sprint: sprint)
+    assert_raises(ArgumentError) { Sprints::Closeout.call(sprint: sprint) }
+  end
+
+  test "the console reports a refused close-out instead of raising" do
+    sprint = project.sprints.create!(name: "S1", status: :active)
+    sign_in_as users(:admin)
+
+    post close_project_sprint_path(project, sprint), params: { roll_to: sprint.id }
+    assert_redirected_to project_sprints_path(project)
+    assert flash[:alert].present?
+    assert sprint.reload.status_active?, "nothing was closed"
+  end
 end

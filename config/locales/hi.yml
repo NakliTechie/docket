@@ -1999,6 +1999,39 @@ hi:
   activerecord:
     errors:
       models:
+        work_item:
+          attributes:
+            parent:
+              cannot_be_self: "स्वयं वही आइटम नहीं हो सकता"
+              cycle: "मूल आइटम का चक्र बन जाएगा"
+              cross_tenant: "किसी अन्य संगठन का है"
+              not_in_project: "उसी परियोजना में होना चाहिए"
+            workflow_state:
+              not_in_project: "इस आइटम की परियोजना का कॉलम होना चाहिए"
+              cross_tenant: "किसी अन्य संगठन का है"
+            sprint:
+              not_in_project: "इस आइटम की परियोजना का स्प्रिंट होना चाहिए"
+              cross_tenant: "किसी अन्य संगठन का है"
+            assignee:
+              cross_tenant: "किसी अन्य संगठन का है"
+            reporter:
+              cross_tenant: "किसी अन्य संगठन का है"
+        project:
+          attributes:
+            lead:
+              cross_tenant: "किसी अन्य संगठन का है"
+        sprint:
+          attributes:
+            status:
+              another_sprint_active: "शुरू नहीं हो सकता — इस परियोजना में पहले से एक स्प्रिंट चल रहा है"
+            ends_on:
+              before_start: "प्रारंभ तिथि से पहले नहीं हो सकती"
+        work_link:
+          attributes:
+            linkable:
+              cross_tenant: "किसी अन्य संगठन का है"
+            work_item:
+              cross_tenant: "किसी अन्य संगठन का है"
         tenant:
           attributes:
             entitlements:

@@ -4,7 +4,19 @@
 module Webhooks
   module_function
 
+  # An event whose module is off must not leave the building: the recurring
+  # sweeps are gated, but these fire from model callbacks, so a disabled
+  # module's data was still being posted outward by any code path that
+  # created a record.
+  EVENT_FEATURES = {
+    "work_item" => "work",
+    "case" => "service_desk"
+  }.freeze
+
   def publish(event, payload)
+    owner = EVENT_FEATURES[event.to_s.split(".").first]
+    return if owner && !Features.enabled?(owner)
+
     WebhookEndpoint.subscribed_to(event).each do |endpoint|
       delivery = endpoint.webhook_deliveries.create!(
         event: event,

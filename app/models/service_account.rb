@@ -11,7 +11,7 @@ class ServiceAccount < ApplicationRecord
     contacts:read contacts:write
     organisations:read organisations:write
     crm:read crm:write
-    work:read work:write
+    work:read work:write work:manage
     config:read config:write
     audit:read
     webhooks:manage
@@ -33,6 +33,10 @@ class ServiceAccount < ApplicationRecord
     "crm:write" => %w[lead:write deal:write],
     "work:read" => %w[work:read],
     "work:write" => %w[work:write],
+    # Configuring a workspace is a tier above doing the work in it, exactly as
+    # config:write sits above cases:write. Without this, endpoints whose policy
+    # demands project:manage had NO scope that could express it.
+    "work:manage" => %w[project:manage],
     "config:read" => %w[settings:manage case_config:manage],
     "config:write" => %w[settings:manage case_config:manage],
     "audit:read" => %w[audit:read],
@@ -48,6 +52,9 @@ class ServiceAccount < ApplicationRecord
   DEFAULT_BUDGET_WINDOW_MINUTES = 60
 
   validates :name, presence: true
+  # DELIBERATELY not scoped to live rows: reissuing a deleted account's
+  # client_id would let a credential someone still holds resolve to a different
+  # principal. An identifier that was ever issued is never reused.
   validates :client_id, presence: true, uniqueness: true
   validates :scopes, presence: true
   validate :scopes_are_known

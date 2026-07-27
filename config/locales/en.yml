@@ -1999,6 +1999,39 @@ en:
   activerecord:
     errors:
       models:
+        work_item:
+          attributes:
+            parent:
+              cannot_be_self: "cannot be the item itself"
+              cycle: "would create a loop of parent items"
+              cross_tenant: "belongs to another organisation"
+              not_in_project: "must be in the same project"
+            workflow_state:
+              not_in_project: "must be a column of this item's project"
+              cross_tenant: "belongs to another organisation"
+            sprint:
+              not_in_project: "must be a sprint of this item's project"
+              cross_tenant: "belongs to another organisation"
+            assignee:
+              cross_tenant: "belongs to another organisation"
+            reporter:
+              cross_tenant: "belongs to another organisation"
+        project:
+          attributes:
+            lead:
+              cross_tenant: "belongs to another organisation"
+        sprint:
+          attributes:
+            status:
+              another_sprint_active: "cannot start — another sprint is already running in this project"
+            ends_on:
+              before_start: "cannot be before the start date"
+        work_link:
+          attributes:
+            linkable:
+              cross_tenant: "belongs to another organisation"
+            work_item:
+              cross_tenant: "belongs to another organisation"
         tenant:
           attributes:
             entitlements:

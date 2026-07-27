@@ -60,6 +60,10 @@ class Case < ApplicationRecord
   after_create_commit :publish_created_webhook
 
   validates :subject, presence: true
+  # DELIBERATELY not scoped to live rows (unlike every other uniqueness rule
+  # here — see the W1 note on WorkflowState). A tracking ID is handed to a
+  # customer; reissuing a deleted case's ID would show whoever still holds it
+  # somebody else's case. The reservation is the point.
   validates :tracking_id, presence: true, uniqueness: { scope: :tenant_id }
   validate :status_changed_through_state_machine, on: :update
   # Only block ASSIGNING to an inactive user — a case keeps an assignee who

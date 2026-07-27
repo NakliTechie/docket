@@ -19,7 +19,13 @@ module Sprints
     private
 
     def sprint_row(sprint)
-      items = sprint.work_items.includes(:workflow_state).to_a
+      # Items that were ROLLED OUT at close-out are still part of what the
+      # sprint committed to — counting only what remains made every closed
+      # sprint report 100% delivery against commitment, which is the one number
+      # this report exists to contradict.
+      items = WorkItem.with_deleted.where(sprint_id: sprint.id)
+                      .or(WorkItem.with_deleted.where(id: sprint.rolled_out_item_ids))
+                      .includes(:workflow_state).to_a
       done = items.select(&:done?)
       {
         name: sprint.name,

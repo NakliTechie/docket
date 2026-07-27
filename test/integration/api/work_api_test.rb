@@ -55,12 +55,58 @@ module Api
       assert_equal "feature_disabled", JSON.parse(response.body)["error"]
     end
 
-    test "a service account needs the work scope" do
-      account = ServiceAccount.create!(name: "Bot", scopes: %w[cases:read])
-      assert_not account.scope?("work:read")
+    # These used to assert `account.scope?(...)` twice and never issue a request,
+    # which is exactly how the hole below shipped: for a service account
+    # authorize_api! checks ONLY the scope and Pundit never runs, so an endpoint
+    # whose policy demands project:manage was gated on work:write.
+    test "a work:write token cannot do project:manage work" do
+      token = service_token_for(%w[work:read work:write])
 
-      with_work = ServiceAccount.create!(name: "WorkBot", scopes: %w[work:read work:write])
-      assert with_work.scope?("work:write")
+      assert_no_difference "Project.count" do
+        post "/api/v1/projects", params: { project: { key: "PWN", name: "Bot project" } },
+             headers: auth_header(token), as: :json
+      end
+      assert_response :forbidden
+
+      before = projects(:pep).key
+      patch "/api/v1/projects/#{projects(:pep).id}",
+            params: { project: { key: "ZZZ", name: "Renamed by bot" } },
+            headers: auth_header(token), as: :json
+      assert_response :forbidden
+      assert_equal before, projects(:pep).reload.key,
+                   "renaming the key rewrites the KEY-123 identity of every item in the project"
+
+      delete "/api/v1/work_items/#{work_items(:pep_one).id}", headers: auth_header(token)
+      assert_response :forbidden
+      refute work_items(:pep_one).reload.deleted?
+    end
+
+    test "a work:manage token can, and work:read alone cannot even write" do
+      manage = service_token_for(%w[work:read work:write work:manage])
+      assert_difference "Project.count", 1 do
+        post "/api/v1/projects", params: { project: { key: "OK", name: "Allowed" } },
+             headers: auth_header(manage), as: :json
+      end
+      assert_response :created
+
+      readonly = service_token_for(%w[work:read])
+      post "/api/v1/work_items",
+           params: { work_item: { project_id: projects(:pep).id, title: "nope" } },
+           headers: auth_header(readonly), as: :json
+      assert_response :forbidden
+    end
+
+    test "the sprint API cannot force a status and skip close-out" do
+      sprint = projects(:pep).sprints.create!(name: "S1", status: :active)
+      work_items(:pep_one).update!(sprint: sprint)
+      token = service_token_for(%w[work:read work:write])
+
+      patch "/api/v1/sprints/#{sprint.id}", params: { sprint: { status: "closed" } },
+            headers: auth_header(token), as: :json
+
+      refute sprint.reload.status_closed?,
+             "closing must go through Closeout, which decides what happens to unfinished work"
+      assert_equal sprint, work_items(:pep_one).reload.sprint
     end
 
     test "work events are published to subscribed webhooks" do

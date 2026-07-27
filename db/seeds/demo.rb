@@ -328,6 +328,64 @@ Current.set(actor: nil) do
     end
   end
 
+  # --- Work module: a project, a board with work in every column, a closed
+  # sprint so velocity has history, and an active one. Plus ONE case escalated
+  # to engineering, so the cross-module seam is visible without anyone having
+  # to construct it. Skipped when the tenant doesn't hold the module.
+  if Features.enabled?("work") && (spec = scenario[:project])
+    project = Project.create!(key: spec[:key], name: spec[:name], lead: users["Arjun Mehta"])
+    states = project.workflow_states.ordered.to_a
+    states[2].update!(wip_limit: 3) # "In progress" — demo data deliberately sits at the limit
+
+    closed_sprint = project.sprints.create!(
+      name: "Sprint 11", goal: "Hardening", status: :closed,
+      starts_on: Date.current - 28, ends_on: Date.current - 14
+    )
+    active_sprint = project.sprints.create!(
+      name: "Sprint 12", goal: spec[:goal], status: :active,
+      starts_on: Date.current - 4, ends_on: Date.current + 10
+    )
+
+    workers = agent_pool.compact
+    # Column spread: 2 backlog, 1 todo, 3 in progress (at the WIP limit), 1 review, 1 done.
+    placement = [ 0, 0, 1, 2, 2, 2, 3, 4 ]
+
+    spec[:items].each_with_index do |(title, kind, priority, estimate), i|
+      state = states[placement[i]] || project.default_state
+      item = project.work_items.create!(
+        title: title, kind: kind, priority: priority, estimate: estimate,
+        workflow_state: state, sprint: active_sprint,
+        reporter: users["Arjun Mehta"], assignee: workers[i % workers.size],
+        due_on: (Date.current + (i * 3) - 4)
+      )
+      item.work_comments.create!(body: "Picked this up — will update after the next deploy.",
+                                 author: item.assignee) if i.even? && item.assignee
+      item.work_watches.create!(user: users["Sunita Rao"]) if i < 3
+    end
+
+    # Closed-sprint history so the velocity report is not an empty table.
+    # Backdated deliberately: cycle time is measured created_at -> closed_at, so
+    # items created "now" would report a median of 0 days and make the report
+    # look broken on a fresh demo.
+    [ [ 3, 26, 16 ], [ 5, 25, 13 ], [ 2, 22, 15 ] ].each_with_index do |(estimate, opened, closed), i|
+      item = project.work_items.create!(
+        title: "Completed in Sprint 11 (#{i + 1})", kind: :task, priority: :normal,
+        estimate: estimate, workflow_state: states.last, sprint: closed_sprint,
+        reporter: users["Arjun Mehta"], assignee: workers[i % workers.size]
+      )
+      item.update_columns(created_at: Time.current - opened.days,
+                          closed_at: Time.current - closed.days)
+    end
+
+    # The seam: one real case handed to engineering.
+    escalated = Case.status_in_progress.first || Case.first
+    if escalated
+      handoff = Work::Escalation.call(kase: escalated, project: project, actor: users["Arjun Mehta"],
+                                      title: "Engineering follow-up: #{escalated.subject}", kind: :bug)
+      handoff.work_item.update!(assignee: workers.first, sprint: active_sprint)
+    end
+  end
+
   Setting.set("demo_seeded", true)
 end
 
@@ -337,3 +395,5 @@ puts "  also: sunita@ (supervisor), priya@/rohan@/fatima@/deepak@ (agents), meen
 puts "  cases: #{Case.count}, contacts: #{Contact.count}, leads: #{Lead.count}, " \
      "deals: #{Deal.count} (#{Deal.status_open.count} open/#{Deal.status_won.count} won/#{Deal.status_lost.count} lost), " \
      "connectors: #{Connector.count}, pending agent actions: #{ConnectorInvocation.status_proposed.count}"
+puts "  work: #{Project.count} project, #{WorkItem.count} items, #{Sprint.count} sprints, " \
+     "#{WorkLink.count} case-to-work link" if Project.any?

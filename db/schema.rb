@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_28_093000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -504,7 +504,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_170000) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_projects_on_deleted_at"
     t.index ["lead_id"], name: "index_projects_on_lead_id"
-    t.index ["tenant_id", "key"], name: "index_projects_on_tenant_id_and_key", unique: true
+    t.index ["tenant_id", "key"], name: "index_projects_on_tenant_id_and_key", unique: true, where: "deleted_at IS NULL"
     t.index ["tenant_id"], name: "index_projects_on_tenant_id"
   end
 
@@ -713,6 +713,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_170000) do
     t.text "goal"
     t.string "name", null: false
     t.integer "project_id", null: false
+    t.json "rolled_out_item_ids", default: [], null: false
     t.date "starts_on"
     t.integer "status", default: 0, null: false
     t.integer "tenant_id", null: false
@@ -811,6 +812,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_170000) do
     t.integer "priority", default: 1, null: false
     t.integer "project_id", null: false
     t.integer "reporter_id"
+    t.string "source_key"
     t.integer "sprint_id"
     t.integer "tenant_id", null: false
     t.string "title", null: false
@@ -820,6 +822,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_170000) do
     t.index ["deleted_at"], name: "index_work_items_on_deleted_at"
     t.index ["parent_id"], name: "index_work_items_on_parent_id"
     t.index ["project_id", "number"], name: "index_work_items_on_project_id_and_number", unique: true
+    t.index ["project_id", "source_key"], name: "index_work_items_on_project_id_and_source_key", unique: true, where: "source_key IS NOT NULL AND deleted_at IS NULL"
     t.index ["project_id"], name: "index_work_items_on_project_id"
     t.index ["reporter_id"], name: "index_work_items_on_reporter_id"
     t.index ["sprint_id"], name: "index_work_items_on_sprint_id"

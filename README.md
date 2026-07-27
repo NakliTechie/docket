@@ -1,13 +1,23 @@
 # Docket
 
-**Self-hosted, sovereign case-management + customer-360 platform — with an in-deployment agentic resolution layer.**
+**Self-hosted, sovereign service desk + CRM + work tracker — one platform, with an in-deployment agentic resolution layer.**
 
-Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites — for any organization that runs support, cases, or sales and wants to **own its stack**: case intake (web portal, email, API), triage, SLA-tracked lifecycle, a light CRM (contacts, organizations, leads, deals, email sequences), a keyboard-first staff console, a tamper-evident hash-chained audit log, a full REST API with machine-to-machine service accounts and signed webhooks, dual SSO (staff + customer identity planes), and an AI layer that runs on **your own model endpoint inside your deployment** — with English and Hindi throughout. Private-sector support desks and sales teams work out of the box; government/PSU grievance redressal is a first-class vertical (`DOCKET_SEED_SCENARIO=gov`).
+Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites — for any organization that runs support, sales, or engineering work and wants to **own its stack**. Three pillars in one deployment, sharing one identity, one audit log and one API:
+
+- **Service desk** — case intake (web portal, email, API), declarative routing, SLA-tracked lifecycle, approval (maker-checker) chains, knowledge base.
+- **CRM** — contacts, organizations, leads, deals with pipelines, email sequences.
+- **Work** — projects, work items (`KEY-123`), a kanban board and sprints, for the engineering side of the same business.
+
+They are not three products behind one login: a support case escalates into engineering work and the desk keeps the customer conversation, a won deal can open an onboarding project, and every object shares the contact it belongs to.
+
+Around them: a keyboard-first staff console, a tamper-evident hash-chained audit log, a full REST API with machine-to-machine service accounts and signed webhooks, an MCP server face for agents, dual SSO (staff + customer identity planes), and an AI layer that runs on **your own model endpoint inside your deployment** — with English and Hindi throughout. Private-sector support desks and sales teams work out of the box; government/PSU grievance redressal is a first-class vertical (`DOCKET_SEED_SCENARIO=gov`).
+
+**Every pillar is a switch.** Modules are entitled per tenant, so a customer who bought only the service desk simply does not have a CRM — its pages don't exist for them, its API answers `feature_disabled`, and no role can reach it. The same mechanism serves both SKUs: a dedicated single-tenant server (the default) and shared multi-tenant SaaS. See [docs/DEPLOYMENT-HANDOFF.md](docs/DEPLOYMENT-HANDOFF.md).
 
 Three guarantees, by construction:
 
 1. **Open by construction.** AGPL-3.0 — read, audit, and fork what runs on your customers' data. (For public bodies: public funds → public code.)
-2. **Data sovereignty.** Single-tenant, self-hosted, operator-owned models. **No telemetry, no phone-home, no update checks, no analytics — ever.** The only outbound connections Docket makes are the LLM endpoint *you* configure and the mail gateway *you* configure.
+2. **Data sovereignty.** Self-hosted, operator-owned models. The default SKU is **single-tenant** — one deployment, one organization, one database, nothing of anyone else's in it. (A shared multi-tenant mode exists for customers who can't fund a dedicated instance; the isolated deploy is the degenerate single-tenant case of it, so the procurement story stays literally true.) **No telemetry, no phone-home, no update checks, no analytics — ever.** The only outbound connections Docket makes are the LLM endpoint *you* configure and the mail gateway *you* configure.
 3. **Zero per-seat licensing.** There is no seat counting anywhere in the code.
 
 ---

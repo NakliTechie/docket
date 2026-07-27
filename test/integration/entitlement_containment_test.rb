@@ -198,4 +198,46 @@ class EntitlementContainmentTest < ActionDispatch::IntegrationTest
     assert_equal Features::REGISTRY.keys.reject { |k| k.include?(".") }, Features.modules,
                  "a hand-written module list goes stale the next time a module is added"
   end
+
+  # ── Regressions from the 2026-07-28 work-module review ────────────────────
+  test "an importer cannot conjure a module the tenant does not have" do
+    disable!("work")
+    payload = { "issues" => [ { "key" => "ZZ-1", "fields" => { "summary" => "should not exist" } } ] }
+
+    assert_no_difference [ "Project.count", "WorkItem.count" ] do
+      result = Imports::Jira.call(payload: payload, actor: users(:admin))
+      assert result.errors.any?, "and it must say why, not fail silently"
+    end
+  end
+
+  test "a disabled module's webhooks do not leave the building" do
+    WebhookEndpoint.create!(name: "eng", url: "https://example.test/hook",
+                            events: %w[work_item.created], active: true)
+    item_attrs = { title: "phantom", reporter: users(:admin) }
+
+    assert_difference "WebhookDelivery.count", 1 do
+      projects(:pep).work_items.create!(**item_attrs)
+    end
+
+    disable!("work")
+    assert_no_difference "WebhookDelivery.count" do
+      ActsAsTenant.with_tenant(Tenant.find(ActsAsTenant.current_tenant.id)) do
+        Project.with_deleted.find(projects(:pep).id).work_items.create!(title: "phantom 2",
+                                                                       reporter: users(:admin))
+      end
+    end
+  end
+
+  test "with sprints off the board neither names a sprint nor filters by one" do
+    sprint = projects(:pep).sprints.create!(name: "Secret Sprint", status: :active)
+    work_items(:pep_one).update!(sprint: sprint)
+    disable!("work.sprints")
+    sign_in_as users(:admin)
+
+    get project_board_path(projects(:pep))
+    assert_response :success
+    refute_match "Secret Sprint", response.body, "a disabled sub-feature must not name its data"
+    assert_match work_items(:pep_two).reference, response.body,
+                 "and must not silently filter the board down to that sprint"
+  end
 end
