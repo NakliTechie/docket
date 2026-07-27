@@ -2,6 +2,12 @@ module Api
   module V1
     # API parity for the Activity & Usage view (handoff §12).
     class ReportsController < BaseController
+      # The activity report IS case-desk data (cases created/resolved, SLA
+      # breaches, volume by queue with queue names). Its access gate is
+      # audit:read, which no module owns, so without this a tenant that never
+      # bought the desk could read its whole shape through the API.
+      require_feature "service_desk"
+
       def activity
         require_report_access!
         from = parse_date(params[:from]) || 30.days.ago.to_date

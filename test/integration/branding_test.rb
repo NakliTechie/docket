@@ -6,6 +6,7 @@ class BrandingTest < ActionDispatch::IntegrationTest
   test "the brand defaults to the product name in the staff header" do
     sign_in_as users(:admin)
     get root_path
+    follow_redirect! # root is an entitlement-aware redirector since ENT
     assert_response :success
     assert_match "Docket", response.body
   end

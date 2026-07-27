@@ -9,7 +9,13 @@ class CasesMailbox < ApplicationMailbox
   before_processing :ensure_sender
 
   def process
-    ActsAsTenant.with_tenant(resolve_tenant) do
+    tenant = resolve_tenant
+    # A tenant without the service desk has no cases to open. Bounce rather
+    # than silently manufacturing one — inbound mail was the last unguarded
+    # way into the desk.
+    return bounced! unless tenant.feature?("service_desk")
+
+    ActsAsTenant.with_tenant(tenant) do
       if existing_case && sender_matches?(existing_case)
         thread_onto(existing_case)
       else

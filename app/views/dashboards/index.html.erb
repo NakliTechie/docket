@@ -25,6 +25,7 @@
 <% end %>
 
 <%# ---- Case-desk plane ---- %>
+<% if feature?("service_desk") %>
 <h2 class="panel-title"><%= t(".case_desk") %></h2>
 <div class="two-column">
   <section>
@@ -99,6 +100,9 @@
   </aside>
 </div>
 
+<% end %>
+
+<% if feature?("crm") %>
 <%# ---- Sales plane (compact; full detail on the sales report) ---- %>
 <div class="panel">
   <h2 class="panel-title"><%= t(".sales") %></h2>
@@ -114,6 +118,9 @@
 </div>
 
 <%# ---- Connector / ingestion plane ---- %>
+<% end %>
+
+<% if feature?("connectors") %>
 <h2 class="panel-title"><%= t(".connectors") %></h2>
 <div class="two-column">
   <section>
@@ -202,6 +209,9 @@
 </div>
 
 <%# ---- Effector / accountability plane ---- %>
+<% end %>
+
+<% if feature?("decisioning") %>
 <h2 class="panel-title"><%= t(".effector") %></h2>
 <div class="two-column">
   <section>
@@ -330,3 +340,4 @@
     <p class="muted"><%= t(".no_decisions") %></p>
   <% end %>
 </div>
+<% end %>

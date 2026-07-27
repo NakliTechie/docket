@@ -32,8 +32,8 @@
           <td><span class="badge badge-role"><%= tenant.status %></span></td>
           <td><%= @case_counts[tenant.id] %></td>
           <td>
-            <%= link_to t(".modules", count: Features::MODULES.count { |m| tenant.feature?(m) },
-                          total: Features::MODULES.size),
+            <%= link_to t(".modules", count: Features.modules.count { |m| tenant.feature?(m) },
+                          total: Features.modules.size),
                         entitlements_admin_tenant_path(tenant) %>
           </td>
           <td class="table-actions">

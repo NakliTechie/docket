@@ -17,7 +17,10 @@
 module Features
   # A feature is `module` or `module.feature`. The dot is the dependency: a
   # sub-feature is dead whenever its module is off, without restating it here.
-  MODULES = %w[service_desk crm work].freeze
+  # MODULES is DERIVED from the registry, never hand-listed — a hand-written
+  # list silently went stale the moment a module was added, and the console then
+  # reported "1 of 3 modules" for a tenant holding four.
+  def self.modules = REGISTRY.keys.reject { |key| key.include?(".") }
 
   # key => permissions the feature owns. A permission listed here is revoked by
   # `User#can?` when the feature is off (Authz says what a ROLE may do;
@@ -81,6 +84,29 @@ module Features
 
   def owner_of(permission)
     PERMISSION_OWNER[permission.to_s]
+  end
+
+  # api/v1 top-level resource => owning feature. Used to filter the MCP tool
+  # list and the OpenAPI document, so an agent is never handed tools for a
+  # module its tenant doesn't have. Resources absent here are shared plumbing
+  # (contacts, organisations, users, tokens, settings, audit) and stay listed.
+  API_RESOURCE_OWNER = {
+    "cases" => "service_desk", "queues" => "service_desk", "categories" => "service_desk",
+    "sla_policies" => "service_desk", "macros" => "service_desk", "messages" => "service_desk",
+    "reports" => "service_desk",
+    "reference_docs" => "service_desk.kb",
+    "leads" => "crm", "deals" => "crm", "pipelines" => "crm",
+    "sequences" => "crm.sequences", "sequence_enrollments" => "crm.sequences"
+  }.freeze
+
+  def owner_of_api_path(path)
+    API_RESOURCE_OWNER[path.to_s.delete_prefix("/").split("/").first.to_s]
+  end
+
+  # Is this api/v1 path available to the tenant in scope?
+  def api_path_enabled?(path)
+    owner = owner_of_api_path(path)
+    owner.nil? || enabled?(owner)
   end
 
   # Grouped for the console: module key => its sub-feature keys.

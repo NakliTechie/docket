@@ -21,6 +21,13 @@ module Connectors
     end
 
     def may_invoke?(principal)
+      # Entitlement first, for EVERY principal. Checking it only inside
+      # User#can? left the gate asymmetric: disabling the connectors module
+      # stopped staff but not the service account — which is the principal the
+      # AI agent actually runs as, so the module kept acting for a tenant that
+      # doesn't have it.
+      return false unless Features.enabled?("connectors")
+
       case principal
       when ServiceAccount then principal.scope?("connectors:invoke")
       when User           then principal.can?("connector:invoke")

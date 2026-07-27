@@ -16,6 +16,7 @@
 </div>
 
 <div class="two-column">
+  <% if feature?("service_desk") %>
   <section aria-label="<%= t(".case_history") %>">
     <h2 class="panel-title"><%= t(".case_history") %></h2>
     <% if @cases.any? %>
@@ -48,6 +49,7 @@
       <%= render "shared/empty_state", title: t(".no_cases") %>
     <% end %>
   </section>
+  <% end %>
 
   <aside>
     <div class="panel">

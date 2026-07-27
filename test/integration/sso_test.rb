@@ -32,7 +32,8 @@ class SsoTest < ActionDispatch::IntegrationTest
     end
     user = User.find_by(email_address: "newstaff@example.com")
     assert_equal "customer_service", user.role
-    follow_redirect!
+    follow_redirect! # → root
+    follow_redirect! # root is an entitlement-aware redirector since ENT
     assert_response :success
 
     get cases_path

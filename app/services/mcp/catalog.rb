@@ -12,11 +12,15 @@ module Mcp
       @index ||= build_index
     end
 
-    # MCP tools/list payload.
+    # MCP tools/list payload, filtered to what the tenant in scope actually has.
+    # Filtering happens HERE, not in build_index: the index is static and
+    # memoized across requests, while entitlements are per tenant.
     def tools
-      index.values.map do |op|
-        { "name" => op[:name], "description" => op[:description], "inputSchema" => op[:input_schema] }
-      end
+      index.values
+           .select { |op| Features.api_path_enabled?(op[:path_template]) }
+           .map do |op|
+             { "name" => op[:name], "description" => op[:description], "inputSchema" => op[:input_schema] }
+           end
     end
 
     def operation(name)

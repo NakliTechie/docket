@@ -5,17 +5,26 @@
     <input type="search" data-palette-target="input" data-action="input->palette#filter"
            placeholder="<%= t("palette.placeholder") %>" aria-label="<%= t("palette.placeholder") %>">
     <ul class="palette-list" data-palette-target="list">
-      <li data-palette-href="<%= cases_path %>" data-palette-label="<%= t("layout.nav.cases") %>"
-          data-action="click->palette#go"><%= icon "inbox" %> <%= t("layout.nav.cases") %></li>
-      <% if policy(Case).create? %>
-        <li data-palette-href="<%= new_case_path %>" data-palette-label="<%= t("cases.index.new_case") %>"
-            data-action="click->palette#go"><%= icon "plus" %> <%= t("cases.index.new_case") %></li>
+      <%# Entitlement-gated: the palette used to render case links AND enumerate
+          queue NAMES for tenants without the service desk — a data leak, not
+          just a dead link. %>
+      <% if feature?("service_desk") %>
+        <li data-palette-href="<%= cases_path %>" data-palette-label="<%= t("layout.nav.cases") %>"
+            data-action="click->palette#go"><%= icon "inbox" %> <%= t("layout.nav.cases") %></li>
+        <% if policy(Case).create? %>
+          <li data-palette-href="<%= new_case_path %>" data-palette-label="<%= t("cases.index.new_case") %>"
+              data-action="click->palette#go"><%= icon "plus" %> <%= t("cases.index.new_case") %></li>
+        <% end %>
       <% end %>
       <li data-palette-href="<%= contacts_path %>" data-palette-label="<%= t("layout.nav.contacts") %>"
           data-action="click->palette#go"><%= icon "user" %> <%= t("layout.nav.contacts") %></li>
       <li data-palette-href="<%= organisations_path %>" data-palette-label="<%= t("layout.nav.organisations") %>"
           data-action="click->palette#go"><%= icon "building" %> <%= t("layout.nav.organisations") %></li>
-      <% CaseQueue.order(:name).each do |queue| %>
+      <% if feature?("work") && policy(Project).index? %>
+        <li data-palette-href="<%= projects_path %>" data-palette-label="<%= t("layout.nav.work") %>"
+            data-action="click->palette#go"><%= icon "layers" %> <%= t("layout.nav.work") %></li>
+      <% end %>
+      <% (feature?("service_desk") && policy(Case).index? ? CaseQueue.order(:name) : []).each do |queue| %>
         <li data-palette-href="<%= cases_path(queue_id: queue.id) %>"
             data-palette-label="<%= "#{t("palette.queue_prefix")} #{queue.name}" %>"
             data-action="click->palette#go"><%= icon "layers" %> <%= t("palette.queue_prefix") %> <%= queue.name %></li>

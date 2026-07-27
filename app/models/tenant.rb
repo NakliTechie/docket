@@ -56,11 +56,19 @@ class Tenant < ApplicationRecord
 
   # Fail-closed on an unknown key: a typo'd guard must deny, never silently
   # allow. A feature is on only if it AND every ancestor module is on.
+  #
+  # Only a literal `true` (or an absent key, meaning "default") enables. An
+  # unexpected value — the string "false", 0, nil, anything a hand-edit or an
+  # import might leave behind — DENIES. The earlier `!= false` test failed open
+  # on every one of those.
   def feature?(key)
     chain = Features.chain(key)
     return false if chain.empty?
 
-    chain.all? { |k| entitlements.fetch(k, true) != false }
+    stored = entitlements || {}
+    chain.all? do |k|
+      !stored.key?(k) || stored[k] == true
+    end
   end
 
   def feature_keys_enabled
@@ -88,11 +96,17 @@ class Tenant < ApplicationRecord
   private
 
   def entitlements_keys_are_known
-    return if entitlements.blank?
+    if entitlements.nil?
+      # nil validated cleanly before, then blew up in feature? at read time —
+      # every gated request became a 500 instead of a deny.
+      errors.add(:entitlements, :cannot_be_nil)
+      return
+    end
 
     unknown = entitlements.keys.map(&:to_s) - Features::KEYS
-    return if unknown.empty?
+    errors.add(:entitlements, :unknown_features, keys: unknown.join(", ")) if unknown.any?
 
-    errors.add(:entitlements, :unknown_features, keys: unknown.join(", "))
+    bad_values = entitlements.reject { |_, v| v == true || v == false }.keys
+    errors.add(:entitlements, :non_boolean_values, keys: bad_values.join(", ")) if bad_values.any?
   end
 end

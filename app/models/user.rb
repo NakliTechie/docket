@@ -63,11 +63,31 @@ class User < ApplicationRecord
   # Two independent gates, both required: Authz says what this ROLE may do,
   # entitlements say what the TENANT bought. A super_admin still cannot touch a
   # module the tenant doesn't have — the module isn't there to touch.
+  #
+  # Entitlements are read from THIS USER'S OWN tenant, never the ambient one.
+  # Reading the ambient tenant meant a user was judged by whichever tenant
+  # happened to be in scope — the platform console iterates tenants with
+  # `with_tenant`, and a tenantless background job would have evaluated every
+  # permission as fully entitled.
   def can?(permission)
     return false unless Authz.permissions_for(role).include?(permission.to_s)
 
     owner = Features.owner_of(permission)
-    owner.nil? || Features.enabled?(owner)
+    return true if owner.nil?
+
+    entitlement_tenant&.feature?(owner) || false
+  end
+
+  # The tenant whose packaging judges this user — always their OWN, never
+  # whichever one happens to be ambient. When the ambient tenant IS theirs we
+  # reuse that instance rather than the association: `user.tenant` is a
+  # separately-loaded copy, so it can carry entitlements that were already
+  # stale by the time the check runs.
+  def entitlement_tenant
+    current = ActsAsTenant.current_tenant
+    return current if current && (tenant_id.nil? || current.id == tenant_id)
+
+    tenant
   end
 
   def deactivate!

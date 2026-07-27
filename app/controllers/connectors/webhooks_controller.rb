@@ -7,6 +7,10 @@ module Connectors
   # Unauthenticated by design (the signature IS the auth). The connector is
   # found tenant-scoped, so a webhook only ever touches its own tenant's data.
   class WebhooksController < ApplicationController
+    # Gating the admin console alone left THIS endpoint — the one that actually
+    # moves data — ingesting and enqueuing syncs for a tenant whose console
+    # says the module doesn't exist.
+    require_feature "connectors"
     allow_unauthenticated_access
     skip_before_action :verify_authenticity_token
 

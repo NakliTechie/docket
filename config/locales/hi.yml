@@ -1940,6 +1940,8 @@ hi:
           attributes:
             entitlements:
               unknown_features: "ऐसी सुविधाओं का उल्लेख करते हैं जो मौजूद नहीं हैं: %{keys}"
+              cannot_be_nil: "सुविधा स्विच का सेट होना चाहिए, रिक्त नहीं"
+              non_boolean_values: "इनके लिए true या false होना चाहिए: %{keys}"
         case:
           attributes:
             status:

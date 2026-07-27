@@ -1940,6 +1940,8 @@ en:
           attributes:
             entitlements:
               unknown_features: "refer to features that do not exist: %{keys}"
+              cannot_be_nil: "must be a set of feature switches, not empty"
+              non_boolean_values: "must be true or false for: %{keys}"
         case:
           attributes:
             status:

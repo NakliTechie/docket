@@ -8,9 +8,12 @@
 # isn't part of the product. (The API answers 403 `feature_disabled` instead,
 # because an integrator holding a valid token needs a diagnosable reason.)
 #
-# This is one of four seams; the others are `User#can?` (Authz intersection),
-# the nav (`feature?` helper), and the MCP/OpenAPI catalog filter. The guard
-# here is the backstop that holds even when a link is hit directly.
+# This is the request-level seam. The others: `User#can?` (Authz intersection),
+# view helpers (`feature?` — nav, palette, dashboard panes), the job fan-out
+# (`each_tenant_with_feature`), and the MCP/OpenAPI catalog filter. The guard
+# here is the backstop that holds even when a URL is hit directly — but it is
+# only a backstop: anything that runs OUTSIDE a request (jobs, mailboxes) has
+# to gate itself, which is why the fan-out helper exists.
 module FeatureGating
   extend ActiveSupport::Concern
 

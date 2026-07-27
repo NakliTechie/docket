@@ -27,4 +27,17 @@ class ApplicationJob < ActiveJob::Base
   def each_active_tenant(&block)
     Tenant.active.find_each { |tenant| ActsAsTenant.with_tenant(tenant, &block) }
   end
+
+  # The entitlement-aware fan-out every recurring sweep must use. A sweep that
+  # ignores packaging keeps a module RUNNING for a tenant that doesn't have it —
+  # and these sweeps have outward, customer-visible effects (sequence email,
+  # SLA-breach webhooks, autonomous decisions). "The console hides it" is not
+  # containment when cron still fires it.
+  def each_tenant_with_feature(key, &block)
+    Tenant.active.find_each do |tenant|
+      next unless tenant.feature?(key)
+
+      ActsAsTenant.with_tenant(tenant, &block)
+    end
+  end
 end
