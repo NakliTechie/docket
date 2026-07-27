@@ -3,7 +3,11 @@
   <h1><%= t(".title") %></h1>
   <p class="muted"><%= t(".intro") %></p>
 
-  <%= form_with url: portal_track_lookup_path, class: "form" do |f| %>
+  <%# Native submission, not Turbo: the lookup answers 200 with the case (it
+      creates nothing, and a redirect would put the tracking ID in the URL —
+      the one thing G2 was written to prevent). Turbo discards a 200 response
+      to a form POST, so the customer saw the unchanged form. %>
+  <%= form_with url: portal_track_lookup_path, class: "form", data: { turbo: false } do |f| %>
     <div class="form-row">
       <%= f.label :tracking_id, t(".tracking_id") %>
       <%= f.text_field :tracking_id, required: true, value: params[:tracking_id],
