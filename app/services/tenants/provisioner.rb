@@ -11,15 +11,19 @@ module Tenants
 
     def self.call(...) = new(...).call
 
-    def initialize(name:, subdomain:, admin_email: nil, admin_name: nil)
+    def initialize(name:, subdomain:, admin_email: nil, admin_name: nil, preset: "full")
       @name = name
       @subdomain = subdomain.to_s.strip.downcase.presence
       @admin_email = admin_email.to_s.strip.downcase.presence
       @admin_name = admin_name
+      # Packaging is chosen at provisioning; "full" (every module) is the default
+      # and the shape a first customer like Netcore gets.
+      @preset = preset.presence || "full"
     end
 
     def call
-      tenant = Tenant.create!(name: @name, subdomain: @subdomain, slug: @subdomain)
+      tenant = Tenant.create!(name: @name, subdomain: @subdomain, slug: @subdomain,
+                              entitlements: Features.preset(@preset))
       admin = nil
       password = nil
 

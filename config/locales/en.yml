@@ -38,6 +38,19 @@ en:
       agent_actions: "Agent actions"
       decision_appeals: "Appeals"
 
+  features:
+    service_desk: "Service desk"
+    service_desk.kb: "Knowledge base"
+    service_desk.approvals: "Approval chains"
+    service_desk.portal: "Public portal"
+    crm: "CRM"
+    crm.sequences: "Sequences"
+    work: "Work"
+    work.sprints: "Sprints"
+    decisioning: "Decisioning"
+    connectors: "Connectors"
+    mcp: "MCP server"
+
   locales:
     en: "English"
     hi: "Hindi"
@@ -1670,6 +1683,7 @@ en:
         provision: "Provision tenant"
         admin_password_once: "New tenant admin password (shown once — give it to the tenant's admin):"
         primary: "Primary"
+        modules: "%{count} of %{total}"
         suspend: "Suspend"
         activate: "Activate"
         columns:
@@ -1677,6 +1691,7 @@ en:
           subdomain: "Subdomain"
           status: "Status"
           cases: "Cases"
+          modules: "Modules"
       new:
         title: "Provision tenant"
         submit: "Provision"
@@ -1693,6 +1708,22 @@ en:
         cannot_suspend_primary: "The primary tenant cannot be suspended."
       activate:
         activated: "Tenant %{name} activated."
+      entitlements:
+        title: "Modules — %{name}"
+        back: "Back to tenants"
+        intro: "What this tenant has bought. Turning a module off removes it from the product for them: its pages stop existing, its API returns feature_disabled, and no role can reach it. On a dedicated deployment this is the operator's own switchboard."
+        presets: "Presets"
+        presets_hint: "Apply a named packaging, then fine-tune below."
+        preset:
+          full: "Full (all modules)"
+          service_only: "Service desk only"
+          crm_only: "CRM only"
+          work_only: "Work only"
+        depends_on: "needs %{module}"
+        save: "Save modules"
+      update_entitlements:
+        updated: "Modules updated for %{name}."
+        preset_applied: "Applied the %{preset} preset."
     decision_appeals:
       index:
         title: "Decision appeals"

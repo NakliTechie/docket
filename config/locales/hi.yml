@@ -38,6 +38,19 @@ hi:
       agent_actions: "एजेंट कार्रवाइयाँ"
       decision_appeals: "अपीलें"
 
+  features:
+    service_desk: "सेवा डेस्क"
+    service_desk.kb: "ज्ञान कोश"
+    service_desk.approvals: "अनुमोदन शृंखलाएँ"
+    service_desk.portal: "सार्वजनिक पोर्टल"
+    crm: "CRM"
+    crm.sequences: "अनुक्रम"
+    work: "कार्य"
+    work.sprints: "स्प्रिंट"
+    decisioning: "निर्णयन"
+    connectors: "कनेक्टर"
+    mcp: "MCP सर्वर"
+
   locales:
     en: "English"
     hi: "हिन्दी"
@@ -1670,6 +1683,7 @@ hi:
         provision: "टेनेंट बनाएँ"
         admin_password_once: "नए टेनेंट एडमिन का पासवर्ड (एक बार दिखाया गया — टेनेंट एडमिन को दें):"
         primary: "प्राथमिक"
+        modules: "%{total} में से %{count}"
         suspend: "निलंबित करें"
         activate: "सक्रिय करें"
         columns:
@@ -1677,6 +1691,7 @@ hi:
           subdomain: "सबडोमेन"
           status: "स्थिति"
           cases: "मामले"
+          modules: "मॉड्यूल"
       new:
         title: "टेनेंट बनाएँ"
         submit: "बनाएँ"
@@ -1693,6 +1708,22 @@ hi:
         cannot_suspend_primary: "प्राथमिक टेनेंट को निलंबित नहीं किया जा सकता।"
       activate:
         activated: "टेनेंट %{name} सक्रिय कर दिया गया।"
+      entitlements:
+        title: "मॉड्यूल — %{name}"
+        back: "टेनेंट सूची पर लौटें"
+        intro: "इस टेनेंट ने क्या खरीदा है। मॉड्यूल बंद करने पर वह उनके लिए उत्पाद से हट जाता है: उसके पृष्ठ मौजूद नहीं रहते, API feature_disabled लौटाता है, और कोई भी भूमिका उस तक नहीं पहुँच सकती। समर्पित परिनियोजन में यही संचालक का अपना नियंत्रण पटल है।"
+        presets: "पूर्वनिर्धारित सेट"
+        presets_hint: "कोई नामित पैकेजिंग लागू करें, फिर नीचे बारीकी से समायोजित करें।"
+        preset:
+          full: "पूर्ण (सभी मॉड्यूल)"
+          service_only: "केवल सेवा डेस्क"
+          crm_only: "केवल CRM"
+          work_only: "केवल कार्य"
+        depends_on: "%{module} आवश्यक है"
+        save: "मॉड्यूल सहेजें"
+      update_entitlements:
+        updated: "%{name} के लिए मॉड्यूल अद्यतन हुए।"
+        preset_applied: "%{preset} पूर्वनिर्धारित सेट लागू किया गया।"
     decision_appeals:
       index:
         title: "निर्णय अपीलें"

@@ -68,6 +68,8 @@ Rails.application.routes.draw do
       member do
         post :suspend
         post :activate
+        get :entitlements
+        patch :entitlements, action: :update_entitlements
       end
     end
     resources :decision_appeals, only: %i[index create] do

@@ -7,6 +7,10 @@ class TenantPolicy < ApplicationPolicy
   def create?   = permit?("tenant:manage")
   def suspend?  = permit?("tenant:manage")
   def activate? = permit?("tenant:manage")
+  # Entitlements are packaging, not per-tenant configuration: only the platform
+  # tier sets them, never a client_admin inside the tenant being packaged.
+  def entitlements?        = permit?("tenant:manage")
+  def update_entitlements? = permit?("tenant:manage")
 
   class Scope < Scope
     def resolve

@@ -4,7 +4,7 @@ module Admin
   # deploy it provisions and suspends tenants. Tenant is not itself tenant-scoped,
   # so listing is naturally cross-tenant; per-tenant counts use with_tenant.
   class TenantsController < ApplicationController
-    before_action :set_tenant, only: %i[suspend activate]
+    before_action :set_tenant, only: %i[suspend activate entitlements update_entitlements]
 
     def index
       authorize Tenant
@@ -46,6 +46,33 @@ module Admin
       authorize @tenant
       @tenant.active!
       redirect_to admin_tenants_path, notice: t(".activated", name: @tenant.name)
+    end
+
+    # Which modules this tenant has bought. In a DEDICATED deploy this is the
+    # operator's own switchboard on the primary tenant — same screen, same
+    # mechanism, so there is no second code path to keep correct.
+    def entitlements
+      authorize @tenant, :update_entitlements?
+      @grouped = Features.grouped
+    end
+
+    def update_entitlements
+      authorize @tenant, :update_entitlements?
+
+      if (preset = params[:preset].presence)
+        @tenant.apply_preset!(preset)
+        redirect_to entitlements_admin_tenant_path(@tenant),
+                    notice: t(".preset_applied", preset: preset) and return
+      end
+
+      # Unchecked boxes don't post, so absence means OFF — the submitted list is
+      # the whole truth for this form.
+      enabled = Array(params[:features]).map(&:to_s)
+      @tenant.update!(entitlements: Features::KEYS.index_with { |key| enabled.include?(key) }
+                                                  .reject { |_, on| on })
+      redirect_to entitlements_admin_tenant_path(@tenant), notice: t(".updated", name: @tenant.name)
+    rescue ArgumentError, ActiveRecord::RecordInvalid => e
+      redirect_to entitlements_admin_tenant_path(@tenant), alert: e.message
     end
 
     private
