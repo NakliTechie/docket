@@ -2,6 +2,7 @@
 # conversion — the counterpart to Admin::ActivityController for the sales
 # side, computed from this deployment's own deal + lead data.
 class SalesReportsController < ApplicationController
+  require_feature "crm"
   def index
     authorize :sales_report, policy_class: SalesReportPolicy
     @from = parse_date(params[:from]) || 30.days.ago.to_date

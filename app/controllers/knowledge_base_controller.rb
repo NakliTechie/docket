@@ -2,6 +2,7 @@
 # (both visibilities — the internal KB is for agents) and insert an article
 # link/snippet into a reply. Renders a turbo-frame the case workspace swaps in.
 class KnowledgeBaseController < ApplicationController
+  require_feature "service_desk.kb"
   def search
     authorize :knowledge_base, policy_class: KnowledgeBasePolicy
     @query = params[:q].to_s.strip

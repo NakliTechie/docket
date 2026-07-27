@@ -2,6 +2,7 @@ module Admin
   # Admin surface for the connector framework: configure an integration,
   # map its fields, schedule it, run it on demand, and read its sync log.
   class ConnectorsController < ApplicationController
+    require_feature "connectors"
     before_action :set_connector, only: %i[show edit update destroy sync pause resume activate]
 
     def index

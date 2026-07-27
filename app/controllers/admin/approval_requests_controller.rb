@@ -3,6 +3,7 @@ module Admin
   # reasoned order (which performs the guarded action) or rejected (it's
   # blocked). invocation:review tier — the human of record.
   class ApprovalRequestsController < ApplicationController
+    require_feature "service_desk.approvals"
     before_action :set_request, only: %i[approve reject]
 
     def index

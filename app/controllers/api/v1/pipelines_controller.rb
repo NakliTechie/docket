@@ -1,6 +1,7 @@
 module Api
   module V1
     class PipelinesController < BaseController
+      require_feature "crm"
       before_action :set_pipeline, only: %i[show update destroy]
 
       def index

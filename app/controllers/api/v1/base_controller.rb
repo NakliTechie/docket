@@ -5,6 +5,7 @@ module Api
     #   dkts_… service-account bearer (client credentials) — scope-gated
     class BaseController < ActionController::API
       include TenantResolution
+      include FeatureGating
       include Pundit::Authorization
       include Pagy::Backend
 
@@ -162,6 +163,13 @@ module Api
 
       def render_error(code, status:, detail: nil)
         render json: { error: code, detail: detail }.compact, status: status
+      end
+
+      # The API says 403 with a diagnosable code where HTML 404s: an integrator
+      # holding a valid token needs to tell "you didn't buy this" apart from
+      # "this endpoint moved".
+      def feature_disabled(key)
+        render_error("feature_disabled", detail: key.to_s, status: :forbidden)
       end
 
       def render_validation_errors(record)

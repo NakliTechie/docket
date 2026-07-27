@@ -1,4 +1,5 @@
 class DealsController < ApplicationController
+  require_feature "crm"
   before_action :set_deal, only: %i[show edit update destroy move]
 
   # Kanban board: open deals grouped by stage for the selected pipeline.

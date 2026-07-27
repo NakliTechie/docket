@@ -6,6 +6,7 @@ module Admin
   # on the connector. State is a short-lived signed token (CSRF + binds the
   # callback to the connector that initiated it).
   class ConnectorOauthController < ApplicationController
+    require_feature "connectors"
     STATE_PURPOSE = "connector_oauth".freeze
 
     # GET /admin/connectors/:id/oauth_authorize

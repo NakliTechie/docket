@@ -1,5 +1,6 @@
 module Admin
   class ReferenceDocsController < ApplicationController
+    require_feature "service_desk.kb"
     before_action :set_doc, only: %i[edit update destroy toggle_published]
 
     def index

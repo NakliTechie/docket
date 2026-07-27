@@ -47,7 +47,52 @@ class Tenant < ApplicationRecord
     shared_deployment? ? active.find_by(subdomain: subdomain.presence) : primary
   end
 
+  # ── Entitlements ───────────────────────────────────────────────────────────
+  # `entitlements` stores ONLY deviations from the Features registry defaults
+  # ({} = everything on), so both SKUs share one mechanism: a dedicated deploy
+  # leaves it empty and behaves exactly as it did pre-entitlements; a SaaS tenant
+  # gets a preset at provisioning.
+  validate :entitlements_keys_are_known
+
+  # Fail-closed on an unknown key: a typo'd guard must deny, never silently
+  # allow. A feature is on only if it AND every ancestor module is on.
+  def feature?(key)
+    chain = Features.chain(key)
+    return false if chain.empty?
+
+    chain.all? { |k| entitlements.fetch(k, true) != false }
+  end
+
+  def feature_keys_enabled
+    Features::KEYS.select { |key| feature?(key) }
+  end
+
+  # Persist one toggle. Storing `true` prunes the override rather than recording
+  # it, so `entitlements` stays a minimal diff and defaults keep flowing through.
+  def set_feature!(key, enabled)
+    raise ArgumentError, "unknown feature #{key}" unless Features.exists?(key)
+
+    updated = entitlements.dup
+    enabled ? updated.delete(key.to_s) : updated[key.to_s] = false
+    update!(entitlements: updated)
+  end
+
+  def apply_preset!(name)
+    update!(entitlements: Features.preset(name))
+  end
+
   def display_label
     name
+  end
+
+  private
+
+  def entitlements_keys_are_known
+    return if entitlements.blank?
+
+    unknown = entitlements.keys.map(&:to_s) - Features::KEYS
+    return if unknown.empty?
+
+    errors.add(:entitlements, :unknown_features, keys: unknown.join(", "))
   end
 end

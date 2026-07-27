@@ -1,4 +1,5 @@
 class CasesController < ApplicationController
+  require_feature "service_desk"
   before_action :set_case, only: %i[show edit update destroy transition assign run_agent]
 
   # Optimistic-locking conflict: someone else changed this case since it was

@@ -60,8 +60,14 @@ class User < ApplicationRecord
   # never a bare role name. When tenancy lands, a `tenant:` keyword is added
   # here (super_admin is cross-tenant, client_admin per-tenant) — call sites
   # pass no tenant today, so none of them change. See plan/rbac-research.
+  # Two independent gates, both required: Authz says what this ROLE may do,
+  # entitlements say what the TENANT bought. A super_admin still cannot touch a
+  # module the tenant doesn't have — the module isn't there to touch.
   def can?(permission)
-    Authz.permissions_for(role).include?(permission.to_s)
+    return false unless Authz.permissions_for(role).include?(permission.to_s)
+
+    owner = Features.owner_of(permission)
+    owner.nil? || Features.enabled?(owner)
   end
 
   def deactivate!

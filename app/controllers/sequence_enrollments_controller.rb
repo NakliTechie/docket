@@ -1,4 +1,5 @@
 class SequenceEnrollmentsController < ApplicationController
+  require_feature "crm.sequences"
   before_action :set_enrollment, only: %i[cancel]
 
   def create

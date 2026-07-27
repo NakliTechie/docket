@@ -2,6 +2,7 @@
 # `position` order on intake by CaseRouting — so ordering is first-class:
 # new rules append to the end and #move swaps a rule with its neighbour.
 class RoutingRulesController < ApplicationController
+  require_feature "service_desk"
   before_action :set_rule, only: %i[edit update destroy move]
 
   def index

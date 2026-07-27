@@ -1,4 +1,5 @@
 class PipelinesController < ApplicationController
+  require_feature "crm"
   before_action :set_pipeline, only: %i[edit update destroy]
 
   def index

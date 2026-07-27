@@ -3,6 +3,7 @@ module Admin
   # connectors. Secrets are write-only (never echoed); a blank field on edit
   # keeps the stored value.
   class SharedCredentialsController < ApplicationController
+    require_feature "connectors"
     before_action :set_credential, only: %i[edit update destroy]
 
     def index

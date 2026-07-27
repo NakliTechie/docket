@@ -1786,6 +1786,10 @@ hi:
   activerecord:
     errors:
       models:
+        tenant:
+          attributes:
+            entitlements:
+              unknown_features: "ऐसी सुविधाओं का उल्लेख करते हैं जो मौजूद नहीं हैं: %{keys}"
         case:
           attributes:
             status:

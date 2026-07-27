@@ -2,6 +2,7 @@
 # and approve/reject the parked confirm/of_record proposals. Admin/supervisor
 # only (DecisionPolicy). All effects are audited via Decisioning::Dispatcher.
 class DecisionsController < ApplicationController
+  require_feature "decisioning"
   def run
     authorize :decision, policy_class: DecisionPolicy
     Decisioning::Dispatcher.run!

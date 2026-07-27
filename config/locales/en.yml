@@ -1786,6 +1786,10 @@ en:
   activerecord:
     errors:
       models:
+        tenant:
+          attributes:
+            entitlements:
+              unknown_features: "refer to features that do not exist: %{keys}"
         case:
           attributes:
             status:

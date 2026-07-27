@@ -1,6 +1,7 @@
 module Api
   module V1
     class DealsController < BaseController
+      require_feature "crm"
       before_action :set_deal, only: %i[show update destroy move]
 
       def index

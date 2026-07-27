@@ -2,6 +2,7 @@ module Portal
   # Public, unauthenticated surface. Lives entirely outside the staff
   # session/policy world; rate-limited by Rack::Attack.
   class BaseController < ApplicationController
+    require_feature "service_desk.portal"
     allow_unauthenticated_access
     layout "portal"
 
