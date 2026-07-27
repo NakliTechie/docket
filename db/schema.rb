@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_160000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -827,6 +827,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_150000) do
     t.index ["workflow_state_id"], name: "index_work_items_on_workflow_state_id"
   end
 
+  create_table "work_links", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.integer "linkable_id", null: false
+    t.string "linkable_type", null: false
+    t.integer "relation", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "work_item_id", null: false
+    t.index ["created_by_id"], name: "index_work_links_on_created_by_id"
+    t.index ["linkable_type", "linkable_id"], name: "index_work_links_on_linkable"
+    t.index ["linkable_type", "linkable_id"], name: "index_work_links_on_linkable_type_and_linkable_id"
+    t.index ["tenant_id"], name: "index_work_links_on_tenant_id"
+    t.index ["work_item_id", "linkable_type", "linkable_id"], name: "index_work_links_uniqueness", unique: true
+    t.index ["work_item_id"], name: "index_work_links_on_work_item_id"
+  end
+
   create_table "work_watches", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "tenant_id", null: false
@@ -942,6 +959,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_150000) do
   add_foreign_key "work_items", "users", column: "reporter_id"
   add_foreign_key "work_items", "work_items", column: "parent_id"
   add_foreign_key "work_items", "workflow_states"
+  add_foreign_key "work_links", "tenants"
+  add_foreign_key "work_links", "users", column: "created_by_id"
+  add_foreign_key "work_links", "work_items"
   add_foreign_key "work_watches", "tenants"
   add_foreign_key "work_watches", "users"
   add_foreign_key "work_watches", "work_items"

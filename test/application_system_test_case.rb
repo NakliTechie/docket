@@ -39,6 +39,10 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     fill_in I18n.t("sessions.new.email"), with: user.email_address
     fill_in I18n.t("sessions.new.password"), with: password
     click_button I18n.t("sessions.new.sign_in")
-    assert_current_path root_path
+    # Since ENT, "/" is a redirector to whichever surface the tenant actually
+    # has, so a signed-in browser never rests on root. Assert we left the
+    # sign-in page rather than pinning a destination that now varies by
+    # entitlement.
+    assert_no_current_path new_session_path
   end
 end

@@ -27,6 +27,7 @@ class WorkItem < ApplicationRecord
   has_many :children, class_name: "WorkItem", foreign_key: :parent_id, dependent: :nullify,
            inverse_of: :parent
   has_many :work_comments, -> { order(:created_at) }, dependent: :destroy
+  has_many :work_links, dependent: :destroy
   has_many :work_watches, dependent: :destroy
   has_many :watchers, through: :work_watches, source: :user
   has_many :audit_entries, as: :auditable, dependent: nil
@@ -40,6 +41,7 @@ class WorkItem < ApplicationRecord
 
   before_validation :assign_number, on: :create
   before_save :stamp_closed_at, if: :workflow_state_id_changed?
+  after_update_commit :echo_state_to_linked_cases, if: :saved_change_to_workflow_state_id?
 
   scope :open, -> { joins(:workflow_state).where.not(workflow_states: { category: :done }) }
   scope :closed, -> { joins(:workflow_state).where(workflow_states: { category: :done }) }
@@ -66,6 +68,23 @@ class WorkItem < ApplicationRecord
 
   def stamp_closed_at
     self.closed_at = done? ? Time.current : nil
+  end
+
+  # An agent watching a case should not have to open the tracker to learn the
+  # engineering work finished. Internal note only — the customer never asked
+  # for a work item and should not be told about one.
+  def echo_state_to_linked_cases
+    work_links.where(linkable_type: "Case").includes(:linkable).find_each do |link|
+      kase = link.linkable
+      next if kase.nil?
+
+      kase.messages.create!(
+        body: I18n.t("work.escalation.state_echo",
+                     reference: reference, state: workflow_state.name),
+        kind: :internal_note,
+        author: nil
+      )
+    end
   end
 
   def parent_is_not_self_or_descendant

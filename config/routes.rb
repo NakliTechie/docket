@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       post :transition
       post :assign
       post :run_agent
+      post :escalate
     end
     resources :messages, only: :create
     post "assist/summarise", to: "assists#summarise", as: :assist_summarise

@@ -1,6 +1,6 @@
 class CasesController < ApplicationController
   require_feature "service_desk"
-  before_action :set_case, only: %i[show edit update destroy transition assign run_agent]
+  before_action :set_case, only: %i[show edit update destroy transition assign run_agent escalate]
 
   # Optimistic-locking conflict: someone else changed this case since it was
   # loaded. Don't clobber — ask the agent to reload and retry.
@@ -102,6 +102,21 @@ class CasesController < ApplicationController
     else
       redirect_to @case, alert: t(".unavailable")
     end
+  end
+
+  # WM4: hand a case to engineering. Requires BOTH modules — the button only
+  # appears when the tenant has work, and this re-checks it.
+  def escalate
+    authorize @case, :update?
+    return head(:not_found) unless feature?("work")
+    raise Pundit::NotAuthorizedError unless Current.user.can?("work:write")
+
+    project = policy_scope(Project).active.find(params[:project_id])
+    result = Work::Escalation.call(kase: @case, project: project, actor: Current.user,
+                                   title: params[:title].presence,
+                                   kind: params[:kind].presence || :bug)
+    redirect_to case_path(@case),
+                notice: t(".escalated", reference: result.work_item.reference)
   end
 
   private

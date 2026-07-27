@@ -257,6 +257,8 @@ en:
     transition:
       transitioned: "Case marked %{status}."
       submitted_for_approval: "Submitted for approval — this change needs a checker's sign-off before it takes effect."
+    escalate:
+      escalated: "Escalated to engineering as %{reference}."
     assign:
       assigned: "Case assigned to %{name}."
       unassigned: "Case unassigned."
@@ -1932,6 +1934,17 @@ en:
   work_comments:
     create:
       created: "Comment added."
+
+  work:
+    escalation:
+      from_case: "Escalated from case %{tracking_id}."
+      case_note: "Escalated to engineering as %{reference}: %{title}"
+      state_echo: "%{reference} moved to %{state}."
+      panel_title: "Engineering work"
+      escalate: "Escalate to engineering"
+      project: "Project"
+      no_projects: "No active projects to escalate into."
+      linked_none: "No linked work."
 
   activerecord:
     errors:

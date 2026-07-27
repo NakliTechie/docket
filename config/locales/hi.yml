@@ -257,6 +257,8 @@ hi:
     transition:
       transitioned: "मामला %{status} चिह्नित किया गया।"
       submitted_for_approval: "अनुमोदन हेतु प्रस्तुत — यह परिवर्तन प्रभावी होने से पहले एक चेकर की मंज़ूरी आवश्यक है।"
+    escalate:
+      escalated: "%{reference} के रूप में इंजीनियरिंग को भेजा गया।"
     assign:
       assigned: "मामला %{name} को सौंपा गया।"
       unassigned: "मामले से नियुक्ति हटाई गई।"
@@ -1932,6 +1934,17 @@ hi:
   work_comments:
     create:
       created: "टिप्पणी जोड़ी गई।"
+
+  work:
+    escalation:
+      from_case: "मामला %{tracking_id} से आगे बढ़ाया गया।"
+      case_note: "%{reference} के रूप में इंजीनियरिंग को भेजा गया: %{title}"
+      state_echo: "%{reference} %{state} में चला गया।"
+      panel_title: "इंजीनियरिंग कार्य"
+      escalate: "इंजीनियरिंग को भेजें"
+      project: "परियोजना"
+      no_projects: "भेजने के लिए कोई सक्रिय परियोजना नहीं।"
+      linked_none: "कोई संबंधित कार्य नहीं।"
 
   activerecord:
     errors:

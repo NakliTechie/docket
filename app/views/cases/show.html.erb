@@ -182,6 +182,39 @@
       <% end %>
     </div>
 
+    <% if feature?("work") && policy(WorkItem).index? %>
+      <div class="panel">
+        <h2 class="panel-title"><%= t("work.escalation.panel_title") %></h2>
+        <% linked = @case.work_items.includes(:project, :workflow_state) %>
+        <% if linked.any? %>
+          <ul class="linked-list">
+            <% linked.each do |item| %>
+              <li>
+                <%= link_to item.reference, work_item_path(item), class: "mono" %>
+                <%= item.title %>
+                <span class="badge"><%= item.workflow_state.name %></span>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="muted"><%= t("work.escalation.linked_none") %></p>
+        <% end %>
+
+        <% if policy(WorkItem).create? %>
+          <% projects = policy_scope(Project).active.order(:key) %>
+          <% if projects.any? %>
+            <%= form_with url: escalate_case_path(@case), class: "form inline-form" do |f| %>
+              <%= f.label :project_id, t("work.escalation.project"), class: "sr-only" %>
+              <%= f.collection_select :project_id, projects, :id, :display_label %>
+              <%= f.submit t("work.escalation.escalate"), class: "btn btn-sm" %>
+            <% end %>
+          <% else %>
+            <p class="muted"><%= t("work.escalation.no_projects") %></p>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
     <div class="panel">
       <h2 class="panel-title"><%= t(".details") %></h2>
       <dl class="meta-list">
