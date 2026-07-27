@@ -174,6 +174,26 @@ class EntitlementContainmentTest < ActionDispatch::IntegrationTest
     refute admin.can?("lead:read"), "their own packaging does"
   end
 
+  test "work API paths and MCP tools drop with the work module" do
+    tenant = ActsAsTenant.current_tenant
+    tenant.set_feature!("work", false)
+    tenant.set_feature!("work.sprints", false)
+
+    # Re-enter with a freshly loaded tenant: the ambient instance still holds
+    # the entitlements it was loaded with.
+    ActsAsTenant.with_tenant(Tenant.find(tenant.id)) do
+      Mcp::Catalog.reset!
+      work_tools = Mcp::Catalog.tools.map { |t| t["name"] }.select { |n| n =~ /work_item|project|sprint/ }
+      assert_empty work_tools, "an agent must not be handed tools for a module the tenant lacks"
+
+      %w[/projects /work_items /sprints /work_items/{id}/transition].each do |path|
+        refute Features.api_path_enabled?(path), "#{path} should be filtered out of the spec"
+      end
+    end
+  ensure
+    Mcp::Catalog.reset!
+  end
+
   test "the module count in the console is derived, not hand-listed" do
     assert_equal Features::REGISTRY.keys.reject { |k| k.include?(".") }, Features.modules,
                  "a hand-written module list goes stale the next time a module is added"

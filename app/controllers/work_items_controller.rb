@@ -88,6 +88,6 @@ class WorkItemsController < ApplicationController
   def item_params
     params.require(:work_item).permit(:title, :description, :kind, :priority, :assignee_id,
                                       :workflow_state_id, :parent_id, :sprint_id, :estimate,
-                                      :due_on, label_list: [])
+                                      :due_on, labels: [])
   end
 end

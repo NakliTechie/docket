@@ -11,6 +11,7 @@ class ServiceAccount < ApplicationRecord
     contacts:read contacts:write
     organisations:read organisations:write
     crm:read crm:write
+    work:read work:write
     config:read config:write
     audit:read
     webhooks:manage
@@ -30,6 +31,8 @@ class ServiceAccount < ApplicationRecord
     "organisations:write" => %w[contact:write],
     "crm:read" => %w[lead:read deal:read pipeline:read],
     "crm:write" => %w[lead:write deal:write],
+    "work:read" => %w[work:read],
+    "work:write" => %w[work:write],
     "config:read" => %w[settings:manage case_config:manage],
     "config:write" => %w[settings:manage case_config:manage],
     "audit:read" => %w[audit:read],

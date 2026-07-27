@@ -77,6 +77,43 @@ module Api
           notes: o.notes, created_at: o.created_at, updated_at: o.updated_at }
       end
 
+      def project(p)
+        {
+          id: p.id, key: p.key, name: p.name, description: p.description,
+          lead_id: p.lead_id, archived: p.archived,
+          created_at: p.created_at, updated_at: p.updated_at
+        }
+      end
+
+      def work_item(i)
+        {
+          id: i.id, reference: i.reference, project_id: i.project_id,
+          number: i.number, title: i.title, description: i.description,
+          kind: i.kind, priority: i.priority,
+          workflow_state_id: i.workflow_state_id, workflow_state: i.workflow_state&.name,
+          state_category: i.workflow_state&.category,
+          assignee_id: i.assignee_id, reporter_id: i.reporter_id,
+          parent_id: i.parent_id, sprint_id: i.sprint_id,
+          labels: i.labels, estimate: i.estimate&.to_f, due_on: i.due_on,
+          closed_at: i.closed_at, created_at: i.created_at, updated_at: i.updated_at
+        }
+      end
+
+      def sprint(s)
+        {
+          id: s.id, project_id: s.project_id, name: s.name, goal: s.goal,
+          status: s.status, starts_on: s.starts_on, ends_on: s.ends_on,
+          created_at: s.created_at, updated_at: s.updated_at
+        }
+      end
+
+      def work_comment(c)
+        {
+          id: c.id, work_item_id: c.work_item_id, author_id: c.author_id,
+          body: c.body, created_at: c.created_at, updated_at: c.updated_at
+        }
+      end
+
       def lead(l)
         {
           id: l.id, name: l.name, email: l.email, phone: l.phone,

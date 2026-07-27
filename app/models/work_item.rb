@@ -42,6 +42,8 @@ class WorkItem < ApplicationRecord
   before_validation :assign_number, on: :create
   before_save :stamp_closed_at, if: :workflow_state_id_changed?
   after_update_commit :echo_state_to_linked_cases, if: :saved_change_to_workflow_state_id?
+  after_create_commit :publish_created
+  after_update_commit :publish_transitioned, if: :saved_change_to_workflow_state_id?
 
   scope :open, -> { joins(:workflow_state).where.not(workflow_states: { category: :done }) }
   scope :closed, -> { joins(:workflow_state).where(workflow_states: { category: :done }) }
@@ -73,6 +75,14 @@ class WorkItem < ApplicationRecord
   # An agent watching a case should not have to open the tracker to learn the
   # engineering work finished. Internal note only — the customer never asked
   # for a work item and should not be told about one.
+  def publish_created
+    Webhooks.publish("work_item.created", Webhooks.work_item_payload(self))
+  end
+
+  def publish_transitioned
+    Webhooks.publish("work_item.transitioned", Webhooks.work_item_payload(self))
+  end
+
   def echo_state_to_linked_cases
     work_links.where(linkable_type: "Case").includes(:linkable).find_each do |link|
       kase = link.linkable

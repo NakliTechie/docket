@@ -33,4 +33,22 @@ module Webhooks
       updated_at: kase.updated_at&.utc&.iso8601(3)
     }
   end
+
+  # Work-module payload. Deliberately mirrors case_payload's shape (id + human
+  # reference + state) so a subscriber handling both does not need two parsers.
+  def work_item_payload(item)
+    {
+      id: item.id,
+      reference: item.reference,
+      project_key: item.project&.key,
+      title: item.title,
+      kind: item.kind,
+      priority: item.priority,
+      state: item.workflow_state&.name,
+      state_category: item.workflow_state&.category,
+      assignee_id: item.assignee_id,
+      sprint_id: item.sprint_id,
+      closed_at: item.closed_at
+    }
+  end
 end
