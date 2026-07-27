@@ -36,3 +36,10 @@
 
 # Local working notes (never committed)
 plan/
+
+# macOS finder metadata.
+.DS_Store
+
+# Agent worktrees (isolated checkouts; never committed).
+/.worktrees/
+/.claude/worktrees/
