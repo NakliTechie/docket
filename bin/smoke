@@ -82,7 +82,11 @@ HTTP=$(curl -s -A "$UA" -b "$JAR" -o /tmp/smoke_status.html -w "%{http_code}" -X
 # mode shares the throwaway smoke DB (DATABASE_PATH is exported above, so runner
 # hits it too); a remote target (SMOKE_BASE_URL) does not — mint inside the compose
 # app container there, or pass SMOKE_API_TOKEN explicitly.
-MINT='admin = User.where(role: :admin).order(:id).first; print ApiToken.create!(user: admin, name: "smoke-#{Time.now.to_i}").raw_token'
+# :super_admin, not :admin — the legacy admin/supervisor/agent roles were
+# retired by MigrateLegacyRoles, so `where(role: :admin)` matched nothing, the
+# create! raised on a nil user, and 2>/dev/null swallowed it. The token came
+# back empty and steps 4-6 (7 of the 12 checks) could never pass.
+MINT='admin = User.where(role: :super_admin).order(:id).first; print ApiToken.create!(user: admin, name: "smoke-#{Time.now.to_i}").raw_token'
 if [ -n "${SMOKE_API_TOKEN:-}" ]; then
   API_TOKEN="$SMOKE_API_TOKEN"
 elif [ -z "${SMOKE_BASE_URL:-}" ]; then
@@ -90,6 +94,11 @@ elif [ -z "${SMOKE_BASE_URL:-}" ]; then
 else
   API_TOKEN=$(docker compose exec -T app bin/rails runner "$MINT" 2>/dev/null)
   [ -n "$API_TOKEN" ] || API_TOKEN=$(bin/rails runner "$MINT" 2>/dev/null)
+fi
+if [ -z "$API_TOKEN" ]; then
+  # Say WHY rather than letting the next seven checks fail for no stated reason.
+  echo "    could not mint an API token — re-running the mint with stderr visible:" >&2
+  bin/rails runner "$MINT" >/dev/null || true
 fi
 [ -n "$API_TOKEN" ]; step "api token issued" $?
 
