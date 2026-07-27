@@ -152,8 +152,11 @@ contacts that later records attach to.
       `/rails/action_mailbox/relay/inbound_emails`.
 - [ ] TLS terminates correctly and `DOCKET_FORCE_SSL` is on.
 - [ ] The break-glass admin password has been changed from whatever first boot used.
-- [ ] Backups: the database is the whole product. The audit log is a hash chain —
-      a partial restore is detectable, which is the point.
+- [ ] Backups: **`bin/backup <dir>` and `bin/restore <dir>`** — see
+      [RUNBOOK-BACKUP.md](RUNBOOK-BACKUP.md). Schedule the backup, get it off the
+      box, and **run the restore drill before go-live**. The restore ends with
+      `bin/rails audit:verify`, so a partial restore is detected rather than
+      assumed.
 
 ## 8. Known gaps — tell the customer before they find them
 
@@ -171,8 +174,14 @@ contacts that later records attach to.
 
 ## 9. Where to look when something breaks
 
+**Start at `/healthz`.** It reports database, queue, storage, recurring-sweep
+freshness and failed-job count as JSON, and answers 503 with the failing check
+named. (`/up` only proves the process booted.)
+
 | Symptom | Look at |
 |---|---|
+| Anything at all, at 2am | `curl -s https://host/healthz \| jq` — it names what is broken |
+| Jobs seem stuck | `/healthz` → `recurring_jobs.stale` and `failed_jobs.count` |
 | SSO bounces to "single sign-on failed" | Boot logs for `Authentication failure!` — the reason follows it. Then §5. |
 | A module's pages 404 for everyone | Admin → Tenants → Modules. A 404 here means "not entitled", by design. |
 | API returns `403 feature_disabled` | Same — the response body names the module. |

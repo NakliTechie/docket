@@ -11,5 +11,6 @@ class SequenceRunnerJob < ApplicationJob
         SequenceEnrollment.due.find_each(&:advance!)
       end
     end
+    record_sweep_success!
   end
 end

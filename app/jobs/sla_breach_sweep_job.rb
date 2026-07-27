@@ -17,5 +17,6 @@ class SlaBreachSweepJob < ApplicationJob
         end
       end
     end
+    record_sweep_success!
   end
 end

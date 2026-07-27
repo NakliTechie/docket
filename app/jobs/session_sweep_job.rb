@@ -9,5 +9,6 @@ class SessionSweepJob < ApplicationJob
   def perform
     Session.expired.in_batches.delete_all
     OauthAccessToken.expired.in_batches.delete_all
+    record_sweep_success!
   end
 end

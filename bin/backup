@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Back up a Docket deployment: all FOUR databases plus the attachment volume.
+#
+# The README's one-liner dumped only the primary. Docket runs primary + cache +
+# queue + cable (config/database.yml); a restore from the primary alone loses
+# the job queue and its failed-job history. Attachments live on disk, not in
+# Postgres, so a database-only backup silently loses every uploaded file.
+#
+#   bin/backup /var/backups/docket
+#
+# Exits non-zero if ANY part fails — a backup that half-worked is not a backup.
+set -euo pipefail
+
+DEST="${1:-${DOCKET_BACKUP_DIR:-}}"
+if [ -z "$DEST" ]; then
+  echo "usage: bin/backup <destination-directory>" >&2
+  exit 64
+fi
+
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT="$DEST/docket-$STAMP"
+mkdir -p "$OUT"
+
+: "${DATABASE_URL:?DATABASE_URL must be set}"
+CACHE_URL="${CACHE_DATABASE_URL:-${DATABASE_URL}_cache}"
+QUEUE_URL="${QUEUE_DATABASE_URL:-${DATABASE_URL}_queue}"
+CABLE_URL="${CABLE_DATABASE_URL:-${DATABASE_URL}_cable}"
+STORAGE_DIR="${DOCKET_STORAGE_DIR:-storage}"
+
+dump() {
+  local name="$1" url="$2"
+  echo "  dumping $name"
+  # -Fc is the custom format: compressed, and restorable selectively.
+  pg_dump --format=custom --no-owner --no-acl --file="$OUT/$name.dump" "$url"
+}
+
+echo "Docket backup -> $OUT"
+dump primary "$DATABASE_URL"
+dump cache   "$CACHE_URL"
+dump queue   "$QUEUE_URL"
+dump cable   "$CABLE_URL"
+
+if [ -d "$STORAGE_DIR" ]; then
+  echo "  archiving attachments ($STORAGE_DIR)"
+  tar -czf "$OUT/storage.tar.gz" -C "$(dirname "$STORAGE_DIR")" "$(basename "$STORAGE_DIR")"
+else
+  echo "  WARNING: no storage directory at $STORAGE_DIR — attachments NOT backed up" >&2
+fi
+
+# A manifest so a restorer knows what they have without opening the dumps.
+cat > "$OUT/MANIFEST.txt" <<MANIFEST
+docket backup
+taken_at: $STAMP
+host: $(hostname)
+databases: primary cache queue cable
+storage: $([ -f "$OUT/storage.tar.gz" ] && echo present || echo MISSING)
+restore: bin/restore $OUT
+verify_after_restore: bin/rails audit:verify
+MANIFEST
+
+echo "OK  $(du -sh "$OUT" | cut -f1) in $OUT"
+echo "Restore with: bin/restore $OUT"
