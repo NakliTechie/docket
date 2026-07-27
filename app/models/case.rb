@@ -218,12 +218,16 @@ class Case < ApplicationRecord
   # First-match declarative routing (CaseRouting) — deterministic, runs before
   # the AI triage and wins over it. No-op when no rule matches.
   def apply_routing_rules
+    return if Imports::Mode.running?
+
     CaseRouting.apply(self)
   end
 
   # Customer-originated cases get the AI triage/draft/resolve loop when a model
   # endpoint is configured; silently nothing otherwise.
   def enqueue_agent_triage
+    return if Imports::Mode.running?
+
     CaseAgentJob.perform_later(self) if ai_triage_eligible?
   end
 
@@ -239,6 +243,8 @@ class Case < ApplicationRecord
   private
 
   def publish_created_webhook
+    return if Imports::Mode.running?
+
     Webhooks.publish("case.created", Webhooks.case_payload(self))
   end
 

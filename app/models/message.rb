@@ -74,6 +74,8 @@ class Message < ApplicationRecord
   # case came in over a messaging connector, where the reply goes back out that
   # same channel instead (see #deliver_via_messaging_connector).
   def notify_contact_by_email
+    return if Imports::Mode.running?
+
     return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
     return if self.case.source_connector&.ingests?
     return if self.case.contact.email.blank?
@@ -83,12 +85,16 @@ class Message < ApplicationRecord
   # Outbound public answers on a messaging case (WhatsApp/Telegram) are sent
   # back out through the originating connector — the omnichannel reply loop (PG2).
   def deliver_via_messaging_connector
+    return if Imports::Mode.running?
+
     return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
     return unless self.case.source_connector&.ingests?
     ConnectorReplyJob.perform_later(id)
   end
 
   def enqueue_sentiment_analysis
+    return if Imports::Mode.running?
+
     # Pass the id (not the record) — consistent with the other message jobs and
     # safe if the message is gone by the time the job runs (S9).
     SentimentJob.perform_later(id) if direction_inbound? && Llm.enabled?
@@ -96,6 +102,8 @@ class Message < ApplicationRecord
 
   # Internal notes never leave the deployment — not even as webhooks.
   def publish_message_webhook
+    return if Imports::Mode.running?
+
     return if kind_internal_note?
     Webhooks.publish("case.message_added", Webhooks.case_payload(self.case).merge(
       message: { id: id, kind: kind, direction: direction, author_type: author_type,

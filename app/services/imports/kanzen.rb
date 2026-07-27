@@ -25,11 +25,13 @@ module Imports
         return @result
       end
 
-      ActiveRecord::Base.transaction do
+      Mode.run do
+        ActiveRecord::Base.transaction do
         project = build_project
         states = build_states(project)
         import_cards(project, states)
-        raise ActiveRecord::Rollback if @dry_run
+          raise ActiveRecord::Rollback if @dry_run
+        end
       end
       @result
     end

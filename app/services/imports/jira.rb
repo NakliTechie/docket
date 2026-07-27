@@ -49,13 +49,15 @@ module Imports
         return @result
       end
 
-      ActiveRecord::Base.transaction do
+      Mode.run do
+        ActiveRecord::Base.transaction do
         @issues.each do |issue|
         next @result.error!("skipped an entry that is not an issue object") unless issue.is_a?(Hash)
 
         import_issue(issue)
       end
-        raise ActiveRecord::Rollback if @dry_run
+          raise ActiveRecord::Rollback if @dry_run
+        end
       end
       @result
     end
