@@ -38,7 +38,11 @@
   <% unless @case.status_closed? %>
     <div class="panel composer">
       <h2 class="panel-title"><%= t(".reply") %></h2>
-      <%= form_with url: portal_track_reply_path, class: "form" do |f| %>
+      <%# Native submission for the same reason as the lookup form: the reply
+          re-renders this page with 200 and must not redirect (the tracking ID
+          would land in the URL). Turbo drops a 200 form response, so the reply
+          saved but the thread never updated. %>
+      <%= form_with url: portal_track_reply_path, class: "form", data: { turbo: false } do |f| %>
         <%= f.hidden_field :tracking_id, value: @case.tracking_id %>
         <%= f.hidden_field :contact_email, value: params[:contact_email] %>
         <%= f.hidden_field :contact_phone, value: params[:contact_phone] %>
