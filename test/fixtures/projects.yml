@@ -1,0 +1,18 @@
+# PEP backs the Work-module tests (the Netcore-shaped "platform engineering"
+# project). Workflow states are seeded by the model's after_create hook, so
+# fixtures deliberately do NOT define them — see workflow_states.yml.
+pep:
+  tenant: primary
+  key: PEP
+  name: Platform Engineering
+  description: Platform work for the first customer rollout
+  lead: admin
+  archived: false
+  last_item_number: 2
+
+acme_proj:
+  tenant: acme
+  key: ACM
+  name: Acme Internal
+  archived: false
+  last_item_number: 0

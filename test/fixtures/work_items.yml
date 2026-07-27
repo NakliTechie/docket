@@ -1,0 +1,20 @@
+pep_one:
+  tenant: primary
+  project: pep
+  workflow_state: pep_backlog
+  number: 1
+  title: Wire the entitlement switchboard
+  kind: 0
+  priority: 1
+  reporter: admin
+
+pep_two:
+  tenant: primary
+  project: pep
+  workflow_state: pep_in_progress
+  number: 2
+  title: Import Freshdesk tickets
+  kind: 1
+  priority: 2
+  assignee: agent_a
+  reporter: admin
