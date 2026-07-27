@@ -44,6 +44,11 @@ class KeyboardWorkspaceTest < ApplicationSystemTestCase
     sign_in_with_form users(:admin)
     visit case_path(cases(:pension_case))
     page.driver.browser.keyboard.type("a")
+    # Wait for the round trip before reading the database. Without a waiting
+    # assertion here the DB read races the request and this failed about one run
+    # in four — the "t" test above never flaked because its assert_text already
+    # waits. assert_equal does no waiting of its own.
+    assert_text I18n.t("cases.assign.assigned", name: users(:admin).name)
     assert_equal users(:admin), cases(:pension_case).reload.assignee
   end
 
