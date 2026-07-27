@@ -1860,6 +1860,8 @@ hi:
 
   boards:
     show:
+      truncated: "%{total} में से %{shown} दिखाए जा रहे हैं।"
+      see_all: "बैकलॉग में सभी देखें"
       sprints: "स्प्रिंट"
       filter: "फ़िल्टर"
       filter_placeholder: "कार्ड हाइलाइट करने के लिए लिखें…"

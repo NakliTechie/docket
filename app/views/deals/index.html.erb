@@ -24,7 +24,8 @@
                data-action="dragover->kanban#dragover drop->kanban#drop dragleave->kanban#dragleave">
         <h2 class="kanban-column-title">
           <%= stage.name %>
-          <span class="kanban-count"><%= stage_deals.size %></span>
+          <% stage_total = @totals_by_stage[stage.id].to_i %>
+          <span class="kanban-count"><%= stage_total %></span>
         </h2>
         <div class="kanban-cards">
           <% stage_deals.each do |deal| %>

@@ -1860,6 +1860,8 @@ en:
 
   boards:
     show:
+      truncated: "Showing %{shown} of %{total}."
+      see_all: "See all in the backlog"
       sprints: "Sprints"
       filter: "Filter"
       filter_placeholder: "Type to highlight cards…"
