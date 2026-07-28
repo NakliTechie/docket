@@ -18,6 +18,13 @@ class ApiToken < ApplicationRecord
   attr_reader :raw_token
 
   scope :usable, -> { where(revoked_at: nil) }
+  # H8: tokens whose owning user is in the current tenant scope. ApiToken has no
+  # tenant_id — it inherits tenancy from its user. In shared mode this keeps the
+  # platform token console (super_admin, but host-scoped like everyone via
+  # TenantResolution) from listing or revoking another tenant's tokens; in an
+  # isolated single-tenant deploy it is a no-op. with_deleted so a soft-deleted
+  # user's tokens are still administrable.
+  scope :for_tenant_users, -> { where(user_id: User.with_deleted.select(:id)) }
 
   before_validation :generate_token, on: :create
 
