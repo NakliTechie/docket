@@ -40,4 +40,26 @@ class PipelineTest < ActiveSupport::TestCase
     p.destroy
     assert stage_ids.all? { |id| PipelineStage.exists?(id) }
   end
+
+  # H26: a nested "Remove" checkbox (allow_destroy) on a pipeline stage 500'd.
+  # The stage is Audited + SoftDeletable; destroying it during nested autosave
+  # appends an audit entry whose auditable is the stage — soft-deleted (hidden by
+  # default scope) and marked_for_destruction — which the old required
+  # belongs_to :auditable rejected as "must exist". AuditEntry now records the
+  # reference by id/type, so the removal completes. (The forward pass blamed a
+  # missing @destroyed on SoftDeletable#destroy; a probe showed that made no
+  # difference — the collection drops the stage either way; the audit chain was
+  # the real blocker.)
+  test "a nested allow_destroy removal soft-deletes a stage" do
+    p = build_pipeline
+    p.save!
+    stage = p.pipeline_stages.order(:position).last
+    assert_equal 3, p.pipeline_stages.count
+
+    p.update!(pipeline_stages_attributes: [ { id: stage.id, _destroy: "1" } ])
+
+    assert PipelineStage.only_deleted.exists?(stage.id), "the removed stage is soft-deleted"
+    refute_includes p.reload.pipeline_stages.map(&:id), stage.id, "and dropped from the collection"
+    assert_equal 2, p.pipeline_stages.count
+  end
 end

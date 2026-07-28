@@ -11,7 +11,14 @@ class AuditEntry < ApplicationRecord
   # it can point at non-SoftDeletable models (Setting, SlaTarget, …) whose
   # classes have no with_deleted scope.
   belongs_to :actor, -> { with_deleted }, polymorphic: true, optional: true
-  belongs_to :auditable, polymorphic: true
+  # optional: the reference is validated by column presence below, NOT by
+  # loading the object. A destroy audit is appended while its auditable is
+  # soft-deleted (default scope hides it) and/or marked_for_destruction during
+  # nested autosave — a required belongs_to rejects both as "must exist" and
+  # would 500 the very destruction it is recording. The id+type are what the
+  # hash chain records anyway; the loaded object never enters canonical_json.
+  belongs_to :auditable, polymorphic: true, optional: true
+  validates :auditable_type, :auditable_id, presence: true
   # The chain itself stays GLOBAL (AuditEntry is deliberately NOT acts_as_tenant):
   # tenant_id is a denormalized filter column for per-tenant audit views only. It
   # is NEVER part of canonical_json — adding it would re-hash every entry and
