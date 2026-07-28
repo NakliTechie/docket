@@ -36,6 +36,29 @@ module Api
         assert_not(names.any? { |n| n.include?("oauth") || n.include?("openapi") }, "public endpoints aren't tools")
       end
 
+      # H11: credential/identity plumbing is never exposed as an agent tool, and
+      # naming one anyway is rejected as unknown.
+      test "tools deny credential and identity resources" do
+        names = rpc(jsonrpc: "2.0", id: 20, method: "tools/list").dig("result", "tools").map { |t| t["name"] }
+        denied = %w[api_tokens service_accounts settings webhook_endpoints users]
+        names.each do |n|
+          resource = n.split("_", 2).last # drop the http verb
+          assert_not denied.any? { |d| resource.start_with?(d) }, "#{n} exposes a denied resource"
+        end
+
+        res = rpc(jsonrpc: "2.0", id: 21, method: "tools/call",
+                  params: { name: "post_api_tokens", arguments: {} })
+        assert_match(/unknown tool/, res.dig("error", "message"))
+      end
+
+      # H10: tools/call is gated on the tenant's entitlement, not just tools/list.
+      test "tools/call rejects a tool whose module the tenant lacks" do
+        tenants(:primary).set_feature!("crm", false)
+        res = rpc(jsonrpc: "2.0", id: 22, method: "tools/call",
+                  params: { name: "get_leads", arguments: {} })
+        assert_match(/unknown tool/, res.dig("error", "message"))
+      end
+
       test "every tool carries a name, description and object inputSchema" do
         tools = rpc(jsonrpc: "2.0", id: 3, method: "tools/list").dig("result", "tools")
         assert tools.all? { |t| t["name"].present? && t["description"].present? }

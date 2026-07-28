@@ -3,6 +3,11 @@
 # the staff member commits a suggested reply, which is then noted in
 # the message metadata for audit.
 class AssistsController < ApplicationController
+  # The assist is a service_desk productivity surface (it summarises case threads
+  # and drafts replies, shown only inside the case view) — gate it like
+  # MessagesController, so a tenant without the service-desk module can't reach
+  # it by hitting the URL directly. require_llm still gates on the AI layer.
+  require_feature "service_desk"
   before_action :set_case
   before_action :require_llm
 

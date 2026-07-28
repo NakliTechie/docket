@@ -3,6 +3,10 @@ module Api
     # API parity for the staff AI assist (handoff §12: anything the UI
     # can do, an external agent can do).
     class AssistsController < BaseController
+      # Same service_desk gate as the web assist — an API token for a tenant
+      # without the service-desk module gets 403 feature_disabled, not AI over
+      # its cases.
+      require_feature "service_desk"
       before_action :set_case
       before_action :require_llm!
 

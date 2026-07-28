@@ -6,7 +6,20 @@ module Mcp
   # Public endpoints (security: []) — the token exchange and the spec itself —
   # are not tools.
   module Catalog
+    # H11: resources an agent must NEVER reach through MCP — minting/revoking API
+    # tokens, creating service accounts, editing deploy settings (which hold the
+    # LLM/SMTP secrets), configuring outbound webhooks, and managing user
+    # identities. These are platform plumbing that api_path_enabled? does not gate
+    # (no feature owns them), so without this deny-list every agent was handed
+    # tools for them. Denied at the index level, so tools/list hides them AND
+    # tools/call rejects them as an unknown tool.
+    DENIED_RESOURCES = %w[api_tokens service_accounts settings webhook_endpoints users].freeze
+
     module_function
+
+    def denied_resource?(path)
+      DENIED_RESOURCES.include?(path.to_s.delete_prefix("/").split("/").first.to_s)
+    end
 
     def index
       @index ||= build_index
@@ -36,6 +49,7 @@ module Mcp
       result = {}
       doc.fetch("paths", {}).each do |path, methods|
         next if path == "/mcp" # the MCP endpoint itself is not a tool
+        next if denied_resource?(path) # H11: credential/identity plumbing is never a tool
 
         methods.each do |http_method, op|
           next unless op.is_a?(Hash) && op["summary"].present?
