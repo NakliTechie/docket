@@ -63,6 +63,14 @@ module Api
         operation = Mcp::Catalog.operation(name)
         raise Mcp::Error.new(-32602, "unknown tool: #{name}") unless operation
 
+        # H10: gate the CALL on the tenant's entitlement, not just the LIST.
+        # tools/list already hides tools for modules the tenant lacks; an agent
+        # that names one anyway must get the same answer (unknown tool), not a
+        # dispatch into a disabled module.
+        unless Features.api_path_enabled?(operation[:path_template])
+          raise Mcp::Error.new(-32602, "unknown tool: #{name}")
+        end
+
         outcome = Mcp::Dispatch.call(
           operation, message.dig("params", "arguments") || {},
           authorization: request.authorization, host: request.host, remote_ip: request.remote_ip
