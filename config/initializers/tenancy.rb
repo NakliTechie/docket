@@ -9,7 +9,16 @@
 #
 # Set via DOCKET_DEPLOYMENT_MODE=isolated|shared. Read through
 # Tenant.deployment_mode / Tenant.shared_deployment?.
-Rails.application.config.x.tenancy_mode = ENV.fetch("DOCKET_DEPLOYMENT_MODE", "isolated")
+# Validate the topology here at boot — models are not yet autoloaded, so this is
+# inlined rather than calling Tenant (canonical list: Tenant::DEPLOYMENT_MODES).
+# Without it a typo ("Shared", "sharded", "") falls through isolated? = !shared?
+# and SILENTLY serves the wrong tenancy: a shared deploy running every query
+# unscoped, or an isolated one demanding a subdomain.
+_mode = ENV.fetch("DOCKET_DEPLOYMENT_MODE", "isolated")
+unless %w[isolated shared].include?(_mode)
+  raise "DOCKET_DEPLOYMENT_MODE must be one of isolated, shared (got #{_mode.inspect})"
+end
+Rails.application.config.x.tenancy_mode = _mode
 
 # Fail-closed exactly where a missed scope is a data-confidentiality breach:
 # SHARED deploys raise NoTenantSet on any unscoped query/write. ISOLATED deploys

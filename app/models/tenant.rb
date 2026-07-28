@@ -20,6 +20,8 @@ class Tenant < ApplicationRecord
   # Deployment topology (set from DOCKET_DEPLOYMENT_MODE in the tenancy
   # initializer). isolated = one DB per client (default, the procurement asset);
   # shared = many tenants on shared infra, resolved by subdomain.
+  DEPLOYMENT_MODES = %w[isolated shared].freeze
+
   def self.deployment_mode
     Rails.application.config.x.tenancy_mode
   end
