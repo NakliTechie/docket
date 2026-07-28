@@ -9,6 +9,16 @@ class AssistTest < ActionDispatch::IntegrationTest
     Setting.unset("llm_provider")
   end
 
+  # H9: the assist is a service_desk surface. A tenant without the module must
+  # not reach it by hitting the URL directly (HTML → 404, the module isn't part
+  # of their product).
+  test "the assist is gated on the service_desk feature" do
+    tenants(:primary).set_feature!("service_desk", false)
+    sign_in_as users(:agent_a)
+    post case_assist_summarise_path(cases(:pension_case))
+    assert_response :not_found
+  end
+
   test "summarise renders an ephemeral summary" do
     sign_in_as users(:agent_a)
     post case_assist_summarise_path(cases(:pension_case))
