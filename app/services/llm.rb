@@ -15,6 +15,13 @@ module Llm
     PROVIDERS.include?(value) ? value : "off"
   end
 
+  # `fake` is a demo/test backend (canned responses) — never OFFER it in a real
+  # deployment, where a stray selection would silently replace the model with
+  # scripted text. The client guard below is the belt to this suspenders.
+  def self.selectable_providers
+    Rails.env.local? ? PROVIDERS : PROVIDERS - %w[fake]
+  end
+
   def self.enabled?
     client.present?
   end
@@ -39,7 +46,7 @@ module Llm
   def self.client
     case provider
     when "fake"
-      FakeClient.new
+      FakeClient.new if Rails.env.local?
     when "in_deployment"
       endpoint = Setting.get("llm_endpoint_url").presence
       endpoint && HttpClient.new(endpoint: endpoint, api_key: Setting.get("llm_api_key").presence,
