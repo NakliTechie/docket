@@ -60,8 +60,8 @@ class WorkItem < ApplicationRecord
     next all if q.blank?
 
     term = "%#{sanitize_sql_like(q.strip.downcase)}%"
-    where("LOWER(work_items.title) LIKE :t OR LOWER(work_items.description) LIKE :t " \
-          "OR LOWER(work_items.source_key) LIKE :t", t: term)
+    where("LOWER(work_items.title) LIKE :t ESCAPE '\\' OR LOWER(work_items.description) LIKE :t ESCAPE '\\' " \
+          "OR LOWER(work_items.source_key) LIKE :t ESCAPE '\\'", t: term)
   }
 
   def reference = "#{project.key}-#{number}"

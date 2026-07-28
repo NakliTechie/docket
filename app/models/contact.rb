@@ -27,7 +27,7 @@ class Contact < ApplicationRecord
   scope :search, ->(q) {
     next all if q.blank?
     term = "%#{sanitize_sql_like(q.strip.downcase)}%"
-    where("LOWER(name) LIKE :t OR LOWER(email) LIKE :t OR LOWER(phone) LIKE :t OR LOWER(external_id) LIKE :t", t: term)
+    where("LOWER(name) LIKE :t ESCAPE '\\' OR LOWER(email) LIKE :t ESCAPE '\\' OR LOWER(phone) LIKE :t ESCAPE '\\' OR LOWER(external_id) LIKE :t ESCAPE '\\'", t: term)
   }
 
   private

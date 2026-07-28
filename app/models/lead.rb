@@ -35,7 +35,7 @@ class Lead < ApplicationRecord
   scope :search, ->(q) {
     next all if q.blank?
     term = "%#{sanitize_sql_like(q.strip.downcase)}%"
-    where("LOWER(name) LIKE :t OR LOWER(email) LIKE :t OR LOWER(phone) LIKE :t OR LOWER(company_name) LIKE :t", t: term)
+    where("LOWER(name) LIKE :t ESCAPE '\\' OR LOWER(email) LIKE :t ESCAPE '\\' OR LOWER(phone) LIKE :t ESCAPE '\\' OR LOWER(company_name) LIKE :t ESCAPE '\\'", t: term)
   }
 
   # Convert: dedupe-or-create a Contact (same upsert rule as the portal),

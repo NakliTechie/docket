@@ -25,22 +25,40 @@ module Retrieval
     matched(scope, query, limit: limit)
   end
 
-  # → Array of matching records from `scope`, ranked.
+  # → Array of matching records from `scope`, ranked. Both adapters use the same
+  # tokens (search_terms) and the same ANY-term-matches semantics: the Postgres
+  # branch ORs the lexemes (`to_tsquery 'a | b | c'`), NOT plainto_tsquery, which
+  # ANDs every word — that mismatch made Postgres silently return fewer results
+  # than the SQLite branch for the identical multi-word query.
   def matched(scope, query, limit:)
+    terms = search_terms(query)
+    return scope.none if terms.empty?
+
     if postgres?
-      scope.where("to_tsvector('simple', title || ' ' || body) @@ plainto_tsquery('simple', ?)", query)
+      # Tokens are [\p{L}\d]{3,} only, so they carry no to_tsquery metacharacters
+      # (| & ! : parens) and are safe to join without further escaping.
+      tsquery = terms.join(" | ")
+      scope.where("to_tsvector('simple', title || ' ' || body) @@ to_tsquery('simple', ?)", tsquery)
            .limit(limit).to_a
     else
-      keyword_match(scope, query, %w[title body], limit: limit)
+      keyword_match(scope, terms, %w[title body], limit: limit)
     end
   end
 
-  def keyword_match(scope, query, columns, limit:)
-    terms = query.to_s.downcase.scan(/[\p{L}\d]{3,}/).uniq.first(8)
+  # The 3+-char alphanumeric tokens a free-text query reduces to (max 8). Shared
+  # by both retrieval branches so their term semantics cannot drift apart.
+  def search_terms(query)
+    query.to_s.downcase.scan(/[\p{L}\d]{3,}/).uniq.first(8)
+  end
+
+  def keyword_match(scope, terms, columns, limit:)
     return scope.none if terms.empty?
 
     clauses = terms.flat_map do |_term|
-      columns.map { |column| "LOWER(#{column}) LIKE ?" }
+      # ESCAPE '\' so sanitize_sql_like's backslash-escaping of % and _ actually
+      # takes effect — SQLite's LIKE has no default escape character, so without
+      # this a query containing % or _ matches as a wildcard.
+      columns.map { |column| "LOWER(#{column}) LIKE ? ESCAPE '\\'" }
     end
     values = terms.flat_map { |term| columns.map { "%#{ActiveRecord::Base.sanitize_sql_like(term)}%" } }
     candidates = scope.where(clauses.join(" OR "), *values).limit(50)

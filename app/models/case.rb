@@ -95,8 +95,8 @@ class Case < ApplicationRecord
     # a customer's inbox and an agent's muscle memory are the OLD system's.
     # Contact#external_id was already searchable; Case's was write-only, so
     # pasting "12345" on day one returned nothing.
-    where("LOWER(cases.subject) LIKE :t OR LOWER(cases.tracking_id) LIKE :t " \
-          "OR LOWER(cases.description) LIKE :t OR LOWER(cases.external_id) LIKE :t", t: term)
+    where("LOWER(cases.subject) LIKE :t ESCAPE '\\' OR LOWER(cases.tracking_id) LIKE :t ESCAPE '\\' " \
+          "OR LOWER(cases.description) LIKE :t ESCAPE '\\' OR LOWER(cases.external_id) LIKE :t ESCAPE '\\'", t: term)
   }
 
   def self.generate_tracking_id
