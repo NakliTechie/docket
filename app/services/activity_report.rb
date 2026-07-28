@@ -77,8 +77,12 @@ class ActivityReport
   # match — both inflated the figure. Parse the json changeset and count
   # only `[_, true]` transitions (a single update flipping both flags = 2).
   def breach_events
+    # CAST to text so the pre-filter works on Postgres too: `changeset` is a
+    # json column, and Postgres has no `LIKE` operator on json (`json ~~ text`).
+    # SQLite stores json as text, so the cast is a no-op there. The authoritative
+    # count is still computed in Ruby by breach_flips; this only narrows the rows.
     audit_entries.where(created_at: range, action: "case.update", auditable_type: "Case")
-              .where("changeset LIKE ? OR changeset LIKE ?",
+              .where("CAST(changeset AS TEXT) LIKE ? OR CAST(changeset AS TEXT) LIKE ?",
                      "%first_response_breached%", "%resolution_breached%")
               .sum { |entry| breach_flips(entry.changeset) }
   end

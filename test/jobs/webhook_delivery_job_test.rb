@@ -114,7 +114,9 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     kase.transition_to!(:triaged)
     kase.transition_to!(:in_progress)
     kase.transition_to!(:resolved)
-    events = WebhookDelivery.where("payload LIKE ?", "%Lifecycle%").pluck(:event)
+    # CAST so the match works on Postgres too — payload is a json column, and
+    # Postgres has no LIKE operator on json (SQLite stores it as text).
+    events = WebhookDelivery.where("CAST(payload AS TEXT) LIKE ?", "%Lifecycle%").pluck(:event)
     assert_includes events, "case.created"
     assert_includes events, "case.status_changed"
     assert_includes events, "case.resolved"
