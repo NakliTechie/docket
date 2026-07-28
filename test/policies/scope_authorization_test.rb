@@ -27,4 +27,34 @@ class ScopeAuthorizationTest < ActiveSupport::TestCase
     # a holder of the read permission still sees the rows
     assert_includes SlaPolicyPolicy::Scope.new(users(:customer_service), SlaPolicy).resolve, sla_policies(:standard)
   end
+
+  # M1 — six more Scopes were gated on "any signed-in user", not the read
+  # permission their own index?/show? require. Every functional role holds
+  # case:read, so the case-family change tightens only the unauthenticated path
+  # today (plus any future role/token lacking it); pipeline:read is the real
+  # tightening — customer_service and technical do not hold it.
+  test "case-family scopes are gated on case:read" do
+    assert_empty CasePolicy::Scope.new(nil, Case).resolve
+    assert_empty CaseQueuePolicy::Scope.new(nil, CaseQueue).resolve
+    assert_empty CategoryPolicy::Scope.new(nil, Category).resolve
+    assert_empty MessagePolicy::Scope.new(nil, Message).resolve
+    assert_includes CasePolicy::Scope.new(users(:customer_service), Case).resolve, cases(:pension_case)
+    assert_includes CategoryPolicy::Scope.new(users(:technical), Category).resolve, categories(:pension_delay)
+    assert_includes MessagePolicy::Scope.new(users(:customer_service), Message).resolve, messages(:note_on_pension)
+  end
+
+  test "pipeline and sequence scopes gate on pipeline:read, which support roles lack" do
+    pipeline = pipelines(:sales)
+    assert_includes PipelinePolicy::Scope.new(users(:sales), Pipeline).resolve, pipeline
+    refute_includes PipelinePolicy::Scope.new(users(:customer_service), Pipeline).resolve, pipeline
+    refute_includes PipelinePolicy::Scope.new(users(:technical), Pipeline).resolve, pipeline
+    assert_empty PipelinePolicy::Scope.new(nil, Pipeline).resolve
+
+    # bypass the no_steps validation — this test is about scoping, not validity
+    seq = Sequence.new(name: "Welcome flow")
+    seq.save!(validate: false)
+    assert_includes SequencePolicy::Scope.new(users(:sales), Sequence).resolve, seq
+    refute_includes SequencePolicy::Scope.new(users(:customer_service), Sequence).resolve, seq
+    assert_empty SequencePolicy::Scope.new(nil, Sequence).resolve
+  end
 end
