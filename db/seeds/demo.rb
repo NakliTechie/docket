@@ -6,6 +6,15 @@
 # items awaiting approval). Idempotent via the demo_seeded marker. All
 # fictional. Switch scenarios on a fresh database.
 require_relative "demo_scenarios"
+
+# Never seed fictional demo data into a real deployment — this writes staff,
+# customers and cases into the live tenant. Development and test are fine
+# (Rails.env.local?); a staging demo can force it with DOCKET_ALLOW_DEMO_SEED=1.
+unless Rails.env.local? || ENV["DOCKET_ALLOW_DEMO_SEED"] == "1"
+  abort "demo:seed refused: #{Rails.env} is not a local environment. " \
+        "Set DOCKET_ALLOW_DEMO_SEED=1 to force (e.g. a staging demo)."
+end
+
 return if Setting.get("demo_seeded")
 
 scenario = DemoScenarios.fetch(ENV.fetch("DOCKET_SEED_SCENARIO", "saas"))

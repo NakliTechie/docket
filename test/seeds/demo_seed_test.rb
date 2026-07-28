@@ -38,4 +38,22 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert_equal "Public Grievance Portal", Setting.get("brand_name")
     assert CaseQueue.exists?(name: "Pensions")
   end
+
+  # C8: fictional demo data must never land in a real deployment. The loader
+  # aborts unless the environment is local or DOCKET_ALLOW_DEMO_SEED=1 is set.
+  test "refuses to seed outside a local environment without an explicit opt-in" do
+    had_flag = ENV.delete("DOCKET_ALLOW_DEMO_SEED")
+    original_env = Rails.env
+
+    Rails.env = "production"
+    error = assert_raises(SystemExit) do
+      capture_io { load Rails.root.join("db/seeds/demo.rb").to_s }
+    end
+
+    refute error.success?, "aborted with a non-zero status, before any write"
+    refute Setting.get("demo_seeded"), "no seeding happened"
+  ensure
+    Rails.env = original_env
+    ENV["DOCKET_ALLOW_DEMO_SEED"] = had_flag if had_flag
+  end
 end
