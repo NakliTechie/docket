@@ -19,7 +19,7 @@ class CasePolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      user.present? ? scope.all : scope.none
+      permit?("case:read") ? scope.all : scope.none
     end
   end
 

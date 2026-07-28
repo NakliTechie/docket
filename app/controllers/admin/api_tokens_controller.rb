@@ -2,7 +2,7 @@ module Admin
   class ApiTokensController < ApplicationController
     def index
       authorize :api_tokens, policy_class: PlatformAreaPolicy
-      @api_tokens = ApiToken.includes(:user).order(id: :desc)
+      @api_tokens = ApiToken.for_tenant_users.includes(:user).order(id: :desc)
       @api_token = ApiToken.new
     end
 
@@ -19,7 +19,7 @@ module Admin
 
     def destroy
       authorize :api_tokens, policy_class: PlatformAreaPolicy
-      ApiToken.find(params[:id]).revoke!
+      ApiToken.for_tenant_users.find(params[:id]).revoke!
       redirect_to admin_api_tokens_path, notice: t(".revoked"), status: :see_other
     end
 

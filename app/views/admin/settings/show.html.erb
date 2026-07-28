@@ -18,7 +18,7 @@
     <div class="form-row">
       <%= label_tag :llm_provider, t(".fields.llm_provider") %>
       <%= select_tag :llm_provider,
-            options_for_select(Llm::PROVIDERS.map { |p| [ t(".providers.#{p}"), p ] }, Llm.provider) %>
+            options_for_select(Llm.selectable_providers.map { |p| [ t(".providers.#{p}"), p ] }, Llm.provider) %>
     </div>
     <div class="form-row">
       <%= label_tag :llm_endpoint_url, t(".fields.llm_endpoint_url") %>

@@ -109,4 +109,33 @@ class SharedModeTenancyTest < ActionDispatch::IntegrationTest
   # direct tenant_id assignment at validation time. Covering it properly means
   # giving the suite a way to run as a second tenant; until then this is a known
   # coverage hole, not a passing test pretending otherwise.
+
+  # H8: the platform API-token console listed and revoked ApiToken.all, which is
+  # every tenant's tokens (ApiToken has no tenant_id — it inherits tenancy from
+  # its user). Only super_admin reaches it, but super_admin is host-scoped in
+  # shared mode (TenantResolution), so on acme's host the console must show only
+  # acme's tokens. Defence-in-depth like C3, not a client_admin-reachable leak.
+  test "the API-token console is scoped to the host's tenant" do
+    primary_token = ActsAsTenant.with_tenant(tenants(:primary)) do
+      ApiToken.create!(user: users(:admin), name: "primary-cli")
+    end
+    acme_admin = ActsAsTenant.with_tenant(@acme) do
+      User.create!(name: "Acme Platform", email_address: "platform-tok@acme.test",
+                   password: "password1234", role: :super_admin)
+    end
+    ActsAsTenant.with_tenant(@acme) { ApiToken.create!(user: @acme_user, name: "acme-cli") }
+
+    host! "acme.docket.app"
+    sign_in_as acme_admin
+
+    get admin_api_tokens_path
+    assert_response :success
+    assert_match "acme-cli", response.body
+    refute_match "primary-cli", response.body
+
+    # A primary token cannot be revoked from acme's host — it is out of scope.
+    delete admin_api_token_path(primary_token)
+    assert_response :not_found
+    refute primary_token.reload.revoked?, "the other tenant's token stays live"
+  end
 end
