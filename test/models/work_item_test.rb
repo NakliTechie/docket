@@ -24,6 +24,22 @@ class WorkItemTest < ActiveSupport::TestCase
     assert_equal project.default_state, item.workflow_state, "lands in the first column"
   end
 
+  # C6: soft-deleting a project must not orphan its items. belongs_to :project
+  # lacked with_deleted (every sibling association has it), so once the project
+  # was hidden work_item.project was nil and #reference raised — 500-ing the
+  # item page, the whole API collection, and any case page linking the item.
+  test "an item still resolves its project after the project is soft-deleted" do
+    item = work_items(:pep_one)
+    project.destroy
+
+    assert project.deleted?, "the project is soft-deleted, not hard-deleted"
+    assert_nil Project.find_by(id: project.id), "and hidden from the default scope"
+
+    item.reload
+    assert_equal project.id, item.project&.id, "the hidden project still loads via with_deleted"
+    assert_equal "#{project.key}-#{item.number}", item.reference, "#reference must not raise"
+  end
+
   test "numbers do not collide under concurrent creation" do
     numbers = 4.times.map { project.work_items.create!(title: "n", reporter: users(:admin)).number }
     assert_equal numbers.uniq, numbers

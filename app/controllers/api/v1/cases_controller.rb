@@ -71,8 +71,19 @@ module Api
 
       def transition
         authorize_api!(@case, :transition?, scope: "cases:write")
-        @case.transition_to!(params.require(:status))
-        render json: { data: Serialize.kase(@case) }
+        to = params.require(:status)
+        # Route through the maker-checker gate, exactly like the web controller
+        # and inbound messages — the API (and, via the MCP tool, an agent) must
+        # not be the one path that bypasses approval. A guarded target parks and
+        # returns false: the transition did NOT happen, so answer 202 with the
+        # pending request rather than 200 with an unchanged case.
+        if @case.guarded_transition_to(to, requested_by: current_user)
+          render json: { data: Serialize.kase(@case) }
+        else
+          approval = @case.approval_requests.status_pending.recent_first.find_by(requested_action: to.to_s)
+          render json: { data: Serialize.kase(@case), approval_request: Serialize.approval_request(approval) },
+                 status: :accepted
+        end
       end
 
       def assign

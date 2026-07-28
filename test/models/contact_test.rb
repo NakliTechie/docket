@@ -28,4 +28,18 @@ class ContactTest < ActiveSupport::TestCase
     assert_includes Contact.search("CIF447"), contacts(:ravi)
     assert_includes Contact.search("98765"), contacts(:ravi)
   end
+
+  # M16 / ZD_10045: a % in the query is a LITERAL, not a wildcard. sanitize_sql_like
+  # backslash-escapes it, but that only bites when the LIKE declares ESCAPE '\'
+  # (SQLite's LIKE has no default escape char). Without the ESCAPE clause this
+  # search returns the wrong set — the escaped "\%" becomes a required literal
+  # backslash and the "100% cashback" row is missed.
+  test "search treats % and _ as literals, not wildcards (LIKE ESCAPE)" do
+    literal = Contact.create!(name: "100% cashback offer", email: "cashback@example.com")
+    other   = Contact.create!(name: "100 rupees flat", email: "rupees@example.com")
+
+    hits = Contact.search("100%")
+    assert_includes hits, literal, "the literal % row must match"
+    refute_includes hits, other, "% must not act as a wildcard"
+  end
 end

@@ -225,6 +225,14 @@ module Api
         { id: t.id, user_id: t.user_id, name: t.name, last_used_at: t.last_used_at,
           revoked_at: t.revoked_at, created_at: t.created_at }
       end
+
+      def approval_request(r)
+        return nil if r.nil?
+        { id: r.id, status: r.status, requested_action: r.requested_action,
+          subject_type: r.subject_type, subject_id: r.subject_id,
+          approval_process_id: r.approval_process_id, requested_by_id: r.requested_by_id,
+          created_at: r.created_at }
+      end
     end
   end
 end

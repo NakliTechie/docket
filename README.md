@@ -72,6 +72,15 @@ bin/rails test && bin/rails test:system
 
 Development and test run on SQLite; no services needed. System tests use Cuprite — point `BROWSER_PATH` at any Chrome/Chromium if it isn't auto-detected.
 
+**Running the suite on Postgres.** Production runs Postgres, and a few queries differ from SQLite (json has no `LIKE` operator; full-text search uses `tsquery`). Point `DATABASE_URL` at a Postgres database and the `test:` config switches adapter automatically — no edit to `config/database.yml`:
+
+```bash
+createdb docket_test   # once
+DATABASE_URL=postgres:///docket_test PARALLEL_WORKERS=1 bin/rails db:test:prepare test
+```
+
+`PARALLEL_WORKERS=1` avoids a libpq-under-fork crash on macOS; on Linux CI it can be higher. CI runs this as the `test-postgres` job on every push.
+
 ---
 
 ## Portal walkthrough (customer side)

@@ -18,7 +18,11 @@ class WorkItem < ApplicationRecord
   # translating between two scales.
   enum :priority, { low: 0, normal: 1, high: 2, urgent: 3 }, default: :normal, prefix: true
 
-  belongs_to :project
+  # with_deleted like every sibling below: a project is soft-deletable, and
+  # deleting one must not orphan its items. Without this, once the project is
+  # hidden `work_item.project` is nil and #reference raises — 500-ing the work
+  # item page, the whole API collection, and any case page linking the item.
+  belongs_to :project, -> { with_deleted }
   belongs_to :workflow_state, -> { with_deleted }
   belongs_to :assignee, -> { with_deleted }, class_name: "User", optional: true
   belongs_to :reporter, -> { with_deleted }, class_name: "User", optional: true
@@ -60,8 +64,8 @@ class WorkItem < ApplicationRecord
     next all if q.blank?
 
     term = "%#{sanitize_sql_like(q.strip.downcase)}%"
-    where("LOWER(work_items.title) LIKE :t OR LOWER(work_items.description) LIKE :t " \
-          "OR LOWER(work_items.source_key) LIKE :t", t: term)
+    where("LOWER(work_items.title) LIKE :t ESCAPE '\\' OR LOWER(work_items.description) LIKE :t ESCAPE '\\' " \
+          "OR LOWER(work_items.source_key) LIKE :t ESCAPE '\\'", t: term)
   }
 
   def reference = "#{project.key}-#{number}"

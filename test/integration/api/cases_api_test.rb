@@ -55,6 +55,27 @@ module Api
       assert Case.with_deleted.exists?(id)
     end
 
+    # C4: the API transition must honour the maker-checker gate, not bypass it.
+    # A guarded target parks for a checker and answers 202 with the pending
+    # request; the case does NOT change status.
+    test "a guarded transition parks for approval and answers 202" do
+      ApprovalProcess.create!(name: "Closure sign-off", trigger_type: :case_transition, trigger_key: "closed")
+      kase = Case.create!(subject: "Refund dispute", channel: :staff, contact: contacts(:asha))
+      kase.transition_to!(:triaged)
+      kase.transition_to!(:resolved)
+
+      assert_difference "ApprovalRequest.count", 1 do
+        post "/api/v1/cases/#{kase.id}/transition", params: { status: "closed" },
+             headers: auth_header(@admin_token), as: :json
+      end
+      assert_response :accepted
+      assert kase.reload.status_resolved?, "the case is parked, not closed — the API must not bypass the gate"
+
+      approval = response.parsed_body["approval_request"]
+      assert_equal "pending", approval["status"]
+      assert_equal "closed", approval["requested_action"]
+    end
+
     test "service account files a case on behalf of a customer by external id" do
       token = service_token_for(%w[cases:read cases:write contacts:write])
       assert_difference "Contact.count" do
