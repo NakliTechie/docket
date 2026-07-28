@@ -20,8 +20,12 @@ class BackupScriptsTest < ActiveSupport::TestCase
 
   test "the backup covers every database in config/database.yml, not just the primary" do
     body = File.read(BACKUP)
-    configured = YAML.load_file(Rails.root.join("config/database.yml"), aliases: true)
-                     .fetch("production").keys
+    # Render ERB first, the way Rails loads database.yml — the `test:` block now
+    # branches on DATABASE_URL (Postgres CI leg vs SQLite), which a raw YAML read
+    # can't parse. Only `production` is asserted on here, and ERB leaves its keys
+    # untouched.
+    rendered = ERB.new(File.read(Rails.root.join("config/database.yml"))).result
+    configured = YAML.load(rendered, aliases: true).fetch("production").keys
 
     assert_equal %w[cable cache primary queue], configured.sort,
                  "database.yml changed — the backup script must be updated to match"

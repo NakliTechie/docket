@@ -11,8 +11,22 @@ development:
   database: <%= ENV.fetch("DATABASE_PATH", "storage/development.sqlite3") %>
 
 test:
+  # Default is SQLite (zero-config). Set DATABASE_URL=postgres://… to run the
+  # suite against the production adapter instead — the CI `test-postgres` leg
+  # and local Postgres runs both take this branch. Single primary database:
+  # in test, queue/cache route through the primary connection and cable uses
+  # the test adapter (see queue.yml / cache.yml / cable.yml), so there is no
+  # four-database split to mirror here — every adapter-specific query the suite
+  # exercises lives on the primary.
+  <% if ENV["DATABASE_URL"].to_s.start_with?("postgres") %>
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  url: <%= ENV["DATABASE_URL"] %>
+  <% else %>
   <<: *default
   database: <%= ENV.fetch("DATABASE_PATH", "storage/test.sqlite3") %>
+  <% end %>
 
 production:
   primary: &production_primary

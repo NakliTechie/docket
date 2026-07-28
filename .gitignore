@@ -45,3 +45,6 @@
 # Agent worktrees (isolated checkouts; never committed).
 /.worktrees/
 /.claude/worktrees/
+
+# Autopilot/agent worktrees
+.worktrees/
