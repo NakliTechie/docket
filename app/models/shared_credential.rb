@@ -3,6 +3,7 @@
 # (encrypted at rest, redacted from the audit log). A connector references one
 # and its provider reads through Connector#secret (own vault first, then here).
 class SharedCredential < ApplicationRecord
+  acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
 
@@ -15,8 +16,11 @@ class SharedCredential < ApplicationRecord
 
   normalizes :name, with: ->(n) { n.to_s.strip.downcase }
 
+  # Scoped to the tenant: a globally-unique name let one tenant's chosen name
+  # collide with another's, which is both a namespace clash and an existence
+  # oracle for a name it should not be able to observe.
   validates :name, presence: true,
-            uniqueness: { conditions: -> { where(deleted_at: nil) } },
+            uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } },
             format: { with: /\A[a-z0-9_]+\z/ }
   validates :label, presence: true
 

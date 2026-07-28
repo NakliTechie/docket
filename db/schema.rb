@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_28_093000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -678,9 +678,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_093000) do
     t.string "label", null: false
     t.string "name", null: false
     t.text "secrets"
+    t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_shared_credentials_on_deleted_at"
-    t.index ["name"], name: "index_shared_credentials_on_name_live", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "name"], name: "index_shared_credentials_on_tenant_id_and_name_live", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id"], name: "index_shared_credentials_on_tenant_id"
   end
 
   create_table "sla_policies", force: :cascade do |t|
@@ -946,6 +948,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_093000) do
   add_foreign_key "sequences", "tenants"
   add_foreign_key "service_accounts", "tenants"
   add_foreign_key "sessions", "users"
+  add_foreign_key "shared_credentials", "tenants"
   add_foreign_key "sla_policies", "tenants"
   add_foreign_key "sla_targets", "sla_policies"
   add_foreign_key "sprints", "projects"

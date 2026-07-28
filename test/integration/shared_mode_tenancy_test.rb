@@ -65,4 +65,48 @@ class SharedModeTenancyTest < ActionDispatch::IntegrationTest
     get "/api/v1/cases", headers: { "Authorization" => "Bearer #{token}" }
     assert_response :not_found # unknown subdomain resolves no tenant
   end
+
+  # SharedCredential had no tenant_id and no acts_as_tenant — its policy Scope
+  # returns `scope.all` and the controller does an unscoped find, so the console
+  # listed every tenant's credentials at once.
+  #
+  # Scope note, so nobody over-reads this test: `connector:manage` is held by
+  # super_admin ONLY (checked against Authz), and super_admin is the cross-tenant
+  # platform tier. A tenant's own client_admin gets 403 here and never could reach
+  # this surface. So this was defence-in-depth, not one customer reading another's
+  # keys. It still matters — the platform console iterates tenants under
+  # `with_tenant`, and this is what makes that iteration actually scope.
+  test "shared credentials are scoped to the host's tenant" do
+    primary_credential = ActsAsTenant.with_tenant(tenants(:primary)) do
+      SharedCredential.create!(name: "primary_vault", label: "Primary Vault",
+                               secrets_hash: { "api_key" => "PRIMARY-SECRET-KEY" })
+    end
+    acme_admin = ActsAsTenant.with_tenant(@acme) do
+      User.create!(name: "Acme Platform", email_address: "platform@acme.test",
+                   password: "password1234", role: :super_admin)
+    end
+
+    host! "acme.docket.app"
+    sign_in_as acme_admin
+
+    get admin_shared_credentials_path
+    assert_response :success
+    refute_match "Primary Vault", response.body
+    refute_match "primary_vault", response.body
+
+    # And not reachable by id either — the edit path did an unscoped find.
+    get edit_admin_shared_credential_path(primary_credential)
+    assert_response :not_found
+  end
+
+  # NOT COVERED HERE: `Connector validates_same_tenant :shared_credential`, added
+  # alongside the tenant_id column so a connector cannot bind another tenant's
+  # credential. It is verified working outside the suite — with two real tenants,
+  # `Connector.new(shared_credential_id: <other tenant's>)` produces
+  # `{:shared_credential=>[{:error=>:cross_tenant}]}` — but it will not reproduce
+  # in this suite, because test_helper pins `ActsAsTenant.test_tenant` to :primary
+  # for every test and that pin wins over with_tenant, a `tenant:` argument, and a
+  # direct tenant_id assignment at validation time. Covering it properly means
+  # giving the suite a way to run as a second tenant; until then this is a known
+  # coverage hole, not a passing test pretending otherwise.
 end

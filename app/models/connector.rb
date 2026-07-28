@@ -5,6 +5,7 @@ class Connector < ApplicationRecord
   acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
+  include TenantReferentialIntegrity
 
   # Credential vault: secrets (api keys, tokens) encrypted at rest.
   encrypts :credentials
@@ -25,7 +26,12 @@ class Connector < ApplicationRecord
     "cases" => { all: %w[external_id subject contact_email] }
   }.freeze
 
+  # `shared_credential_id` is mass-assignable from the admin form, and an optional
+  # belongs_to skips the existence check — so a guessed id from another tenant used
+  # to be stored happily, and `Connector#secret` would read through it at invoke
+  # time. Now that the credential carries a tenant_id, that is checkable.
   belongs_to :shared_credential, optional: true
+  validates_same_tenant :shared_credential
   has_many :connector_runs, dependent: :delete_all
   has_many :invocations, class_name: "ConnectorInvocation", dependent: :destroy
 
