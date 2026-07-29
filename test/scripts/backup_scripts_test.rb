@@ -39,6 +39,23 @@ class BackupScriptsTest < ActiveSupport::TestCase
     assert_match(/tar -xzf .*storage/, File.read(RESTORE))
   end
 
+  # H19: attachments live only on disk, so a backup that omits them is a trap.
+  test "the backup exits non-zero when the storage directory is missing" do
+    body = File.read(BACKUP)
+    assert_match(/no storage directory[^\n]*\n\s*exit 1/, body,
+                 "missing storage must `exit 1`, not warn-and-continue")
+  end
+
+  # H20: sibling DB URLs are derived before any ?query (not concatenated onto the
+  # whole URL), and the script runs from the app root so a relative storage path
+  # resolves wherever it's invoked from.
+  test "the backup derives sibling URLs safely and runs from the app root" do
+    body = File.read(BACKUP)
+    assert_match(/sibling_url/, body, "sibling URLs must be parsed, not string-concatenated")
+    assert_no_match(/\$\{DATABASE_URL\}_cache/, body, "no naive concatenation onto the whole URL")
+    assert_match(%r{cd "\$\(dirname "\$0"\)/\.\."}, body, "must cd to the app root")
+  end
+
   test "a partial failure fails the whole backup" do
     assert_match(/set -euo pipefail/, File.read(BACKUP),
                  "a backup that half-worked must not report success")

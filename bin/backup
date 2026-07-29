@@ -16,15 +16,26 @@ if [ -z "$DEST" ]; then
   echo "usage: bin/backup <destination-directory>" >&2
   exit 64
 fi
+mkdir -p "$DEST"
+DEST="$(cd "$DEST" && pwd)"   # absolute, resolved against the caller's CWD first
+cd "$(dirname "$0")/.."       # H20: run from the app root so a relative STORAGE_DIR resolves wherever we're called from (cron, another CWD)
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT="$DEST/docket-$STAMP"
 mkdir -p "$OUT"
 
 : "${DATABASE_URL:?DATABASE_URL must be set}"
-CACHE_URL="${CACHE_DATABASE_URL:-${DATABASE_URL}_cache}"
-QUEUE_URL="${QUEUE_DATABASE_URL:-${DATABASE_URL}_queue}"
-CABLE_URL="${CABLE_DATABASE_URL:-${DATABASE_URL}_cable}"
+
+# H20: derive the sibling DB URLs by appending the suffix to the database NAME,
+# BEFORE any ?query — concatenating onto the whole URL corrupts one carrying
+# params (…/docket?sslmode=require + _cache → …require_cache, an unusable URL).
+sibling_url() {
+  local url="$1" suffix="$2"
+  if [[ "$url" == *\?* ]]; then echo "${url%%\?*}${suffix}?${url#*\?}"; else echo "${url}${suffix}"; fi
+}
+CACHE_URL="${CACHE_DATABASE_URL:-$(sibling_url "$DATABASE_URL" _cache)}"
+QUEUE_URL="${QUEUE_DATABASE_URL:-$(sibling_url "$DATABASE_URL" _queue)}"
+CABLE_URL="${CABLE_DATABASE_URL:-$(sibling_url "$DATABASE_URL" _cable)}"
 STORAGE_DIR="${DOCKET_STORAGE_DIR:-storage}"
 
 dump() {
@@ -44,7 +55,10 @@ if [ -d "$STORAGE_DIR" ]; then
   echo "  archiving attachments ($STORAGE_DIR)"
   tar -czf "$OUT/storage.tar.gz" -C "$(dirname "$STORAGE_DIR")" "$(basename "$STORAGE_DIR")"
 else
-  echo "  WARNING: no storage directory at $STORAGE_DIR — attachments NOT backed up" >&2
+  # H19: attachments live only on disk. A "backup" that silently omits them is
+  # a trap discovered at restore time — refuse it with a non-zero exit.
+  echo "  ERROR: no storage directory at $STORAGE_DIR — attachments would be lost; refusing to declare a backup" >&2
+  exit 1
 fi
 
 # A manifest so a restorer knows what they have without opening the dumps.
