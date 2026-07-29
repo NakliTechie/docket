@@ -27,6 +27,22 @@ class HealthCheckTest < ActionDispatch::IntegrationTest
     assert_response :success, "a load balancer cannot authenticate"
   end
 
+  # H22: a DOWN queue database must FAIL the check, not read as "not configured".
+  # table_exists? returns false cleanly when the table is merely absent (test/demo);
+  # it RAISES when the connection is dead, and that must turn the check red.
+  test "a dead queue database fails the check, not 'not configured'" do
+    SolidQueue::Job.define_singleton_method(:table_exists?) do
+      raise ActiveRecord::ConnectionNotEstablished, "queue db down"
+    end
+    get "/healthz"
+    assert_response :service_unavailable
+    queue = JSON.parse(response.body).dig("checks", "queue")
+    assert_equal false, queue["ok"], "a dead queue DB is a failure, not 'not configured'"
+    assert queue["error"].present?, "reports the exception class only"
+  ensure
+    SolidQueue::Job.singleton_class.send(:remove_method, :table_exists?)
+  end
+
   test "a sweep that has not run in hours turns the check red" do
     stamp("SlaBreachSweepJob", 6.hours.ago) # runs every 5 minutes
     get "/healthz"

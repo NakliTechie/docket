@@ -67,13 +67,17 @@ class HealthCheck
     { ok: false, error: e.class.name }
   end
 
+  # H22: fail CLOSED on a dead queue database. `table_exists?` returns false
+  # cleanly when the connection is fine but the table is absent (test/demo, a
+  # legitimate "not configured"), and RAISES when the connection itself is dead.
+  # Swallowing that raise made a down queue DB read as "not configured" (green);
+  # instead let it propagate to the caller's rescue, which reports the check
+  # failed. Only a truly-absent SolidQueue constant is "not available".
   def queue_available?(klass = nil)
     klass ||= defined?(SolidQueue::Job) ? SolidQueue::Job : nil
     return false if klass.nil?
 
     klass.table_exists?
-  rescue StandardError
-    false
   end
 
   def recurring_jobs
