@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+bin/rails test \
+  test/seeds/demo_seed_test.rb \
+  test/integration/branding_test.rb \
+  test/integration/rbac_functional_roles_test.rb \
+  test/integration/connector_invocations_test.rb \
+  test/system/portal_tracking_test.rb \
+  test/system/role_walkthrough_test.rb
