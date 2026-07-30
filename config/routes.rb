@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   get "healthz", to: "health#show"
 
   root "home#index"
+  resource :setup, only: %i[show update]
 
   resource :session
   resources :passwords, param: :token

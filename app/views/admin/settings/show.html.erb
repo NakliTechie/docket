@@ -1,18 +1,41 @@
 <% page_title t(".title") %>
 <div class="page-header"><h1><%= t(".title") %></h1></div>
 
+<nav class="settings-toc" aria-label="<%= t(".sections.label") %>">
+  <a href="#workspace"><%= t(".sections.branding") %></a>
+  <a href="#intake"><%= t(".sections.intake") %></a>
+  <a href="#email-delivery"><%= t(".sections.email") %></a>
+  <a href="#ai-settings"><%= t(".sections.ai") %></a>
+  <a href="#api-settings"><%= t(".sections.api") %></a>
+  <a href="#staff-sso"><%= t(".sections.staff_sso") %></a>
+  <a href="#customer-sso"><%= t(".sections.customer_sso") %></a>
+</nav>
+
+<div id="email-delivery" class="panel email-status <%= OutboundEmail.configured? ? "connected" : "not-configured" %>">
+  <h2><%= t(".email_status.title") %></h2>
+  <p><%= t(OutboundEmail.configured? ? ".email_status.connected" : ".email_status.not_configured") %></p>
+  <% unless OutboundEmail.configured? %>
+    <p class="muted"><%= t(".email_status.consequence") %></p>
+  <% end %>
+</div>
+
 <%= form_with url: admin_settings_path, method: :patch, class: "form" do |f| %>
+  <details id="workspace" class="settings-section" open>
+    <summary><%= t(".sections.branding") %></summary>
   <fieldset>
-    <legend><%= t(".sections.branding") %></legend>
+    <legend class="visually-hidden"><%= t(".sections.branding") %></legend>
     <div class="form-row">
       <%= label_tag :brand_name, t(".fields.brand_name") %>
       <%= text_field_tag :brand_name, Setting.get("brand_name"), placeholder: t("layout.product_name") %>
       <p class="form-hint"><%= t(".fields.brand_name_hint") %></p>
     </div>
   </fieldset>
+  </details>
 
+  <details id="ai-settings" class="settings-section">
+    <summary><%= t(".sections.ai") %></summary>
   <fieldset>
-    <legend><%= t(".sections.ai") %></legend>
+    <legend class="visually-hidden"><%= t(".sections.ai") %></legend>
     <p class="form-hint"><%= t(".ai_intro") %></p>
 
     <div class="form-row">
@@ -67,9 +90,12 @@
       <p class="form-hint"><%= t(".fields.effector_agent_hint") %></p>
     </div>
   </fieldset>
+  </details>
 
+  <details id="intake" class="settings-section" open>
+    <summary><%= t(".sections.intake") %></summary>
   <fieldset>
-    <legend><%= t(".sections.intake") %></legend>
+    <legend class="visually-hidden"><%= t(".sections.intake") %></legend>
     <div class="form-row">
       <%= label_tag :default_queue_id, t(".fields.default_queue") %>
       <%= select_tag :default_queue_id,
@@ -88,9 +114,12 @@
       <%= text_field_tag :outbound_email_from, Setting.get("outbound_email_from"), placeholder: "support@example.com" %>
     </div>
   </fieldset>
+  </details>
 
+  <details id="api-settings" class="settings-section">
+    <summary><%= t(".sections.api") %></summary>
   <fieldset>
-    <legend><%= t(".sections.api") %></legend>
+    <legend class="visually-hidden"><%= t(".sections.api") %></legend>
     <div class="form-row">
       <%= label_tag :cors_allowed_origins, t(".fields.cors_allowed_origins") %>
       <%= text_field_tag :cors_allowed_origins, Setting.get("cors_allowed_origins"), placeholder: "https://netbanking.example.in, https://crm.example.in" %>
@@ -102,9 +131,12 @@
       <p class="form-hint"><%= t(".fields.app_base_url_hint") %></p>
     </div>
   </fieldset>
+  </details>
 
+  <details id="staff-sso" class="settings-section">
+    <summary><%= t(".sections.staff_sso") %></summary>
   <fieldset>
-    <legend><%= t(".sections.staff_sso") %></legend>
+    <legend class="visually-hidden"><%= t(".sections.staff_sso") %></legend>
     <p class="form-hint"><%= t(".staff_sso_intro") %></p>
     <div class="form-row">
       <%= label_tag :sso_staff_oidc_issuer, t(".fields.oidc_issuer") %>
@@ -142,9 +174,12 @@
       <%= text_field_tag :sso_staff_saml_sp_entity_id, Setting.get("sso_staff_saml_sp_entity_id") %>
     </div>
   </fieldset>
+  </details>
 
+  <details id="customer-sso" class="settings-section">
+    <summary><%= t(".sections.customer_sso") %></summary>
   <fieldset>
-    <legend><%= t(".sections.customer_sso") %></legend>
+    <legend class="visually-hidden"><%= t(".sections.customer_sso") %></legend>
     <p class="form-hint"><%= t(".customer_sso_intro") %></p>
     <div class="form-row">
       <%= label_tag :sso_customer_oidc_issuer, t(".fields.oidc_issuer") %>
@@ -165,6 +200,7 @@
       <p class="form-hint"><%= t(".fields.external_id_claim_hint") %></p>
     </div>
   </fieldset>
+  </details>
 
   <div class="form-actions">
     <%= f.submit t(".save"), class: "btn btn-primary" %>

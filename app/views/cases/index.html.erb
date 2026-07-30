@@ -2,7 +2,7 @@
 <div class="page-header">
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
-    <% if policy(Case).create? %>
+    <% if @has_any_cases && policy(Case).create? %>
       <%= link_to new_case_path, class: "btn btn-primary" do %>
         <%= icon "plus" %><%= t(".new_case") %>
       <% end %>
@@ -10,7 +10,8 @@
   </div>
 </div>
 
-<%= form_with url: cases_path, method: :get, class: "filter-bar" do |f| %>
+<% if @has_any_cases %>
+  <%= form_with url: cases_path, method: :get, class: "filter-bar" do |f| %>
   <div class="form-row">
     <%= f.label :q, t("filters.search") %>
     <%= f.search_field :q, value: @filters[:q] %>
@@ -43,11 +44,12 @@
   <%= f.hidden_field :dir, value: @filters[:dir] %>
   <%= f.submit t("filters.apply"), class: "btn" %>
   <%= link_to t("filters.clear"), cases_path, class: "btn btn-ghost btn-sm" %>
+  <% end %>
 <% end %>
 
 <% if @cases.any? %>
   <div class="table-wrap" data-controller="keynav">
-    <table>
+    <table class="case-table">
       <thead>
         <tr>
           <th><%= t(".columns.tracking_id") %></th>
@@ -64,15 +66,15 @@
       <tbody data-keynav-target="list">
         <% @cases.each do |kase| %>
           <tr data-keynav-href="<%= case_path(kase) %>">
-            <td class="mono"><%= link_to kase.tracking_id, case_path(kase) %></td>
-            <td><%= link_to kase.subject, case_path(kase) %></td>
-            <td><%= kase.contact.name %></td>
-            <td><%= status_badge(kase) %></td>
-            <td><%= priority_badge(kase) %></td>
-            <td><%= kase.queue&.name || tag.span(t("cases.no_queue"), class: "muted") %></td>
-            <td><%= kase.assignee&.name || tag.span(t("cases.unassigned"), class: "muted") %></td>
-            <td><%= sla_chip(kase) %></td>
-            <td class="table-meta"><%= l kase.created_at, format: :short %></td>
+            <td class="mono" data-label="<%= t(".columns.tracking_id") %>"><%= link_to kase.tracking_id, case_path(kase) %></td>
+            <td data-label="<%= t(".columns.subject") %>"><%= link_to kase.subject, case_path(kase) %></td>
+            <td data-label="<%= t(".columns.contact") %>"><%= kase.contact.name %></td>
+            <td data-label="<%= t(".columns.status") %>"><%= status_badge(kase) %></td>
+            <td data-label="<%= t(".columns.priority") %>"><%= priority_badge(kase) %></td>
+            <td data-label="<%= t(".columns.queue") %>"><%= kase.queue&.name || tag.span(t("cases.no_queue"), class: "muted") %></td>
+            <td data-label="<%= t(".columns.assignee") %>"><%= kase.assignee&.name || tag.span(t("cases.unassigned"), class: "muted") %></td>
+            <td data-label="<%= t(".columns.sla") %>"><%= sla_chip(kase) %></td>
+            <td class="table-meta" data-label="<%= t(".columns.created") %>"><%= l kase.created_at, format: :short %></td>
           </tr>
         <% end %>
       </tbody>
@@ -80,8 +82,28 @@
   </div>
   <%= render "shared/pagination", pagy: @pagy %>
 <% else %>
-  <%= render "shared/empty_state",
-        title: t(".empty.title"),
-        hint: t(".empty.hint"),
-        action: policy(Case).create? ? link_to(t(".new_case"), new_case_path, class: "btn btn-primary") : nil %>
+  <% if @has_any_cases %>
+    <%= render "shared/empty_state",
+          title: t(".no_matches.title"),
+          hint: t(".no_matches.hint"),
+          action: link_to(t("filters.clear"), cases_path, class: "btn") %>
+  <% else %>
+    <% portal_url = "#{request.base_url}#{portal_root_path}" %>
+    <% actions = capture do %>
+      <div class="empty-state-actions" data-controller="clipboard">
+        <% if policy(Case).create? %>
+          <%= link_to t(".new_case"), new_case_path, class: "btn btn-primary" %>
+        <% end %>
+        <button type="button" class="btn" data-action="clipboard#copy"
+                data-clipboard-label-value="<%= t(".empty.portal_copied") %>"><%= t(".empty.copy_portal") %></button>
+        <%= link_to t(".empty.open_setup"), setup_path, class: "btn" if PlatformAreaPolicy.new(Current.user, :settings).show? %>
+        <span class="visually-hidden" data-clipboard-target="source"><%= portal_url %></span>
+        <span class="copy-feedback" data-clipboard-target="feedback" aria-live="polite"></span>
+      </div>
+    <% end %>
+    <%= render "shared/empty_state",
+          title: t(".empty.title"),
+          hint: t(".empty.hint", portal_url: portal_url),
+          action: actions %>
+  <% end %>
 <% end %>

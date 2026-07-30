@@ -1,0 +1,123 @@
+<% page_title t(".title") %>
+<% page_description t(".meta_description", brand: brand_name) %>
+
+<div class="page-header">
+  <div>
+    <h1><%= t(".title") %></h1>
+    <p class="muted"><%= t(".intro") %></p>
+  </div>
+  <span class="setup-progress" aria-label="<%= t(".progress_label", done: @setup.completed_count, total: @setup.total_count) %>">
+    <%= t(".progress", done: @setup.completed_count, total: @setup.total_count) %>
+  </span>
+</div>
+
+<ol class="setup-list">
+  <li class="setup-step <%= "complete" if @setup.brand_ready? %>">
+    <div>
+      <h2><%= t(".brand.title") %></h2>
+      <p><%= t(".brand.body") %></p>
+    </div>
+    <div class="setup-step-actions">
+      <span class="badge"><%= t(@setup.brand_ready? ? ".status.done" : ".status.to_do") %></span>
+      <%= link_to t(".brand.action"), admin_settings_path(anchor: "workspace"), class: "btn btn-sm" %>
+    </div>
+  </li>
+
+  <li class="setup-step <%= "complete" if @setup.modules_confirmed? %>">
+    <div>
+      <h2><%= t(".modules.title") %></h2>
+      <p><%= t(".modules.body") %></p>
+      <p class="muted"><%= @setup.active_modules.map { |key| t("features.#{key}") }.to_sentence %></p>
+    </div>
+    <div class="setup-step-actions">
+      <span class="badge"><%= t(@setup.modules_confirmed? ? ".status.done" : ".status.to_do") %></span>
+      <%= link_to t(".modules.adjust"), entitlements_admin_tenant_path(Current.tenant), class: "btn btn-sm" %>
+      <% unless @setup.modules_confirmed? %>
+        <%= button_to t(".modules.confirm"), setup_path, method: :patch,
+              params: { step: "modules" }, class: "btn btn-primary btn-sm" %>
+      <% end %>
+    </div>
+  </li>
+
+  <% if @setup.service_desk? %>
+    <li class="setup-step <%= "complete" if @setup.intake_ready? %>">
+      <div>
+        <h2><%= t(".intake.title") %></h2>
+        <p><%= t(".intake.body") %></p>
+      </div>
+      <div class="setup-step-actions">
+        <span class="badge"><%= t(@setup.intake_ready? ? ".status.ready" : ".status.to_do") %></span>
+        <%= link_to t(".intake.queues"), case_queues_path, class: "btn btn-sm" %>
+        <%= link_to t(".intake.sla"), sla_policies_path, class: "btn btn-sm" %>
+      </div>
+    </li>
+
+    <li class="setup-step complete" data-controller="clipboard">
+      <div>
+        <h2><%= t(".portal.title") %></h2>
+        <p><%= t(".portal.body") %></p>
+        <p class="setup-url mono" data-clipboard-target="source"><%= @setup.portal_url %></p>
+        <span class="copy-feedback" data-clipboard-target="feedback" aria-live="polite"></span>
+      </div>
+      <div class="setup-step-actions">
+        <span class="badge"><%= t(".status.ready") %></span>
+        <button type="button" class="btn btn-sm" data-action="clipboard#copy"
+                data-clipboard-label-value="<%= t(".portal.copied") %>"><%= t(".portal.copy") %></button>
+        <%= link_to t(".portal.open"), portal_root_path, class: "btn btn-sm",
+              target: "_blank", rel: "noopener" %>
+      </div>
+    </li>
+  <% end %>
+
+  <li class="setup-step <%= "complete" if @setup.email_decided? %>">
+    <div>
+      <h2><%= t(".email.title") %></h2>
+      <p><%= t(@setup.email_configured? ? ".email.connected" : ".email.not_configured") %></p>
+      <% unless @setup.email_configured? %>
+        <p class="muted"><%= t(".email.consequence") %></p>
+      <% end %>
+    </div>
+    <div class="setup-step-actions">
+      <span class="badge"><%= t(@setup.email_configured? ? ".status.connected" : (@setup.email_decided? ? ".status.deferred" : ".status.to_do")) %></span>
+      <%= link_to t(".email.settings"), admin_settings_path(anchor: "email-delivery"), class: "btn btn-sm" %>
+      <% unless @setup.email_decided? %>
+        <%= button_to t(".email.skip"), setup_path, method: :patch,
+              params: { step: "email" }, class: "btn btn-sm" %>
+      <% end %>
+    </div>
+  </li>
+
+  <li class="setup-step <%= "complete" if @setup.first_value? %>">
+    <div>
+      <h2><%= t(".first_request.title") %></h2>
+      <p><%= t(".first_request.body") %></p>
+    </div>
+    <div class="setup-step-actions">
+      <span class="badge"><%= t(@setup.first_value? ? ".status.done" : ".status.to_do") %></span>
+      <% if @setup.service_desk? %>
+        <%= link_to t(".first_request.portal"), portal_root_path, class: "btn btn-primary btn-sm",
+              target: "_blank", rel: "noopener" %>
+        <%= link_to t(".first_request.internal"), new_case_path, class: "btn btn-sm" %>
+      <% elsif @setup.crm? %>
+        <%= link_to t(".first_request.lead"), new_lead_path, class: "btn btn-primary btn-sm" %>
+      <% elsif @setup.work? %>
+        <%= link_to t(".first_request.project"), new_project_path, class: "btn btn-primary btn-sm" %>
+      <% end %>
+    </div>
+  </li>
+
+  <li class="setup-step <%= "complete" if @setup.team_decided? %>">
+    <div>
+      <h2><%= t(".team.title") %></h2>
+      <p><%= t(".team.body") %></p>
+    </div>
+    <div class="setup-step-actions">
+      <span class="badge"><%= t(@setup.team_ready? ? ".status.done" : (@setup.team_decided? ? ".status.deferred" : ".status.to_do")) %></span>
+      <%= link_to t(".team.invite"), new_admin_user_path, class: "btn btn-sm" %>
+      <% unless @setup.team_decided? %>
+        <%= button_to t(".team.skip"), setup_path, method: :patch,
+              params: { step: "team" }, class: "btn btn-sm" %>
+      <% end %>
+    </div>
+  </li>
+</ol>

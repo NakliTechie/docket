@@ -57,15 +57,15 @@ class EntitlementContainmentTest < ActionDispatch::IntegrationTest
     sign_in_as users(:admin)
 
     get root_path
-    assert_redirected_to leads_path, "root must resolve to a surface the tenant has"
+    assert_redirected_to dashboard_path, "an administrator should land on usable insights"
     follow_redirect!
     assert_response :success
   end
 
-  test "root prefers the service desk when the tenant has it" do
+  test "root sends an administrator with operational data to insights" do
     sign_in_as users(:admin)
     get root_path
-    assert_redirected_to cases_path
+    assert_redirected_to dashboard_path
   end
 
   # ── Endpoints that move data outside the console ──────────────────────────

@@ -5,6 +5,13 @@
 class DashboardsController < ApplicationController
   def index
     authorize :dashboard, policy_class: DashboardPolicy
+    setup = SetupProgress.new(actor: Current.user, base_url: request.base_url)
+    if request.format.html? &&
+        PlatformAreaPolicy.new(Current.user, :settings).show? &&
+        setup.fresh_tenant?
+      return redirect_to setup_path
+    end
+
     @from = parse_date(params[:from]) || 30.days.ago.to_date
     @to = parse_date(params[:to]) || Date.current
     @overview = DashboardOverview.new(from: @from, to: @to)

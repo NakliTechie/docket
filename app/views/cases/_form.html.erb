@@ -13,8 +13,34 @@
   <div class="form-row <%= "field-error" if kase.errors[:contact].any? %>">
     <%= f.label :contact_id, t("cases.fields.contact") %>
     <%= f.collection_select :contact_id, Contact.order(:name), :id, :name,
-          { include_blank: t("forms.select_prompt") }, required: true %>
-    <p class="form-hint"><%= link_to t("cases.form.new_contact"), new_contact_path %></p>
+          { include_blank: t("forms.select_prompt") }, required: !kase.new_record? %>
+    <% if kase.new_record? && policy(Contact).create? %>
+      <p class="form-hint"><%= t("cases.form.contact_choice") %></p>
+      <details class="inline-contact panel" <%= "open" if Contact.none? %>>
+        <summary><%= t("cases.form.new_contact") %></summary>
+        <p class="form-hint"><%= t("cases.form.new_contact_hint") %></p>
+        <%= fields_for :new_contact, @inline_contact || Contact.new do |contact_fields| %>
+          <div class="form-row <%= "field-error" if @inline_contact&.errors&.[](:name)&.any? %>">
+            <%= contact_fields.label :name, t("contacts.fields.name") %>
+            <%= contact_fields.text_field :name %>
+            <% @inline_contact&.errors&.[](:name)&.each do |msg| %>
+              <p class="field-error-message"><%= msg %></p>
+            <% end %>
+          </div>
+          <div class="form-row <%= "field-error" if @inline_contact&.errors&.[](:email)&.any? %>">
+            <%= contact_fields.label :email, t("contacts.fields.email") %>
+            <%= contact_fields.email_field :email %>
+            <% @inline_contact&.errors&.[](:email)&.each do |msg| %>
+              <p class="field-error-message"><%= msg %></p>
+            <% end %>
+          </div>
+          <div class="form-row">
+            <%= contact_fields.label :phone, t("contacts.fields.phone") %>
+            <%= contact_fields.telephone_field :phone %>
+          </div>
+        <% end %>
+      </details>
+    <% end %>
     <% kase.errors[:contact].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
   </div>
 

@@ -9,21 +9,38 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    post passwords_path, params: { email_address: @user.email_address }
-    assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
-    assert_redirected_to new_session_path
+    with_smtp do
+      post passwords_path, params: { email_address: @user.email_address }
+      assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
+      assert_redirected_to new_session_path
+    end
 
     follow_redirect!
     assert_notice "reset instructions sent"
   end
 
   test "create for an unknown user redirects but sends no mail" do
-    post passwords_path, params: { email_address: "missing-user@example.com" }
-    assert_enqueued_emails 0
-    assert_redirected_to new_session_path
+    with_smtp do
+      post passwords_path, params: { email_address: "missing-user@example.com" }
+      assert_enqueued_emails 0
+      assert_redirected_to new_session_path
+    end
 
     follow_redirect!
     assert_notice "reset instructions sent"
+  end
+
+  test "create reports unavailable delivery honestly when smtp is not configured" do
+    previous = ENV.delete("SMTP_ADDRESS")
+
+    post passwords_path, params: { email_address: @user.email_address }
+
+    assert_enqueued_emails 0
+    assert_redirected_to new_session_path
+    follow_redirect!
+    assert_notice "Email delivery is not configured"
+  ensure
+    ENV["SMTP_ADDRESS"] = previous if previous
   end
 
   test "edit" do
@@ -78,6 +95,14 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def with_smtp
+    previous = ENV["SMTP_ADDRESS"]
+    ENV["SMTP_ADDRESS"] = "smtp.example.test"
+    yield
+  ensure
+    ENV["SMTP_ADDRESS"] = previous
+  end
     def assert_notice(text)
       assert_select "div", /#{text}/
     end

@@ -8,11 +8,12 @@ class PasswordsController < ApplicationController
   end
 
   def create
-    if user = User.active.find_by(email_address: params[:email_address])
+    if OutboundEmail.configured? && (user = User.active.find_by(email_address: params[:email_address]))
       PasswordsMailer.reset(user).deliver_later
     end
 
-    redirect_to new_session_path, notice: t(".sent")
+    notice = OutboundEmail.configured? ? t(".sent") : t(".email_unavailable")
+    redirect_to new_session_path, notice: notice
   end
 
   def edit

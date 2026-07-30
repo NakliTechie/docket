@@ -53,4 +53,27 @@ class BrandingTest < ActionDispatch::IntegrationTest
     assert_select 'link[rel="icon"][href="/icon.svg"][type="image/svg+xml"]'
     assert_select 'link[rel="icon"][href="/icon.png"][type="image/png"]'
   end
+
+  test "public layouts publish concise page descriptions" do
+    get portal_root_path
+    assert_select 'meta[name="description"][content*="Submit and track"]'
+
+    get inquiry_path
+    assert_select 'meta[name="description"][content*="request more information"]'
+
+    get new_session_path
+    assert_select 'meta[name="description"][content*="Sign in"]'
+    assert_select "a[href='#{portal_root_path}']", text: I18n.t("sessions.new.customer_portal")
+
+    get portal_root_path
+    assert_select "a[href='#{new_session_path}']", text: I18n.t("portal.nav.staff_sign_in")
+  end
+
+  test "the CSP nonce covers Turbo's progress stylesheet" do
+    get portal_root_path
+    policy = response.headers["Content-Security-Policy"]
+    nonce = css_select('meta[name="csp-nonce"]').first["content"]
+
+    assert_includes policy, "style-src 'self' 'nonce-#{nonce}'"
+  end
 end

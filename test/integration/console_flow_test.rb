@@ -46,6 +46,37 @@ class ConsoleFlowTest < ActionDispatch::IntegrationTest
     assert_equal "resolved", kase.reload.status
   end
 
+  test "staff create the first contact inline without losing the case form" do
+    sign_in_as users(:admin)
+
+    assert_difference [ "Case.count", "Contact.count" ], 1 do
+      post cases_path, params: {
+        case: { subject: "First request", description: "Preserved case details", priority: "normal" },
+        new_contact: { name: "First Customer", email: "first.customer@example.test" }
+      }
+    end
+
+    kase = Case.order(:id).last
+    assert_redirected_to case_path(kase)
+    assert_equal "First Customer", kase.contact.name
+    assert_equal "Preserved case details", kase.description
+  end
+
+  test "an invalid inline contact rolls back the case and contact together" do
+    sign_in_as users(:admin)
+
+    assert_no_difference [ "Case.count", "Contact.count" ] do
+      post cases_path, params: {
+        case: { subject: "First request", description: "Keep this visible" },
+        new_contact: { name: "", email: "not-an-email" }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "textarea[name='case[description]']", text: "Keep this visible"
+    assert_select ".field-error-message"
+  end
+
   test "illegal transition shows a friendly error not a stack trace" do
     sign_in_as users(:admin)
     post transition_case_path(cases(:pension_case)), params: { status: "closed" }

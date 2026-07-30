@@ -21,9 +21,11 @@ Rails.application.configure do
   end
 
   # A fresh random nonce per request (Rails memoizes it within the request, so
-  # every emitted <script> shares it and matches the header). Not derived from
-  # the session id, which would be stable across the session's responses and
-  # thus more predictable/reusable (L12).
+  # every emitted <script>/<style> shares it and matches the header). Turbo
+  # reads the nonce meta tag for its progress-bar stylesheet; allowing that
+  # nonce under style-src keeps the policy strict without losing navigation
+  # feedback. Not derived from the session id, which would be stable across the
+  # session's responses and thus more predictable/reusable (L12).
   config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
-  config.content_security_policy_nonce_directives = %w[script-src]
+  config.content_security_policy_nonce_directives = %w[script-src style-src]
 end

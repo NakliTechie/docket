@@ -6,6 +6,24 @@ en:
     locale_switch_label: "हिन्दी"
     sign_out: "Sign out"
     nav:
+      menu: "Menu"
+      home: "Home"
+      inbox: "Inbox"
+      customers: "Customers"
+      sales: "Sales"
+      delivery: "Delivery"
+      knowledge_automation: "Knowledge & automation"
+      insights: "Insights"
+      administration: "Administration"
+      workspace_section: "Workspace"
+      people_access: "People & access"
+      channels_integrations: "Channels & integrations"
+      security_audit: "Security & audit"
+      setup: "Setup"
+      api_access: "API access"
+      team_activity: "Team activity"
+      change_history: "Change history"
+      sign_in_security: "Sign-in & security"
       cases: "Cases"
       dashboard: "Dashboard"
       crm: "CRM"
@@ -39,6 +57,61 @@ en:
       webhooks: "Webhooks"
       agent_actions: "Agent actions"
       decision_appeals: "Appeals"
+
+  setups:
+    update:
+      updated: "Setup progress saved."
+    show:
+      title: "Get Docket ready"
+      meta_description: "Set up %{brand}, open the customer portal, and complete your first request."
+      intro: "Start by accepting and resolving one test request. Everything advanced can wait."
+      progress: "%{done} of %{total} ready"
+      progress_label: "Setup progress: %{done} of %{total} steps ready"
+      status:
+        done: "Done"
+        ready: "Ready"
+        connected: "Connected"
+        deferred: "Later"
+        to_do: "To do"
+      brand:
+        title: "Name your workspace"
+        body: "Choose the name customers and staff will see."
+        action: "Set workspace name"
+      modules:
+        title: "Choose the work you do"
+        body: "Keep only the service desk, sales, and delivery modules this workspace needs."
+        adjust: "Adjust modules"
+        confirm: "These look right"
+      intake:
+        title: "Confirm intake defaults"
+        body: "The seeded queue and SLA are usable now. Change them only if your process needs something different."
+        queues: "Review queues"
+        sla: "Review SLA"
+      portal:
+        title: "Open your customer portal"
+        body: "Customers can file and track requests here immediately."
+        copy: "Copy portal link"
+        copied: "Portal link copied"
+        open: "Open portal"
+      email:
+        title: "Check outbound email"
+        connected: "An SMTP delivery service is connected."
+        not_configured: "Outbound email is not configured on this deployment."
+        consequence: "The portal still works, but customers will not receive confirmation emails and staff replies will not leave Docket."
+        settings: "View email status"
+        skip: "Do this later"
+      first_request:
+        title: "File one test request"
+        body: "Create a request, then assign, reply, and resolve it to verify the core loop."
+        portal: "File through portal"
+        internal: "Create internally"
+        lead: "Create first lead"
+        project: "Create first project"
+      team:
+        title: "Invite your team"
+        body: "Add staff now, or keep this as a one-person workspace while you evaluate."
+        invite: "Invite a user"
+        skip: "Just me for now"
 
   features:
     service_desk: "Service desk"
@@ -113,10 +186,12 @@ en:
     sso_failed: "Single sign-on failed. Try again or use your password."
     new:
       title: "Sign in"
+      meta_description: "Sign in to %{brand} to manage customer requests and work."
       email: "Email address"
       password: "Password"
       sign_in: "Sign in"
       forgot_password: "Forgot password?"
+      customer_portal: "Open customer portal"
       sso_oidc: "Sign in with corporate SSO"
       sso_saml: "Sign in with SAML (ADFS)"
 
@@ -124,15 +199,18 @@ en:
     invalid_token: "Password reset link is invalid or has expired."
     new:
       title: "Forgot your password?"
+      meta_description: "Request a password reset for %{brand}."
       send_instructions: "Email reset instructions"
       back_to_sign_in: "Back to sign in"
     edit:
       title: "Update your password"
+      meta_description: "Choose a new password for %{brand}."
       new_password: "New password"
       confirm_password: "Repeat new password"
       save: "Save"
     create:
       sent: "Password reset instructions sent (if a user with that email address exists)."
+      email_unavailable: "Email delivery is not configured on this deployment. Ask an administrator to reset your password."
     update:
       reset: "Password has been reset."
       mismatch: "Passwords did not match."
@@ -180,7 +258,9 @@ en:
       assignee: "Assignee"
       sla_policy: "SLA policy"
     form:
-      new_contact: "Create a new contact first"
+      new_contact: "Create contact here"
+      new_contact_hint: "Add only the details needed for this case. You can complete the contact later."
+      contact_choice: "Select an existing contact, or create one without leaving this case."
       default_sla: "Use default policy"
     errors:
       invalid_transition: "That status change is not allowed from the case's current status."
@@ -203,7 +283,13 @@ en:
         created: "Created"
       empty:
         title: "No cases yet"
-        hint: "Share your public portal link, or create a case on behalf of a customer."
+        hint: "Share %{portal_url}, or create a case on behalf of a customer."
+        copy_portal: "Copy portal link"
+        portal_copied: "Portal link copied"
+        open_setup: "Open setup"
+      no_matches:
+        title: "No cases match these filters"
+        hint: "Clear the filters to return to the full inbox."
     email_intake:
       no_subject: "(no subject)"
     agent:
@@ -701,6 +787,7 @@ en:
 
   inquiries:
     brand: "Get in touch"
+    meta_description: "Contact %{brand} and request more information."
     footer: "We'll never share your details. Powered by Docket."
     fields:
       name: "Your name"
@@ -1048,6 +1135,7 @@ en:
 
   portal:
     brand: "Support Center"
+    meta_description: "Submit and track support requests with %{brand}."
     footer: "Powered by Docket."
     nav:
       new_case: "Submit a request"
@@ -1056,6 +1144,7 @@ en:
       my_cases: "My cases"
       sign_out: "Sign out"
       customer_sign_in: "Log in with your account"
+      staff_sign_in: "Staff sign in"
     knowledge_base:
       index:
         title: "Help & answers"
@@ -1102,6 +1191,8 @@ en:
       confirmation:
         title: "Your case has been filed"
         body: "Quote this tracking ID in any follow-up:"
+        copy_id: "Copy tracking ID"
+        copied: "Tracking ID copied"
         keep_safe: "Keep this ID safe — together with your email or phone it is how you check the status of your case."
         email_queued: "A confirmation email is queued for %{email}."
         email_unavailable: "Email delivery is not configured, so no copy was sent. Keep this tracking ID safe."
@@ -1577,12 +1668,19 @@ en:
         title: "Settings"
         save: "Save settings"
         sections:
+          label: "Settings sections"
           branding: "Branding"
           ai: "AI / agentic resolution"
           intake: "Intake defaults"
+          email: "Email delivery"
           api: "API & integrations"
           staff_sso: "Staff SSO (internal IdP)"
           customer_sso: "Customer SSO (portal IdP)"
+        email_status:
+          title: "Outbound email"
+          connected: "SMTP delivery is connected. Confirmation and reply emails can leave this deployment."
+          not_configured: "SMTP delivery is not configured. The From address below does not connect an email service."
+          consequence: "Portal filing and tracking still work, but password resets, confirmations, and staff replies cannot be delivered externally. Configure SMTP_ADDRESS in the deployment environment."
         staff_sso_intro: "Staff sign into the console via your corporate IdP — OIDC preferred, SAML 2.0 for ADFS. First SSO login provisions the user in Customer service; a client or super admin can change the role, or you can configure the role claim mapping. Local password login always remains as break-glass."
         customer_sso_intro: "The customer portal trusts your customer identity provider. The configured claim maps to the contact's customer ID; signed-in customers see their own cases without the tracking-ID flow. Customer sessions can never reach the staff console. The anonymous flow always remains available."
         ai_intro: "Docket is fully usable without AI. Configure an in-deployment model endpoint (Ollama/vLLM, OpenAI-compatible) to enable routing, drafting, and staff assist."
@@ -1958,7 +2056,10 @@ en:
         due: "Due"
       empty:
         title: "No work items"
-        hint: "Create the first item, or adjust the filters above."
+        hint: "Create the first item to start this project's delivery backlog."
+      no_matches:
+        title: "No work items match these filters"
+        hint: "Clear the filters to return to the full backlog."
     new:
       title: "New item in %{key}"
     edit:

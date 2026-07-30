@@ -11,7 +11,8 @@
   </div>
 </div>
 
-<%= form_with url: project_work_items_path(@project), method: :get, class: "filter-bar" do |f| %>
+<% if @has_any_items %>
+  <%= form_with url: project_work_items_path(@project), method: :get, class: "filter-bar" do |f| %>
   <div class="form-row">
     <%= f.label :q, t("filters.search") %>
     <%= f.search_field :q, value: params[:q] %>
@@ -31,6 +32,8 @@
     <%= f.check_box :open, checked: params[:open] == "1" %>
   </div>
   <%= f.submit t("filters.apply"), class: "btn" %>
+    <%= link_to t("filters.clear"), project_work_items_path(@project), class: "btn btn-ghost btn-sm" %>
+  <% end %>
 <% end %>
 
 <% if @items.any? %>
@@ -64,5 +67,11 @@
   </div>
   <%= render "shared/pagination", pagy: @pagy %>
 <% else %>
-  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+  <% if @has_any_items %>
+    <%= render "shared/empty_state", title: t(".no_matches.title"), hint: t(".no_matches.hint"),
+          action: link_to(t("filters.clear"), project_work_items_path(@project), class: "btn") %>
+  <% else %>
+    <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+          action: policy(WorkItem).create? ? link_to(t(".new_item"), new_project_work_item_path(@project), class: "btn btn-primary") : nil %>
+  <% end %>
 <% end %>

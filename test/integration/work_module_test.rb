@@ -61,6 +61,30 @@ class WorkModuleTest < ActionDispatch::IntegrationTest
     assert_redirected_to work_item_path(item)
   end
 
+  test "an empty backlog hides filters and offers the first item" do
+    project = projects(:pep)
+    project.work_items.update_all(deleted_at: Time.current)
+    sign_in_as users(:admin)
+
+    get project_work_items_path(project)
+
+    assert_response :success
+    assert_select "form.filter-bar", count: 0
+    assert_select "a[href='#{new_project_work_item_path(project)}']",
+                  text: I18n.t("work_items.index.new_item")
+  end
+
+  test "a filtered empty backlog keeps its recovery controls" do
+    project = projects(:pep)
+    sign_in_as users(:admin)
+
+    get project_work_items_path(project, q: "definitely-no-work-item-matches")
+
+    assert_response :success
+    assert_select "form.filter-bar", count: 1
+    assert_select ".empty-state-title", text: I18n.t("work_items.index.no_matches.title")
+  end
+
   test "watching is a toggle" do
     sign_in_as users(:agent_a)
     item = work_items(:pep_one)

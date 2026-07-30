@@ -54,6 +54,11 @@ module ApplicationHelper
     [ content_for(:title), t("layout.product_name") ].compact_blank.join(" · ")
   end
 
+  def page_description(description = nil)
+    content_for(:description) { description } if description
+    content_for(:description)
+  end
+
   def nav_link(label, path, active: false)
     link_to label, path, class: class_names("nav-link", active: active),
             aria: { current: active ? "page" : nil }
@@ -63,10 +68,15 @@ module ApplicationHelper
   # `active` highlights the group when one of its pages is current.
   def nav_group(label, active: false)
     content = capture { yield }
-    tag.details(class: class_names("nav-group", active: active)) do
+    tag.details(class: class_names("nav-group", active: active),
+                data: { action: "toggle->navigation#groupToggled" }) do
       tag.summary(label, class: class_names("nav-link", "nav-group-toggle", active: active)) +
         tag.div(content, class: "nav-menu")
     end
+  end
+
+  def nav_section(label)
+    tag.span(label, class: "nav-menu-section")
   end
 
   # Single-key status shortcuts on the case view; documented in the

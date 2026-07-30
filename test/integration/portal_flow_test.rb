@@ -5,7 +5,7 @@ class PortalFlowTest < ActionDispatch::IntegrationTest
 
   test "customer files a case anonymously and receives a tracking id" do
     assert_difference [ "Case.count", "Contact.count", "Message.count" ], 1 do
-      assert_enqueued_emails 1 do
+      assert_enqueued_emails 0 do
         post portal_cases_path, params: { portal_submission: {
           name: "Sita Devi", email: "sita@example.com",
           subject: "Water supply disruption",
@@ -21,16 +21,19 @@ class PortalFlowTest < ActionDispatch::IntegrationTest
     assert_equal "No water for three days.", kase.messages.first.body
     assert_equal "inbound", kase.messages.first.direction
     assert_select "p", text: I18n.t("portal.cases.confirmation.email_unavailable")
+    assert_select "button", text: I18n.t("portal.cases.confirmation.copy_id")
   end
 
   test "confirmation reports queued email only when outbound delivery is configured" do
     previous_address = ENV["SMTP_ADDRESS"]
     ENV["SMTP_ADDRESS"] = "smtp.example.test"
-    post portal_cases_path, params: { portal_submission: {
-      name: "Sita Devi", email: "sita.queued@example.com",
-      subject: "Water supply disruption",
-      description: "No water for three days."
-    } }
+    assert_enqueued_emails 1 do
+      post portal_cases_path, params: { portal_submission: {
+        name: "Sita Devi", email: "sita.queued@example.com",
+        subject: "Water supply disruption",
+        description: "No water for three days."
+      } }
+    end
 
     assert_response :created
     assert_select "p",

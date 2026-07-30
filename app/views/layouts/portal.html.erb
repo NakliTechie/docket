@@ -4,6 +4,7 @@
     <title><%= page_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="referrer" content="same-origin">
+    <meta name="description" content="<%= t("portal.meta_description", brand: brand_name(t("portal.brand"))) %>">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="icon" href="/icon.png" type="image/png">
     <%= csrf_meta_tags %>
@@ -24,6 +25,7 @@
               active: controller_name == "tracking" %>
         <%= nav_link t("portal.nav.knowledge_base"), portal_kb_index_path,
               active: controller_name == "knowledge_base" %>
+        <%= nav_link t("portal.nav.staff_sign_in"), new_session_path %>
         <% if session[:portal_contact_id] %>
           <%= nav_link t("portal.nav.my_cases"), portal_my_cases_path,
                 active: controller_name == "my_cases" %>

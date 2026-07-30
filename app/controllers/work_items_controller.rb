@@ -6,9 +6,9 @@ class WorkItemsController < ApplicationController
 
   def index
     authorize WorkItem
-    @items = policy_scope(WorkItem).where(project: @project)
-               .includes(:assignee, :workflow_state, :sprint)
-               .search(params[:q])
+    scope = policy_scope(WorkItem).where(project: @project)
+    @has_any_items = scope.exists?
+    @items = scope.includes(:assignee, :workflow_state, :sprint).search(params[:q])
     @items = @items.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
     @items = @items.where(kind: params[:kind]) if params[:kind].present?
     @items = @items.where(workflow_state_id: params[:state_id]) if params[:state_id].present?

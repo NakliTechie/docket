@@ -10,7 +10,9 @@ module Portal
     def create
       @submission = PortalSubmission.new(submission_params)
       if (kase = @submission.save)
-        CaseMailer.confirmation(kase).deliver_later if kase.contact.email.present?
+        if kase.contact.email.present? && OutboundEmail.configured?
+          CaseMailer.confirmation(kase).deliver_later
+        end
         # Keep the tracking handle out of the URL/Referer while carrying the
         # just-created case into the confirmation's primary "Track" action.
         # TrackingController clears it after successful verification.

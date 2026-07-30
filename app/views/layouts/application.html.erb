@@ -4,6 +4,9 @@
     <title><%= page_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="referrer" content="same-origin">
+    <% if page_description.present? %>
+      <meta name="description" content="<%= page_description %>">
+    <% end %>
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="icon" href="/icon.png" type="image/png">
     <%= csrf_meta_tags %>
@@ -17,98 +20,129 @@
 
     <% if authenticated? %>
       <header class="app-header">
-        <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>">
+        <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>"
+             data-controller="navigation"
+             data-action="keydown@window->navigation#keydown click->navigation#closeFromLink">
           <%= link_to brand_name, root_path, class: "brand" %>
-          <% if feature?("service_desk") %>
-            <%= nav_link t("layout.nav.cases"), cases_path, active: controller_name == "cases" %>
-          <% end %>
-          <% if policy(:dashboard).index? %>
-            <%= nav_link t("layout.nav.dashboard"), dashboard_path, active: controller_name == "dashboards" %>
-          <% end %>
+          <button type="button" class="nav-menu-toggle"
+                  aria-controls="staff-navigation" aria-expanded="false"
+                  data-navigation-target="toggle" data-action="navigation#toggle">
+            <%= t("layout.nav.menu") %>
+          </button>
 
-          <%= nav_group t("layout.nav.crm"),
-                active: %w[contacts organisations leads deals pipelines sequences sales_reports].include?(controller_name) do %>
-            <%# contacts + organisations are shared by every module, so they are not
-                entitlement-gated — the CRM group survives with just these two. %>
-            <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
-            <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>
-            <% if feature?("crm") %>
-              <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
-              <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
-              <%= nav_link t("layout.nav.sales_report"), sales_report_path, active: controller_name == "sales_reports" %>
-              <% if policy(Pipeline).create? %>
-                <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
-                <% if feature?("crm.sequences") %>
-                  <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
+          <div id="staff-navigation" class="app-nav-links">
+            <%= nav_link t("layout.nav.home"), root_path, active: controller_name.in?(%w[home setup]) %>
+
+            <% if feature?("service_desk") %>
+              <%= nav_link t("layout.nav.inbox"), cases_path, active: controller_name == "cases" %>
+            <% end %>
+
+            <%= nav_group t("layout.nav.customers"),
+                  active: %w[contacts organisations].include?(controller_name) do %>
+              <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
+              <%= nav_link t("layout.nav.organisations"), organisations_path, active: controller_name == "organisations" %>
+            <% end %>
+
+            <% if feature?("crm") && policy(Lead).index? %>
+              <%= nav_group t("layout.nav.sales"),
+                    active: %w[leads deals pipelines sequences sales_reports].include?(controller_name) do %>
+                <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
+                <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
+                <%= nav_link t("layout.nav.sales_report"), sales_report_path, active: controller_name == "sales_reports" %>
+                <% if policy(Pipeline).create? %>
+                  <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
+                  <% if feature?("crm.sequences") %>
+                    <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
+                  <% end %>
                 <% end %>
               <% end %>
             <% end %>
-          <% end %>
 
-          <% if feature?("work") && policy(Project).index? %>
-            <%= nav_link t("layout.nav.work"), projects_path,
-                  active: %w[projects boards work_items].include?(controller_name) %>
-          <% end %>
+            <% if feature?("work") && policy(Project).index? %>
+              <%= nav_link t("layout.nav.delivery"), projects_path,
+                    active: %w[projects boards work_items].include?(controller_name) %>
+            <% end %>
 
-          <% webhook_policy = PlatformAreaPolicy.new(Current.user, :webhooks) %>
-          <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? ||
-                policy(Connector).index? || webhook_policy.index? ||
-                policy(ConnectorInvocation).index? %>
-            <%= nav_group t("layout.nav.service_desk"),
-                  active: %w[case_queues categories sla_policies macros routing_rules approval_processes reference_docs connectors webhook_endpoints connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
-              <% if policy(CaseQueue).create? %>
-                <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
-                <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
-                <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
-                <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
-              <% end %>
-              <% if policy(RoutingRule).index? %>
-                <%= nav_link t("layout.nav.routing_rules"), routing_rules_path, active: controller_name == "routing_rules" %>
-              <% end %>
-              <% if policy(ApprovalProcess).index? %>
-                <%= nav_link t("layout.nav.approval_processes"), approval_processes_path, active: controller_name == "approval_processes" %>
-              <% end %>
-              <% if policy(ReferenceDoc).index? %>
-                <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
-              <% end %>
-              <% if policy(Connector).index? %>
-                <%= nav_link t("layout.nav.connectors"), admin_connectors_path, active: controller_name == "connectors" %>
-              <% end %>
-              <% if webhook_policy.index? %>
-                <%= nav_link t("layout.nav.webhooks"), admin_webhook_endpoints_path, active: controller_name == "webhook_endpoints" %>
-              <% end %>
-              <% if policy(ConnectorInvocation).index? %>
-                <%= nav_link t("layout.nav.agent_actions"), admin_connector_invocations_path, active: controller_name == "connector_invocations" %>
-              <% end %>
-              <% if policy(DecisionAppeal).index? %>
-                <%= nav_link t("layout.nav.decision_appeals"), admin_decision_appeals_path, active: controller_name == "decision_appeals" %>
-              <% end %>
-              <% if policy(ApprovalRequest).index? %>
-                <%= nav_link t("layout.nav.approval_requests"), admin_approval_requests_path, active: controller_name == "approval_requests" %>
+            <% webhook_policy = PlatformAreaPolicy.new(Current.user, :webhooks) %>
+            <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? ||
+                  policy(ConnectorInvocation).index? %>
+              <%= nav_group t("layout.nav.knowledge_automation"),
+                    active: %w[case_queues categories sla_policies macros routing_rules approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
+                <% if policy(CaseQueue).create? %>
+                  <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
+                  <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
+                  <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
+                  <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
+                <% end %>
+                <% if policy(RoutingRule).index? %>
+                  <%= nav_link t("layout.nav.routing_rules"), routing_rules_path, active: controller_name == "routing_rules" %>
+                <% end %>
+                <% if policy(ApprovalProcess).index? %>
+                  <%= nav_link t("layout.nav.approval_processes"), approval_processes_path, active: controller_name == "approval_processes" %>
+                <% end %>
+                <% if policy(ReferenceDoc).index? %>
+                  <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
+                <% end %>
+                <% if policy(ConnectorInvocation).index? %>
+                  <%= nav_link t("layout.nav.agent_actions"), admin_connector_invocations_path, active: controller_name == "connector_invocations" %>
+                <% end %>
+                <% if policy(DecisionAppeal).index? %>
+                  <%= nav_link t("layout.nav.decision_appeals"), admin_decision_appeals_path, active: controller_name == "decision_appeals" %>
+                <% end %>
+                <% if policy(ApprovalRequest).index? %>
+                  <%= nav_link t("layout.nav.approval_requests"), admin_approval_requests_path, active: controller_name == "approval_requests" %>
+                <% end %>
               <% end %>
             <% end %>
-          <% end %>
 
-          <% if policy(User).index? %>
-            <%= nav_group t("layout.nav.admin"),
-                  active: %w[users roles tenants activity audit security_events service_accounts api_tokens shared_credentials settings].include?(controller_name) do %>
-              <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
-              <%= nav_link t("layout.nav.roles"), admin_roles_path, active: controller_name == "roles" %>
-              <% if policy(Tenant).index? %>
-                <%= nav_link t("layout.nav.tenants"), admin_tenants_path, active: controller_name == "tenants" %>
-              <% end %>
-              <%= nav_link t("layout.nav.activity"), admin_activity_path, active: controller_name == "activity" %>
-              <%= nav_link t("layout.nav.audit"), admin_audit_path, active: controller_name == "audit" %>
-              <%= nav_link t("layout.nav.security_events"), admin_security_events_path, active: controller_name == "security_events" %>
-              <% if PlatformAreaPolicy.new(Current.user, :service_accounts).index? %>
-                <%= nav_link t("layout.nav.integrations"), admin_service_accounts_path,
-                      active: %w[service_accounts api_tokens].include?(controller_name) %>
-              <% end %>
-              <% if PlatformAreaPolicy.new(Current.user, :settings).index? %>
-                <%= nav_link t("layout.nav.settings"), admin_settings_path, active: controller_name == "settings" %>
+            <% if DashboardPolicy.new(Current.user, :dashboard).index? %>
+              <%= nav_link t("layout.nav.insights"), dashboard_path, active: controller_name == "dashboards" %>
+            <% end %>
+
+            <% settings_policy = PlatformAreaPolicy.new(Current.user, :settings) %>
+            <% service_accounts_policy = PlatformAreaPolicy.new(Current.user, :service_accounts) %>
+            <% if policy(User).index? || settings_policy.index? || policy(Connector).index? ||
+                  webhook_policy.index? || service_accounts_policy.index? %>
+              <%= nav_group t("layout.nav.administration"),
+                    active: %w[setup users roles tenants activity audit security_events service_accounts api_tokens shared_credentials settings connectors webhook_endpoints].include?(controller_name) do %>
+                <% if settings_policy.index? %>
+                  <%= nav_section t("layout.nav.workspace_section") %>
+                  <%= nav_link t("layout.nav.setup"), setup_path, active: controller_name == "setup" %>
+                  <%= nav_link t("layout.nav.settings"), admin_settings_path, active: controller_name == "settings" %>
+                <% end %>
+
+                <% if policy(User).index? %>
+                  <%= nav_section t("layout.nav.people_access") %>
+                  <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
+                  <%= nav_link t("layout.nav.roles"), admin_roles_path, active: controller_name == "roles" %>
+                  <% if policy(Tenant).index? %>
+                    <%= nav_link t("layout.nav.tenants"), admin_tenants_path, active: controller_name == "tenants" %>
+                  <% end %>
+                <% end %>
+
+                <% if service_accounts_policy.index? || policy(Connector).index? || webhook_policy.index? %>
+                  <%= nav_section t("layout.nav.channels_integrations") %>
+                <% end %>
+                <% if service_accounts_policy.index? %>
+                  <%= nav_link t("layout.nav.api_access"), admin_service_accounts_path,
+                        active: %w[service_accounts api_tokens].include?(controller_name) %>
+                <% end %>
+                <% if policy(Connector).index? %>
+                  <%= nav_link t("layout.nav.connectors"), admin_connectors_path, active: controller_name == "connectors" %>
+                <% end %>
+                <% if webhook_policy.index? %>
+                  <%= nav_link t("layout.nav.webhooks"), admin_webhook_endpoints_path, active: controller_name == "webhook_endpoints" %>
+                <% end %>
+
+                <% if policy(User).index? %>
+                  <%= nav_section t("layout.nav.security_audit") %>
+                  <%= nav_link t("layout.nav.team_activity"), admin_activity_path, active: controller_name == "activity" %>
+                  <%= nav_link t("layout.nav.change_history"), admin_audit_path, active: controller_name == "audit" %>
+                  <%= nav_link t("layout.nav.sign_in_security"), admin_security_events_path, active: controller_name == "security_events" %>
+                <% end %>
               <% end %>
             <% end %>
-          <% end %>
+          </div>
         </nav>
         <div class="app-header-right">
           <button type="button" class="btn btn-ghost btn-sm" data-action="hotkeys#openHelp"

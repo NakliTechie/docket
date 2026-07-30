@@ -10,9 +10,9 @@ class CasesController < ApplicationController
 
   def index
     @filters = filter_params
-    cases = policy_scope(Case)
-              .includes(:contact, :queue, :assignee, :category)
-              .search(@filters[:q])
+    scope = policy_scope(Case).includes(:contact, :queue, :assignee, :category)
+    @has_any_cases = scope.exists?
+    cases = scope.search(@filters[:q])
     cases = cases.where(status: @filters[:status]) if @filters[:status].present?
     cases = cases.where(priority: @filters[:priority]) if @filters[:priority].present?
     cases = cases.where(queue_id: @filters[:queue_id]) if @filters[:queue_id].present?
@@ -32,14 +32,21 @@ class CasesController < ApplicationController
 
   def new
     @case = Case.new(contact_id: params[:contact_id], channel: :staff)
+    @inline_contact = Contact.new(preferred_language: I18n.locale)
     authorize @case
   end
 
   def create
     @case = Case.new(case_params)
     @case.channel = :staff
+    @inline_contact = Contact.new(inline_contact_params.merge(preferred_language: I18n.locale))
     authorize @case
-    if @case.save
+    if inline_contact_requested?
+      authorize @inline_contact
+      @case.contact = @inline_contact
+    end
+
+    if save_case_with_inline_contact
       redirect_to @case, notice: t(".created", tracking_id: @case.tracking_id)
     else
       render :new, status: :unprocessable_entity
@@ -136,6 +143,28 @@ class CasesController < ApplicationController
   def case_params
     params.require(:case).permit(:subject, :description, :priority, :category_id,
                                  :queue_id, :assignee_id, :contact_id, :sla_policy_id)
+  end
+
+  def inline_contact_params
+    params.fetch(:new_contact, ActionController::Parameters.new).permit(:name, :email, :phone)
+  end
+
+  def inline_contact_requested?
+    @inline_contact.name.present? || @inline_contact.email.present? || @inline_contact.phone.present?
+  end
+
+  def save_case_with_inline_contact
+    return @case.save unless inline_contact_requested?
+
+    case_valid = @case.valid?
+    contact_valid = @inline_contact.valid?
+    return false unless case_valid && contact_valid
+
+    Case.transaction do
+      @inline_contact.save!
+      @case.save!
+    end
+    true
   end
 
   # contact_id is set when the case is created; repointing it via the edit
