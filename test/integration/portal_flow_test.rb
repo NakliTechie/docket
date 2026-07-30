@@ -20,6 +20,24 @@ class PortalFlowTest < ActionDispatch::IntegrationTest
     assert_equal "sita@example.com", kase.contact.email
     assert_equal "No water for three days.", kase.messages.first.body
     assert_equal "inbound", kase.messages.first.direction
+    assert_select "p", text: I18n.t("portal.cases.confirmation.email_unavailable")
+  end
+
+  test "confirmation reports queued email only when outbound delivery is configured" do
+    previous_address = ENV["SMTP_ADDRESS"]
+    ENV["SMTP_ADDRESS"] = "smtp.example.test"
+    post portal_cases_path, params: { portal_submission: {
+      name: "Sita Devi", email: "sita.queued@example.com",
+      subject: "Water supply disruption",
+      description: "No water for three days."
+    } }
+
+    assert_response :created
+    assert_select "p",
+      text: I18n.t("portal.cases.confirmation.email_queued",
+        email: "sita.queued@example.com")
+  ensure
+    ENV["SMTP_ADDRESS"] = previous_address
   end
 
   test "string file params are ignored (no attach-by-reference or 500) (M12)" do

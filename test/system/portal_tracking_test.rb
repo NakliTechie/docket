@@ -26,13 +26,15 @@ class PortalTrackingTest < ApplicationSystemTestCase
             with: "Our March invoice applied 18% GST where our contract says 12%."
     click_on I18n.t("portal.cases.new.submit")
 
-    tracking_id = page.text[/DKT-[A-Z0-9]{4}-[A-Z0-9]{4}/]
-    assert tracking_id, "the confirmation must show a tracking ID"
+    tracking_id = find("[data-test-id=tracking-id]").text.strip
+    assert_match(/\ADKT-[A-Z0-9]{4}-[A-Z0-9]{4}\z/, tracking_id,
+      "the confirmation must show a tracking ID")
 
-    # The lookup. Before the fix this re-rendered the empty form and the
-    # customer never saw their case.
-    visit portal_track_path
-    fill_in "tracking_id", with: tracking_id
+    # Follow the real confirmation handoff. The just-created tracking ID is
+    # carried server-side (never in the URL or Referer) so the customer cannot
+    # lose it merely by following the primary action.
+    click_on I18n.t("portal.cases.confirmation.track_now")
+    assert_field "tracking_id", with: tracking_id
     fill_in "contact_email", with: "kavya.reddy@example.test"
     click_on I18n.t("portal.tracking.new.check")
 

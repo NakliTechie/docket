@@ -11,6 +11,10 @@ module Portal
       @submission = PortalSubmission.new(submission_params)
       if (kase = @submission.save)
         CaseMailer.confirmation(kase).deliver_later if kase.contact.email.present?
+        # Keep the tracking handle out of the URL/Referer while carrying the
+        # just-created case into the confirmation's primary "Track" action.
+        # TrackingController clears it after successful verification.
+        session[:portal_tracking_id] = kase.tracking_id
         render :confirmation, locals: { kase: kase }, status: :created
       else
         render :new, status: :unprocessable_entity

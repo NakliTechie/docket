@@ -5,11 +5,13 @@ module Portal
   # prevent tracking-ID enumeration.
   class TrackingController < BaseController
     def new
+      @prefill_tracking_id = session[:portal_tracking_id]
     end
 
     def show
       @case = verified_case
       if @case
+        session.delete(:portal_tracking_id)
         @messages = public_thread(@case)
         render :show
       else

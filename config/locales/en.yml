@@ -1102,7 +1102,8 @@ en:
         title: "Your case has been filed"
         body: "Quote this tracking ID in any follow-up:"
         keep_safe: "Keep this ID safe — together with your email or phone it is how you check the status of your case."
-        emailed: "We have also emailed it to %{email}."
+        email_queued: "A confirmation email is queued for %{email}."
+        email_unavailable: "Email delivery is not configured, so no copy was sent. Keep this tracking ID safe."
         track_now: "Track your case"
         file_another: "File another"
     tracking:

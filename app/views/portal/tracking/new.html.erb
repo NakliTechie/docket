@@ -10,7 +10,8 @@
   <%= form_with url: portal_track_lookup_path, class: "form", data: { turbo: false } do |f| %>
     <div class="form-row">
       <%= f.label :tracking_id, t(".tracking_id") %>
-      <%= f.text_field :tracking_id, required: true, value: params[:tracking_id],
+      <%= f.text_field :tracking_id, required: true,
+            value: params[:tracking_id].presence || @prefill_tracking_id,
             placeholder: "DKT-XXXX-XXXX", class: "mono" %>
     </div>
     <div class="form-row">
