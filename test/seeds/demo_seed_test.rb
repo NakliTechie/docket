@@ -68,4 +68,11 @@ class DemoSeedTest < ActiveSupport::TestCase
     Rails.env = original_env
     ENV["DOCKET_ALLOW_DEMO_SEED"] = had_flag if had_flag
   end
+
+  test "the documented compose demo explicitly passes the production seed gate" do
+    entrypoint = Rails.root.join("bin/docker-entrypoint").read
+
+    assert_includes entrypoint,
+      "DOCKET_ALLOW_DEMO_SEED=1 ./bin/rails db:seed demo:seed"
+  end
 end

@@ -20,7 +20,10 @@ fi
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
   if [ "${DOCKET_SEED_DEMO}" == "true" ]; then
-    ./bin/rails db:seed demo:seed
+    # DOCKET_SEED_DEMO is the operator's explicit opt-in at the deployment
+    # boundary. Pass the seed's production safety gate only for this branch;
+    # direct `demo:seed` calls remain refused without their own opt-in.
+    DOCKET_ALLOW_DEMO_SEED=1 ./bin/rails db:seed demo:seed
   else
     ./bin/rails db:seed
   fi
