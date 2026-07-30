@@ -42,7 +42,11 @@ First boot migrates Postgres and seeds a fictional demo — by default **Acme Cl
 | API | http://localhost:3000/api/v1 | see [API access](#api-access) |
 | OpenAPI spec | http://localhost:3000/api/v1/openapi.json | public |
 
-Other demo logins: `sunita@docket.local` (supervisor), `priya@` / `rohan@` / `fatima@` / `deepak@docket.local` (agents), `meena@docket.local` (read-only) — all `docket-demo`.
+Other demo logins: `sunita@docket.local` (client admin),
+`farah@docket.local` (finance), `sanjay@docket.local` (sales),
+`priya@` / `rohan@` / `fatima@` / `deepak@docket.local`
+(customer service), `tarun@docket.local` (technical), and
+`meena@docket.local` (read-only) — all `docket-demo`.
 
 **Defaults are production-safe.** A plain `docker compose up --build` seeds **no** demo accounts, enforces SSL, and generates a unique `SECRET_KEY_BASE` on first boot (persisted to the storage volume). For a real deployment, just set a database password and put a TLS-terminating reverse proxy in front:
 

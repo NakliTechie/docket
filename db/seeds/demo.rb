@@ -51,10 +51,13 @@ Current.set(actor: nil) do
     [ "Arjun Mehta", "arjun@docket.local", :super_admin ],
     [ "Sunita Rao", "sunita@docket.local", :client_admin ],
     [ "Vikram Joshi", "vikram@docket.local", :client_admin ],
+    [ "Farah Siddiqui", "farah@docket.local", :finance ],
+    [ "Sanjay Kulkarni", "sanjay@docket.local", :sales ],
     [ "Priya Nair", "priya@docket.local", :customer_service ],
     [ "Rohan Gupta", "rohan@docket.local", :customer_service ],
     [ "Fatima Khan", "fatima@docket.local", :customer_service ],
     [ "Deepak Yadav", "deepak@docket.local", :customer_service ],
+    [ "Tarun Bhat", "tarun@docket.local", :technical ],
     [ "Meena Iyer", "meena@docket.local", :readonly ]
   ]
   users = {}
@@ -206,7 +209,7 @@ Current.set(actor: nil) do
   CaseAgentJob.perform_now(showcase)
 
   # --- Sales funnel (leads + an outreach sequence) ---
-  sales_owner = users["Priya Nair"]
+  sales_owner = users["Sanjay Kulkarni"]
   scenario[:leads].each do |attrs|
     Lead.find_or_create_by!(email: attrs[:email]) { |l| l.assign_attributes(attrs.merge(owner: sales_owner)) }
   end
@@ -399,8 +402,9 @@ Current.set(actor: nil) do
 end
 
 puts "Demo data ready (brand: #{scenario[:brand]}):"
-puts "  staff login: arjun@docket.local / #{ENV.fetch('DOCKET_DEMO_PASSWORD', 'docket-demo')} (admin)"
-puts "  also: sunita@ (supervisor), priya@/rohan@/fatima@/deepak@ (agents), meena@ (read-only)"
+puts "  staff login: arjun@docket.local / #{ENV.fetch('DOCKET_DEMO_PASSWORD', 'docket-demo')} (super admin)"
+puts "  also: sunita@ (client admin), farah@ (finance), sanjay@ (sales), " \
+     "priya@/rohan@/fatima@/deepak@ (customer service), tarun@ (technical), meena@ (read-only)"
 puts "  cases: #{Case.count}, contacts: #{Contact.count}, leads: #{Lead.count}, " \
      "deals: #{Deal.count} (#{Deal.status_open.count} open/#{Deal.status_won.count} won/#{Deal.status_lost.count} lost), " \
      "connectors: #{Connector.count}, pending agent actions: #{ConnectorInvocation.status_proposed.count}"

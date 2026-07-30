@@ -21,6 +21,18 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert Connector.exists?(provider: "http_json")
     assert_operator ConnectorInvocation.status_proposed.count, :>=, 2
     assert Sequence.exists?(name: "New-lead welcome")
+    {
+      super_admin: "arjun@docket.local",
+      client_admin: "sunita@docket.local",
+      finance: "farah@docket.local",
+      sales: "sanjay@docket.local",
+      customer_service: "priya@docket.local",
+      technical: "tarun@docket.local",
+      readonly: "meena@docket.local"
+    }.each do |role, email|
+      assert User.exists?(email_address: email, role: role),
+        "demo seed has no #{role} login"
+    end
 
     %w[new triaged in_progress waiting_on_customer resolved closed reopened].each do |status|
       assert Case.where(status: status).exists?, "expected at least one #{status} case"
