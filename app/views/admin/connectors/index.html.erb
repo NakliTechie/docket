@@ -1,23 +1,27 @@
 <% page_title t(".title") %>
 <div class="page-header">
   <h1><%= t(".title") %></h1>
-  <div class="page-actions">
-    <%= link_to t(".shared_credentials"), admin_shared_credentials_path, class: "btn" %>
-  </div>
+  <% if policy(SharedCredential).index? %>
+    <div class="page-actions">
+      <%= link_to t(".shared_credentials"), admin_shared_credentials_path, class: "btn" %>
+    </div>
+  <% end %>
 </div>
 
 <p class="muted"><%= t(".intro") %></p>
 
-<div class="panel">
-  <h2 class="panel-title"><%= t(".add") %></h2>
-  <div class="provider-picker">
-    <% @descriptors.each do |descriptor| %>
-      <%= link_to new_admin_connector_path(provider: descriptor.key), class: "btn" do %>
-        <%= descriptor.name %> <span class="muted">· <%= descriptor.category %></span>
+<% if policy(Connector).new? %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t(".add") %></h2>
+    <div class="provider-picker">
+      <% @descriptors.each do |descriptor| %>
+        <%= link_to new_admin_connector_path(provider: descriptor.key), class: "btn" do %>
+          <%= descriptor.name %> <span class="muted">· <%= descriptor.category %></span>
+        <% end %>
       <% end %>
-    <% end %>
+    </div>
   </div>
-</div>
+<% end %>
 
 <% if @connectors.any? %>
   <div class="table-wrap">

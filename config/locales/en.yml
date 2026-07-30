@@ -36,6 +36,7 @@ en:
       reference_docs: "Knowledge"
       integrations: "Integrations"
       connectors: "Connectors"
+      webhooks: "Webhooks"
       agent_actions: "Agent actions"
       decision_appeals: "Appeals"
 

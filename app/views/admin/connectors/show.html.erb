@@ -1,27 +1,30 @@
 <% page_title @connector.name %>
+<% connector_policy = policy(@connector) %>
 <div class="page-header">
   <h1><%= @connector.name %></h1>
   <div class="page-actions">
-    <% if @connector.oauth? && !@connector.oauth_connected? %>
+    <% if connector_policy.update? && @connector.oauth? && !@connector.oauth_connected? %>
       <% if @connector.configured? %>
         <%= link_to t(".connect"), oauth_authorize_admin_connector_path(@connector), class: "btn btn-primary" %>
       <% end %>
-    <% elsif @connector.status_draft? %>
+    <% elsif connector_policy.activate? && @connector.status_draft? %>
       <%= button_to t(".activate"), activate_admin_connector_path(@connector), class: "btn btn-primary" %>
     <% else %>
-      <% if @connector.provider_syncs? %>
+      <% if connector_policy.sync? && @connector.provider_syncs? %>
         <%= button_to t(".sync_now"), sync_admin_connector_path(@connector), class: "btn btn-primary" %>
       <% end %>
-      <% if @connector.status_active? %>
+      <% if connector_policy.pause? && @connector.status_active? %>
         <%= button_to t(".pause"), pause_admin_connector_path(@connector), class: "btn" %>
-      <% else %>
+      <% elsif connector_policy.resume? && !@connector.status_active? %>
         <%= button_to t(".resume"), resume_admin_connector_path(@connector), class: "btn" %>
       <% end %>
     <% end %>
-    <% if @connector.oauth? && @connector.oauth_connected? %>
+    <% if connector_policy.update? && @connector.oauth? && @connector.oauth_connected? %>
       <%= link_to t(".reconnect"), oauth_authorize_admin_connector_path(@connector), class: "btn" %>
     <% end %>
-    <%= link_to t(".edit"), edit_admin_connector_path(@connector), class: "btn" %>
+    <% if connector_policy.edit? %>
+      <%= link_to t(".edit"), edit_admin_connector_path(@connector), class: "btn" %>
+    <% end %>
   </div>
 </div>
 
@@ -100,7 +103,13 @@
         <tbody>
           <% @invocations.each do |inv| %>
             <tr>
-              <td><%= link_to l(inv.created_at, format: :long), admin_connector_invocation_path(inv) %></td>
+              <td>
+                <% if policy(inv).show? %>
+                  <%= link_to l(inv.created_at, format: :long), admin_connector_invocation_path(inv) %>
+                <% else %>
+                  <%= l(inv.created_at, format: :long) %>
+                <% end %>
+              </td>
               <td class="mono"><%= inv.action %></td>
               <td class="mono text-sm"><%= inv.on_behalf_of %></td>
               <td><%= inv.requester_label %></td>
@@ -115,5 +124,7 @@
   <% end %>
 </div>
 
-<%= button_to t(".delete"), admin_connector_path(@connector), method: :delete, class: "btn btn-danger",
-      form: { data: { turbo_confirm: t(".delete_confirm") } } %>
+<% if connector_policy.destroy? %>
+  <%= button_to t(".delete"), admin_connector_path(@connector), method: :delete, class: "btn btn-danger",
+        form: { data: { turbo_confirm: t(".delete_confirm") } } %>
+<% end %>

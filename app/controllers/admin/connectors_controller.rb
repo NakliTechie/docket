@@ -61,19 +61,19 @@ module Admin
     end
 
     def sync
-      authorize @connector, :update?
+      authorize @connector, :sync?
       ConnectorSyncJob.perform_later(@connector.id, trigger: "manual")
       redirect_to admin_connector_path(@connector), notice: t(".sync_started")
     end
 
     def pause
-      authorize @connector, :update?
+      authorize @connector, :pause?
       @connector.update!(status: :paused)
       redirect_to admin_connector_path(@connector), notice: t(".paused")
     end
 
     def resume
-      authorize @connector, :update?
+      authorize @connector, :resume?
       @connector.update!(status: :active)
       redirect_to admin_connector_path(@connector), notice: t(".resumed")
     end
@@ -81,7 +81,7 @@ module Admin
     # Configure-later: take a draft connector live, once its required
     # credentials are present.
     def activate
-      authorize @connector, :update?
+      authorize @connector, :activate?
       if @connector.configured?
         @connector.update!(status: :active)
         redirect_to admin_connector_path(@connector), notice: t(".activated")

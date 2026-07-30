@@ -161,7 +161,9 @@
             </tbody>
           </table>
         </div>
-        <%= link_to t(".manage_connectors"), admin_connectors_path, class: "btn btn-ghost btn-sm" %>
+        <% if policy(Connector).index? %>
+          <%= link_to t(".manage_connectors"), admin_connectors_path, class: "btn btn-ghost btn-sm" %>
+        <% end %>
       <% else %>
         <p class="muted"><%= t(".no_connectors") %></p>
       <% end %>
@@ -225,7 +227,9 @@
         <dt><%= t(".human_approved") %></dt><dd><%= op.autonomy[:human_approved] %></dd>
         <dt><%= t(".rejected") %></dt><dd><%= op.autonomy[:rejected] %></dd>
       </dl>
-      <%= link_to t(".view_agent_actions"), admin_connector_invocations_path, class: "btn btn-ghost btn-sm" %>
+      <% if policy(ConnectorInvocation).index? %>
+        <%= link_to t(".view_agent_actions"), admin_connector_invocations_path, class: "btn btn-ghost btn-sm" %>
+      <% end %>
     </div>
 
     <div class="panel">
@@ -271,9 +275,11 @@
 <%# ---- Decisioning (rule-based, persisted + gated) ---- %>
 <div class="page-header">
   <h2 class="panel-title"><%= t(".decisioning") %></h2>
-  <div class="page-actions">
-    <%= button_to t(".run_decisioning"), run_decisions_path, class: "btn btn-sm" %>
-  </div>
+  <% if policy(:decision).run? %>
+    <div class="page-actions">
+      <%= button_to t(".run_decisioning"), run_decisions_path, class: "btn btn-sm" %>
+    </div>
+  <% end %>
 </div>
 <div class="panel">
   <p class="muted"><%= t(".decisioning_note") %></p>
@@ -302,8 +308,10 @@
               <td><%= decision.subject_label %></td>
               <td><%= decision.recommendation %></td>
               <td class="row-actions">
-                <%= button_to t(".approve"), approve_decision_path(decision), class: "btn btn-sm" %>
-                <%= button_to t(".reject"), reject_decision_path(decision), class: "btn btn-ghost btn-sm" %>
+                <% if policy(:decision).approve? %>
+                  <%= button_to t(".approve"), approve_decision_path(decision), class: "btn btn-sm" %>
+                  <%= button_to t(".reject"), reject_decision_path(decision), class: "btn btn-ghost btn-sm" %>
+                <% end %>
               </td>
             </tr>
           <% end %>

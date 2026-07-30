@@ -10,6 +10,9 @@ class RbacFunctionalRolesTest < ActionDispatch::IntegrationTest
 
     get dashboard_path
     assert_response :success
+    assert_select "a[href='#{admin_connectors_path}']", count: 0
+    assert_select "a[href='#{admin_connector_invocations_path}']", count: 0
+    assert_select "form[action='#{run_decisions_path}']", count: 0
 
     get admin_settings_path
     assert_response :forbidden
@@ -23,10 +26,42 @@ class RbacFunctionalRolesTest < ActionDispatch::IntegrationTest
   end
 
   test "technical may view/operate connectors but not manage them" do
+    connector = Connector.create!(
+      name: "RBAC walkthrough connector",
+      provider: "http_json",
+      target: "contacts",
+      config: { "endpoint_url" => "https://api.example.test/contacts" },
+      field_mapping: { "external_id" => "id" }
+    )
     sign_in_as users(:technical)
+
+    get dashboard_path
+    assert_response :success
+    assert_select "a[href='#{admin_connectors_path}']",
+      text: I18n.t("dashboards.index.manage_connectors"), count: 1
+    assert_select "a[href='#{admin_connector_invocations_path}']", count: 0
+    assert_select "form[action='#{run_decisions_path}']", count: 0
+    assert_select "a[href='#{admin_webhook_endpoints_path}']", count: 1
 
     get admin_connectors_path
     assert_response :success
+    assert_select "a[href='#{admin_shared_credentials_path}']", count: 0
+    assert_select "a[href^='#{new_admin_connector_path}']", count: 0
+
+    get admin_connector_path(connector)
+    assert_response :success
+    assert_select "form[action='#{sync_admin_connector_path(connector)}']", count: 1
+    assert_select "form[action='#{pause_admin_connector_path(connector)}']", count: 1
+    assert_select "a[href='#{edit_admin_connector_path(connector)}']", count: 0
+    assert_select "form[action='#{admin_connector_path(connector)}']", count: 0
+
+    post pause_admin_connector_path(connector)
+    assert_redirected_to admin_connector_path(connector)
+    assert connector.reload.status_paused?
+
+    post resume_admin_connector_path(connector)
+    assert_redirected_to admin_connector_path(connector)
+    assert connector.reload.status_active?
 
     get new_admin_connector_path
     assert_response :forbidden
@@ -40,6 +75,19 @@ class RbacFunctionalRolesTest < ActionDispatch::IntegrationTest
 
     get dashboard_path
     assert_response :forbidden
+  end
+
+  test "client admin sees review controls but not connector management" do
+    sign_in_as users(:client_admin)
+
+    get dashboard_path
+    assert_response :success
+    assert_select "a[href='#{admin_connectors_path}']", count: 0
+    assert_select "a[href='#{admin_connector_invocations_path}']",
+      text: I18n.t("dashboards.index.view_agent_actions"), count: 1
+    assert_select "form[action='#{run_decisions_path}']", count: 1
+    assert_select "a[href='#{admin_service_accounts_path}']", count: 0
+    assert_select "a[href='#{admin_settings_path}']", count: 0
   end
 
   test "the roles matrix page is visible to user-managers and renders permissions" do

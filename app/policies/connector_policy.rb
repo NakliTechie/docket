@@ -6,6 +6,10 @@ class ConnectorPolicy < ApplicationPolicy
   def edit?    = permit?("connector:manage")
   def update?  = permit?("connector:manage")
   def destroy? = permit?("connector:manage")
+  def sync?    = permit?("connector:operate")
+  def pause?   = permit?("connector:operate")
+  def resume?  = permit?("connector:operate")
+  def activate? = permit?("connector:manage")
 
   class Scope < Scope
     def resolve
