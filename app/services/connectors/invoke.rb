@@ -65,9 +65,13 @@ module Connectors
       invocation
     end
 
-    def reject!(invocation, approver:)
+    def reject!(invocation, approver:, reason: nil)
       raise Connectors::Error, "invocation is not awaiting approval" unless invocation.status_proposed?
-      invocation.update!(status: :rejected, approved_by: approver, approved_at: Time.current)
+      if invocation.of_record? && reason.to_s.strip.blank?
+        raise Connectors::Error, "a decision of record requires a reason (a reasoned order)"
+      end
+      invocation.update!(status: :rejected, approved_by: approver, approved_at: Time.current,
+                         decision_reason: reason.presence)
       invocation
     end
 

@@ -1369,6 +1369,7 @@ hi:
         on_behalf_of: "किसकी ओर से"
         reasoning: "एजेंट का तर्क"
         approved_by: "मंज़ूरीकर्ता"
+        reviewed_by: "समीक्षक"
         decision_reason: "कारण (सकारण आदेश)"
         args: "तर्क (आर्ग्युमेंट्स)"
         result: "परिणाम"

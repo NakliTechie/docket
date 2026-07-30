@@ -71,6 +71,10 @@ class ConnectorInvocationsTest < ActionDispatch::IntegrationTest
     post reject_admin_connector_invocation_path(inv)
     assert inv.reload.status_rejected?
     assert_nil inv.result
+
+    get admin_connector_invocation_path(inv)
+    assert_select "dt", text: I18n.t("admin.connector_invocations.show.reviewed_by")
+    assert_select "dt", text: I18n.t("admin.connector_invocations.show.approved_by"), count: 0
   end
 
   test "a supervisor is a valid human-of-record for the queue" do
@@ -115,6 +119,19 @@ class ConnectorInvocationsTest < ActionDispatch::IntegrationTest
     sign_in_as users(:admin)
     post approve_admin_connector_invocation_path(inv), params: { reason: "" }
     assert inv.reload.status_proposed?
+  end
+
+  test "a decision of record cannot be rejected without a reasoned order" do
+    inv = of_record_invocation
+    sign_in_as users(:admin)
+
+    post reject_admin_connector_invocation_path(inv), params: { reason: "" }
+    assert inv.reload.status_proposed?
+
+    post reject_admin_connector_invocation_path(inv),
+      params: { reason: "The record does not support the proposed action" }
+    assert inv.reload.status_rejected?
+    assert_equal "The record does not support the proposed action", inv.decision_reason
   end
 
   test "a decision of record executes once a reasoned order is supplied" do

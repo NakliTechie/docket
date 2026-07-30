@@ -21,7 +21,8 @@
     <dd><%= @invocation.requester_label.presence || t("admin.connector_invocations.index.requested_by_system") %></dd>
     <dt><%= t(".on_behalf_of") %></dt><dd class="mono"><%= @invocation.on_behalf_of.presence || t(".none") %></dd>
     <% if @invocation.approved_by %>
-      <dt><%= t(".approved_by") %></dt><dd><%= @invocation.approved_by.name %></dd>
+      <dt><%= t(@invocation.status_rejected? ? ".reviewed_by" : ".approved_by") %></dt>
+      <dd><%= @invocation.approved_by.name %></dd>
     <% end %>
     <% if @invocation.decision_reason.present? %>
       <dt><%= t(".decision_reason") %></dt><dd><%= @invocation.decision_reason %></dd>
@@ -47,10 +48,10 @@
       </div>
       <%= submit_tag t(".approve"), class: "btn btn-primary",
             data: { turbo_confirm: t(".approve_confirm") } %>
+      <%= button_tag t(".reject"), type: "submit", class: "btn btn-danger",
+            formaction: reject_admin_connector_invocation_path(@invocation),
+            formmethod: "post", data: { turbo_confirm: t(".reject_confirm") } %>
     <% end %>
-    <%= button_to t(".reject"), reject_admin_connector_invocation_path(@invocation),
-          class: "btn btn-danger",
-          form: { data: { turbo_confirm: t(".reject_confirm") } } %>
   </div>
 <% end %>
 

@@ -33,7 +33,7 @@ module Admin
 
     def reject
       authorize @invocation, :reject?
-      Connectors::Invoke.reject!(@invocation, approver: Current.user)
+      Connectors::Invoke.reject!(@invocation, approver: Current.user, reason: params[:reason])
       redirect_to admin_connector_invocation_path(@invocation), notice: t(".rejected")
     rescue Connectors::Error => e
       redirect_to admin_connector_invocation_path(@invocation), alert: e.message
