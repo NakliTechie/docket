@@ -35,4 +35,22 @@ class BrandingTest < ActionDispatch::IntegrationTest
     assert_no_match(/grievance/i, response.body)
     assert_match "Submit a request", response.body
   end
+
+  test "browser layouts advertise the shipped icons" do
+    get "/portal"
+    assert_response :success
+    assert_select 'link[rel="icon"][href="/icon.svg"][type="image/svg+xml"]'
+    assert_select 'link[rel="icon"][href="/icon.png"][type="image/png"]'
+
+    get "/inquiry"
+    assert_response :success
+    assert_select 'link[rel="icon"][href="/icon.svg"][type="image/svg+xml"]'
+    assert_select 'link[rel="icon"][href="/icon.png"][type="image/png"]'
+
+    sign_in_as users(:admin)
+    get cases_path
+    assert_response :success
+    assert_select 'link[rel="icon"][href="/icon.svg"][type="image/svg+xml"]'
+    assert_select 'link[rel="icon"][href="/icon.png"][type="image/png"]'
+  end
 end
