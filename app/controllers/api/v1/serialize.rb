@@ -67,7 +67,7 @@ module Api
         {
           id: c.id, name: c.name, email: c.email, phone: c.phone,
           external_id: c.external_id, organisation_id: c.organisation_id,
-          preferred_language: c.preferred_language, notes: c.notes,
+          preferred_language: c.preferred_language, notes: c.notes, sms_consent: c.sms_consent,
           created_at: c.created_at, updated_at: c.updated_at
         }
       end
@@ -109,7 +109,8 @@ module Api
 
       def work_comment(c)
         {
-          id: c.id, work_item_id: c.work_item_id, author_id: c.author_id,
+          id: c.id, work_item_id: c.work_item_id,
+          author_type: c.author_type, author_id: c.author_id,
           body: c.body, created_at: c.created_at, updated_at: c.updated_at
         }
       end
@@ -119,7 +120,7 @@ module Api
           id: l.id, name: l.name, email: l.email, phone: l.phone,
           company_name: l.company_name, source: l.source, status: l.status,
           owner_id: l.owner_id, contact_id: l.contact_id, converted_deal_id: l.converted_deal_id,
-          value_estimate_cents: l.value_estimate_cents, notes: l.notes,
+          value_estimate_cents: l.value_estimate_cents, notes: l.notes, sms_consent: l.sms_consent,
           converted_at: l.converted_at, created_at: l.created_at, updated_at: l.updated_at
         }
       end
@@ -130,7 +131,7 @@ module Api
           status: d.status, value_cents: d.value_cents, currency: d.currency,
           owner_id: d.owner_id, contact_id: d.contact_id, organisation_id: d.organisation_id,
           lead_id: d.lead_id, expected_close_on: d.expected_close_on, closed_at: d.closed_at,
-          created_at: d.created_at, updated_at: d.updated_at
+          lost_reason: d.lost_reason, created_at: d.created_at, updated_at: d.updated_at
         }
       end
 
@@ -157,10 +158,15 @@ module Api
       end
 
       def sequence_enrollment(e)
+        latest_delivery = e.sequence_deliveries.order(created_at: :desc).first
         {
           id: e.id, sequence_id: e.sequence_id, enrollable_type: e.enrollable_type,
           enrollable_id: e.enrollable_id, status: e.status,
           current_step_position: e.current_step_position, next_run_at: e.next_run_at,
+          last_delivery: latest_delivery && {
+            status: latest_delivery.status, channel: latest_delivery.channel,
+            claimed_at: latest_delivery.claimed_at, delivered_at: latest_delivery.delivered_at
+          },
           created_at: e.created_at, updated_at: e.updated_at
         }
       end

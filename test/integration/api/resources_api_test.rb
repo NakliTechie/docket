@@ -17,14 +17,18 @@ module Api
       assert_equal "CIF447192", contact.external_id
     end
 
-    test "contacts crud with ext addressing" do
-      post "/api/v1/contacts", params: { contact: { name: "Via API", email: "viaapi@example.com", external_id: "CIFAPI1" } },
+  test "contacts crud with ext addressing" do
+      post "/api/v1/contacts",
+           params: { contact: { name: "Via API", email: "viaapi@example.com",
+                                external_id: "CIFAPI1", sms_consent: true } },
            headers: auth_header(@admin_token), as: :json
       assert_response :created
+      assert_equal true, response.parsed_body["data"]["sms_consent"]
 
       get "/api/v1/contacts/ext:CIFAPI1", headers: auth_header(@admin_token)
       assert_response :success
       assert_equal "Via API", response.parsed_body["data"]["name"]
+      assert_equal true, response.parsed_body["data"]["sms_consent"]
 
       get "/api/v1/contacts", params: { q: "viaapi" }, headers: auth_header(@admin_token)
       assert_equal 1, response.parsed_body["data"].size

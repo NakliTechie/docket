@@ -25,25 +25,29 @@ module Connectors
         return existing if existing
       end
 
-      Budget.enforce!(principal)
-      Budget.enforce_connector!(connector)
+      invocation = Current.set(actor: principal, on_behalf_of: on_behalf_of) do
+        Budget.reserve!(principal, connector) do
+          # A concurrent idempotent request may have committed while this
+          # caller waited for a budget lock. Recheck before consuming a slot.
+          existing = connector.invocations.find_by(idempotency_key: idempotency_key) if idempotency_key.present?
+          next existing if existing
 
-      invocation = nil
-      Current.set(actor: principal, on_behalf_of: on_behalf_of) do
-        invocation = connector.invocations.create!(
-          action: action.key, args: args, on_behalf_of: on_behalf_of,
-          reasoning: reasoning, requested_by: principal, idempotency_key: idempotency_key,
-          effect: action.effect, decision_class: action.effective_decision_class,
-          status: gated_status(connector, action)
-        )
-        execute!(invocation, action) if invocation.status_approved?
-      rescue ActiveRecord::RecordNotUnique
-        # Lost an idempotency-key race with a concurrent call — return the
-        # winner instead of bubbling a 500 (M7). Only safe for a real key
-        # (nil keys are distinct in the unique index, so this can't be one).
-        raise unless idempotency_key.present?
-        invocation = connector.invocations.find_by(idempotency_key: idempotency_key)
+          connector.invocations.create!(
+            action: action.key, args: args, on_behalf_of: on_behalf_of,
+            reasoning: reasoning, requested_by: principal, idempotency_key: idempotency_key,
+            effect: action.effect, decision_class: action.effective_decision_class,
+            status: gated_status(connector, action)
+          )
+        end
       end
+      execute!(invocation, action) if invocation.status_approved?
+      invocation
+    rescue ActiveRecord::RecordNotUnique
+      # Lost an idempotency-key race with a concurrent unbudgeted call —
+      # return the winner instead of bubbling a 500. nil keys are distinct
+      # in the unique index, so this is only safe for a real key.
+      raise unless idempotency_key.present?
+      invocation = connector.invocations.find_by(idempotency_key: idempotency_key)
       invocation
     end
 
@@ -51,27 +55,39 @@ module Connectors
     # decision of record requires a reasoned order (substantive review — a
     # blank rubber-stamp is itself legally void under Indian admin law).
     def approve!(invocation, approver:, reason: nil)
-      raise Connectors::Error, "invocation is not awaiting approval" unless invocation.status_proposed?
-      if invocation.of_record? && reason.to_s.strip.blank?
-        raise Connectors::Error, "a decision of record requires a reason (a reasoned order)"
+      action = nil
+      invocation.with_lock do
+        # A competing approver already owns execution. Reload and return the
+        # winner's state without performing the external side effect again.
+        return invocation.reload unless invocation.status_proposed?
+
+        ensure_distinct_human!(invocation.requested_by, approver)
+        if invocation.of_record? && reason.to_s.strip.blank?
+          raise Connectors::Error, "a decision of record requires a reason (a reasoned order)"
+        end
+        action = invocation.connector.provider_action(invocation.action)
+        # The provider catalogue can change between parking and approval
+        # (action renamed/removed) — fail clearly before claiming execution.
+        raise Connectors::Error, "action no longer offered: #{invocation.action}" unless action
+
+        invocation.update!(status: :approved, approved_by: approver, approved_at: Time.current,
+                           decision_reason: reason.presence)
+        invocation.update!(status: :executing)
       end
-      invocation.update!(status: :approved, approved_by: approver, approved_at: Time.current,
-                         decision_reason: reason.presence)
-      action = invocation.connector.provider_action(invocation.action)
-      # The provider catalogue can change between parking and approval (action
-      # renamed/removed) — fail clearly instead of NoMethodError in execute! (L9).
-      raise Connectors::Error, "action no longer offered: #{invocation.action}" unless action
-      execute!(invocation, action)
-      invocation
+      execute_claimed!(invocation, action)
     end
 
     def reject!(invocation, approver:, reason: nil)
-      raise Connectors::Error, "invocation is not awaiting approval" unless invocation.status_proposed?
-      if invocation.of_record? && reason.to_s.strip.blank?
-        raise Connectors::Error, "a decision of record requires a reason (a reasoned order)"
+      invocation.with_lock do
+        return invocation.reload unless invocation.status_proposed?
+
+        ensure_distinct_human!(invocation.requested_by, approver)
+        if invocation.of_record? && reason.to_s.strip.blank?
+          raise Connectors::Error, "a decision of record requires a reason (a reasoned order)"
+        end
+        invocation.update!(status: :rejected, approved_by: approver, approved_at: Time.current,
+                           decision_reason: reason.presence)
       end
-      invocation.update!(status: :rejected, approved_by: approver, approved_at: Time.current,
-                         decision_reason: reason.presence)
       invocation
     end
 
@@ -94,9 +110,19 @@ module Connectors
     # acting on_behalf_of the case — even on the human-approved path, the human
     # owns the approval entry and the agent owns the execution.
     def execute!(invocation, action)
-      invocation.update!(status: :executing)
+      invocation.with_lock do
+        return invocation.reload unless invocation.status_approved?
+        invocation.update!(status: :executing)
+      end
+      execute_claimed!(invocation, action)
+    end
+
+    def execute_claimed!(invocation, action)
       Current.set(actor: invocation.requested_by, on_behalf_of: invocation.on_behalf_of,
                   delegation_id: invocation.delegation_id) do
+        unless invocation.connector.operational?
+          raise Connectors::Error, "connector #{invocation.connector_id} is not active and configured"
+        end
         observation = invocation.connector.provider_instance.invoke(
           action.key, invocation.args || {}, { invocation: invocation }
         )
@@ -107,5 +133,14 @@ module Connectors
       invocation.update!(status: :failed, error: e.message.truncate(500), finished_at: Time.current)
       invocation
     end
+
+    def ensure_distinct_human!(maker, checker)
+      return unless maker.is_a?(User) && checker.is_a?(User)
+      return unless maker.persisted? && checker.persisted?
+      return unless maker.id == checker.id
+
+      raise Connectors::Error, "the maker cannot approve or reject their own invocation"
+    end
+    private_class_method :ensure_distinct_human!
   end
 end

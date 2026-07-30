@@ -84,6 +84,12 @@ class Connector < ApplicationRecord
     provider_descriptor.required_secret_fields.all? { |field| secret(field).present? }
   end
 
+  # One operational switch for every traffic direction. A paused/error/draft
+  # connector is a kill switch, not merely a scheduler preference.
+  def operational?
+    status_active? && configured? && (!oauth? || oauth_connected?)
+  end
+
   # An OAuth2 provider (Connectors::OauthProvider): the operator supplies a
   # client id/secret, then completes a browser authorization-code connect that
   # stores the token bundle. `configured?` (client secret present) means "ready

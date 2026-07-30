@@ -48,11 +48,18 @@
       <% if @enrollments.any? %>
         <ul class="enrollment-list">
           <% @enrollments.each do |enr| %>
+            <% latest_delivery = enr.sequence_deliveries.max_by(&:created_at) %>
             <li>
               <span><%= enr.enrollable.try(:name) || "#{enr.enrollable_type} ##{enr.enrollable_id}" %></span>
               <span class="badge badge-<%= enr.status == "active" ? "open" : (enr.status == "completed" ? "won" : "lost") %>">
                 <%= t("sequences.enum.status.#{enr.status}") %>
               </span>
+              <% if latest_delivery %>
+                <span class="muted text-sm">
+                  <%= t(".last_delivery",
+                        status: t("sequences.delivery_status.#{latest_delivery.status}")) %>
+                </span>
+              <% end %>
               <% if enr.status_active? && policy(@sequence).enroll? %>
                 <%= button_to t(".cancel"), cancel_sequence_enrollment_path(enr), class: "btn btn-ghost btn-sm" %>
               <% end %>

@@ -138,4 +138,35 @@ class SharedModeTenancyTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     refute primary_token.reload.revoked?, "the other tenant's token stays live"
   end
+
+  test "the REST API-token endpoints cannot list, create, or revoke across tenants" do
+    primary_token = ActsAsTenant.with_tenant(tenants(:primary)) do
+      ApiToken.create!(user: users(:admin), name: "primary-api-cli")
+    end
+    acme_admin = nil
+    acme_auth = ActsAsTenant.with_tenant(@acme) do
+      acme_admin = User.create!(name: "Acme API Platform", email_address: "platform-api@acme.test",
+                                password: "password1234", role: :super_admin)
+      ApiToken.create!(user: acme_admin, name: "acme-admin-auth").raw_token
+    end
+    ActsAsTenant.with_tenant(@acme) { ApiToken.create!(user: @acme_user, name: "acme-api-cli") }
+
+    host! "acme.docket.app"
+    headers = { "Authorization" => "Bearer #{acme_auth}" }
+
+    get "/api/v1/api_tokens", headers: headers
+    assert_response :success
+    names = response.parsed_body["data"].pluck("name")
+    assert_includes names, "acme-api-cli"
+    refute_includes names, "primary-api-cli"
+
+    post "/api/v1/api_tokens",
+         params: { api_token: { user_id: users(:admin).id, name: "cross-tenant" } },
+         headers: headers, as: :json
+    assert_response :not_found
+
+    delete "/api/v1/api_tokens/#{primary_token.id}", headers: headers
+    assert_response :not_found
+    refute primary_token.reload.revoked?
+  end
 end

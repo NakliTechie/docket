@@ -726,6 +726,12 @@ en:
 
   sequences:
     inactive: "Inactive"
+    delivery_status:
+      pending: "Pending"
+      attempting: "Attempt uncertain"
+      delivered: "Delivered"
+      skipped: "Skipped"
+      failed: "Failed"
     day_count:
       zero: "Same day"
       one: "After 1 day"
@@ -765,6 +771,7 @@ en:
     show:
       steps: "Steps"
       enrollments: "Enrollments"
+      last_delivery: "Last delivery: %{status}"
       no_enrollments: "No one is enrolled yet."
       confirm_delete: "Delete this sequence?"
       cancel: "Cancel"
@@ -1296,6 +1303,7 @@ en:
         draft_needs_credentials: "Draft — add the required credentials, then activate."
         oauth_ready: "Draft — client credentials saved. Click Connect to authorize and go live."
         oauth_needs_credentials: "Draft — add the OAuth client id (config) and client secret, then Connect."
+        traffic_stopped: "Traffic is stopped: inbound requests, syncs, case replies, SMS sends, and agent actions will not use this connector until it is active and configured."
         edit: "Edit"
         provider: "Provider"
         target: "Syncs into"
@@ -1335,8 +1343,9 @@ en:
         deleted: "Connector deleted."
       sync:
         sync_started: "Sync started — refresh in a moment to see the run."
+        unavailable: "Sync was not started because this connector is not active and configured."
       pause:
-        paused: "Connector paused."
+        paused: "Connector paused. Inbound, sync, replies, SMS, and agent actions are stopped."
       resume:
         resumed: "Connector resumed."
       activate:
@@ -1978,6 +1987,11 @@ en:
       show_all: "Show all items"
 
   sprints:
+    enum:
+      status:
+        planned: "Planned"
+        active: "Active"
+        closed: "Closed"
     fields:
       name: "Sprint name"
       goal: "Goal"
@@ -1988,6 +2002,20 @@ en:
       board: "Board"
       new_sprint: "New sprint"
       backlog_count: "%{count} open items in the backlog (no sprint)."
+      report:
+        title: "Sprint report"
+        median_cycle_time: "Median cycle time"
+        days: "%{count} days"
+        hint: "Velocity is completed estimate. Delivery compares completed points with the work committed to each sprint, including unfinished work rolled out at close."
+        ratio: "%{done} / %{total}"
+        points: "%{done} / %{total} points"
+        percent: "%{value}%"
+        empty: "Start a sprint to establish the first velocity measurement."
+        columns:
+          sprint: "Sprint"
+          completed_items: "Completed items"
+          velocity: "Velocity / commitment"
+          delivery: "Delivery"
       start: "Start"
       close: "Close"
       roll_to: "Roll unfinished into %{name}"

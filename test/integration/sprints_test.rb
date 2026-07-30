@@ -89,6 +89,21 @@ class SprintsTest < ActionDispatch::IntegrationTest
     assert days < 5, "median must not be dragged by the 400-day outlier (got #{days})"
   end
 
+  test "the sprint page renders velocity and cycle-time reporting" do
+    sprint = project.sprints.create!(name: "Measured sprint", status: :active)
+    item = work_items(:pep_two)
+    item.update!(sprint: sprint, estimate: 8)
+    item.transition_to!(workflow_states(:pep_done))
+    sign_in_as users(:admin)
+
+    get project_sprints_path(project)
+
+    assert_response :success
+    assert_select "#sprint-report-title", text: I18n.t("sprints.index.report.title")
+    assert_match "Measured sprint", response.body
+    assert_match "8.0 / 8.0", response.body
+  end
+
   test "sprints follow the work.sprints entitlement" do
     ActsAsTenant.current_tenant.set_feature!("work.sprints", false)
     sign_in_as users(:admin)

@@ -29,6 +29,24 @@ module Api
       assert sales["stages"].any? { |s| s["name"] == "Won" && s["is_won"] }
     end
 
+    test "lost reason round-trips through create, update, and serialization" do
+      write = service_token_for(%w[crm:read crm:write])
+      post "/api/v1/deals",
+           params: { deal: { name: "Lost API Deal", pipeline_id: pipelines(:sales).id,
+                             pipeline_stage_id: pipeline_stages(:sales_lost).id,
+                             lost_reason: "competitor" } },
+           headers: auth_header(write), as: :json
+
+      assert_response :created
+      assert_equal "competitor", response.parsed_body["data"]["lost_reason"]
+      id = response.parsed_body["data"]["id"]
+
+      patch "/api/v1/deals/#{id}", params: { deal: { lost_reason: "price" } },
+            headers: auth_header(write), as: :json
+      assert_response :success
+      assert_equal "price", response.parsed_body["data"]["lost_reason"]
+    end
+
     test "a token without crm scope is refused" do
       post "/api/v1/deals", params: { deal: { name: "x", pipeline_id: pipelines(:sales).id } },
            headers: auth_header(service_token_for(%w[cases:read])), as: :json

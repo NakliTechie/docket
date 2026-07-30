@@ -20,10 +20,28 @@ module Connectors
     end
 
     def ingest_one(connector, msg)
-      contact = resolve_contact(connector, msg)
-      kase    = find_or_open_case(connector, contact, msg)
-      append_message(kase, contact, msg)
-      kase
+      external_id = msg[:external_message_id].to_s.presence
+      duplicate = find_message(connector, external_id)
+      return duplicate.case if duplicate
+
+      Message.transaction do
+        # Recheck after opening the transaction: another delivery may have
+        # committed while this request was normalizing the provider payload.
+        duplicate = find_message(connector, external_id)
+        next duplicate.case if duplicate
+
+        contact = resolve_contact(connector, msg)
+        kase    = find_or_open_case(connector, contact, msg)
+        append_message(connector, kase, contact, msg, external_id)
+        kase
+      end
+    rescue ActiveRecord::RecordNotUnique
+      # The unique database claim is the concurrency backstop. Any contact/case
+      # opened by the losing transaction rolls back with the duplicate insert.
+      duplicate = find_message(connector, external_id)
+      return duplicate.case if duplicate
+
+      raise
     end
 
     # Dedupe on the channel-scoped external id (e.g. "whatsapp:9198…"), then on
@@ -53,7 +71,7 @@ module Connectors
       thread = msg[:external_thread_id].to_s
       if thread.present?
         open = Case.open_cases
-                   .where(source_connector_id: connector.id, source_thread_id: thread)
+                   .where(source_connector_id: connector.id, source_thread_id: thread, contact_id: contact.id)
                    .order(created_at: :desc).first
         return open if open
       end
@@ -68,14 +86,22 @@ module Connectors
       )
     end
 
-    def append_message(kase, contact, msg)
+    def append_message(connector, kase, contact, msg, external_id)
       kase.messages.create!(
         kind: :public_reply,
         direction: :inbound,
         author: contact,
+        source_connector: connector,
+        external_message_id: external_id,
         body: msg[:body].to_s.presence || "(empty message)",
         metadata: { "channel" => msg[:channel], "external_message_id" => msg[:external_message_id] }.compact
       )
+    end
+
+    def find_message(connector, external_id)
+      return if external_id.blank?
+
+      Message.with_deleted.find_by(source_connector: connector, external_message_id: external_id)
     end
   end
 end

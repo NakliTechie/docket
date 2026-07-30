@@ -48,7 +48,7 @@ module Docket
           ),
           Contact: object_schema(
             id: :integer, name: :string, email: :string, phone: :string, external_id: :string,
-            organisation_id: :integer, preferred_language: :string, notes: :string,
+            organisation_id: :integer, preferred_language: :string, notes: :string, sms_consent: :boolean,
             created_at: :datetime, updated_at: :datetime
           ),
           Organisation: object_schema(id: :integer, name: :string, kind: :string, external_ref: :string,
@@ -56,11 +56,14 @@ module Docket
           Lead: object_schema(id: :integer, name: :string, email: :string, phone: :string,
                               company_name: :string, source: enum(Lead.sources.keys), status: enum(Lead.statuses.keys),
                               owner_id: :integer, contact_id: :integer, converted_deal_id: :integer, value_estimate_cents: :integer,
-                              notes: :string, converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
+                              notes: :string, sms_consent: :boolean,
+                              converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
           Deal: object_schema(id: :integer, name: :string, pipeline_id: :integer, pipeline_stage_id: :integer,
                               status: enum(Deal.statuses.keys), value_cents: :integer, currency: :string,
                               owner_id: :integer, contact_id: :integer, organisation_id: :integer, lead_id: :integer,
-                              expected_close_on: :datetime, closed_at: :datetime, created_at: :datetime, updated_at: :datetime),
+                              expected_close_on: :datetime, closed_at: :datetime,
+                              lost_reason: enum(Deal.lost_reasons.keys),
+                              created_at: :datetime, updated_at: :datetime),
           Pipeline: object_schema(id: :integer, name: :string, slug: :string, position: :integer, active: :boolean,
                                   stages: { type: "array", items: { type: "object" } },
                                   created_at: :datetime, updated_at: :datetime),
@@ -70,6 +73,7 @@ module Docket
           SequenceEnrollment: object_schema(id: :integer, sequence_id: :integer, enrollable_type: :string,
                                             enrollable_id: :integer, status: enum(SequenceEnrollment.statuses.keys),
                                             current_step_position: :integer, next_run_at: :datetime,
+                                            last_delivery: :object,
                                             created_at: :datetime, updated_at: :datetime),
           Queue: object_schema(id: :integer, name: :string, slug: :string, description: :string,
                                member_ids: { type: "array", items: { type: "integer" } },
@@ -99,6 +103,27 @@ module Docket
                                         active: :boolean, created_at: :datetime, updated_at: :datetime),
           ApiToken: object_schema(id: :integer, user_id: :integer, name: :string,
                                   last_used_at: :datetime, revoked_at: :datetime, created_at: :datetime),
+          Project: object_schema(id: :integer, key: :string, name: :string, description: :string,
+                                 lead_id: :integer, archived: :boolean,
+                                 created_at: :datetime, updated_at: :datetime),
+          WorkItem: object_schema(id: :integer, reference: :string, project_id: :integer, number: :integer,
+                                  title: :string, description: :string, kind: :string, priority: :string,
+                                  workflow_state_id: :integer, workflow_state: :string, state_category: :string,
+                                  assignee_id: :integer, reporter_id: :integer, parent_id: :integer,
+                                  sprint_id: :integer, labels: :object, estimate: :string,
+                                  due_on: :datetime, closed_at: :datetime,
+                                  created_at: :datetime, updated_at: :datetime),
+          WorkComment: object_schema(id: :integer, work_item_id: :integer,
+                                     author_type: :string, author_id: :integer, body: :string,
+                                     created_at: :datetime, updated_at: :datetime),
+          Sprint: object_schema(id: :integer, project_id: :integer, name: :string, goal: :string,
+                                status: :string, starts_on: :datetime, ends_on: :datetime,
+                                created_at: :datetime, updated_at: :datetime),
+          SprintReport: object_schema(
+            project_id: :integer,
+            cycle_time_days: { type: %w[number null] },
+            sprints: { type: "array", items: { type: "object" } }
+          ),
           Error: object_schema(error: :string, detail: :string)
         }
       }
@@ -162,12 +187,16 @@ module Docket
         params: [ id_param ], request: { workflow_state_id: :integer },
         responses: { "200" => "Moved", "404" => "State not in this project" }) }
       result["/work_items/{work_item_id}/work_comments"] = {
-        get: op("List comments on a work item", params: [ query_param("work_item_id") ], schema: "WorkComment"),
-        post: op("Comment on a work item", params: [ query_param("work_item_id") ],
+        get: op("List comments on a work item", params: [ path_param("work_item_id") ], schema: "WorkComment"),
+        post: op("Comment on a work item", params: [ path_param("work_item_id") ],
                  request: { work_comment: :object }, schema: "WorkComment")
       }
       crud(result, "sprints", "Sprint", extra_params: %w[project_id], only: %i[index show create update],
            create_note: "sprint[project_id] is required on create. One sprint may be active per project. status is NOT settable here — close through POST /sprints/{id}/close so unfinished work is dealt with.")
+      result["/projects/{project_id}/sprint_report"] = {
+        get: op("Sprint velocity, commitment delivery, and median project cycle time",
+                params: [ path_param("project_id") ], schema: "SprintReport")
+      }
       result["/sprints/{id}/close"] = { post: op("Close a sprint; unfinished items go to the backlog or roll into roll_to",
         params: [ id_param ], request: { roll_to: :integer },
         responses: { "200" => "Closed, with moved_items count" }) }
@@ -288,11 +317,15 @@ module Docket
     end
 
     def id_param
-      { name: "id", in: "path", required: true, schema: { type: "string" } }
+      path_param("id")
     end
 
     def case_id_param
-      { name: "case_id", in: "path", required: true, schema: { type: "string" } }
+      path_param("case_id")
+    end
+
+    def path_param(name)
+      { name: name, in: "path", required: true, schema: { type: "string" } }
     end
 
     def query_param(name)

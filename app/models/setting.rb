@@ -5,8 +5,11 @@ class Setting < ApplicationRecord
   include Audited
 
   SECRET_KEY_PATTERN = /(_secret|_password|_api_key|_client_secret|_token)\z/
+  PROBABILITY_KEYS = %w[ai_route_confidence ai_resolve_confidence].freeze
 
   validates :key, presence: true, uniqueness: { scope: :tenant_id }
+  validates :value, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 1 },
+                    if: -> { PROBABILITY_KEYS.include?(key) }
 
   # Settings resolve per tenant with a deploy-wide fallback: the current tenant's
   # own row wins, else the global (tenant_id NULL) value. With no tenant in scope

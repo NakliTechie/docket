@@ -8,7 +8,10 @@ class WorkComment < ApplicationRecord
   include Audited
 
   belongs_to :work_item
-  belongs_to :author, -> { with_deleted }, class_name: "User"
+  # Human and machine collaborators use the same explicit attribution model.
+  # Both User and ServiceAccount are soft-deletable, so historical comments
+  # keep resolving after their author is deactivated.
+  belongs_to :author, -> { with_deleted }, polymorphic: true
 
   has_many :audit_entries, as: :auditable, dependent: nil
 
@@ -22,6 +25,8 @@ class WorkComment < ApplicationRecord
 
   def publish_commented
     Webhooks.publish("work_item.commented",
-                     Webhooks.work_item_payload(work_item).merge(comment_id: id, author_id: author_id))
+                     Webhooks.work_item_payload(work_item).merge(
+                       comment_id: id, author_type: author_type, author_id: author_id
+                     ))
   end
 end

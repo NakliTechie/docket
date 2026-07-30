@@ -16,6 +16,12 @@ module Api
         render json: { data: Serialize.sprint(@sprint) }
       end
 
+      def report
+        project = Project.find(params[:project_id])
+        authorize_api!(project, :show?, scope: "work:read")
+        render json: { data: Sprints::Velocity.call(project: project).merge(project_id: project.id) }
+      end
+
       def create
         project = Project.find(params.require(:sprint)[:project_id])
         sprint = project.sprints.new(sprint_params.except(:project_id))

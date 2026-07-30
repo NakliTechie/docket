@@ -11,7 +11,7 @@ module Api
 
       def create
         comment = @item.work_comments.new(body: params.require(:work_comment)[:body],
-                                          author: current_user)
+                                          author: Current.actor)
         authorize_api!(comment, :create?, scope: "work:write")
         if comment.save
           render json: { data: Serialize.work_comment(comment) }, status: :created

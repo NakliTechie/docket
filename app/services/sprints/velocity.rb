@@ -28,6 +28,7 @@ module Sprints
                       .includes(:workflow_state).to_a
       done = items.select(&:done?)
       {
+        sprint_id: sprint.id,
         name: sprint.name,
         status: sprint.status,
         committed: items.size,

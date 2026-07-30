@@ -47,6 +47,22 @@ module Api
       assert sprint.reload.status_closed?
     end
 
+    test "the sprint report is available over the API" do
+      sprint = projects(:pep).sprints.create!(name: "Measured", status: :active)
+      item = work_items(:pep_two)
+      item.update!(sprint: sprint, estimate: 5)
+      item.transition_to!(workflow_states(:pep_done))
+
+      get "/api/v1/projects/#{projects(:pep).id}/sprint_report", headers: auth_header(@token)
+
+      assert_response :success
+      data = response.parsed_body["data"]
+      assert_equal projects(:pep).id, data["project_id"]
+      row = data["sprints"].find { |candidate| candidate["sprint_id"] == sprint.id }
+      assert_equal 5.0, row["completed_estimate"]
+      assert data.key?("cycle_time_days")
+    end
+
     test "the work API follows the work entitlement" do
       ActsAsTenant.current_tenant.set_feature!("work", false)
 
@@ -94,6 +110,22 @@ module Api
            params: { work_item: { project_id: projects(:pep).id, title: "nope" } },
            headers: auth_header(readonly), as: :json
       assert_response :forbidden
+    end
+
+    test "a service account can author a work comment with explicit attribution" do
+      token = service_token_for(%w[work:read work:write])
+
+      assert_difference "WorkComment.count", 1 do
+        post "/api/v1/work_items/#{work_items(:pep_one).id}/work_comments",
+             params: { work_comment: { body: "Automated build report" } },
+             headers: auth_header(token), as: :json
+      end
+
+      assert_response :created
+      comment = WorkComment.order(:id).last
+      assert_instance_of ServiceAccount, comment.author
+      assert_equal "ServiceAccount", response.parsed_body["data"]["author_type"]
+      assert_equal comment.author_id, response.parsed_body["data"]["author_id"]
     end
 
     test "the sprint API cannot force a status and skip close-out" do

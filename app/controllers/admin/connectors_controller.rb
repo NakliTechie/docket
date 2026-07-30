@@ -62,6 +62,11 @@ module Admin
 
     def sync
       authorize @connector, :sync?
+      unless @connector.operational?
+        redirect_to admin_connector_path(@connector), alert: t(".unavailable")
+        return
+      end
+
       ConnectorSyncJob.perform_later(@connector.id, trigger: "manual")
       redirect_to admin_connector_path(@connector), notice: t(".sync_started")
     end

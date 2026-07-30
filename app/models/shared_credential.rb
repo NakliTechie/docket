@@ -12,7 +12,10 @@ class SharedCredential < ApplicationRecord
   # The secret fields the admin form offers (the union the providers read).
   COMMON_FIELDS = %w[api_key api_secret authkey key_id key_secret webhook_url license_id token].freeze
 
-  has_many :connectors, dependent: :nullify
+  # Keep the foreign keys across a soft delete. The belongs_to default scope
+  # makes a deleted credential unavailable (fail closed); restore makes the
+  # exact relationship usable again.
+  has_many :connectors
 
   normalizes :name, with: ->(n) { n.to_s.strip.downcase }
 

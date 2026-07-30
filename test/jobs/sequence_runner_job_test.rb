@@ -16,11 +16,14 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     lead = Lead.create!(name: "Asha", email: "asha.seq@example.com")
     enr = seq.enroll!(lead)
 
-    assert_enqueued_email_with CrmMailer, :sequence_step, args: [ enr, seq.ordered_steps.first ] do
+    assert_enqueued_with(job: SequenceDeliveryJob) do
       SequenceRunnerJob.perform_now
     end
 
     enr.reload
+    delivery = enr.sequence_deliveries.find_by!(sequence_step: seq.ordered_steps.first)
+    assert delivery.status_pending?
+    assert_equal "asha.seq@example.com", delivery.recipient
     assert_equal 1, enr.current_step_position
     assert enr.status_active?
     assert enr.next_run_at > Time.current # waiting for the 5-day step
@@ -45,7 +48,7 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     enr = seq.enroll!(lead)
     enr.update_columns(next_run_at: 2.days.from_now)
 
-    assert_no_enqueued_emails do
+    assert_no_enqueued_jobs(only: SequenceDeliveryJob) do
       SequenceRunnerJob.perform_now
     end
     assert_equal 0, enr.reload.current_step_position
@@ -55,7 +58,8 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     seq = two_step_sequence
     lead = Lead.create!(name: "Phone Only", phone: "+919999999999")
     enr = seq.enroll!(lead)
-    assert_no_enqueued_emails { SequenceRunnerJob.perform_now }
+    assert_no_enqueued_jobs(only: SequenceDeliveryJob) { SequenceRunnerJob.perform_now }
+    assert enr.sequence_deliveries.reload.first.status_skipped?
     assert_equal 1, enr.reload.current_step_position
   end
 
@@ -78,7 +82,11 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     seq = sms_sequence
     lead = Lead.create!(name: "Opted In", phone: "+919900000001", sms_consent: true)
     seq.enroll!(lead)
-    assert_enqueued_with(job: SmsDeliveryJob) { SequenceRunnerJob.perform_now }
+    assert_enqueued_with(job: SequenceDeliveryJob) { SequenceRunnerJob.perform_now }
+    delivery = SequenceDelivery.order(:id).last
+    assert_equal "sms", delivery.channel
+    assert_equal "+919900000001", delivery.recipient
+    assert delivery.status_pending?
   end
 
   test "an SMS step is skipped without consent, but the enrollment still advances" do
@@ -86,7 +94,21 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     seq = sms_sequence
     lead = Lead.create!(name: "No Consent", phone: "+919900000002", sms_consent: false)
     enr = seq.enroll!(lead)
-    assert_no_enqueued_jobs(only: SmsDeliveryJob) { SequenceRunnerJob.perform_now }
+    assert_no_enqueued_jobs(only: SequenceDeliveryJob) { SequenceRunnerJob.perform_now }
+    assert enr.sequence_deliveries.reload.first.status_skipped?
     assert_equal 1, enr.reload.current_step_position
+  end
+
+  test "overlapping advances cannot create a duplicate or skip ahead" do
+    seq = two_step_sequence
+    lead = Lead.create!(name: "Once", email: "once.seq@example.com")
+    enr = seq.enroll!(lead)
+
+    assert enr.advance!
+    refute enr.advance!
+
+    assert_equal 1, enr.sequence_deliveries.count
+    assert_equal seq.ordered_steps.second, enr.reload.current_step
+    assert_equal 1, enr.current_step_position
   end
 end

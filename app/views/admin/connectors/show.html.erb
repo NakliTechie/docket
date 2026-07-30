@@ -10,7 +10,7 @@
     <% elsif connector_policy.activate? && @connector.status_draft? %>
       <%= button_to t(".activate"), activate_admin_connector_path(@connector), class: "btn btn-primary" %>
     <% else %>
-      <% if connector_policy.sync? && @connector.provider_syncs? %>
+      <% if connector_policy.sync? && @connector.provider_syncs? && @connector.operational? %>
         <%= button_to t(".sync_now"), sync_admin_connector_path(@connector), class: "btn btn-primary" %>
       <% end %>
       <% if connector_policy.pause? && @connector.status_active? %>
@@ -40,6 +40,9 @@
       <dt><%= t(".webhook_url") %></dt><dd class="mono table-meta"><%= connector_webhook_url(@connector) %></dd>
     <% end %>
   </dl>
+  <% unless @connector.operational? %>
+    <p class="muted text-sm"><%= t(".traffic_stopped") %></p>
+  <% end %>
   <% if @connector.oauth? && !@connector.oauth_connected? %>
     <p class="muted text-sm"><%= @connector.configured? ? t(".oauth_ready") : t(".oauth_needs_credentials") %></p>
   <% elsif @connector.status_draft? %>

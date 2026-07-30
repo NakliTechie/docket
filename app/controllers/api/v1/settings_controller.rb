@@ -11,14 +11,15 @@ module Api
 
       def update
         require_settings_access!("config:write")
-        Admin::SettingsController::EDITABLE.each do |key, type|
+        SettingContract::EDITABLE.each do |key, type|
           next unless params.key?(key)
           raw = params[key]
           # Secrets are write-only: ignore a blank or the read mask so a
           # read-modify-write round-trip can neither wipe a stored secret
           # nor store the literal "[SET]" mask back over it.
           next if type == :secret && (raw.blank? || raw == SECRET_MASK)
-          value = coerce(raw, type)
+          value = SettingContract.coerce(key, raw)
+          next if SettingContract.invalid?(value)
           value.nil? ? Setting.unset(key) : Setting.set(key, value)
         end
         # Render directly — do NOT route through show, whose config:read gate
@@ -31,7 +32,7 @@ module Api
       # Every :secret-typed key is masked — not just llm_api_key. The SSO client
       # secrets are secrets too and must never leave.
       def settings_payload
-        Admin::SettingsController::EDITABLE.to_h do |key, type|
+        SettingContract::EDITABLE.to_h do |key, type|
           value = Setting.get(key)
           value = (value.present? ? SECRET_MASK : nil) if type == :secret
           [ key, value ]
@@ -43,15 +44,6 @@ module Api
           raise Pundit::NotAuthorizedError unless current_user.can?("settings:manage")
         else
           raise ScopeDenied, scope unless current_access_token.scope?(scope)
-        end
-      end
-
-      def coerce(raw, type)
-        case type
-        when :bool then ActiveModel::Type::Boolean.new.cast(raw)
-        when :int then raw.presence&.to_i
-        when :float then raw.presence&.to_f
-        else raw.presence
         end
       end
     end

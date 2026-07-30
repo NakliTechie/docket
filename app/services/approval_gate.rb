@@ -52,6 +52,7 @@ module ApprovalGate
   # void), then the guarded action is performed under the approver's name.
   def approve!(request, approver:, reason:)
     raise Error, "request is not pending" unless request.status_pending?
+    ensure_distinct_human!(request.requested_by, approver)
     raise Error, "a reasoned order is required to approve" if reason.to_s.strip.blank?
 
     ApprovalRequest.transaction do
@@ -67,8 +68,20 @@ module ApprovalGate
   # Checker rejects: the guarded action is blocked; the case stays put.
   def reject!(request, approver:, reason: nil)
     raise Error, "request is not pending" unless request.status_pending?
+    ensure_distinct_human!(request.requested_by, approver)
     request.update!(status: :rejected, decided_by: approver, reason: reason.presence, decided_at: Time.current)
     request
+  end
+
+  # System/customer-originated requests have no human maker and may be decided
+  # normally. Where both sides are human, maker-checker means two persisted
+  # identities—not the same person wearing two roles.
+  def ensure_distinct_human!(maker, checker)
+    return unless maker.is_a?(User) && checker.is_a?(User)
+    return unless maker.persisted? && checker.persisted?
+    return unless maker.id == checker.id
+
+    raise Error, "the maker cannot approve or reject their own request"
   end
 
   # Carry out the now-authorized action. Attributed to the approver so the

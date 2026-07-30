@@ -85,6 +85,43 @@ class Connectors::InvokeTest < ActiveSupport::TestCase
     assert_nil inv.result
   end
 
+  test "a human maker cannot approve or reject their own invocation" do
+    maker = staff
+    inv = Connectors::Invoke.call(connector, "post_json", args: args, principal: maker)
+
+    approve_error = assert_raises(Connectors::Error) do
+      Connectors::Invoke.approve!(inv, approver: maker)
+    end
+    assert_includes approve_error.message, "maker"
+    assert inv.reload.status_proposed?
+
+    assert_raises(Connectors::Error) { Connectors::Invoke.reject!(inv, approver: maker) }
+    assert inv.reload.status_proposed?
+  end
+
+  test "only the first approval executes an invocation" do
+    inv = Connectors::Invoke.call(connector, "post_json", args: args, principal: agent)
+    calls = 0
+    response = FakeResponse.new("200", '{"ok":true}')
+    original = Net::HTTP.method(:new)
+    Net::HTTP.define_singleton_method(:new) do |*_args|
+      fake = FakeHttp.new(response)
+      fake.define_singleton_method(:request) do |_request|
+        calls += 1
+        response
+      end
+      fake
+    end
+
+    Connectors::Invoke.approve!(inv, approver: staff)
+    Connectors::Invoke.approve!(ConnectorInvocation.find(inv.id), approver: staff)
+
+    assert_equal 1, calls
+    assert inv.reload.status_succeeded?
+  ensure
+    Net::HTTP.define_singleton_method(:new, original) if original
+  end
+
   test "approve! fails clearly when the action is no longer offered (L9)" do
     inv = Connectors::Invoke.call(connector, "post_json", args: args, principal: agent)
     inv.update_column(:action, "removed_action") # provider catalogue changed since parking
@@ -117,6 +154,26 @@ class Connectors::InvokeTest < ActiveSupport::TestCase
     assert_raises(Connectors::Authorization::Forbidden) do
       Connectors::Invoke.call(conn, "post_json", args: args, principal: agent)
     end
+  end
+
+  test "a paused connector rejects new agent actions" do
+    conn = connector
+    conn.update!(status: :paused)
+
+    assert_raises(Connectors::Authorization::Forbidden) do
+      Connectors::Invoke.call(conn, "post_json", args: args, principal: agent)
+    end
+  end
+
+  test "pausing before approval fails the parked action without provider egress" do
+    conn = connector
+    inv = Connectors::Invoke.call(conn, "post_json", args: args, principal: agent)
+    conn.update!(status: :paused)
+
+    Connectors::Invoke.approve!(inv, approver: staff)
+
+    assert inv.reload.status_failed?
+    assert_includes inv.error, "not active"
   end
 
   test "an unknown action raises" do

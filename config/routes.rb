@@ -215,6 +215,7 @@ Rails.application.routes.draw do
       end
       # Work module (WM5)
       resources :projects, only: %i[index show create update destroy]
+      get "projects/:project_id/sprint_report", to: "sprints#report"
       resources :work_items, only: %i[index show create update destroy] do
         member { post :transition }
         resources :work_comments, only: %i[index create], controller: "work_comments"

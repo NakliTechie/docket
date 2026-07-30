@@ -11,6 +11,7 @@ class SprintsController < ApplicationController
     @sprints = policy_scope(Sprint).where(project: @project).ordered
     @counts = WorkItem.where(sprint: @sprints).group(:sprint_id).count
     @backlog_count = policy_scope(WorkItem).where(project: @project, sprint: nil).open.count
+    @report = Sprints::Velocity.call(project: @project)
   end
 
   def new

@@ -5,7 +5,7 @@ class ConnectorSyncJob < ApplicationJob
 
   def perform(connector_id, trigger: "scheduled")
     connector = Connector.find_by(id: connector_id)
-    return unless connector
+    return unless connector&.operational?
 
     Connectors::Sync.run(connector, trigger: trigger)
   end

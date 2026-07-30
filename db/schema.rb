@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -409,8 +409,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
     t.datetime "deleted_at"
     t.integer "direction", default: 0, null: false
     t.string "email_message_id"
+    t.string "external_message_id"
     t.integer "kind", default: 0, null: false
     t.json "metadata"
+    t.integer "source_connector_id"
     t.string "subject"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
@@ -419,6 +421,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
     t.index ["case_id"], name: "index_messages_on_case_id"
     t.index ["deleted_at"], name: "index_messages_on_deleted_at"
     t.index ["email_message_id"], name: "index_messages_on_email_message_id"
+    t.index ["source_connector_id"], name: "index_messages_on_source_connector_id"
+    t.index ["tenant_id", "source_connector_id", "external_message_id"], name: "index_messages_on_tenant_connector_external_id", unique: true, where: "source_connector_id IS NOT NULL AND external_message_id IS NOT NULL"
     t.index ["tenant_id"], name: "index_messages_on_tenant_id"
   end
 
@@ -585,6 +589,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
     t.index ["created_at"], name: "index_security_events_on_created_at"
     t.index ["kind"], name: "index_security_events_on_kind"
     t.index ["tenant_id"], name: "index_security_events_on_tenant_id"
+  end
+
+  create_table "sequence_deliveries", force: :cascade do |t|
+    t.string "channel", null: false
+    t.datetime "claimed_at"
+    t.integer "connector_id"
+    t.datetime "created_at", null: false
+    t.datetime "delivered_at"
+    t.string "last_error"
+    t.json "payload", default: {}, null: false
+    t.string "recipient"
+    t.integer "sequence_enrollment_id", null: false
+    t.integer "sequence_step_id", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["connector_id"], name: "index_sequence_deliveries_on_connector_id"
+    t.index ["sequence_enrollment_id", "sequence_step_id"], name: "index_sequence_deliveries_on_enrollment_and_step", unique: true
+    t.index ["sequence_enrollment_id"], name: "index_sequence_deliveries_on_sequence_enrollment_id"
+    t.index ["sequence_step_id"], name: "index_sequence_deliveries_on_sequence_step_id"
+    t.index ["status", "created_at"], name: "index_sequence_deliveries_on_status_and_created_at"
+    t.index ["tenant_id"], name: "index_sequence_deliveries_on_tenant_id"
   end
 
   create_table "sequence_enrollments", force: :cascade do |t|
@@ -786,13 +812,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
 
   create_table "work_comments", force: :cascade do |t|
     t.integer "author_id", null: false
+    t.string "author_type", null: false
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.integer "work_item_id", null: false
-    t.index ["author_id"], name: "index_work_comments_on_author_id"
+    t.index ["author_type", "author_id"], name: "index_work_comments_on_author_type_and_author_id"
     t.index ["deleted_at"], name: "index_work_comments_on_deleted_at"
     t.index ["tenant_id"], name: "index_work_comments_on_tenant_id"
     t.index ["work_item_id"], name: "index_work_comments_on_work_item_id"
@@ -920,6 +947,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
   add_foreign_key "leads", "users", column: "owner_id"
   add_foreign_key "macros", "tenants"
   add_foreign_key "messages", "cases"
+  add_foreign_key "messages", "connectors", column: "source_connector_id"
   add_foreign_key "messages", "tenants"
   add_foreign_key "oauth_access_tokens", "service_accounts"
   add_foreign_key "organisations", "tenants"
@@ -941,6 +969,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
   add_foreign_key "routing_rules", "tenants"
   add_foreign_key "routing_rules", "users", column: "then_assignee_id"
   add_foreign_key "security_events", "tenants"
+  add_foreign_key "sequence_deliveries", "connectors"
+  add_foreign_key "sequence_deliveries", "sequence_enrollments"
+  add_foreign_key "sequence_deliveries", "sequence_steps"
+  add_foreign_key "sequence_deliveries", "tenants"
   add_foreign_key "sequence_enrollments", "sequence_steps", column: "current_step_id", on_delete: :nullify
   add_foreign_key "sequence_enrollments", "sequences"
   add_foreign_key "sequence_enrollments", "tenants"
@@ -957,7 +989,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_200000) do
   add_foreign_key "webhook_deliveries", "webhook_endpoints"
   add_foreign_key "webhook_endpoints", "tenants"
   add_foreign_key "work_comments", "tenants"
-  add_foreign_key "work_comments", "users", column: "author_id"
   add_foreign_key "work_comments", "work_items"
   add_foreign_key "work_items", "projects"
   add_foreign_key "work_items", "sprints"

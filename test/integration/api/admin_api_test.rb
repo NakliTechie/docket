@@ -81,6 +81,14 @@ module Api
       assert_equal "oidc-staff-secret", Setting.get("sso_staff_oidc_client_secret")
       assert_equal "oidc-customer-secret", Setting.get("sso_customer_oidc_client_secret")
 
+      Setting.set("ai_route_confidence", 0.4)
+      patch "/api/v1/settings",
+            params: { ai_route_confidence: { polluted: true }, ai_resolve_confidence: 9.9 },
+            headers: auth_header(@admin_token), as: :json
+      assert_response :success
+      assert_equal 0.4, Setting.get("ai_route_confidence"), "non-scalar input is ignored"
+      assert_equal 1.0, Setting.get("ai_resolve_confidence"), "probabilities share the console clamp"
+
       config_token = service_token_for(%w[config:read])
       get "/api/v1/settings", headers: auth_header(config_token)
       assert_response :success

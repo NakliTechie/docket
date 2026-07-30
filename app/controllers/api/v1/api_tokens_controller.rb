@@ -6,12 +6,16 @@ module Api
       before_action :require_admin_human!
 
       def index
-        pagy, records = pagy(ApiToken.order(id: :desc))
+        pagy, records = pagy(tenant_tokens.order(id: :desc))
         render json: { data: records.map { |t| Serialize.api_token(t) }, pagination: pagination_meta(pagy) }
       end
 
       def create
-        token = ApiToken.new(token_params)
+        # ApiToken has no tenant_id of its own; its tenant is derived from the
+        # owning User. Resolve the owner through User's tenant scope so an
+        # administrator cannot mint a token for another tenant by guessing an
+        # id on a shared deployment.
+        token = ApiToken.new(user: User.find(token_params[:user_id]), name: token_params[:name])
         if token.save
           render json: { data: Serialize.api_token(token).merge(token: token.raw_token) }, status: :created
         else
@@ -20,7 +24,7 @@ module Api
       end
 
       def destroy
-        token = ApiToken.find(params[:id])
+        token = tenant_tokens.find(params[:id])
         token.revoke!
         head :no_content
       end
@@ -33,6 +37,10 @@ module Api
 
       def token_params
         params.require(:api_token).permit(:user_id, :name)
+      end
+
+      def tenant_tokens
+        ApiToken.for_tenant_users
       end
     end
   end

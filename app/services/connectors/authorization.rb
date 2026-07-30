@@ -11,6 +11,9 @@ module Connectors
     module_function
 
     def permit!(principal:, connector:, action:)
+      unless connector.operational?
+        raise Forbidden, "connector #{connector.id} is not active and configured"
+      end
       unless connector.enabled_action?(action.key)
         raise Forbidden, "connector #{connector.id} does not expose action '#{action.key}'"
       end

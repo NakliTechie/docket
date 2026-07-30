@@ -14,11 +14,17 @@ class Message < ApplicationRecord
 
   belongs_to :case, inverse_of: :messages
   belongs_to :author, -> { with_deleted }, polymorphic: true, optional: true
+  # Provider delivery identity for inbound replay protection. Scoped by
+  # connector because providers may issue the same id in separate accounts.
+  belongs_to :source_connector, class_name: "Connector", optional: true
 
   has_many_attached :files
   include AttachableValidation
 
   validates :body, presence: true
+  validates :external_message_id,
+            uniqueness: { scope: %i[tenant_id source_connector_id] },
+            allow_nil: true
 
   after_create :stamp_first_response
   after_create :reopen_conversation_on_customer_reply

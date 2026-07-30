@@ -6,6 +6,20 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
                                         events: WebhookEndpoint::EVENTS)
   end
 
+  def perform_delivery(delivery)
+    with_resolution([ "93.184.216.34" ]) do
+      WebhookDeliveryJob.perform_now(delivery)
+    end
+  end
+
+  def with_resolution(addresses)
+    original = Docket::OutboundUrl.method(:resolve)
+    Docket::OutboundUrl.define_singleton_method(:resolve) { |*_args| addresses }
+    yield
+  ensure
+    Docket::OutboundUrl.define_singleton_method(:resolve, original)
+  end
+
   test "case lifecycle publishes signed deliveries" do
     assert_difference "WebhookDelivery.count", 1 do
       Case.create!(subject: "Hooked", contact: contacts(:asha))
@@ -25,7 +39,7 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     end
 
     delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => { "id" => 1 } })
-    WebhookDeliveryJob.perform_now(delivery)
+    perform_delivery(delivery)
 
     expected = "sha256=#{OpenSSL::HMAC.hexdigest("SHA256", @endpoint.secret, received[:body])}"
     assert_equal expected, received[:signature]
@@ -38,7 +52,7 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
   test "forged signatures cannot be produced without the secret" do
     stub_request(:post, "https://receiver.example.in/hook").to_return(status: 200)
     delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })
-    WebhookDeliveryJob.perform_now(delivery)
+    perform_delivery(delivery)
 
     body = JSON.generate(delivery.payload)
     wrong = "sha256=#{OpenSSL::HMAC.hexdigest("SHA256", "other-secret", body)}"
@@ -50,7 +64,7 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })
 
     assert_enqueued_with(job: WebhookDeliveryJob) do
-      WebhookDeliveryJob.perform_now(delivery)
+      perform_delivery(delivery)
     rescue WebhookDeliveryJob::DeliveryError
       # perform_now re-raises after scheduling the retry
     end
@@ -64,7 +78,7 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })
 
     assert_no_enqueued_jobs do
-      WebhookDeliveryJob.perform_now(delivery) # no DeliveryError raised → no retry scheduled
+      perform_delivery(delivery) # no DeliveryError raised → no retry scheduled
     end
     assert delivery.reload.status_failed?
     assert_equal 404, delivery.response_code
@@ -75,7 +89,7 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     stub_request(:post, "https://receiver.example.in/hook").to_raise(Errno::ECONNREFUSED)
     delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })
     assert_enqueued_with(job: WebhookDeliveryJob) do
-      WebhookDeliveryJob.perform_now(delivery)
+      perform_delivery(delivery)
     rescue WebhookDeliveryJob::DeliveryError
       # retry_on re-raises once attempts are exhausted in-line
     end
@@ -93,6 +107,18 @@ class WebhookDeliveryJobTest < ActiveJob::TestCase
     WebhookDeliveryJob.perform_now(delivery)
     assert_equal "failed", delivery.reload.status
     assert_match(/blocked/, delivery.last_error)
+  end
+
+  test "a hostname resolving to a private address is blocked before connect" do
+    @endpoint.update_column(:url, "https://public-looking.example/hook")
+    delivery = @endpoint.webhook_deliveries.create!(event: "case.created", payload: { "data" => {} })
+
+    with_resolution([ "93.184.216.34", "169.254.169.254" ]) do
+      WebhookDeliveryJob.perform_now(delivery)
+    end
+
+    assert_equal "failed", delivery.reload.status
+    assert_match(/resolved to 169\.254\.169\.254/, delivery.last_error)
   end
 
   test "internal notes never publish webhooks" do

@@ -13,6 +13,52 @@
 
 <p class="muted"><%= t(".backlog_count", count: @backlog_count) %></p>
 
+<section class="panel" aria-labelledby="sprint-report-title">
+  <h2 class="panel-title" id="sprint-report-title"><%= t(".report.title") %></h2>
+  <dl class="meta-list">
+    <dt><%= t(".report.median_cycle_time") %></dt>
+    <dd>
+      <%= @report[:cycle_time_days] ?
+            t(".report.days", count: number_with_precision(@report[:cycle_time_days], precision: 1, strip_insignificant_zeros: true)) :
+            "—" %>
+    </dd>
+  </dl>
+  <p class="muted text-sm"><%= t(".report.hint") %></p>
+
+  <% if @report[:sprints].any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t(".report.columns.sprint") %></th>
+            <th><%= t(".report.columns.completed_items") %></th>
+            <th><%= t(".report.columns.velocity") %></th>
+            <th><%= t(".report.columns.delivery") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report[:sprints].each do |row| %>
+            <% delivery = row[:committed_estimate].positive? ?
+                 (row[:completed_estimate] * 100 / row[:committed_estimate]).round :
+                 nil %>
+            <tr>
+              <td>
+                <strong><%= row[:name] %></strong>
+                <span class="badge"><%= t("sprints.enum.status.#{row[:status]}") %></span>
+              </td>
+              <td><%= t(".report.ratio", done: row[:completed], total: row[:committed]) %></td>
+              <td><%= t(".report.points", done: row[:completed_estimate], total: row[:committed_estimate]) %></td>
+              <td><%= delivery ? t(".report.percent", value: delivery) : "—" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".report.empty") %></p>
+  <% end %>
+</section>
+
 <% if @sprints.any? %>
   <div class="table-wrap">
     <table>

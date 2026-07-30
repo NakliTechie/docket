@@ -9,7 +9,9 @@ class SequencesController < ApplicationController
 
   def show
     authorize @sequence
-    @enrollments = @sequence.sequence_enrollments.includes(:enrollable).order(created_at: :desc)
+    @enrollments = @sequence.sequence_enrollments
+                            .includes(:enrollable, :sequence_deliveries)
+                            .order(created_at: :desc)
   end
 
   def new

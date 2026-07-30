@@ -19,10 +19,10 @@ class Connectors::InboundTest < ActiveSupport::TestCase
                       config: { "chat_id" => "999" }, credentials_hash: { "bot_token" => "BOT" })
   end
 
-  def wa_payload(body, from: "919876500000", name: "Asha")
+  def wa_payload(body, from: "919876500000", name: "Asha", message_id: nil)
     { "entry" => [ { "changes" => [ { "field" => "messages", "value" => {
       "contacts" => [ { "wa_id" => from, "profile" => { "name" => name } } ],
-      "messages" => [ { "from" => from, "id" => "wamid.#{body.length}", "type" => "text",
+      "messages" => [ { "from" => from, "id" => message_id || "wamid.#{body}", "type" => "text",
                         "text" => { "body" => body } } ]
     } } ] } ] }
   end
@@ -113,11 +113,66 @@ class Connectors::InboundTest < ActiveSupport::TestCase
     assert_equal 1, Contact.where(external_id: "whatsapp:9198").count
   end
 
+  test "replaying the same provider message returns the original result without side effects" do
+    wa = whatsapp
+    payload = wa_payload("one and only", from: "9198", message_id: "wamid.stable-1")
+    first = Connectors::Inbound.process(wa, payload).first
+
+    assert_no_difference [ "Case.count", "Contact.count", "Message.count" ] do
+      replay = Connectors::Inbound.process(wa, payload).first
+      assert_equal first.id, replay.id
+    end
+    message = first.messages.find_by!(external_message_id: "wamid.stable-1")
+    assert_equal wa, message.source_connector
+  end
+
+  test "the same external id remains distinct across connectors" do
+    first_connector = whatsapp
+    second_connector = whatsapp
+    payload = wa_payload("same id", message_id: "wamid.shared")
+
+    assert_difference "Message.count", 2 do
+      Connectors::Inbound.process(first_connector, payload)
+      Connectors::Inbound.process(second_connector, payload)
+    end
+    assert_equal 2, Message.where(external_message_id: "wamid.shared").count
+  end
+
+  test "messages without a provider id retain at-least-once behavior" do
+    wa = whatsapp
+    normalized = {
+      channel: "whatsapp", external_thread_id: "9198", external_message_id: nil,
+      sender: { external_id: "9198", phone: "9198", name: "Asha" }, body: "No id"
+    }
+
+    assert_difference "Message.count", 2 do
+      Connectors::Inbound.ingest_one(wa, normalized)
+      Connectors::Inbound.ingest_one(wa, normalized)
+    end
+  end
+
   test "a different sender opens a separate case" do
     wa = whatsapp
     a = Connectors::Inbound.process(wa, wa_payload("a", from: "9198")).first
     b = Connectors::Inbound.process(wa, wa_payload("b", from: "9111")).first
     assert_not_equal a.id, b.id
+  end
+
+  test "a reused provider thread id cannot attach one contact to another contact's case" do
+    wa = whatsapp
+    first = {
+      channel: "whatsapp", external_thread_id: "reused-thread", external_message_id: "m-1",
+      sender: { external_id: "sender-1", phone: "9111", name: "One" }, body: "First"
+    }
+    second = {
+      channel: "whatsapp", external_thread_id: "reused-thread", external_message_id: "m-2",
+      sender: { external_id: "sender-2", phone: "9222", name: "Two" }, body: "Second"
+    }
+
+    a = Connectors::Inbound.ingest_one(wa, first)
+    b = Connectors::Inbound.ingest_one(wa, second)
+    assert_not_equal a.id, b.id
+    assert_not_equal a.contact_id, b.contact_id
   end
 
   test "an inbound sender does NOT thread onto a verified contact by bare phone (M2)" do
@@ -166,6 +221,26 @@ class Connectors::InboundTest < ActiveSupport::TestCase
     assert_equal [ "send_text_message", { "to" => "9198", "text" => "On it!" } ], fake.calls.first
     assert_equal true, msg.reload.metadata.dig("delivery", "ok")
     assert_equal "wamid.out", msg.metadata.dig("delivery", "message_id")
+  end
+
+  test "Reply.deliver records a skip and never invokes a paused connector" do
+    wa = whatsapp
+    kase = Case.create!(subject: "x", channel: :whatsapp, contact: contacts(:asha),
+                        source_connector: wa, source_thread_id: "9198")
+    msg = kase.messages.create!(kind: :public_reply, direction: :outbound,
+                                author: users(:agent_a), body: "On it!")
+    fake = Object.new
+    def fake.invoke(*) = raise("paused connector must not send")
+    wa.define_singleton_method(:provider_instance) { fake }
+    wa.update!(status: :paused)
+
+    Connectors::Reply.deliver(msg)
+
+    delivery = msg.reload.metadata.fetch("delivery")
+    assert_equal false, delivery["ok"]
+    assert_equal true, delivery["skipped"]
+    assert_equal "connector_inactive", delivery["reason"]
+    assert_equal "paused", delivery["status"]
   end
 
   test "an outbound reply on a messaging case enqueues delivery and skips email" do

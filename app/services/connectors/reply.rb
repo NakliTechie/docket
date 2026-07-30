@@ -11,6 +11,11 @@ module Connectors
       kase = message.case
       connector = kase.source_connector
       return unless connector&.ingests?
+      unless connector.operational?
+        stamp(message, "ok" => false, "skipped" => true,
+                       "reason" => "connector_inactive", "status" => connector.status)
+        return
+      end
 
       action, args = dispatch(kase, message)
       return unless action

@@ -27,12 +27,24 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
                  password: "password123", role: :client_admin)
   end
 
-  # Stub the action lookup + execution so we test the gate, not a provider.
+  teardown do
+    if @original_provider_action
+      Connectors::HttpJsonProvider.define_singleton_method(:action, @original_provider_action)
+    end
+    if @original_provider_invoke
+      Connectors::HttpJsonProvider.define_method(:invoke, @original_provider_invoke)
+    end
+  end
+
+  # Stub the provider class rather than one Connector instance. The production
+  # approval claim deliberately reloads the row under lock, so transient
+  # singleton methods on an Active Record instance do not survive it.
   def stub(conn, action)
-    conn.define_singleton_method(:provider_action) { |_k| action }
-    fake = Object.new
-    fake.define_singleton_method(:invoke) { |_k, _a, _c| { "ok" => true } }
-    conn.define_singleton_method(:provider_instance) { fake }
+    @original_provider_action ||= Connectors::HttpJsonProvider.method(:action)
+    @original_provider_invoke ||= Connectors::HttpJsonProvider.instance_method(:invoke)
+    Connectors::HttpJsonProvider.define_singleton_method(:action) { |_key| action }
+    Connectors::HttpJsonProvider.define_method(:invoke) { |_key, _args, _context| { "ok" => true } }
+    conn
   end
 
   def call(conn)

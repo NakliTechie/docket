@@ -11,12 +11,6 @@ class AssistsController < ApplicationController
   before_action :set_case
   before_action :require_llm
 
-  # Bound the summarisation prompt so a very long thread can't blow the
-  # model's context window (or its cost): most-recent messages only, with a
-  # hard char cap on the joined thread.
-  MAX_SUMMARY_MESSAGES = 60
-  MAX_SUMMARY_CHARS = 16_000
-
   # These run on the request thread (a staff member is waiting), so cap the
   # model wait well below the 120s background default — a slow/stuck model
   # mustn't pin a Puma worker for two minutes (M21). On timeout the rescue
@@ -25,19 +19,7 @@ class AssistsController < ApplicationController
 
   def summarise
     authorize @case, :show?
-    thread = @case.messages.order(:created_at).last(MAX_SUMMARY_MESSAGES).map { |m|
-      "#{m.author_display_name} (#{m.kind}): #{m.body.truncate(800)}"
-    }.join("\n").truncate(MAX_SUMMARY_CHARS)
-    prompt = <<~PROMPT
-      [TASK:summarise]
-      Summarise this case thread for a staff member in 3 sentences or fewer, ending with the next required action.
-      #{Llm.fence_instruction}
-      Subject:
-      #{Llm.fence(@case.subject)}
-      #{@case.description.presence&.then { |d| "Original request:\n#{Llm.fence(d.truncate(800))}" }}
-      Thread:
-      #{Llm.fence(thread.presence || "(no messages yet)")}
-    PROMPT
+    prompt = AssistPrompts.summarise(@case)
 
     @summary = client.chat([ { role: "user", content: prompt } ], read_timeout: INTERACTIVE_READ_TIMEOUT)
     render partial: "assists/summary", locals: { summary: @summary, kase: @case }
@@ -48,21 +30,7 @@ class AssistsController < ApplicationController
   def suggest_reply
     authorize @case, :update?
     grounding = Retrieval.grounding_for("#{@case.subject} #{@case.description}")
-    last_inbound = @case.messages.where(direction: :inbound).order(:created_at).last
-    prompt = <<~PROMPT
-      [TASK:suggest]
-      Draft a reply for a staff member to send to the customer. Be concrete, polite, and grounded ONLY in the context provided. Do not invent case facts.
-      #{Llm.fence_instruction}
-      Subject:
-      #{Llm.fence(@case.subject)}
-      Original request:
-      #{Llm.fence(@case.description.presence || @case.messages.where(direction: :inbound).order(:created_at).first&.body || "")}
-      Latest customer message:
-      #{Llm.fence(last_inbound&.body&.truncate(1500) || "(none)")}
-      Grounding:
-      #{grounding.map { |g| "- #{g.title}: #{g.text.truncate(600)}" }.join("\n").presence || "(none)"}
-      Reply with the message text only.
-    PROMPT
+    prompt = AssistPrompts.suggest_reply(@case, grounding: grounding)
 
     @suggestion = client.chat([ { role: "user", content: prompt } ], read_timeout: INTERACTIVE_READ_TIMEOUT)
     render partial: "assists/suggestion", locals: { suggestion: @suggestion, kase: @case }

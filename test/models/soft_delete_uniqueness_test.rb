@@ -8,7 +8,8 @@ class SoftDeleteUniquenessTest < ActiveSupport::TestCase
   # Identifiers handed out to someone who may still hold them. Never reissued.
   DELIBERATELY_RESERVED = {
     "Case" => :tracking_id,          # a customer quotes this back at you
-    "ServiceAccount" => :client_id   # a credential resolves through it
+    "ServiceAccount" => :client_id,  # a credential resolves through it
+    "Message" => :external_message_id # a provider retry must never replay a deleted delivery
   }.freeze
 
   def soft_deletable_models

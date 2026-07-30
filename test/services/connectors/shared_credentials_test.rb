@@ -53,6 +53,22 @@ class Connectors::SharedCredentialsTest < ActiveSupport::TestCase
     assert_nil conn.secret("api_key")
   end
 
+  test "soft delete fails closed without losing the connector reference and restore reconnects it" do
+    sc = shared(secrets: { "api_key" => "shared" })
+    conn = Connector.create!(name: "C", provider: "http_json", target: "contacts",
+      field_mapping: { "external_id" => "id" },
+      config: { "endpoint_url" => "https://api.example.com/c" }, shared_credential: sc)
+
+    sc.destroy!
+    assert_equal sc.id, conn.reload.shared_credential_id
+    assert_nil conn.shared_credential
+    assert_nil conn.secret("api_key"), "a deleted credential must not remain usable"
+
+    sc.restore!
+    assert_equal sc, conn.reload.shared_credential
+    assert_equal "shared", conn.secret("api_key")
+  end
+
   # --- a provider reads through the shared credential ---
 
   class FakeResponse

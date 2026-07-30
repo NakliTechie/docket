@@ -9,11 +9,14 @@ module Api
     test "crm:write can create and convert a lead; crm:read cannot write" do
       write = service_token_for(%w[crm:read crm:write])
 
-      post "/api/v1/leads", params: { lead: { name: "API Lead", email: "api.lead@example.com", company_name: "API Co" } },
+      post "/api/v1/leads",
+           params: { lead: { name: "API Lead", email: "api.lead@example.com",
+                             company_name: "API Co", sms_consent: true } },
            headers: auth_header(write), as: :json
       assert_response :created
       lead_id = response.parsed_body["data"]["id"]
       assert_equal "api", response.parsed_body["data"]["source"]
+      assert_equal true, response.parsed_body["data"]["sms_consent"]
 
       post "/api/v1/leads/#{lead_id}/convert", headers: auth_header(write), as: :json
       assert_response :success

@@ -61,6 +61,36 @@ class ApprovalGateTest < ActiveSupport::TestCase
     assert kase.reload.status_resolved?, "a rejected case does not close"
   end
 
+  test "the maker cannot approve or reject their own request" do
+    kase = resolved_case
+    closure_process
+    maker = users(:client_admin)
+    req = ApprovalGate.submit_transition!(kase, "closed", requested_by: maker)
+
+    error = assert_raises(ApprovalGate::Error) do
+      ApprovalGate.approve!(req, approver: maker, reason: "I checked my own work.")
+    end
+    assert_includes error.message, "maker"
+    assert req.reload.status_pending?
+    assert kase.reload.status_resolved?
+
+    assert_raises(ApprovalGate::Error) { ApprovalGate.reject!(req, approver: maker, reason: "No") }
+    assert req.reload.status_pending?
+  end
+
+  test "a request with no human maker can be decided by a human checker" do
+    kase = resolved_case
+    process = closure_process
+    req = kase.approval_requests.create!(
+      approval_process: process, requested_action: "closed", requested_by: nil
+    )
+
+    assert_nothing_raised do
+      ApprovalGate.reject!(req, approver: users(:client_admin), reason: "Automated request was not justified.")
+    end
+    assert req.reload.status_rejected?
+  end
+
   test "an approval process escalates an otherwise-autonomous effector action to review" do
     slack = Connector.create!(name: "S", provider: "slack_webhook", status: :active,
                               credentials_hash: { "webhook_url" => "https://hooks.slack.com/x" })

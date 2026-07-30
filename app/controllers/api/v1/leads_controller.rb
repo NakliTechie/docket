@@ -58,7 +58,7 @@ module Api
 
       def lead_params
         params.require(:lead).permit(:name, :email, :phone, :company_name,
-                                     :source, :owner_id, :value_estimate_cents, :notes)
+                                     :source, :owner_id, :value_estimate_cents, :notes, :sms_consent)
       end
     end
   end

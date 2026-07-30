@@ -37,6 +37,9 @@ class ConnectorsTest < ActionDispatch::IntegrationTest
     get admin_connector_path(connector)
     assert_response :success
 
+    post activate_admin_connector_path(connector)
+    assert connector.reload.status_active?
+
     assert_enqueued_with(job: ConnectorSyncJob) do
       post sync_admin_connector_path(connector)
     end
@@ -62,6 +65,18 @@ class ConnectorsTest < ActionDispatch::IntegrationTest
     assert connector.reload.status_paused?
     post resume_admin_connector_path(connector)
     assert connector.reload.status_active?
+  end
+
+  test "a paused connector cannot be manually synced" do
+    sign_in_as users(:admin)
+    connector = create_connector(status: :paused)
+
+    assert_no_enqueued_jobs(only: ConnectorSyncJob) do
+      post sync_admin_connector_path(connector)
+    end
+
+    assert_redirected_to admin_connector_path(connector)
+    assert flash[:alert].present?
   end
 
   test "non-admins cannot reach connectors" do
