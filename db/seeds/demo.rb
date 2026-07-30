@@ -15,15 +15,16 @@ unless Rails.env.local? || ENV["DOCKET_ALLOW_DEMO_SEED"] == "1"
         "Set DOCKET_ALLOW_DEMO_SEED=1 to force (e.g. a staging demo)."
 end
 
-return if Setting.get("demo_seeded")
-
 scenario = DemoScenarios.fetch(ENV.fetch("DOCKET_SEED_SCENARIO", "saas"))
 rng = Random.new(42)
-puts "Seeding demo data (scenario: #{ENV.fetch('DOCKET_SEED_SCENARIO', 'saas')})…"
 
 # Demo data owns a tenant; seed it into the primary (resolves to the existing
 # test tenant when invoked from the suite). Leaves an already-set tenant intact.
 ActsAsTenant.current_tenant ||= Tenant.find_or_create_by!(slug: Tenant::PRIMARY_SLUG) { |t| t.name = "Docket" }
+
+return if Setting.get("demo_seeded")
+
+puts "Seeding demo data (scenario: #{ENV.fetch('DOCKET_SEED_SCENARIO', 'saas')})…"
 
 Current.set(actor: nil) do
   Setting.set("llm_provider", "fake")

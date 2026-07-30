@@ -75,4 +75,23 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert_includes entrypoint,
       "DOCKET_ALLOW_DEMO_SEED=1 ./bin/rails db:seed demo:seed"
   end
+
+  test "is idempotent when a fresh process has no tenant context" do
+    previous_test_tenant = ActsAsTenant.test_tenant
+    ActsAsTenant.test_tenant = nil
+    ActsAsTenant.current_tenant = nil
+
+    seed("saas")
+    counts_after_first_seed = [ Case.count, Message.count, Project.count, WorkItem.count ]
+
+    # Container restarts begin without request or test tenant context.
+    ActsAsTenant.current_tenant = nil
+    seed("saas")
+
+    assert_equal counts_after_first_seed,
+      [ Case.count, Message.count, Project.count, WorkItem.count ]
+  ensure
+    ActsAsTenant.current_tenant = nil
+    ActsAsTenant.test_tenant = previous_test_tenant
+  end
 end
