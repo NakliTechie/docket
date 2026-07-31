@@ -6,13 +6,32 @@ module Api
       # breaches, volume by queue with queue names). Its access gate is
       # audit:read, which no module owns, so without this a tenant that never
       # bought the desk could read its whole shape through the API.
-      require_feature "service_desk"
+      require_feature "service_desk", except: :sales
+      require_feature "crm", only: :sales
 
       def activity
         require_report_access!
         from = parse_date(params[:from]) || 30.days.ago.to_date
         to = parse_date(params[:to]) || Date.current
         render json: { data: ActivityReport.new(from: from, to: to, viewer: current_user).as_json }
+      end
+
+      def csat
+        require_report_access!
+        from = parse_date(params[:from]) || 30.days.ago.to_date
+        to = parse_date(params[:to]) || Date.current
+        render json: { data: CsatReport.new(from: from, to: to).as_json }
+      end
+
+      def sales
+        if current_user
+          raise Pundit::NotAuthorizedError unless current_user.can?("report:sales")
+        elsif !current_access_token.scope?("crm:read")
+          raise ScopeDenied, "crm:read"
+        end
+        from = parse_date(params[:from]) || 30.days.ago.to_date
+        to = parse_date(params[:to]) || Date.current
+        render json: { data: SalesReport.new(from: from, to: to).as_json }
       end
 
       private

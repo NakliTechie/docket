@@ -19,6 +19,21 @@
   </div>
 </div>
 
+<% if policy(@lead).merge? && @duplicate_leads.any? %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t("leads.show.duplicates") %></h2>
+    <p class="muted"><%= t("leads.show.duplicates_hint") %></p>
+    <ul class="stack-sm">
+      <% @duplicate_leads.each do |candidate| %>
+        <li><%= link_to candidate.name, lead_path(candidate) %> · <%= candidate.email || candidate.phone %>
+          <%= button_to t("leads.show.merge_into_this"), merge_lead_path(@lead),
+                params: { source_lead_id: candidate.id }, class: "btn btn-sm",
+                form: { class: "inline-form", data: { turbo_confirm: t("leads.show.merge_confirm", name: candidate.name) } } %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
 <div class="panel">
   <h2 class="panel-title"><%= t(".details") %></h2>
   <dl class="meta-list">

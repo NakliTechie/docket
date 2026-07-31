@@ -55,11 +55,27 @@ module Connectors
     # Pull customers inbound; they map to Contact via the connector
     # field-mapping. GET /customers.json → { "customers" => [...] }.
     def fetch
-      uri = build_uri(api_base, "/customers.json")
-      response = ensure_ok!(get(uri, headers: auth_headers), "Shopify")
-      body = parse_json(response.body)
-      records = body.is_a?(Hash) ? body["customers"] : body
-      records.is_a?(Array) ? records : []
+      records = []
+      origin = build_uri(api_base)
+      query = { limit: 250 }
+      # last_synced_at advances only after Sync completes, making this a durable
+      # delta watermark. Rewind slightly so same-timestamp updates are replayed
+      # and safely deduplicated by the local upsert.
+      query[:updated_at_min] = (connector.last_synced_at - 5.minutes).utc.iso8601 if connector.last_synced_at
+      uri = build_uri(api_base, "/customers.json?#{URI.encode_www_form(query)}")
+
+      loop do
+        response = ensure_ok!(get(uri, headers: auth_headers), "Shopify")
+        body = parse_json(response.body)
+        page = body.is_a?(Hash) ? body["customers"] : nil
+        raise Connectors::Error, "Shopify returned an invalid customers page" unless page.is_a?(Array)
+
+        records.concat(page.select { |record| record.is_a?(Hash) })
+        uri = next_link_uri(response, origin: origin)
+        break unless uri
+      end
+
+      records
     end
 
     def invoke(action_key, args, _context = {})

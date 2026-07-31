@@ -11,14 +11,15 @@ class KeyboardWorkspaceTest < ApplicationSystemTestCase
 
     page.driver.browser.keyboard.type("j")
     assert_selector "tr.row-selected", count: 1
-    first_subject = find("tr.row-selected td:nth-child(2)").text
+    first_subject = find("tr.row-selected td[data-label='#{I18n.t("cases.index.columns.subject")}']").text
 
     page.driver.browser.keyboard.type("j")
-    second_subject = find("tr.row-selected td:nth-child(2)").text
+    second_subject = find("tr.row-selected td[data-label='#{I18n.t("cases.index.columns.subject")}']").text
     refute_equal first_subject, second_subject
 
     page.driver.browser.keyboard.type("k")
-    assert_equal first_subject, find("tr.row-selected td:nth-child(2)").text
+    assert_equal first_subject,
+                 find("tr.row-selected td[data-label='#{I18n.t("cases.index.columns.subject")}']").text
 
     page.driver.browser.keyboard.type(:enter)
     assert_selector "h1", text: first_subject

@@ -1,13 +1,19 @@
 module Llm
-  # OpenAI-compatible /chat/completions over plain Net::HTTP. The only
-  # outbound network call Docket ever makes besides configured mail.
+  # OpenAI-compatible /chat/completions over plain Net::HTTP. This is one of
+  # several explicit server-side egress boundaries; connectors, webhooks, SMS,
+  # mail, and migration sources have separate transports and controls.
   class HttpClient
     attr_reader :endpoint, :model
 
     def initialize(endpoint:, model:, api_key: nil)
-      @endpoint = endpoint.chomp("/")
+      uri = URI.parse(endpoint.to_s)
+      raise Error, "LLM endpoint must be a valid HTTP(S) URL" unless uri.is_a?(URI::HTTP) && uri.host.present?
+
+      @endpoint = uri.to_s.chomp("/")
       @api_key = api_key
       @model = model
+    rescue URI::InvalidURIError
+      raise Error, "LLM endpoint must be a valid HTTP(S) URL"
     end
 
     # Default read timeout for background work (the triage/draft job). The
@@ -67,7 +73,8 @@ module Llm
       response = http.request(request)
       raise Error, "LLM endpoint returned #{response.code}" unless response.code.to_i == 200
       JSON.parse(response.body)
-    rescue JSON::ParserError, SystemCallError, Net::OpenTimeout, Net::ReadTimeout, IOError => e
+    rescue JSON::ParserError, URI::InvalidURIError, SystemCallError,
+           Net::OpenTimeout, Net::ReadTimeout, IOError => e
       raise Error, "LLM request failed: #{e.class}: #{e.message}"
     end
 

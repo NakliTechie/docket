@@ -14,6 +14,48 @@ module Connectors
   module Invoke
     module_function
 
+    # A reply already authored and authorized through the case surface must not
+    # be parked behind a second approval click. It still crosses the governed
+    # egress seam: operational state, connector/principal budgets, durable
+    # idempotency, actor attribution, and the audited invocation record all
+    # apply. Callers are responsible for authorizing the underlying reply.
+    def call_direct(connector, action_key, args:, principal:, on_behalf_of: nil,
+                    reasoning: nil, idempotency_key: nil)
+      action = connector.provider_action(action_key)
+      raise Connectors::Error, "unknown action: #{action_key}" unless action
+
+      existing = connector.invocations.find_by(idempotency_key: idempotency_key) if idempotency_key.present?
+      return existing if existing
+
+      unless connector.operational?
+        return create_direct_failure(
+          connector, action, args, principal, on_behalf_of, reasoning, idempotency_key,
+          "connector #{connector.id} is not active and configured"
+        )
+      end
+
+      created = false
+      invocation = Current.set(actor: principal, on_behalf_of: on_behalf_of) do
+        Budget.reserve!(principal, connector) do
+          existing = connector.invocations.find_by(idempotency_key: idempotency_key) if idempotency_key.present?
+          next existing if existing
+
+          created = true
+          connector.invocations.create!(
+            action: action.key, args: args, on_behalf_of: on_behalf_of,
+            reasoning: reasoning, requested_by: principal, idempotency_key: idempotency_key,
+            effect: action.effect, decision_class: action.effective_decision_class,
+            status: :executing
+          )
+        end
+      end
+      created ? execute_claimed!(invocation, action) : invocation
+    rescue ActiveRecord::RecordNotUnique
+      raise unless idempotency_key.present?
+
+      connector.invocations.find_by!(idempotency_key: idempotency_key)
+    end
+
     def call(connector, action_key, args:, principal:, on_behalf_of: nil,
              reasoning: nil, idempotency_key: nil)
       action = connector.provider_action(action_key)
@@ -141,6 +183,20 @@ module Connectors
 
       raise Connectors::Error, "the maker cannot approve or reject their own invocation"
     end
+
+    def create_direct_failure(connector, action, args, principal, on_behalf_of, reasoning,
+                              idempotency_key, error)
+      Current.set(actor: principal, on_behalf_of: on_behalf_of) do
+        connector.invocations.create!(
+          action: action.key, args: args, on_behalf_of: on_behalf_of,
+          reasoning: reasoning, requested_by: principal, idempotency_key: idempotency_key,
+          effect: action.effect, decision_class: action.effective_decision_class,
+          status: :failed, error: error, finished_at: Time.current
+        )
+      end
+    end
+    private_class_method :create_direct_failure
+
     private_class_method :ensure_distinct_human!
   end
 end

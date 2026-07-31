@@ -11,14 +11,20 @@ module Mcp
     # LLM/SMTP secrets), configuring outbound webhooks, and managing user
     # identities. These are platform plumbing that api_path_enabled? does not gate
     # (no feature owns them), so without this deny-list every agent was handed
-    # tools for them. Denied at the index level, so tools/list hides them AND
-    # tools/call rejects them as an unknown tool.
+    # tools for them. A denied resource is rejected at ANY structural path
+    # segment — not only the first one — so a future nested route such as
+    # /connectors/{id}/settings cannot silently re-expose the same plumbing.
+    # Denied at the index level, so tools/list hides it AND tools/call rejects
+    # it as an unknown tool.
     DENIED_RESOURCES = %w[api_tokens service_accounts settings webhook_endpoints users].freeze
 
     module_function
 
     def denied_resource?(path)
-      DENIED_RESOURCES.include?(path.to_s.delete_prefix("/").split("/").first.to_s)
+      static_segments = path.to_s.split("/").reject { |segment|
+        segment.blank? || segment.match?(/\A\{[^}]+\}\z/)
+      }
+      (static_segments & DENIED_RESOURCES).any?
     end
 
     def index

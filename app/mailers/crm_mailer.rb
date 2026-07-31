@@ -1,18 +1,14 @@
 # Outbound sequence email — the v1.2 CRM comms gateway. Goes through the
-# same SMTP config as every other mail; with no SMTP configured, delivery
-# is :test (silent), so there's no accidental egress.
+# same SMTP config as every other mail; without SMTP the delivery job records
+# a skipped receipt and the null transport remains the final egress fail-safe.
 class CrmMailer < ApplicationMailer
   def sequence_delivery(delivery)
     @body = delivery.payload.fetch("body", "")
+    @unsubscribe_url = SequenceUnsubscribe.url_for(delivery.sequence_enrollment.enrollable)
     headers["X-Docket-Delivery-ID"] = "sequence-#{delivery.id}"
+    headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
+    headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
     mail to: delivery.recipient, subject: delivery.payload.fetch("subject"),
          template_name: "sequence_step"
-  end
-
-  def sequence_step(enrollment, step)
-    vars = enrollment.interpolation_vars
-    @body = step.render_body(vars)
-    subject = step.render_subject(vars).presence || enrollment.sequence.name
-    mail to: enrollment.recipient_email, subject: subject
   end
 end

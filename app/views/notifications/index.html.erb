@@ -1,0 +1,43 @@
+<% page_title t("notifications.index.title") %>
+
+<div class="page-header">
+  <div>
+    <h1><%= t("notifications.index.title") %></h1>
+    <p class="page-subtitle"><%= t("notifications.index.subtitle") %></p>
+  </div>
+  <% if Current.user.notifications.unread.exists? %>
+    <%= button_to t("notifications.index.mark_all_read"), read_all_notifications_path,
+                  method: :patch, class: "btn" %>
+  <% end %>
+</div>
+
+<nav class="tabs" aria-label="<%= t("notifications.index.filters_label") %>">
+  <%= link_to t("notifications.index.all"), notifications_path,
+              class: class_names("btn btn-sm", "btn-primary": params[:status] != "unread") %>
+  <%= link_to t("notifications.index.unread"), notifications_path(status: "unread"),
+              class: class_names("btn btn-sm", "btn-primary": params[:status] == "unread") %>
+</nav>
+
+<% if @notifications.any? %>
+  <ol class="notification-list">
+    <% @notifications.each do |notification| %>
+      <li class="notification-item severity-<%= notification.severity %> <%= "is-unread" if notification.unread? %>">
+        <%= button_to read_notification_path(notification), method: :patch,
+                      class: "notification-open" do %>
+          <span class="notification-title"><%= notification.localized_title %></span>
+          <span class="notification-body"><%= notification.localized_body %></span>
+          <span class="notification-meta">
+            <%= l notification.last_occurred_at, format: :long %>
+            <% if notification.occurrences > 1 %>
+              · <%= t("notifications.index.occurrences", count: notification.occurrences) %>
+            <% end %>
+          </span>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+  <%= render "shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "shared/empty_state", title: t("notifications.index.empty.title"),
+             hint: t("notifications.index.empty.hint") %>
+<% end %>

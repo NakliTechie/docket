@@ -32,8 +32,10 @@ class Message < ApplicationRecord
   after_create_commit :deliver_via_messaging_connector
   after_create_commit :enqueue_sentiment_analysis
   after_create_commit :publish_message_webhook
+  after_create_commit :notify_mentions
 
   def author_display_name
+    return source_author_name if source_author_name.present?
     return I18n.t("messages.author.system") if author.nil?
     author.respond_to?(:name) ? author.name : author.to_s
   end
@@ -50,11 +52,19 @@ class Message < ApplicationRecord
     metadata&.dig("ai")
   end
 
+  def signature = metadata&.dig("signature").presence
+
+  def outbound_body
+    [ body, signature ].compact_blank.join("\n\n")
+  end
+
   private
 
   # First outbound public answer (human or AI) stops the first-response
   # SLA clock.
   def stamp_first_response
+    return if Imports::Mode.running?
+
     return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
     self.case.record_first_response!(at: created_at)
   end
@@ -63,6 +73,8 @@ class Message < ApplicationRecord
   # in_progress; on an already-resolved case it reopens it — otherwise the
   # reply lands silently on a resolved case and staff never see it (M13).
   def reopen_conversation_on_customer_reply
+    return if Imports::Mode.running?
+
     return unless direction_inbound? && from_customer?
 
     # Route through the maker-checker gate (W3): if a tenant guards
@@ -115,5 +127,9 @@ class Message < ApplicationRecord
       message: { id: id, kind: kind, direction: direction, author_type: author_type,
                  body: body, created_at: created_at.utc.iso8601(3) }
     ))
+  end
+
+  def notify_mentions
+    Notifications::Events.mentions(self)
   end
 end

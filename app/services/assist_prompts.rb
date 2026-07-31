@@ -7,6 +7,17 @@ module AssistPrompts
 
   module_function
 
+  def sentiment(message)
+    <<~PROMPT
+      [TASK:sentiment]
+      Classify the sentiment of this customer message as positive, neutral, or negative.
+      #{Llm.fence_instruction}
+      Customer message:
+      #{Llm.fence(message.body.to_s.truncate(2000))}
+      Respond with JSON: {"sentiment": ..., "confidence": 0.0-1.0}
+    PROMPT
+  end
+
   def summarise(kase)
     thread = kase.messages.order(:created_at).last(MAX_SUMMARY_MESSAGES).map { |message|
       "#{message.author_display_name} (#{message.kind}): #{message.body.truncate(800)}"

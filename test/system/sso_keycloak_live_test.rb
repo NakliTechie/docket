@@ -21,6 +21,7 @@ class SsoKeycloakLiveTest < ApplicationSystemTestCase
     Setting.set("sso_staff_oidc_issuer", issuer)
     Setting.set("sso_staff_oidc_client_id", "docket-staff")
     Setting.set("sso_staff_oidc_client_secret", "staff-client-secret")
+    Setting.set("sso_staff_jit_domains", "example.com")
     Setting.set("sso_staff_role_claim", "groups")
     Setting.set("sso_staff_role_mapping", { "docket-admins" => "super_admin" }.to_json)
     Setting.set("sso_customer_oidc_issuer", issuer)

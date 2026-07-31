@@ -41,4 +41,24 @@ class RoleAssignmentGuardTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_entity
   end
+
+  test "invalid role input is rejected rather than falling back to a default" do
+    sign_in_as users(:super_admin)
+    assert_no_difference "User.count" do
+      post admin_users_path, params: { user: {
+        name: "Unknown", email_address: "unknown-role@t.test",
+        password: "password1234", role: "owner"
+      } }
+    end
+    assert_response :unprocessable_entity
+
+    token = api_token_for(users(:super_admin))
+    assert_no_difference "User.count" do
+      post "/api/v1/users", params: { user: {
+        name: "Array role", email_address: "array-role@t.test",
+        password: "password1234", role: [ "super_admin" ]
+      } }, headers: auth_header(token), as: :json
+    end
+    assert_response :unprocessable_entity
+  end
 end

@@ -8,6 +8,9 @@ class Case < ApplicationRecord
   include Audited
   include Labelable
   include HumanEnums
+  include HasCustomFields
+
+  has_custom_fields_for :cases
 
   humanizes_enums :status, :priority, :channel
 
@@ -44,6 +47,10 @@ class Case < ApplicationRecord
   belongs_to :sla_policy, -> { with_deleted }, optional: true
   # Which connector ingested this case (nil for portal/email/manual/API).
   belongs_to :source_connector, class_name: "Connector", optional: true
+  belongs_to :routed_by_rule, class_name: "RoutingRule", optional: true
+  belongs_to :merged_into, -> { with_deleted }, class_name: "Case", optional: true
+  has_many :merged_cases, class_name: "Case", foreign_key: :merged_into_id, dependent: nil,
+                          inverse_of: :merged_into
 
   has_many :messages, dependent: nil, inverse_of: :case
   has_many :audit_entries, as: :auditable, dependent: nil
@@ -51,13 +58,24 @@ class Case < ApplicationRecord
   # Engineering work escalated from this case (WM4).
   has_many :work_links, as: :linkable, dependent: :destroy
   has_many :work_items, through: :work_links
+  has_many :sla_clock_events, dependent: nil
+  has_many :routing_rule_executions, dependent: nil
+  has_one :csat_survey, dependent: nil
+  has_many :case_presences, dependent: :destroy
+  has_many_attached :files
+  include AttachableValidation
 
   before_validation :ensure_tracking_id, on: :create
+  before_validation :stamp_status_changed_at
   before_validation :apply_default_sla_policy, on: :create
   before_save :compute_sla_due_dates, if: :sla_inputs_changed?
   after_create_commit :apply_routing_rules
   after_create_commit :enqueue_agent_triage
   after_create_commit :publish_created_webhook
+  after_create_commit :notify_assignment, if: :assignee_id?
+  after_update_commit :notify_assignment, if: :saved_change_to_assignee_id?
+  after_create :start_sla_clocks
+  after_update :record_sla_recalculation
 
   validates :subject, presence: true
   # DELIBERATELY not scoped to live rows (unlike every other uniqueness rule
@@ -69,13 +87,16 @@ class Case < ApplicationRecord
   # Only block ASSIGNING to an inactive user — a case keeps an assignee who
   # later goes inactive (unchanged assignee_id) so it stays editable.
   validate :assignee_must_be_active, if: -> { assignee_id.present? && will_save_change_to_assignee_id? }
+  validate :merge_lineage_is_valid
+  validates_same_tenant :merged_into
 
-  scope :open_cases, -> { where(status: OPEN_STATUSES) }
+  scope :canonical, -> { where(merged_into_id: nil) }
+  scope :open_cases, -> { canonical.where(status: OPEN_STATUSES) }
   # A breach is also real when the case left the open set (was resolved /
   # closed) after missing its deadline — otherwise a case resolved inside
   # the 5-minute sweep window after going overdue is never flagged (M18).
   scope :overdue_first_response, -> {
-    base = where(first_response_breached: false).where.not(first_response_due_at: nil)
+    base = canonical.where(first_response_breached: false).where.not(first_response_due_at: nil)
     still_open = base.where(first_responded_at: nil, status: OPEN_STATUSES)
                      .where("first_response_due_at < ?", Time.current)
     responded_late = base.where.not(first_responded_at: nil)
@@ -83,7 +104,7 @@ class Case < ApplicationRecord
     still_open.or(responded_late)
   }
   scope :overdue_resolution, -> {
-    base = where(resolution_breached: false).where.not(resolution_due_at: nil)
+    base = canonical.where(resolution_breached: false).where.not(resolution_due_at: nil)
     still_open = base.where(status: OPEN_STATUSES).where("resolution_due_at < ?", Time.current)
     resolved_late = base.where.not(resolved_at: nil).where("resolved_at > resolution_due_at")
     still_open.or(resolved_late)
@@ -117,22 +138,27 @@ class Case < ApplicationRecord
     end
 
     previous_status = status
+    at = Time.current
     @transitioning = true
-    self.status = new_status
-    case new_status
-    when "resolved"
-      self.resolved_at = Time.current
-    when "closed"
-      self.closed_at = Time.current
-    when "reopened"
-      self.reopened_at = Time.current
-      self.reopen_count += 1
-      self.resolved_at = nil
-      self.closed_at = nil
-      reset_resolution_sla_on_reopen
+    transaction do
+      self.status = new_status
+      self.status_changed_at = at
+      case new_status
+      when "resolved"
+        self.resolved_at = at
+      when "closed"
+        self.closed_at = at
+      when "reopened"
+        self.reopened_at = at
+        self.reopen_count += 1
+        self.resolved_at = nil
+        self.closed_at = nil
+      end
+      save!
+      SlaClock.transition!(self, from: previous_status, to: new_status, at: at)
     end
-    save!
     publish_status_webhooks(previous_status)
+    CsatSurvey.invite!(self) if status_resolved?
     self
   ensure
     @transitioning = false
@@ -142,6 +168,11 @@ class Case < ApplicationRecord
     transition_to!(new_status)
   rescue InvalidTransition, ActiveRecord::RecordInvalid
     false
+  end
+
+  def stamp_status_changed_at
+    self.status_changed_at ||= Time.current
+    self.status_changed_at = Time.current if will_save_change_to_status? && !will_save_change_to_status_changed_at?
   end
 
   # Maker-checker-aware transition (W3). If an ApprovalProcess guards this target
@@ -163,8 +194,22 @@ class Case < ApplicationRecord
     OPEN_STATUSES.include?(status)
   end
 
+  def canonical_record
+    record = self
+    seen = Set.new
+    while record.merged_into && seen.add?(record.id)
+      record = record.merged_into
+    end
+    record
+  end
+
   def record_first_response!(at: Time.current)
-    update!(first_responded_at: at) if first_responded_at.nil?
+    return if first_responded_at
+
+    transaction do
+      update!(first_responded_at: at)
+      SlaClock.stop_first_response!(self, at: at) unless Imports::Mode.running?
+    end
   end
 
   private
@@ -184,40 +229,72 @@ class Case < ApplicationRecord
     self.sla_policy ||= SlaPolicy.default
   end
 
-  # Reopening starts a fresh resolution clock from the reopen moment, so
-  # the sweep doesn't instantly mark a (possibly long-resolved) case
-  # breached against its stale original due date (M17). The sticky
-  # resolution_breached flag is left as-is — it is history.
-  def reset_resolution_sla_on_reopen
-    target = sla_policy&.target_for(priority)
-    self.resolution_due_at = target ? (reopened_at + target.resolution_minutes.minutes) : nil
-  end
-
   def sla_inputs_changed?
     new_record? || will_save_change_to_priority? || will_save_change_to_sla_policy_id?
   end
 
   def compute_sla_due_dates
     target = sla_policy&.target_for(priority)
-    base = created_at || Time.current
+    # A reopened conversation owns a fresh resolution clock. Changing its
+    # priority must preserve that restart rather than silently moving the due
+    # date back to the case's original creation time.
+    base = reopened_at || created_at || Time.current
     if target.nil?
       self.first_response_due_at = nil unless first_responded_at
       self.resolution_due_at = nil unless resolved_at
       return
     end
-    self.first_response_due_at = base + target.first_response_minutes.minutes if first_responded_at.nil?
-    self.resolution_due_at = base + target.resolution_minutes.minutes if resolved_at.nil?
+    calendar = sla_policy&.business_calendar || BusinessCalendar.default
+    if first_responded_at.nil?
+      self.first_response_due_at = SlaClock.deadline(
+        calendar: calendar, from: base, minutes: target.first_response_minutes
+      )
+    end
+    if resolved_at.nil?
+      if status_waiting_on_customer?
+        self.resolution_remaining_minutes = target.resolution_minutes
+        self.resolution_due_at = nil
+      else
+        self.resolution_due_at = SlaClock.deadline(
+          calendar: calendar, from: base, minutes: target.resolution_minutes
+        )
+      end
+    end
+  end
+
+  def start_sla_clocks
+    return if Imports::Mode.running?
+
+    SlaClock.start!(self)
+  end
+
+  def record_sla_recalculation
+    return if Imports::Mode.running?
+    return unless saved_change_to_priority? || saved_change_to_sla_policy_id?
+
+    SlaClock.recalculate!(self, :first_response) unless first_responded_at
+    SlaClock.recalculate!(self, :resolution) unless resolved_at
   end
 
   # Status mutations must come through #transition_to! — the single
   # state-machine location (handoff §2).
   def status_changed_through_state_machine
     return unless will_save_change_to_status?
+    return if Imports::Mode.running?
+
     errors.add(:status, :must_use_state_machine) unless @transitioning
   end
 
   def assignee_must_be_active
-    errors.add(:assignee, :inactive) unless assignee&.active?
+    errors.add(:assignee, :inactive) unless assignee&.case_assignee?
+  end
+
+  def merge_lineage_is_valid
+    return if merged_into.nil?
+
+    errors.add(:merged_into, :same_case) if merged_into_id == id
+    errors.add(:merged_into, :different_contact) if merged_into.contact_id != contact_id
+    errors.add(:merged_into, :already_merged) if merged_into.merged_into_id.present?
   end
 
   # First-match declarative routing (CaseRouting) — deterministic, runs before
@@ -257,5 +334,9 @@ class Case < ApplicationRecord
     payload = Webhooks.case_payload(self).merge(previous_status: previous_status)
     Webhooks.publish("case.status_changed", payload)
     Webhooks.publish("case.resolved", payload) if status_resolved?
+  end
+
+  def notify_assignment
+    Notifications::Events.case_assigned(self)
   end
 end

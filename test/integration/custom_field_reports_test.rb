@@ -1,0 +1,31 @@
+require "test_helper"
+
+class CustomFieldReportsTest < ActionDispatch::IntegrationTest
+  setup do
+    @field = CustomFieldDefinition.create!(resource_type: "cases", key: "region", label: "Region",
+                                           field_type: :single_select,
+                                           options: %w[North South], reportable: true)
+    cases(:pension_case).assign_custom_fields(region: "North")
+    cases(:pension_case).save!
+  end
+
+  test "staff can inspect and export a reportable field" do
+    sign_in_as users(:agent_a)
+    get custom_field_report_path, params: { resource_type: "cases", field: "region" }
+    assert_response :success
+    assert_match "North", response.body
+    assert_match "Not set", response.body
+
+    get custom_field_report_path(format: :csv), params: { resource_type: "cases", field: "region" }
+    assert_response :success
+    assert_equal "text/csv", response.media_type
+    assert_match "resource,field_key,field_label,value,count,total", response.body
+  end
+
+  test "non-reportable fields cannot be queried" do
+    @field.update!(reportable: false)
+    sign_in_as users(:admin)
+    get custom_field_report_path, params: { resource_type: "cases", field: "region" }
+    assert_response :not_found
+  end
+end

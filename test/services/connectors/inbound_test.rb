@@ -211,7 +211,7 @@ class Connectors::InboundTest < ActiveSupport::TestCase
                                 author: users(:agent_a), body: "On it!")
     fake = Object.new
     def fake.calls = @calls ||= []
-    def fake.invoke(action, args)
+    def fake.invoke(action, args, _context = {})
       calls << [ action, args ]
       { "message_id" => "wamid.out" }
     end
@@ -221,6 +221,13 @@ class Connectors::InboundTest < ActiveSupport::TestCase
     assert_equal [ "send_text_message", { "to" => "9198", "text" => "On it!" } ], fake.calls.first
     assert_equal true, msg.reload.metadata.dig("delivery", "ok")
     assert_equal "wamid.out", msg.metadata.dig("delivery", "message_id")
+    invocation = ConnectorInvocation.find(msg.metadata.dig("delivery", "invocation_id"))
+    assert invocation.status_succeeded?
+    assert_equal users(:agent_a), invocation.requested_by
+    assert_equal "case-message:#{msg.id}:reply", invocation.idempotency_key
+    assert_equal "case:#{kase.id}", invocation.on_behalf_of
+    assert AuditEntry.where(auditable: invocation, actor: users(:agent_a)).exists?,
+           "the pre-authorized direct send remains actor-attributed in the audit chain"
   end
 
   test "Reply.deliver records a skip and never invokes a paused connector" do
@@ -241,6 +248,36 @@ class Connectors::InboundTest < ActiveSupport::TestCase
     assert_equal true, delivery["skipped"]
     assert_equal "connector_inactive", delivery["reason"]
     assert_equal "paused", delivery["status"]
+    invocation = ConnectorInvocation.find(delivery["invocation_id"])
+    assert invocation.status_failed?
+    assert_includes invocation.error, "not active"
+  end
+
+  test "direct replies consume the connector budget without approval parking" do
+    wa = whatsapp
+    wa.update!(action_budget: 1, action_budget_window_minutes: 60)
+    kase = Case.create!(subject: "x", channel: :whatsapp, contact: contacts(:asha),
+                        source_connector: wa, source_thread_id: "9198")
+    first = kase.messages.create!(kind: :public_reply, direction: :outbound,
+                                  author: users(:agent_a), body: "First")
+    second = kase.messages.create!(kind: :public_reply, direction: :outbound,
+                                   author: users(:agent_a), body: "Second")
+    fake = Object.new
+    def fake.calls = @calls ||= []
+    def fake.invoke(action, args, _context = {})
+      calls << [ action, args ]
+      { "message_id" => "sent-#{calls.size}" }
+    end
+    wa.define_singleton_method(:provider_instance) { fake }
+
+    Connectors::Reply.deliver(first)
+    Connectors::Reply.deliver(second)
+
+    assert_equal 1, fake.calls.size
+    assert_equal 1, ConnectorInvocation.where(connector: wa).count
+    assert ConnectorInvocation.find_by!(connector: wa).status_succeeded?
+    assert_equal true, first.reload.metadata.dig("delivery", "ok")
+    assert_includes second.reload.metadata.dig("delivery", "error"), "budget exhausted"
   end
 
   test "an outbound reply on a messaging case enqueues delivery and skips email" do

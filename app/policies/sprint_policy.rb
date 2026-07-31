@@ -3,16 +3,20 @@
 # their own cadence.
 class SprintPolicy < ApplicationPolicy
   def index?   = permit?("work:read")
-  def show?    = permit?("work:read")
-  def create?  = permit?("work:write")
-  def update?  = permit?("work:write")
-  def start?   = permit?("work:write")
-  def close?   = permit?("work:write")
-  def destroy? = permit?("project:manage")
+  def show?    = permit?("work:read") && project_visible?
+  def create?  = permit?("work:write") && project_visible?
+  def update?  = permit?("work:write") && project_visible?
+  def start?   = permit?("work:write") && project_visible?
+  def close?   = permit?("work:write") && project_visible?
+  def destroy? = permit?("project:manage") && project_visible?
+
+  private
+
+  def project_visible? = record.is_a?(Class) || record.project&.visible_to?(user) || false
 
   class Scope < Scope
     def resolve
-      permit?("work:read") ? scope.all : scope.none
+      permit?("work:read") ? scope.visible_to(user) : scope.none
     end
   end
 end

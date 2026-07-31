@@ -26,8 +26,8 @@
       <h2 class="panel-title"><%= t(".pipeline_now") %></h2>
       <dl class="meta-list">
         <dt><%= t(".open_deals") %></dt><dd><%= @report.stats[:open_deals] %></dd>
-        <dt><%= t(".open_value") %></dt><dd><%= format_cents(@report.stats[:open_value_cents]) %></dd>
-        <dt><%= t(".weighted_value") %></dt><dd><%= format_cents(@report.stats[:weighted_value_cents]) %></dd>
+        <dt><%= t(".open_value") %></dt><dd><%= format_money_totals(@report.stats[:open_values_by_currency]) %></dd>
+        <dt><%= t(".weighted_value") %></dt><dd><%= format_money_totals(@report.stats[:weighted_values_by_currency]) %></dd>
       </dl>
     </div>
 
@@ -48,7 +48,7 @@
                 <tr>
                   <td><%= row[:stage]&.name || "—" %></td>
                   <td><%= row[:count] %></td>
-                  <td><%= format_cents(row[:value_cents]) %></td>
+                  <td><%= format_money(row[:value_cents], row[:currency]) %></td>
                 </tr>
               <% end %>
             </tbody>
@@ -65,13 +65,13 @@
       <h2 class="panel-title"><%= t(".won_lost_window") %></h2>
       <dl class="meta-list">
         <dt><%= t(".won") %></dt>
-        <dd><%= t(".count_value", count: @report.stats[:won_count], value: format_cents(@report.stats[:won_value_cents])) %></dd>
+        <dd><%= t(".count_value", count: @report.stats[:won_count], value: format_money_totals(@report.stats[:won_values_by_currency])) %></dd>
         <dt><%= t(".lost") %></dt>
-        <dd><%= t(".count_value", count: @report.stats[:lost_count], value: format_cents(@report.stats[:lost_value_cents])) %></dd>
+        <dd><%= t(".count_value", count: @report.stats[:lost_count], value: format_money_totals(@report.stats[:lost_values_by_currency])) %></dd>
         <dt><%= t(".win_rate") %></dt>
         <dd><%= @report.stats[:win_rate] ? t(".percent", value: @report.stats[:win_rate]) : "—" %></dd>
         <dt><%= t(".deals_created") %></dt>
-        <dd><%= t(".count_value", count: @report.stats[:deals_created], value: format_cents(@report.stats[:deals_created_value_cents])) %></dd>
+        <dd><%= t(".count_value", count: @report.stats[:deals_created], value: format_money_totals(@report.stats[:deals_created_values_by_currency])) %></dd>
         <dt><%= t(".lead_conversion") %></dt>
         <dd>
           <%= @report.stats[:lead_conversion_rate] ? t(".percent", value: @report.stats[:lead_conversion_rate]) : "—" %>
@@ -96,8 +96,8 @@
               <% @report.by_owner.each do |row| %>
                 <tr>
                   <td><%= row[:owner]&.name || t(".unassigned") %></td>
-                  <td><%= format_cents(row[:open_value_cents]) %></td>
-                  <td><%= format_cents(row[:won_value_cents]) %></td>
+                  <td><%= format_money(row[:open_value_cents], row[:currency]) %></td>
+                  <td><%= format_money(row[:won_value_cents], row[:currency]) %></td>
                 </tr>
               <% end %>
             </tbody>
@@ -125,7 +125,7 @@
                 <tr>
                   <td><%= t("deals.enum.lost_reason.#{row[:reason]}") %></td>
                   <td><%= row[:count] %></td>
-                  <td><%= format_cents(row[:value_cents]) %></td>
+                  <td><%= format_money(row[:value_cents], row[:currency]) %></td>
                 </tr>
               <% end %>
             </tbody>
@@ -134,6 +134,20 @@
       <% else %>
         <p class="muted"><%= t(".no_losses") %></p>
       <% end %>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".competitor_losses") %></h2>
+      <% if @report.competitor_losses.any? %>
+        <div class="table-wrap"><table><thead><tr>
+          <th><%= t(".columns.competitor") %></th><th><%= t(".columns.deals") %></th><th><%= t(".columns.value") %></th>
+        </tr></thead><tbody>
+          <% @report.competitor_losses.each do |row| %><tr>
+            <td><%= row[:competitor]&.name || "—" %></td><td><%= row[:count] %></td>
+            <td><%= format_money(row[:value_cents], row[:currency]) %></td>
+          </tr><% end %>
+        </tbody></table></div>
+      <% else %><p class="muted"><%= t(".no_competitor_losses") %></p><% end %>
     </div>
   </aside>
 </div>

@@ -34,6 +34,12 @@
           include_blank: t("forms.default") %>
   </div>
 
+  <div class="form-row">
+    <%= f.label :email_signature, t("admin.users.fields.email_signature") %>
+    <%= f.text_area :email_signature, rows: 4, maxlength: 2_000 %>
+    <p class="form-hint"><%= t("admin.users.fields.email_signature_hint") %></p>
+  </div>
+
   <fieldset>
     <legend><%= t("admin.users.fields.queues") %></legend>
     <%= f.collection_check_boxes :queue_ids, CaseQueue.order(:name), :id, :name do |b| %>

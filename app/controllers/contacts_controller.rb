@@ -7,14 +7,13 @@ class ContactsController < ApplicationController
 
   def show
     authorize @contact
-    # Contacts are shared by every module, so this page is NOT entitlement-gated
-    # — but the case history on it belongs to the service desk. Without this a
-    # tenant that never bought the desk could browse every case, subject line
-    # and tracking ID through the contact record.
-    @cases = Case.none
-    return unless feature?("service_desk") && policy(Case).index?
-
-    @pagy, @cases = pagy(@contact.cases.includes(:queue, :assignee).order(created_at: :desc))
+    result = Customer360.new(
+      subject: @contact,
+      case_scope: feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none,
+      deal_scope: feature?("crm") && policy(Deal).index? ? policy_scope(Deal) : Deal.none,
+      work_scope: feature?("work") && policy(WorkItem).index? ? policy_scope(WorkItem) : WorkItem.none
+    ).call
+    assign_customer_360(result)
   end
 
   def new
@@ -56,11 +55,22 @@ class ContactsController < ApplicationController
 
   private
 
+  def assign_customer_360(result)
+    @cases = result.cases
+    @case_count = result.case_count
+    @deals = result.deals
+    @deal_count = result.deal_count
+    @work_items = result.work_items
+    @work_item_count = result.work_item_count
+  end
+
   def set_contact
     @contact = Contact.find(params[:id])
   end
 
-  EDITABLE_ATTRS = %i[name email phone organisation_id preferred_language notes sms_consent].freeze
+  EDITABLE_ATTRS = %i[
+    name email phone organisation_id preferred_language notes sms_consent email_consent
+  ].freeze
 
   def contact_params
     params.require(:contact).permit(*EDITABLE_ATTRS, :external_id)

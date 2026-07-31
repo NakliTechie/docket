@@ -2,8 +2,10 @@ module Connectors
   # Routes an outbound case reply back out through the messaging connector that
   # originated the case (PG2) — closing the loop WhatsApp/Telegram opened on
   # intake. A human (or the AI agent) already authored the reply, so this is a
-  # direct provider send, not an agent-gated effector invocation. The provider
-  # message id (or any error) is recorded on the message metadata for audit.
+  # direct, pre-authorized invocation: it never parks for approval, but still
+  # applies connector state, budgets, idempotency, actor attribution, and the
+  # durable ConnectorInvocation audit trail. The provider message id (or any
+  # error) is also stamped on message metadata for the case timeline.
   module Reply
     module_function
 
@@ -11,17 +13,26 @@ module Connectors
       kase = message.case
       connector = kase.source_connector
       return unless connector&.ingests?
-      unless connector.operational?
-        stamp(message, "ok" => false, "skipped" => true,
-                       "reason" => "connector_inactive", "status" => connector.status)
-        return
-      end
 
       action, args = dispatch(kase, message)
       return unless action
 
-      result = connector.provider_instance.invoke(action, args)
-      stamp(message, "ok" => true, "message_id" => result["message_id"], "via" => connector.provider)
+      invocation = Connectors::Invoke.call_direct(
+        connector, action, args: args, principal: message.author,
+        on_behalf_of: "case:#{kase.id}", reasoning: "authorized case reply",
+        idempotency_key: "case-message:#{message.id}:reply"
+      )
+      if invocation.status_succeeded?
+        result = invocation.result || {}
+        stamp(message, "ok" => true, "message_id" => result["message_id"],
+                       "via" => connector.provider, "invocation_id" => invocation.id)
+      elsif invocation.status_failed? && !connector.operational?
+        stamp(message, "ok" => false, "skipped" => true, "reason" => "connector_inactive",
+                       "status" => connector.status, "invocation_id" => invocation.id)
+      elsif invocation.status_failed?
+        stamp(message, "ok" => false, "error" => invocation.error,
+                       "invocation_id" => invocation.id)
+      end
     rescue Connectors::Error => e
       stamp(message, "ok" => false, "error" => e.message)
     end
@@ -32,10 +43,10 @@ module Connectors
       when "whatsapp"
         to = kase.source_thread_id.presence || kase.contact.phone
         return nil if to.blank?
-        [ "send_text_message", { "to" => to, "text" => message.body } ]
+        [ "send_text_message", { "to" => to, "text" => message.outbound_body } ]
       when "telegram"
         return nil if kase.source_thread_id.blank?
-        [ "send_message", { "chat_id" => kase.source_thread_id, "text" => message.body } ]
+        [ "send_message", { "chat_id" => kase.source_thread_id, "text" => message.outbound_body } ]
       end
     end
 

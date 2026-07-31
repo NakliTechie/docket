@@ -1,0 +1,41 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <% if @report %>
+    <%= link_to t(".export_csv"), custom_field_report_path(format: :csv,
+          resource_type: @resource_type, field: @definition.key), class: "btn" %>
+  <% end %>
+</div>
+
+<p class="page-intro"><%= t(".intro") %></p>
+
+<%= form_with url: custom_field_report_path, method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row">
+    <%= f.label :resource_type, t(".resource") %>
+    <%= f.select :resource_type,
+          [[t("custom_fields.index.cases"), "cases"], [t("custom_fields.index.work_items"), "work_items"]],
+          { selected: @resource_type } %>
+  </div>
+  <div class="form-row">
+    <%= f.label :field, t(".field") %>
+    <%= f.select :field, @definitions.map { |definition| [definition.label, definition.key] },
+          { selected: @definition&.key } %>
+  </div>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+<% end %>
+
+<% if @report %>
+  <p class="muted"><%= t(".total", count: @report.total) %></p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th><%= t(".value") %></th><th><%= t(".count") %></th></tr></thead>
+      <tbody>
+        <% @report.rows.each do |row| %>
+          <tr><td><%= row.label %></td><td><%= row.count %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+<% end %>

@@ -1,0 +1,32 @@
+<% page_title t("project_templates.index.title") %>
+<div class="page-header">
+  <div>
+    <h1><%= t("project_templates.index.title") %></h1>
+    <p class="page-subtitle"><%= t("project_templates.index.subtitle") %></p>
+  </div>
+  <%= link_to t("project_templates.index.new"), new_project_template_path, class: "btn btn-primary" %>
+</div>
+
+<% if @templates.any? %>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><%= t("project_templates.fields.name") %></th>
+      <th><%= t("project_templates.fields.key_prefix") %></th>
+      <th><%= t("project_templates.fields.items") %></th>
+      <th><%= t("project_templates.fields.active") %></th>
+      <th><span class="visually-hidden"><%= t("tables.actions") %></span></th>
+    </tr></thead>
+    <tbody>
+      <% @templates.each do |template| %>
+        <tr>
+          <td><%= template.name %></td><td class="mono"><%= template.key_prefix %></td>
+          <td><%= template.project_template_items.size %></td>
+          <td><%= template.active? ? t("forms.yes") : t("forms.no") %></td>
+          <td><%= link_to t("actions.edit"), edit_project_template_path(template), class: "btn btn-sm" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table></div>
+<% else %>
+  <%= render "shared/empty_state", title: t("project_templates.index.empty") %>
+<% end %>

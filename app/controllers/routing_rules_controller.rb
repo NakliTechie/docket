@@ -80,6 +80,7 @@ class RoutingRulesController < ApplicationController
   def rule_params
     params.require(:routing_rule).permit(
       :name, :active, :if_channel, :if_priority, :match_category_id, :if_subject_contains,
+      :trigger_type, :after_minutes, :if_status, :use_business_hours,
       :then_queue_id, :then_category_id, :then_priority, :then_assignment, :then_assignee_id
     )
   end

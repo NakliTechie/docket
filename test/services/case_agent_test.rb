@@ -53,6 +53,40 @@ class CaseAgentTest < ActiveSupport::TestCase
     assert_includes turn.body, I18n.t("cases.agent.human_handoff_footer")
   end
 
+  test "a guarded AI resolution stays internal until a human approves it" do
+    categories(:pension_delay).update!(ai_auto_resolve: true)
+    Category.where.not(id: categories(:pension_delay).id).find_each(&:destroy)
+    ApprovalProcess.create!(name: "AI resolution review", trigger_type: :case_transition,
+                            trigger_key: "resolved")
+    kase = build_case(subject: "Pension delay", description: "Simple pension delay query")
+
+    CaseAgent.new(kase).run
+
+    assert kase.reload.status_triaged?
+    assert_empty kase.messages.where(kind: :agent_turn)
+    request = kase.approval_requests.status_pending.find_by!(requested_action: "resolved")
+    proposal = kase.messages.find { |message| message.metadata["ai"] == "resolve_proposal" }
+    assert proposal.kind_internal_note?
+
+    ApprovalGate.approve!(request, approver: users(:client_admin),
+                          reason: "The answer matches the approved guidance.")
+
+    assert kase.reload.status_resolved?
+    assert_equal 1, kase.messages.where(kind: :agent_turn).count
+  end
+
+  test "AI routing respects a guarded triage transition" do
+    ApprovalProcess.create!(name: "Triage review", trigger_type: :case_transition,
+                            trigger_key: "triaged")
+    kase = build_case
+
+    CaseAgent.new(kase).run
+
+    assert kase.reload.status_new?
+    assert kase.approval_requests.status_pending.exists?(requested_action: "triaged")
+    assert_empty kase.messages.where(kind: :agent_turn)
+  end
+
   test "low-confidence drafts do not auto-resolve even with opt-in" do
     categories(:pension_delay).update!(ai_auto_resolve: true)
     Category.where.not(id: categories(:pension_delay).id).find_each(&:destroy)

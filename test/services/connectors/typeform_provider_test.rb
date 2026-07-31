@@ -14,9 +14,15 @@ class Connectors::TypeformProviderTest < ActiveSupport::TestCase
     def request(req) = (@last = req; @r)
   end
   def with_http(code, body = "{}")
+    with_http_seq([ code, body ]) { |requests| yield requests }
+  end
+  def with_http_seq(*responses)
     captured = []
+    index = -1
     original = Net::HTTP.method(:new)
     Net::HTTP.define_singleton_method(:new) do |host = nil, port = nil|
+      index += 1
+      code, body = responses[index] || responses.last
       FakeHttp.new(FakeResponse.new(code.to_s, body), host, port).tap { |h| captured << h }
     end
     yield captured
@@ -64,7 +70,7 @@ class Connectors::TypeformProviderTest < ActiveSupport::TestCase
 
       req = reqs.last.last
       assert_kind_of Net::HTTP::Get, req
-      assert_equal "/forms/abc123/responses", req.path
+      assert_equal "/forms/abc123/responses?page_size=1000", req.path
       assert_equal "Bearer tfp_token", req["Authorization"]
     end
   end
@@ -82,9 +88,9 @@ class Connectors::TypeformProviderTest < ActiveSupport::TestCase
     end
   end
 
-  test "fetch tolerates a non-hash body by returning an empty array" do
+  test "fetch rejects a non-hash body instead of reporting a truncated sync as successful" do
     with_http(200, "not json") do
-      assert_equal [], provider.fetch
+      assert_raises(Connectors::Error) { provider.fetch }
     end
   end
 
@@ -92,7 +98,7 @@ class Connectors::TypeformProviderTest < ActiveSupport::TestCase
     with_http(200, { "items" => [] }.to_json) do |reqs|
       provider(config: { "base_url" => "https://eu.typeform.com" }).fetch
       assert_equal "eu.typeform.com", reqs.last.host
-      assert_equal "/forms/abc123/responses", reqs.last.last.path
+      assert_equal "/forms/abc123/responses?page_size=1000", reqs.last.last.path
     end
   end
 
@@ -111,6 +117,18 @@ class Connectors::TypeformProviderTest < ActiveSupport::TestCase
   test "fetch raises on a non-2xx response" do
     with_http(401) do
       assert_raises(Connectors::Error) { provider.fetch }
+    end
+  end
+
+
+  test "fetch uses the last response token to traverse a full page" do
+    first_items = 1_000.times.map { |index| { "response_id" => "r#{index}", "token" => "t#{index}" } }
+    second = { "items" => [ { "response_id" => "last", "token" => "last-token" } ] }.to_json
+
+    with_http_seq([ 200, { "items" => first_items }.to_json ], [ 200, second ]) do |requests|
+      records = provider.fetch
+      assert_equal 1_001, records.size
+      assert_includes requests.last.last.path, "before=t999"
     end
   end
 end

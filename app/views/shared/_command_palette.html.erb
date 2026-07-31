@@ -2,7 +2,8 @@
         data-action="click->palette#close:self keydown->palette#onKeydown"
         aria-label="<%= t("palette.label") %>">
   <div class="modal-content">
-    <input type="search" data-palette-target="input" data-action="input->palette#filter"
+    <input type="search" id="command-palette-search" name="command_palette_search"
+           data-palette-target="input" data-action="input->palette#filter"
            placeholder="<%= t("palette.placeholder") %>" aria-label="<%= t("palette.placeholder") %>">
     <ul class="palette-list" data-palette-target="list">
       <%# Entitlement-gated: the palette used to render case links AND enumerate

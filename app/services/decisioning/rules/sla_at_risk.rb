@@ -9,6 +9,7 @@ module Decisioning
 
       def self.decision_class = :confirm
       def self.effect = :write
+      def self.owner_feature = "service_desk"
 
       def evaluate
         Case.open_cases

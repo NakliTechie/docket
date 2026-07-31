@@ -41,22 +41,41 @@ export default class extends Controller {
     const card = this.element.querySelector(`.kanban-card[data-item-id="${this.draggedId}"]`)
     if (!card || !targetId) return
 
+    const sourceColumn = card.closest(".kanban-column")
     column.querySelector(".kanban-cards").appendChild(card)
-    this.recount()
+    this.recount(sourceColumn, column)
     this.persist(this.draggedId, targetId)
   }
 
   // Counts and WIP flags are rendered server-side; keep them honest after an
-  // optimistic move instead of waiting for a reload.
-  recount() {
-    this.element.querySelectorAll(".kanban-column").forEach((column) => {
-      const count = column.querySelectorAll(".kanban-card").length
+  // optimistic move instead of waiting for a reload. data-total-count carries
+  // the true server count when a column is capped; counting rendered cards
+  // would turn 65 into 49 after one drag and hide a real WIP breach.
+  recount(sourceColumn, targetColumn) {
+    if (sourceColumn && targetColumn && sourceColumn !== targetColumn) {
+      sourceColumn.dataset.totalCount = Math.max(0, this.totalCount(sourceColumn) - 1)
+      targetColumn.dataset.totalCount = this.totalCount(targetColumn) + 1
+    }
+
+    new Set([sourceColumn, targetColumn].filter(Boolean)).forEach((column) => {
+      const count = this.totalCount(column)
       const badge = column.querySelector(".kanban-count")
       if (badge) badge.textContent = count
 
       const limit = parseInt(column.dataset.wipLimit || "", 10)
-      if (!isNaN(limit)) column.classList.toggle("is-over-wip", count > limit)
+      if (!isNaN(limit)) {
+        const over = count > limit
+        column.classList.toggle("is-over-wip", over)
+        column.querySelector(".kanban-wip")?.classList.toggle("is-over", over)
+        const warning = column.querySelector(".board-wip-warning")
+        if (warning) warning.hidden = !over
+      }
     })
+  }
+
+  totalCount(column) {
+    const stored = parseInt(column.dataset.totalCount || "", 10)
+    return isNaN(stored) ? column.querySelectorAll(".kanban-card").length : stored
   }
 
   persist(itemId, targetId) {
@@ -74,7 +93,7 @@ export default class extends Controller {
       },
       body: JSON.stringify(body)
     }).then((response) => {
-      if (!response.ok) window.location.reload()
+      if (!response.ok || response.status === 202) window.location.reload()
     }).catch(() => window.location.reload())
   }
 }

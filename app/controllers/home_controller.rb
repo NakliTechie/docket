@@ -8,7 +8,7 @@ class HomeController < ApplicationController
   # Contacts is the floor: shared by every module, so it is always reachable.
   def index
     setup = SetupProgress.new(actor: Current.user, base_url: request.base_url)
-    if setup_access? && setup.fresh_tenant?
+    if setup_access? && setup.needs_attention?
       return redirect_to setup_path
     end
 

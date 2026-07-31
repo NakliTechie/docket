@@ -4,9 +4,9 @@
 
 Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites — for any organization that runs support, sales, or engineering work and wants to **own its stack**. Three pillars in one deployment, sharing one identity, one audit log and one API:
 
-- **Service desk** — case intake (web portal, email, API), declarative routing, SLA-tracked lifecycle, approval (maker-checker) chains, knowledge base.
-- **CRM** — contacts, organizations, leads, deals with pipelines, email sequences.
-- **Work** — projects, work items (`KEY-123`), a kanban board and sprints, for the engineering side of the same business.
+- **Service desk** — case intake (web portal, email, API and supported messaging connectors), scheduled/declarative routing, business-calendar SLA, approvals, collaboration, CSAT, and knowledge.
+- **CRM** — contacts, organizations, configurable lead capture, reviewed duplicate merge, pipelines, deals, products, competitors, sequences, and sales reporting.
+- **Work** — projects and templates, work items (`KEY-123`), assignment rules, relations, comments/watches, kanban boards, sprints, and transition approvals.
 
 They are not three products behind one login: a support case escalates into engineering work and the desk keeps the customer conversation, a won deal can open an onboarding project, and every object shares the contact it belongs to.
 
@@ -17,7 +17,7 @@ Around them: a keyboard-first staff console, a tamper-evident hash-chained audit
 Three guarantees, by construction:
 
 1. **Open by construction.** AGPL-3.0 — read, audit, and fork what runs on your customers' data. (For public bodies: public funds → public code.)
-2. **Data sovereignty.** Self-hosted, operator-owned models. The default SKU is **single-tenant** — one deployment, one organization, one database, nothing of anyone else's in it. (A shared multi-tenant mode exists for customers who can't fund a dedicated instance; the isolated deploy is the degenerate single-tenant case of it, so the procurement story stays literally true.) **No telemetry, no phone-home, no update checks, no analytics — ever.** The only outbound connections Docket makes are the LLM endpoint *you* configure and the mail gateway *you* configure.
+2. **Data sovereignty.** Self-hosted, operator-owned models. The default SKU is **single-tenant** — one deployment, one organization, one database, nothing of anyone else's in it. (A shared multi-tenant mode exists for customers who can't fund a dedicated instance; the isolated deploy is the degenerate single-tenant case of it, so the procurement story stays literally true.) **No vendor telemetry, phone-home, update checks, or product analytics.** Outbound traffic is limited to endpoints the operator deliberately configures: mail, identity/model services, connector providers, webhooks, and migration sources.
 3. **Zero per-seat licensing.** There is no seat counting anywhere in the code.
 
 ---
@@ -29,11 +29,16 @@ Requirements: Docker with the compose plugin.
 ```bash
 git clone <this-repo> docket && cd docket
 
-# Try the demo on localhost (seeds fictional data, serves plain HTTP):
-DOCKET_SEED_DEMO=true DOCKET_FORCE_SSL=false docker compose up --build
+# Try the demo on localhost. Seeding is an explicit one-off operation, never a
+# web-container restart side effect:
+export POSTGRES_PASSWORD=$(openssl rand -hex 16)
+DOCKET_FORCE_SSL=false docker compose up --build -d db migrate
+docker compose run --rm -e DOCKET_ALLOW_DEMO_SEED=1 app \
+  ./bin/rails db:prepare db:seed demo:seed
+DOCKET_FORCE_SSL=false docker compose up
 ```
 
-First boot migrates Postgres and seeds a fictional demo — by default **Acme Cloud**, a SaaS support desk (8 staff, dozens of cases across queues, plus leads, deals and knowledge docs). Pick a vertical with `DOCKET_SEED_SCENARIO=saas|retail|gov` (default `saas`; `gov` seeds a Directorate of Public Grievances + a bank branch). It then serves:
+The explicit seed command loads a fictional demo — by default **Acme Cloud**, a SaaS support desk (8 staff, dozens of cases across queues, plus leads, deals and knowledge docs). Pass `-e DOCKET_SEED_SCENARIO=retail|gov` to `docker compose run` to select another vertical (default `saas`; `gov` seeds a Directorate of Public Grievances + a bank branch). The app then serves:
 
 | Surface | URL | Credentials |
 | --- | --- | --- |
@@ -48,13 +53,29 @@ Other demo logins: `sunita@docket.local` (client admin),
 (customer service), `tarun@docket.local` (technical), and
 `meena@docket.local` (read-only) — all `docket-demo`.
 
-**Defaults are production-safe.** A plain `docker compose up --build` seeds **no** demo accounts, enforces SSL, and generates a unique `SECRET_KEY_BASE` on first boot (persisted to the storage volume). For a real deployment, just set a database password and put a TLS-terminating reverse proxy in front:
+**Defaults are production-safe.** Web-container startup never migrates or seeds,
+SSL is enforced, and a unique `SECRET_KEY_BASE` is generated on first boot
+(persisted to the storage volume). The one-shot release service prepares all
+four databases; on first creation only, it runs the idempotent base seed for the
+tenant, break-glass admin, and day-one defaults. Rich demo accounts are never
+created unless explicitly requested. For a real deployment, set the database
+password, public origin, initial admin password, and put a TLS-terminating
+reverse proxy in front:
 
 ```bash
-POSTGRES_PASSWORD=$(openssl rand -hex 16) docker compose up --build -d
+POSTGRES_PASSWORD=$(openssl rand -hex 16) \
+SECRET_KEY_BASE=$(openssl rand -hex 64) \
+DOCKET_ADMIN_PASSWORD='<choose one>' \
+DOCKET_BASE_URL=https://support.example.com \
+docker compose up --build -d
 ```
 
-A break-glass admin (`admin@docket.local`) is seeded on first boot. Set `DOCKET_ADMIN_PASSWORD` to choose its password; if you don't, a random one is generated and **printed once** in the boot logs — capture it and change it after first login. (Manage `SECRET_KEY_BASE` yourself by setting it explicitly, e.g. `SECRET_KEY_BASE=$(openssl rand -hex 64)`.)
+Compose runs migrations in a one-shot `migrate` service and starts the web app
+only after it succeeds. `DOCKET_ADMIN_PASSWORD` is consumed by that first-create
+seed but is deliberately not passed to the long-running app container. If it is
+omitted, a random password is printed once in `docker compose logs migrate`—
+capture it and change it after first login. Restarts and later migrations do not
+re-run the seed.
 
 ### Smoke test
 
@@ -97,7 +118,11 @@ DATABASE_URL=postgres:///docket_test PARALLEL_WORKERS=1 bin/rails db:test:prepar
 
 ## Staff console
 
-Sign in at `/`. The case workspace is keyboard-first — press `?` anywhere for the full key map (j/k/Enter list navigation, single-key status changes, `a` assign-to-me, `n` next case, `m` compose, Ctrl+K command palette). Macros (admin-managed canned responses with `{{contact_name}}`-style variables) insert into the composer. When AI is enabled you also get thread summaries, sentiment flags on incoming messages, and grounded suggested replies — always insert-and-edit, never auto-sent.
+Sign in at `/`. The case workspace is keyboard-first — press `?` anywhere for the full key map (j/k/Enter list navigation, single-key status changes, `a` assign-to-me, `n` next case, `m` compose, Ctrl+K command palette). My Tickets/My Work, saved views, safe bulk actions, assignment/mention/watch notifications, case-presence signals, merge/split, action macros, rich replies, signatures, and attachments support the daily queue. When AI is enabled you also get thread summaries, sentiment flags on incoming messages, and grounded suggested replies — always insert-and-edit, never auto-sent.
+
+For the complete product, role, scope, SLA, notification, connector, decisioning,
+privacy, and tenant-lifecycle guide, see
+[docs/OPERATOR-GUIDE.md](docs/OPERATOR-GUIDE.md).
 
 ---
 
@@ -134,7 +159,7 @@ Settings offers a **BYOK** mode for external providers. It requires ticking an e
 
 Admin → Settings → *Staff SSO*. OIDC is primary; SAML 2.0 is also shipped (ADFS). Local password login always remains as break-glass.
 
-**Keycloak (OIDC) example** — create a confidential client `docket-staff` with redirect URI `https://your-docket/auth/staff_oidc/callback`, then set issuer `https://keycloak/realms/<realm>`, client ID and secret. First SSO login provisions the user as an `agent`; map roles automatically by setting *Role claim* (e.g. `groups`) and *Role mapping* (e.g. `{"docket-admins": "admin", "grievance-leads": "supervisor"}`).
+**Keycloak (OIDC) example** — create a confidential client `docket-staff` with redirect URI `https://your-docket/auth/staff_oidc/callback`, then set issuer `https://keycloak/realms/<realm>`, client ID and secret. First SSO login provisions the user as `customer_service`; map roles automatically by setting *Role claim* (e.g. `groups`) and *Role mapping* (e.g. `{"docket-admins": "client_admin", "sales-team": "sales"}`).
 
 **ADFS (SAML) example** — create a relying party with ACS URL `https://your-docket/auth/staff_saml/callback`, then set the IdP SSO URL and the IdP signing certificate (PEM) in settings. The NameID should be the user's email.
 
@@ -150,7 +175,8 @@ Admin → Settings → *Customer SSO*: point the portal at your **customer** ide
 
 ## API access
 
-Everything the UI can do, the API can do, versioned under `/api/v1` (spec at `/api/v1/openapi.json`).
+Docket's supported integration API is versioned under `/api/v1`; its live,
+tenant-filtered route and schema inventory is `/api/v1/openapi.json`.
 
 ### Per-user tokens (staff tooling)
 
@@ -162,7 +188,7 @@ curl -H "Authorization: Bearer dkt_…" https://your-docket/api/v1/cases?status=
 
 ### Service accounts (your systems, headless)
 
-Admin → Integrations → *Service accounts* → create with the scopes the integration needs (`cases:read`, `cases:write`, `contacts:read/write`, `organisations:*`, `config:*`, `audit:read`, `webhooks:manage`). Exchange the client credentials for a 1-hour bearer:
+Admin → Integrations → *Service accounts* → create with the scopes the integration needs. The exact 17-scope inventory and its policy projection are in the [operator guide](docs/OPERATOR-GUIDE.md#service-account-api-scopes). Exchange the client credentials for a 1-hour bearer:
 
 ```bash
 curl -X POST https://your-docket/api/v1/oauth/token \
@@ -194,7 +220,7 @@ The audit log records `service account X on behalf of contact CIF447192` for eve
 
 ### NakliPoster collection
 
-Import `docs/docket-api.nakliposter.json` (Postman v2.1 collection schema — works in compatible clients). It covers the full surface, the on-behalf-of flow, and a signed webhook-receiver test; fill in `base_url` and credentials in the collection variables.
+Import `docs/docket-api.nakliposter.json` (Postman v2.1 collection schema — works in compatible clients). It is a curated service-desk, on-behalf-of, and signed-webhook walkthrough; fill in `base_url` and credentials in the collection variables. Use the live OpenAPI document for the complete surface.
 
 ## Webhooks
 
@@ -222,16 +248,24 @@ bin/rails audit:verify          # CLI: PASS/FAIL + first break
 
 Admin → Activity shows per-user action counts, login/SSO history, and case volume by queue and staff with CSV export — computed entirely from this deployment's own audit log. It is the deployment owner's data and is never transmitted anywhere.
 
-## Backup
+## Backup and restore
 
-Two things hold all state:
+Production state spans four PostgreSQL databases, attachments, an external
+audit checkpoint, and deployment secrets. Use the preflighted
+scripts—never a primary-only `pg_dump`:
 
 ```bash
-docker compose exec db pg_dump -U docket -Fc docket_production > docket-$(date +%F).dump
-docker compose cp app:/rails/storage ./storage-backup-$(date +%F)   # attachments
+bin/backup /var/backups/docket
+DOCKET_RESTORE_CONFIRM=yes bin/restore /var/backups/docket/docket-<UTC timestamp>
 ```
 
-Restore with `pg_restore` into a fresh database plus copying the storage directory back. (On the SQLite dev/demo profile, copy `storage/*.sqlite3` and `storage/` files.)
+The restore validates the complete set before overwriting anything and finishes
+by verifying the audit chain against the captured checkpoint. Default Compose
+persists its generated session secret and vault keyring inside the archived
+storage volume, so the archive itself is sensitive; externally managed secrets
+must be retained separately with matching backup generations. Run a clean-host
+restore drill and record the measured RTO before
+go-live. See [docs/RUNBOOK-BACKUP.md](docs/RUNBOOK-BACKUP.md).
 
 ## Licence
 
@@ -239,7 +273,11 @@ Docket's core is licensed under **AGPL-3.0** (see `LICENSE`): anyone who operate
 
 ## Project documents
 
-- `DECISIONS.md` — every non-locked implementation decision, one line each.
-- `FORWARD-PASS.md` — security findings fixed during gate forward passes.
-- `KNOWN-GAPS.md` — honest list of what shipped incomplete.
-- `docs/` — the founding vision and the v1.0 build instructions.
+- `DECISIONS.md` — architecture and product decisions.
+- `CHANGELOG.md` — user-visible and operational changes by release.
+- `docs/OPERATOR-GUIDE.md` — product configuration, roles, scopes, automation,
+  lifecycle, privacy, and key rotation.
+- `docs/DEPLOYMENT-HANDOFF.md` — production deployment and go-live checklist.
+- `docs/GO-LIVE-VALIDATION.md` — production evidence script for mail, connectors,
+  model quality, migration, shared hosting, and human accessibility.
+- `docs/RUNBOOK-MIGRATION.md` and `docs/RUNBOOK-BACKUP.md` — cutover and recovery.

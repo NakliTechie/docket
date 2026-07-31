@@ -55,6 +55,35 @@ class AdminSurfacesTest < ActionDispatch::IntegrationTest
     assert_equal macro.id, message.metadata["macro_id"]
   end
 
+  test "an action macro applies its reply type and case updates atomically" do
+    sign_in_as users(:admin)
+    macro = Macro.create!(name: "Own and progress", body: "We are on it.",
+                          message_kind: "internal_note", set_status: "in_progress",
+                          set_priority: "high", set_assignee: users(:agent_a))
+    kase = cases(:pension_case)
+    post case_messages_path(kase), params: {
+      macro_id: macro.id,
+      message: { body: "We are on it.", kind: "public_reply" }
+    }
+    assert_redirected_to case_path(kase)
+    message = kase.messages.order(:id).last
+    assert message.kind_internal_note?
+    assert_equal "in_progress", kase.reload.status
+    assert_equal "high", kase.priority
+    assert_equal users(:agent_a), kase.assignee
+    assert_equal "in_progress", message.metadata.dig("macro_actions", "status")
+  end
+
+  test "a public reply snapshots the agent signature" do
+    admin = users(:admin)
+    admin.update!(email_signature: "**Anita**\nCustomer care")
+    sign_in_as admin
+    post case_messages_path(cases(:pension_case)), params: {
+      message: { body: "Signed reply", kind: "public_reply" }
+    }
+    assert_equal admin.email_signature, Message.order(:id).last.signature
+  end
+
   test "macro management denied to agents" do
     sign_in_as users(:agent_a)
     get macros_path

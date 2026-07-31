@@ -16,6 +16,8 @@ class CasePolicy < ApplicationPolicy
   def assign?     = update?
 
   def destroy? = permit?("case:delete")
+  def merge? = destroy?
+  def split? = destroy?
 
   class Scope < Scope
     def resolve

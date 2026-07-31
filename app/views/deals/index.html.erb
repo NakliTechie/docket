@@ -20,20 +20,21 @@
        data-kanban-param-value="pipeline_stage_id">
     <% @stages.each do |stage| %>
       <% stage_deals = @deals_by_stage[stage.id] || [] %>
-      <section class="kanban-column" data-target-id="<%= stage.id %>"
+      <% stage_total = @totals_by_stage[stage.id].to_i %>
+      <section class="kanban-column" data-target-id="<%= stage.id %>" data-total-count="<%= stage_total %>"
                data-action="dragover->kanban#dragover drop->kanban#drop dragleave->kanban#dragleave">
         <h2 class="kanban-column-title">
           <%= stage.name %>
-          <% stage_total = @totals_by_stage[stage.id].to_i %>
           <span class="kanban-count"><%= stage_total %></span>
         </h2>
         <div class="kanban-cards">
           <% stage_deals.each do |deal| %>
-            <article class="kanban-card" draggable="true" data-item-id="<%= deal.id %>"
-                     data-action="dragstart->kanban#dragstart dragend->kanban#dragend">
+            <% draggable = policy(deal).move? %>
+            <article class="kanban-card" draggable="<%= draggable %>" data-item-id="<%= deal.id %>"
+                     <% if draggable %>data-action="dragstart->kanban#dragstart dragend->kanban#dragend"<% end %>>
               <%= link_to deal.name, deal_path(deal), class: "kanban-card-title" %>
               <% if deal.value_cents %>
-                <div class="kanban-card-value"><%= number_to_currency(deal.value, unit: "₹") %></div>
+                <div class="kanban-card-value"><%= format_money(deal.value_cents, deal.currency) %></div>
               <% end %>
               <% if deal.contact %><div class="kanban-card-meta"><%= deal.contact.name %></div><% end %>
               <% if deal.owner %><div class="kanban-card-meta"><%= deal.owner.name %></div><% end %>

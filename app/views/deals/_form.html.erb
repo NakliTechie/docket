@@ -48,6 +48,11 @@
   </div>
 
   <div class="form-row">
+    <%= f.label :currency, t("deals.fields.currency") %>
+    <%= f.text_field :currency, maxlength: 3, pattern: "[A-Za-z]{3}", required: true %>
+  </div>
+
+  <div class="form-row">
     <%= f.label :expected_close_on, t("deals.fields.expected_close_on") %>
     <%= f.date_field :expected_close_on %>
   </div>

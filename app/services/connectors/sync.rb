@@ -8,6 +8,7 @@ module Connectors
     module_function
 
     MAX_RECORDS = 5_000
+    STALE_RUN_AFTER = 1.hour
 
     # docket_field => external_field is the mapping shape; these are the docket
     # fields each target can map. external_id is the dedup key everywhere.
@@ -19,11 +20,17 @@ module Connectors
     }.freeze
 
     def run(connector, trigger: "manual")
-      run = connector.connector_runs.create!(trigger: trigger, status: :running, started_at: Time.current)
+      run = claim(connector, trigger)
+      return nil unless run
+
       Current.set(actor: nil) do
         perform(connector, run)
       end
       run
+    rescue ActiveRecord::RecordNotUnique
+      # The partial unique index is the final defence when two workers race
+      # after both being queued. The winner owns the sync; the loser is a no-op.
+      nil
     rescue StandardError => e
       connector.update!(status: :error)
       run&.update!(status: :failed, finished_at: Time.current, error: e.message.truncate(500))
@@ -31,25 +38,46 @@ module Connectors
     end
 
     def perform(connector, run)
-      fetched = Array(connector.provider_instance.fetch)
-      records = fetched.first(MAX_RECORDS)
-      # No silent truncation: log when the provider returned more than the cap.
-      if fetched.size > records.size
-        Rails.logger.warn("Connectors::Sync capped connector #{connector.id}: #{fetched.size} fetched → #{MAX_RECORDS} processed")
-      end
-
       created = 0
       updated = 0
-      records.each do |raw|
+      records_in = 0
+      capped = false
+      fetched = connector.provider_instance.fetch || []
+      fetched.each do |raw|
+        if records_in >= MAX_RECORDS
+          capped = true
+          break
+        end
+
         case upsert(connector, raw)
         when :created then created += 1
         when :updated then updated += 1
         end
+        records_in += 1
       end
+      if capped
+        Rails.logger.warn("Connectors::Sync capped connector #{connector.id}: more than #{MAX_RECORDS} fetched")
+      end
+
       connector.update!(last_synced_at: Time.current, status: :active)
-      # records_in reflects what was actually processed (the capped set).
       run.update!(status: :success, finished_at: Time.current,
-                  records_in: records.size, records_created: created, records_updated: updated)
+                  records_in: records_in, records_created: created, records_updated: updated)
+    end
+
+    # Claim a connector briefly under its row lock. The network request and
+    # record writes happen after the lock is released. A stale claim is failed
+    # explicitly so an interrupted worker cannot block the connector forever.
+    def claim(connector, trigger)
+      connector.with_lock do
+        now = Time.current
+        connector.connector_runs.status_running
+          .where("started_at IS NULL OR started_at <= ?", now - STALE_RUN_AFTER)
+          .update_all(status: ConnectorRun.statuses.fetch("failed"), finished_at: now,
+                      error: "sync claim expired", updated_at: now)
+        return nil if connector.connector_runs.status_running.exists?
+
+        connector.connector_runs.create!(trigger: trigger, status: :running, started_at: now)
+      end
     end
 
     def upsert(connector, raw)

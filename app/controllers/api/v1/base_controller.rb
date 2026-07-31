@@ -95,7 +95,7 @@ module Api
         if current_user
           policy_scope(model)
         elsif current_access_token.scope?(scope)
-          model.all
+          model.respond_to?(:visible_to) ? model.visible_to(nil, manage: scope == "work:manage") : model.all
         else
           raise ScopeDenied, scope
         end

@@ -34,10 +34,19 @@ class SequenceDelivery < ApplicationRecord
 
   def claim!
     claimed = false
-    with_lock do
-      if status_pending?
-        update!(status: :attempting, claimed_at: Time.current)
-        claimed = true
+    target = sequence_enrollment.enrollable
+    target.with_lock do
+      with_lock do
+        if status_pending?
+          if channel == "email" && !sequence_enrollment.recipient_email_consent?
+            update!(status: :skipped, last_error: "email consent withdrawn")
+          elsif channel == "sms" && !sequence_enrollment.recipient_sms_consent?
+            update!(status: :skipped, last_error: "SMS consent withdrawn")
+          else
+            update!(status: :attempting, claimed_at: Time.current)
+            claimed = true
+          end
+        end
       end
     end
     claimed

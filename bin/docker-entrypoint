@@ -15,18 +15,17 @@ if [ -z "${SECRET_KEY_BASE}" ]; then
   export SECRET_KEY_BASE="$(cat "${SECRET_KEY_FILE}")"
 fi
 
-# If running the rails server then prepare all databases (primary +
-# cache + queue + cable) and optionally load the demo seed data.
-if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
-  ./bin/rails db:prepare
-  if [ "${DOCKET_SEED_DEMO}" == "true" ]; then
-    # DOCKET_SEED_DEMO is the operator's explicit opt-in at the deployment
-    # boundary. Pass the seed's production safety gate only for this branch;
-    # direct `demo:seed` calls remain refused without their own opt-in.
-    DOCKET_ALLOW_DEMO_SEED=1 ./bin/rails db:seed demo:seed
-  else
-    ./bin/rails db:seed
-  fi
+# Connector/OAuth credentials use a separate, versioned encryption keyring.
+# The file contains no session-signing material and can be rotated independently.
+VAULT_KEY_FILE="${DOCKET_VAULT_KEYS_PATH:-/rails/storage/vault_keys.json}"
+if [ -z "${DOCKET_VAULT_KEYS}" ] && [ ! -f "${VAULT_KEY_FILE}" ]; then
+  ruby -rjson -rsecurerandom -e 'print JSON.generate(active: "v1", keys: { "v1" => SecureRandom.hex(32) })' > "${VAULT_KEY_FILE}"
+  chmod 600 "${VAULT_KEY_FILE}"
+  echo "Generated a unique v1 credential-vault keyring (persisted to storage volume)."
 fi
+
+# Database preparation and first-create base seeding belong to the one-shot
+# release/migrate process. Web replicas only boot the application, so they
+# cannot race seeds or migrations.
 
 exec "${@}"

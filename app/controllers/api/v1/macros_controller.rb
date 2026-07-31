@@ -46,7 +46,8 @@ module Api
       end
 
       def macro_params
-        params.require(:macro).permit(:name, :body)
+        params.require(:macro).permit(:name, :body, :message_kind, :set_status, :set_priority,
+                                      :set_queue_id, :set_assignee_id)
       end
     end
   end

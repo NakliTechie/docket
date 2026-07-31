@@ -48,6 +48,11 @@ class OperationalReportTest < ActiveSupport::TestCase
     assert(r.cases_created_trend.all? { |d| d[:count].is_a?(Integer) })
   end
 
+  test "rejects reversed or unbounded ranges before materializing dates" do
+    assert_raises(ArgumentError) { report(from: Date.current, to: Date.yesterday) }
+    assert_raises(ArgumentError) { report(from: 10_000.days.ago.to_date, to: Date.current) }
+  end
+
   # --- Connector / ingestion plane ---
 
   def connector(status: :active, last_synced_at: nil, interval: nil)

@@ -1,0 +1,5 @@
+<%= t("csat_mailer.invitation.greeting", name: @survey.contact.name) %>
+
+<%= t("csat_mailer.invitation.body", tracking_id: @kase.tracking_id) %>
+
+<%= csat_survey_url(@token) %>

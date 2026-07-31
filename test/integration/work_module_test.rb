@@ -35,6 +35,23 @@ class WorkModuleTest < ActionDispatch::IntegrationTest
     assert item.done?
   end
 
+  test "an ordinary edit cannot bypass a guarded Work transition" do
+    item = work_items(:pep_one)
+    done = workflow_states(:pep_done)
+    ApprovalProcess.create!(name: "Done review", trigger_type: :work_item_transition,
+                            trigger_key: "PEP:Done")
+    sign_in_as users(:admin)
+
+    patch work_item_path(item), params: {
+      work_item: { title: "Edited safely", workflow_state_id: done.id }
+    }
+
+    assert_response :redirect
+    assert_equal "Edited safely", item.reload.title
+    assert_equal workflow_states(:pep_backlog), item.workflow_state
+    assert item.approval_requests.status_pending.exists?(requested_action: done.id.to_s)
+  end
+
   test "the workspace shows an item and takes a comment" do
     sign_in_as users(:agent_a)
     item = work_items(:pep_two)

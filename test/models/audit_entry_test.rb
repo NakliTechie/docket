@@ -98,10 +98,45 @@ class AuditEntryTest < ActiveSupport::TestCase
     end
   end
 
+  test "a platform actor may be attributed while provisioning another tenant" do
+    entry = ActsAsTenant.with_tenant(tenants(:acme)) do
+      Current.set(actor: users(:super_admin)) do
+        AuditEntry.append!(action: "tenant.maintenance", auditable: tenants(:acme))
+      end
+    end
+
+    assert_equal tenants(:acme).id, entry.tenant_id
+    assert_equal users(:super_admin), entry.actor
+  end
+
   test "canonicalization is key-order independent" do
     entry = AuditEntry.append!(action: "test.event", auditable: contacts(:asha),
                                changeset: { "b" => 1, "a" => 2 })
     reordered = AuditEntry.canonicalize({ "a" => 2, "b" => 1 })
     assert_equal AuditEntry.canonicalize(entry.changeset), reordered
+  end
+
+  test "external checkpoint detects tail truncation and a full wipe" do
+    checkpoint_path = Rails.root.join("tmp", "audit-checkpoint-test-#{SecureRandom.hex(6)}.json")
+    original_path = ENV["DOCKET_AUDIT_CHECKPOINT_PATH"]
+    ENV["DOCKET_AUDIT_CHECKPOINT_PATH"] = checkpoint_path.to_s
+
+    Contact.create!(name: "Checkpoint A", email: "checkpoint-a@example.com")
+    Contact.create!(name: "Checkpoint B", email: "checkpoint-b@example.com")
+    AuditCheckpoint.persist_current!(allow_initialize: true)
+
+    AuditEntry.order(id: :desc).first.delete
+    tail_result = AuditEntry.verify_chain(cache: false, checkpoint: true)
+    refute tail_result[:ok]
+    assert_equal "external audit checkpoint mismatch", tail_result[:reason]
+
+    AuditEntry.delete_all
+    wipe_result = AuditEntry.verify_chain(cache: false, checkpoint: true)
+    refute wipe_result[:ok]
+    assert_equal "external audit checkpoint mismatch", wipe_result[:reason]
+  ensure
+    ENV["DOCKET_AUDIT_CHECKPOINT_PATH"] = original_path
+    FileUtils.rm_f(checkpoint_path) if checkpoint_path
+    FileUtils.rm_f("#{checkpoint_path}.lock") if checkpoint_path
   end
 end

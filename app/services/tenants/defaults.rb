@@ -11,6 +11,7 @@ module Tenants
     def seed!
       seed_pipeline!
       seed_queue!
+      seed_calendar!
       seed_sla!
     end
 
@@ -41,13 +42,30 @@ module Tenants
     def seed_sla!
       return unless defined?(SlaPolicy) && SlaPolicy.none?
 
-      sla = SlaPolicy.create!(name: "Standard", description: "Default first-response and resolution targets.")
+      sla = SlaPolicy.create!(name: "Standard", description: "Default first-response and resolution targets.",
+                              business_calendar: BusinessCalendar.default)
       # [priority, first_response_minutes, resolution_minutes] — 8h/7d down to 30m/8h.
       [ [ :low, 480, 10080 ], [ :normal, 240, 4320 ], [ :high, 60, 1440 ], [ :urgent, 30, 480 ] ].each do |priority, fr, res|
         sla.sla_targets.create!(priority: priority, first_response_minutes: fr, resolution_minutes: res)
       end
       Setting.set("default_sla_policy_id", sla.id)
       puts "  default SLA policy: #{sla.name} (#{sla.sla_targets.size} targets)"
+    end
+
+    def seed_calendar!
+      return unless defined?(BusinessCalendar) && BusinessCalendar.none?
+
+      calendar = BusinessCalendar.new(
+        name: "Standard working week", time_zone: ENV.fetch("DOCKET_DEFAULT_TIME_ZONE", "UTC"),
+        is_default: true
+      )
+      (1..5).each do |weekday|
+        calendar.business_calendar_windows.build(
+          weekday: weekday, starts_minute: 9 * 60, ends_minute: 17 * 60
+        )
+      end
+      calendar.save!
+      puts "  default business calendar: #{calendar.name} (#{calendar.time_zone})"
     end
   end
 end

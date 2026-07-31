@@ -22,7 +22,7 @@
 
   <fieldset>
     <legend><%= t("case_queues.fields.members") %></legend>
-    <%= f.collection_check_boxes :member_ids, User.active.staff.order(:name), :id, :display_label do |b| %>
+    <%= f.collection_check_boxes :member_ids, User.case_assignees.order(:name), :id, :display_label do |b| %>
       <div class="checkbox-row">
         <%= b.check_box %>
         <%= b.label %>

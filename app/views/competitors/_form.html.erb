@@ -1,0 +1,7 @@
+<%= form_with model: competitor, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: competitor %>
+  <div class="form-row"><%= f.label :name, t("competitors.fields.name") %><%= f.text_field :name, required: true %></div>
+  <div class="form-row"><%= f.label :website, t("competitors.fields.website") %><%= f.url_field :website %></div>
+  <div class="form-row"><%= f.label :notes, t("competitors.fields.notes") %><%= f.text_area :notes %></div>
+  <div class="form-actions"><%= f.submit class: "btn btn-primary" %><%= link_to t("actions.cancel"), competitors_path, class: "btn" %></div>
+<% end %>

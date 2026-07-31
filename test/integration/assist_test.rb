@@ -19,6 +19,18 @@ class AssistTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "the api assist is gated on the service_desk feature" do
+    tenants(:primary).set_feature!("service_desk", false)
+    token = api_token_for(users(:admin))
+
+    post "/api/v1/cases/#{cases(:pension_case).id}/assist/summarise",
+         headers: auth_header(token)
+
+    assert_response :forbidden
+    assert_equal "feature_disabled", response.parsed_body["error"]
+    assert_equal "service_desk", response.parsed_body["detail"]
+  end
+
   test "summarise renders an ephemeral summary" do
     sign_in_as users(:agent_a)
     post case_assist_summarise_path(cases(:pension_case))

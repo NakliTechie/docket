@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <title><%= t("errors.tenant_suspended.title") %> · <%= @suspended_brand %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app %>
+  </head>
+  <body>
+    <main id="main" class="app-main"><%= yield %></main>
+  </body>
+</html>

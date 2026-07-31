@@ -1,7 +1,8 @@
 # Strict CSP (handoff §8): no inline script, no external origins. The
 # importmap <script> is permitted via per-request nonce. The only
-# network egress Docket ever performs is server-side (configured LLM
-# endpoint + outbound mail), so browser-side connect stays :self.
+# browser-side egress is intentionally absent, so connect-src stays :self.
+# Server-side egress includes configured LLM, mail, connectors, webhooks, SMS,
+# and migration sources; each boundary owns its own transport policy.
 Rails.application.configure do
   config.content_security_policy do |policy|
     policy.default_src :none

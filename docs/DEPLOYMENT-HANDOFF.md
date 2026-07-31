@@ -1,5 +1,24 @@
 # Docket — deployment handoff
 
+## Release and migration policy
+
+Docket uses SemVer and `vMAJOR.MINOR.PATCH` tags; the running release is defined
+in `lib/docket/version.rb` and changes are in `CHANGELOG.md`. Production schema
+work is forward-only and follows expand/backfill/switch/contract. Additive,
+backward-compatible schema lands first, backfills run in bounded batches, code
+switches only after old and new versions can coexist, and destructive cleanup
+waits at least one compatible release. Rollback after contraction is a tested
+backup restore, not a down migration.
+
+Compose runs `bin/release` (`db:prepare`) in its one-shot `migrate` service. The
+app service is not started until it succeeds; web-container boot itself never
+changes schema or seed data. A newly created database receives the idempotent
+base seed once; an existing database is migrated without reseeding.
+
+The production image must carry libvips 8.13 or newer. Rails/Active Storage
+8.1.3.1 enforces the secure untrusted-loader boundary introduced after
+CVE-2026-66066; do not replace the image's `libvips` package with an older build.
+
 Everything needed to stand Docket up on a server, in the order you'll need it.
 Written for whoever runs the deploy, not for whoever wrote the code.
 
@@ -35,19 +54,21 @@ multi-customer infrastructure.
 SECRET_KEY_BASE=$(openssl rand -hex 64) \
 DOCKET_ADMIN_PASSWORD='<choose one>' \
 DOCKET_BASE_URL=https://support.example.com \
-docker compose up --build -d
+POSTGRES_PASSWORD=$(openssl rand -hex 16) docker compose up --build -d
 ```
 
-First boot migrates the database and creates a break-glass admin
-(`admin@docket.local`). If you don't set `DOCKET_ADMIN_PASSWORD`, a random one is
-generated and **printed once** in the boot logs — capture it, then change it.
+The release service creates the base tenant, break-glass admin, and day-one
+defaults when the database is first created. `DOCKET_ADMIN_PASSWORD` is passed
+only to that one-shot service, not the long-running app. If it is omitted, read
+the random password once with `docker compose logs migrate`, capture it, then
+change it. Container restarts and later migrations do not re-run seeds.
 
 **Do not ship the compose file's default `SECRET_KEY_BASE`.** Set it explicitly
 (above). It signs sessions and password-reset tokens; a known value means anyone
 can forge both.
 
-**`DOCKET_SEED_DEMO` must be unset or `false` in production.** It seeds demo
-staff accounts with known passwords.
+For a demo only, use a separate explicit command with
+`DOCKET_ALLOW_DEMO_SEED=1`; never run it against production data.
 
 ### Environment variables
 
@@ -55,19 +76,24 @@ staff accounts with known passwords.
 |---|---|---|
 | `SECRET_KEY_BASE` | **always** | Generate per deploy. Never reuse, never default. |
 | `DOCKET_BASE_URL` | **always** | Public URL. SSO redirect URIs and emailed links are built from it. |
-| `DOCKET_ALLOWED_HOSTS` | **always** | Comma-separated hostnames the app will answer to. |
-| `DOCKET_ADMIN_PASSWORD` | first boot | Otherwise printed once in the logs. |
+| `DOCKET_ALLOWED_HOSTS` | optional extras | Comma-separated additional hostnames. The host in `DOCKET_BASE_URL` is allowed automatically. |
+| `DOCKET_ADMIN_PASSWORD` | first creation | Otherwise printed once in the migrate-service logs; never passed to the web process. |
 | `DOCKET_DEPLOYMENT_MODE` | shared only | `isolated` (default) or `shared`. |
 | `DOCKET_BASE_DOMAIN` | shared only | The domain subdomains hang off. |
 | `DOCKET_FORCE_SSL` | prod | Leave on. Only disable behind a TLS-terminating proxy that sets `X-Forwarded-Proto`. |
-| `DOCKET_SEED_DEMO` | never in prod | Demo accounts with known passwords. |
+| `DOCKET_ALLOW_DEMO_SEED` | demo command only | Explicitly permits fictional accounts with known passwords. Never set on the web service. |
+| `DOCKET_VAULT_KEYS` / `DOCKET_VAULT_KEYS_PATH` | prod | Versioned credential-encryption keys. Default Compose generates a 0600 storage file; use one shared keyring across every replica. |
+| `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | if mail | No `SMTP_ADDRESS` means external delivery is disabled. `SMTP_STARTTLS=false` is for exceptional trusted networks only. |
+| `DOCKET_DKIM_DOMAIN`, `DOCKET_DKIM_SELECTOR`, `DOCKET_DKIM_PRIVATE_KEY[_PATH]` | if signing mail | Publish matching DNS; key path must be 0600 and RSA at least 2048-bit. |
+| `RAILS_INBOUND_EMAIL_PASSWORD` | if inbound mail | Shared secret used by the production relay ingress at `/rails/action_mailbox/relay/inbound_emails`. |
 | `DOCKET_STAFF_OIDC_*` / `DOCKET_STAFF_SAML_*` | if SSO | Or set them per tenant in Settings — see §5. |
 
 ## 3. Turn on what the customer bought
 
 Modules are per tenant, set at **Admin → Tenants → Modules**:
 
-- `service_desk` (+ `kb`, `approvals`, `portal`)
+- `service_desk` (+ `kb`, `portal`)
+- `approvals` (cross-module maker-checker governance)
 - `crm` (+ `sequences`)
 - `work` (+ `sprints`)
 - `decisioning`, `connectors`, `mcp`
@@ -85,6 +111,7 @@ A non-demo deploy has no queues, no categories, no SLA policies. Before handing
 it to users:
 
 1. **Service desk** — at least one queue, a few categories, one SLA policy, and
+   one business calendar with holidays/hours; attach it to the SLA policy and
    set the default queue and default SLA policy in Settings.
 2. **Branding** — brand name, so the product doesn't say "Docket" to their users.
 3. **Outbound SMTP** — host, port, credentials, from-address. Without this no
@@ -93,12 +120,25 @@ it to users:
    (`super_admin`, `client_admin`, `finance`, `sales`, `customer_service`,
    `technical`, `readonly`).
 5. **Work module** — one project per team; each seeds its own board columns.
-   Set WIP limits on the project's edit screen if they want them.
+   Set WIP limits/default assignment rules and reusable onboarding templates.
+6. **CRM module** — pipeline/stages, public lead-capture forms and consent text,
+   catalog/competitors, and any email sequences. Test unsubscribe before use.
+7. **Notifications/CSAT** — choose the SLA risk window and whether notifications
+   also send email; enable CSAT only after SMTP is proven.
+
+The exact seven-role inventory, 17 API scopes, daily workflow, and all operator
+surfaces are in [OPERATOR-GUIDE.md](OPERATOR-GUIDE.md).
+
+Use [GO-LIVE-VALIDATION.md](GO-LIVE-VALIDATION.md) for the production evidence
+record: TLS/health, authenticated outbound and inbound mail, migration rehearsal,
+the six-provider launch connector subset, model quality, and human screen-reader
+journeys.
 
 ## 5. SSO (optional, but expect it for enterprise)
 
-Both an OIDC and a SAML plane, for staff and (separately) customers. Configure
-per tenant in Settings, or deploy-wide via `DOCKET_STAFF_OIDC_*`.
+Staff sign-on supports OIDC or SAML; the separately guarded customer portal
+supports OIDC. Configure per tenant in Settings, or use the matching deploy-wide
+environment variables.
 
 Three things that have bitten before and will bite again:
 
@@ -113,45 +153,64 @@ Three things that have bitten before and will bite again:
 
 ## 6. Migrating a customer off their old stack
 
-All three importers read an **export file** — no vendor credentials, nothing
-called live. Every one **defaults to a dry run** that reports exactly what it
-would do, including every source value it has no mapping for. Nothing is written
-until you pass `APPLY=1`.
+Freshdesk, Jira, Salesforce, generic CSV, and KanZen imports all default to a
+**dry run**. Freshdesk and Jira can consume either a streaming export file or
+their paginated API. State and role mappings are explicit: an unknown state is
+reported and its record is skipped, never dropped into a guessed default.
 
 ```bash
 # Dry run first — always.
 bin/rails docket:import:jira FILE=/tmp/jira-export.json
 bin/rails docket:import:freshdesk FILE=/tmp/freshdesk-export.json
+bin/rails docket:import:salesforce_preview FILE=/tmp/salesforce.json MAPS=/tmp/salesforce-maps.json
+bin/rails docket:import:csv_preview FILE=/tmp/contacts.csv CONTRACT=/tmp/contacts-contract.json
 bin/rails docket:import:kanzen FILE=/tmp/board.kanzen.json KEY=OPS
 
 # Then commit.
-bin/rails docket:import:jira FILE=/tmp/jira-export.json APPLY=1
+bin/rails docket:import:jira FILE=/tmp/jira-export.json MAPS=/tmp/jira-maps.json APPLY=1
 ```
 
 Add `TENANT=<slug>` in shared mode. Add `PROJECT=KEY` to the Jira import to
 force everything into one project instead of deriving projects from issue keys.
 
-**Read the `UNMAPPED` lines before you apply.** They name every status, issue
-type or priority the importer had no rule for; those rows fall back to a default,
-which is often wrong. Supply a mapping or fix it after import — but decide
-knowingly.
+**Read every `UNMAPPED`, `ERROR`, and `CONFLICT` line before applying.** A dry
+run executes model validation and rolls back domain rows. It validates attachment
+metadata but deliberately does not download attachment bytes; byte-level storage
+validation happens on `APPLY=1`.
 
-Imports are **idempotent** — Jira on the issue key, Freshdesk on the ticket id —
-so a run that fails halfway can simply be run again.
+Every applied source record receives a durable provider identity. Runs commit in
+bounded batches and print a resume token; pass `RESUME_TOKEN=<token>` after an
+interruption. Delta runs keep a source watermark. If a Docket user changed a
+previously imported field while the provider changed the same field, Docket
+keeps the local value and records an explicit conflict instead of overwriting it.
 
 Recommended order: **Freshdesk → Jira → CRM data**, because tickets create the
 contacts that later records attach to.
 
+The complete mapping, resume, API, delta-cutover, and reconciliation procedure
+is in [RUNBOOK-MIGRATION.md](RUNBOOK-MIGRATION.md).
+
 ## 7. Before you call it live
+
+**Repository release proof (2026-08-01):** the production image built with Rails 8.1.3.1,
+libvips 8.14.1, and PostgreSQL 16.14 clients; a fresh isolated Compose stack seeded its base
+tenant/defaults, reported healthy dependencies, and passed the 12-step smoke; a separate
+clean target restored all four databases, the 35-entry audit checkpoint, and attachment
+bytes, then passed the smoke again. The local restore-to-serving reference was 9.24s
+(17.81s including clean-stack provisioning). This closes artifact/procedure risk, not the
+environment-owned SMTP/TLS/DNS/inbound-mail checks below.
 
 - [ ] `docker compose up --build` clean from scratch, and the app serves.
 - [ ] The in-Puma worker actually fires: an SLA sweep runs, a sequence email
       sends. (These are cron-shaped; if they don't run, nothing tells you.)
 - [ ] Outbound mail lands in a real inbox — not just "no error in the log".
+- [ ] SPF, DKIM, and DMARC pass in that mailbox when signed mail is required.
 - [ ] Inbound email intake, **if wanted**: SMTP relay → Action Mailbox at
       `/rails/action_mailbox/relay/inbound_emails`.
 - [ ] TLS terminates correctly and `DOCKET_FORCE_SSL` is on.
-- [ ] The break-glass admin password has been changed from whatever first boot used.
+- [ ] `/healthz` is 200 and shows database, queue, storage, recurring jobs, and
+      failed-job checks healthy from the production hostname.
+- [ ] The break-glass admin password has been changed from the explicit initial seed value.
 - [ ] Backups: **`bin/backup <dir>` and `bin/restore <dir>`** — see
       [RUNBOOK-BACKUP.md](RUNBOOK-BACKUP.md). Schedule the backup, get it off the
       box, and **run the restore drill before go-live**. The restore ends with
@@ -160,13 +219,16 @@ contacts that later records attach to.
 
 ## 8. Known gaps — tell the customer before they find them
 
-- **The 68 connectors are doc-verified, not live-tested.** Every one is
+- **The 65 connectors are implementation/stub-tested, not live-certified.** Every one is
   implemented against the vendor's documented API and unit-tested against a
   stub, but none has made an authenticated call with real credentials. Validate
   the ones a customer actually depends on before relying on them.
 - **Shared-mode wildcard DNS/TLS is unproven on real infrastructure** (§1).
-- **The AI layer has only been run against a fake model client.** Point it at a
-  real endpoint and re-check before promising anything about it.
+- **The real AI integration path is proven locally, not production-qualified.** A local
+  Ollama `qwen2.5:3b` run exercised the OpenAI-compatible client, agent tool selection,
+  auditable connector proposal, human approval gate, and case-timeline logging with
+  synthetic data. Validate the chosen production model/endpoint against the pilot's
+  quality, latency, privacy, and failure criteria before promising outcomes.
 - **A screen-reader pass has not been done.** Automated accessibility checks
   (axe-core) are green; that is not the same as usable.
 - **Sprint burndown is data-only** — velocity and cycle time are computed, but

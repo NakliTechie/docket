@@ -10,14 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_101000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
     t.string "message_id", null: false
     t.integer "status", default: 0, null: false
+    t.bigint "tenant_id"
     t.datetime "updated_at", null: false
     t.index ["message_id", "message_checksum"], name: "index_action_mailbox_inbound_emails_uniqueness", unique: true
+    t.index ["tenant_id"], name: "index_action_mailbox_inbound_emails_on_tenant_id"
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -104,14 +106,69 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "created_at", null: false
     t.json "metadata"
     t.string "previous_sha", limit: 64, null: false
+    t.datetime "redacted_at"
+    t.integer "redaction_event_id"
     t.string "sha", limit: 64, null: false
     t.integer "tenant_id"
     t.index ["action"], name: "index_audit_entries_on_action"
     t.index ["actor_type", "actor_id"], name: "index_audit_entries_on_actor"
     t.index ["auditable_type", "auditable_id"], name: "index_audit_entries_on_auditable"
     t.index ["created_at"], name: "index_audit_entries_on_created_at"
+    t.index ["redaction_event_id"], name: "index_audit_entries_on_redaction_event_id"
     t.index ["sha"], name: "index_audit_entries_on_sha", unique: true
     t.index ["tenant_id"], name: "index_audit_entries_on_tenant_id"
+  end
+
+  create_table "business_calendar_exceptions", force: :cascade do |t|
+    t.bigint "business_calendar_id", null: false
+    t.boolean "closed", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "ends_minute"
+    t.string "name", null: false
+    t.date "on_date", null: false
+    t.integer "starts_minute"
+    t.datetime "updated_at", null: false
+    t.index ["business_calendar_id", "on_date"], name: "index_business_calendar_exceptions_unique", unique: true
+    t.index ["business_calendar_id"], name: "index_business_calendar_exceptions_on_business_calendar_id"
+    t.check_constraint "closed = true AND starts_minute IS NULL AND ends_minute IS NULL OR closed = false AND starts_minute >= 0 AND ends_minute <= 1440 AND starts_minute < ends_minute", name: "business_calendar_exceptions_shape_valid"
+  end
+
+  create_table "business_calendar_windows", force: :cascade do |t|
+    t.bigint "business_calendar_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "ends_minute", null: false
+    t.integer "starts_minute", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weekday", null: false
+    t.index ["business_calendar_id", "weekday", "starts_minute", "ends_minute"], name: "index_business_calendar_windows_unique", unique: true
+    t.index ["business_calendar_id"], name: "index_business_calendar_windows_on_business_calendar_id"
+    t.check_constraint "starts_minute >= 0 AND ends_minute <= 1440 AND starts_minute < ends_minute", name: "business_calendar_windows_minutes_valid"
+    t.check_constraint "weekday >= 0 AND weekday <= 6", name: "business_calendar_windows_weekday_valid"
+  end
+
+  create_table "business_calendars", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "is_default", default: false, null: false
+    t.string "name", null: false
+    t.bigint "tenant_id", null: false
+    t.string "time_zone", default: "UTC", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id"], name: "index_business_calendars_on_tenant_id"
+    t.index ["tenant_id"], name: "index_business_calendars_one_default", unique: true, where: "(is_default = true)"
+  end
+
+  create_table "case_presences", force: :cascade do |t|
+    t.bigint "case_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "last_seen_at", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["case_id"], name: "index_case_presences_on_case_id"
+    t.index ["tenant_id", "case_id", "last_seen_at"], name: "index_case_presences_on_tenant_id_and_case_id_and_last_seen_at"
+    t.index ["tenant_id", "case_id", "user_id"], name: "index_case_presences_on_tenant_id_and_case_id_and_user_id", unique: true
+    t.index ["tenant_id"], name: "index_case_presences_on_tenant_id"
+    t.index ["user_id"], name: "index_case_presences_on_user_id"
   end
 
   create_table "cases", force: :cascade do |t|
@@ -121,6 +178,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "closed_at"
     t.integer "contact_id", null: false
     t.datetime "created_at", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.text "description"
     t.string "external_id"
@@ -129,18 +187,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "first_response_due_at"
     t.json "labels"
     t.integer "lock_version", default: 0, null: false
+    t.datetime "merged_at"
+    t.bigint "merged_into_id"
     t.integer "priority", default: 1, null: false
     t.integer "queue_id"
     t.integer "reopen_count", default: 0, null: false
     t.datetime "reopened_at"
     t.boolean "resolution_breached", default: false, null: false
     t.datetime "resolution_due_at"
+    t.datetime "resolution_paused_at"
+    t.integer "resolution_remaining_minutes"
     t.datetime "resolved_at"
     t.integer "routed_by_rule_id"
     t.integer "sla_policy_id"
     t.integer "source_connector_id"
     t.string "source_thread_id"
     t.integer "status", default: 0, null: false
+    t.datetime "status_changed_at", null: false
     t.string "subject", null: false
     t.integer "tenant_id", null: false
     t.string "tracking_id", null: false
@@ -152,6 +215,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["deleted_at"], name: "index_cases_on_deleted_at"
     t.index ["external_id"], name: "index_cases_on_external_id"
     t.index ["first_response_breached", "first_response_due_at"], name: "idx_on_first_response_breached_first_response_due_a_66b2255ab2"
+    t.index ["merged_into_id"], name: "index_cases_on_merged_into_id"
     t.index ["priority"], name: "index_cases_on_priority"
     t.index ["queue_id"], name: "index_cases_on_queue_id"
     t.index ["resolution_breached", "resolution_due_at"], name: "index_cases_on_resolution_breached_and_resolution_due_at"
@@ -159,10 +223,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["sla_policy_id"], name: "index_cases_on_sla_policy_id"
     t.index ["source_connector_id"], name: "index_cases_on_source_connector_id"
     t.index ["status", "queue_id"], name: "index_cases_on_status_and_queue_id"
+    t.index ["status", "status_changed_at"], name: "index_cases_on_status_and_status_changed_at"
     t.index ["status"], name: "index_cases_on_status"
+    t.index ["tenant_id", "merged_into_id"], name: "index_cases_on_tenant_id_and_merged_into_id"
     t.index ["tenant_id", "source_connector_id", "source_thread_id"], name: "index_cases_on_tenant_connector_thread"
     t.index ["tenant_id", "tracking_id"], name: "index_cases_on_tenant_id_and_tracking_id", unique: true
     t.index ["tenant_id"], name: "index_cases_on_tenant_id"
+    t.check_constraint "resolution_remaining_minutes >= 0", name: "cases_resolution_remaining_minutes_nonnegative"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -174,8 +241,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_categories_on_deleted_at"
-    t.index ["tenant_id", "name"], name: "index_categories_on_tenant_id_and_name", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "name"], name: "index_categories_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_categories_on_tenant_id"
+  end
+
+  create_table "competitors", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "name", null: false
+    t.text "notes"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "website"
+    t.index ["tenant_id", "name"], name: "index_competitors_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["tenant_id"], name: "index_competitors_on_tenant_id"
   end
 
   create_table "connector_invocations", force: :cascade do |t|
@@ -224,6 +303,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "updated_at", null: false
     t.index ["connector_id", "id"], name: "index_connector_runs_on_connector_id_and_id"
     t.index ["connector_id"], name: "index_connector_runs_on_connector_id"
+    t.index ["connector_id"], name: "index_connector_runs_on_one_running_per_connector", unique: true, where: "status = 0"
     t.index ["tenant_id"], name: "index_connector_runs_on_tenant_id"
   end
 
@@ -258,6 +338,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "email"
+    t.boolean "email_consent", default: false, null: false
+    t.datetime "email_unsubscribed_at"
+    t.datetime "erased_at"
+    t.string "erasure_token"
     t.string "external_id"
     t.string "name", null: false
     t.text "notes"
@@ -273,8 +357,82 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["organisation_id"], name: "index_contacts_on_organisation_id"
     t.index ["phone"], name: "index_contacts_on_phone"
     t.index ["source_connector_id"], name: "index_contacts_on_source_connector_id"
-    t.index ["tenant_id", "external_id"], name: "index_contacts_on_tenant_id_and_external_id", unique: true, where: "external_id IS NOT NULL AND deleted_at IS NULL"
+    t.index ["tenant_id", "erasure_token"], name: "index_contacts_on_tenant_id_and_erasure_token", unique: true, where: "(erasure_token IS NOT NULL)"
+    t.index ["tenant_id", "external_id"], name: "index_contacts_on_tenant_id_and_external_id", unique: true, where: "((external_id IS NOT NULL) AND (deleted_at IS NULL))"
     t.index ["tenant_id"], name: "index_contacts_on_tenant_id"
+  end
+
+  create_table "csat_surveys", force: :cascade do |t|
+    t.bigint "case_id", null: false
+    t.text "comment"
+    t.bigint "contact_id"
+    t.datetime "created_at", null: false
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "delivery_claimed_at"
+    t.datetime "delivery_enqueued_at"
+    t.text "delivery_last_error"
+    t.integer "delivery_status", default: 0, null: false
+    t.datetime "invited_at", null: false
+    t.datetime "responded_at"
+    t.integer "score"
+    t.datetime "sent_at"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["case_id"], name: "index_csat_surveys_on_case_id"
+    t.index ["contact_id"], name: "index_csat_surveys_on_contact_id"
+    t.index ["tenant_id", "case_id"], name: "index_csat_surveys_on_tenant_id_and_case_id", unique: true
+    t.index ["tenant_id", "delivery_status"], name: "index_csat_surveys_on_tenant_id_and_delivery_status"
+    t.index ["tenant_id", "responded_at"], name: "index_csat_surveys_on_tenant_id_and_responded_at"
+    t.index ["tenant_id"], name: "index_csat_surveys_on_tenant_id"
+    t.check_constraint "score IS NULL OR score >= 1 AND score <= 5", name: "csat_surveys_score_valid"
+  end
+
+  create_table "custom_field_definitions", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "field_type", null: false
+    t.string "key", null: false
+    t.string "label", null: false
+    t.json "options", default: [], null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "reportable", default: true, null: false
+    t.boolean "required", default: false, null: false
+    t.string "resource_type", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "resource_type", "key"], name: "index_custom_fields_on_tenant_resource_key", unique: true
+    t.index ["tenant_id", "resource_type", "position"], name: "index_custom_fields_on_tenant_resource_position"
+    t.index ["tenant_id"], name: "index_custom_field_definitions_on_tenant_id"
+  end
+
+  create_table "deal_competitors", force: :cascade do |t|
+    t.bigint "competitor_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "deal_id", null: false
+    t.integer "disposition", default: 0, null: false
+    t.text "notes"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["competitor_id"], name: "index_deal_competitors_on_competitor_id"
+    t.index ["deal_id"], name: "index_deal_competitors_on_deal_id"
+    t.index ["tenant_id", "deal_id", "competitor_id"], name: "idx_on_tenant_id_deal_id_competitor_id_e0499f3a34", unique: true
+    t.index ["tenant_id"], name: "index_deal_competitors_on_tenant_id"
+  end
+
+  create_table "deal_line_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.bigint "deal_id", null: false
+    t.string "description", null: false
+    t.bigint "product_id", null: false
+    t.decimal "quantity", precision: 12, scale: 3, default: "1.0", null: false
+    t.bigint "tenant_id", null: false
+    t.bigint "unit_price_cents", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deal_id"], name: "index_deal_line_items_on_deal_id"
+    t.index ["product_id"], name: "index_deal_line_items_on_product_id"
+    t.index ["tenant_id", "deal_id", "product_id"], name: "index_deal_line_items_on_tenant_id_and_deal_id_and_product_id", unique: true
+    t.index ["tenant_id"], name: "index_deal_line_items_on_tenant_id"
   end
 
   create_table "deals", force: :cascade do |t|
@@ -356,20 +514,109 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["tenant_id"], name: "index_decisions_on_tenant_id"
   end
 
+  create_table "import_conflicts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "current_value"
+    t.string "external_id", null: false
+    t.string "field", null: false
+    t.bigint "import_identity_id"
+    t.bigint "import_run_id", null: false
+    t.json "incoming_value"
+    t.json "previous_imported_value"
+    t.string "source_type", null: false
+    t.string "status", default: "unresolved", null: false
+    t.bigint "target_id"
+    t.string "target_type"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["import_identity_id"], name: "index_import_conflicts_on_import_identity_id"
+    t.index ["import_run_id"], name: "index_import_conflicts_on_import_run_id"
+    t.index ["target_type", "target_id"], name: "index_import_conflicts_on_target"
+    t.index ["tenant_id", "status"], name: "index_import_conflicts_on_tenant_id_and_status"
+    t.index ["tenant_id"], name: "index_import_conflicts_on_tenant_id"
+  end
+
+  create_table "import_identities", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.json "imported_attributes"
+    t.bigint "last_seen_run_id"
+    t.json "metadata"
+    t.string "source", null: false
+    t.string "source_digest", limit: 64
+    t.string "source_instance", default: "default", null: false
+    t.string "source_type", null: false
+    t.datetime "source_updated_at"
+    t.bigint "target_id"
+    t.string "target_type"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["last_seen_run_id"], name: "index_import_identities_on_last_seen_run_id"
+    t.index ["target_type", "target_id"], name: "index_import_identities_on_target"
+    t.index ["tenant_id", "source", "source_instance", "source_type", "external_id"], name: "index_import_identities_on_source_identity", unique: true
+    t.index ["tenant_id"], name: "index_import_identities_on_tenant_id"
+  end
+
+  create_table "import_runs", force: :cascade do |t|
+    t.json "checkpoint"
+    t.datetime "completed_at"
+    t.json "conflicts"
+    t.datetime "created_at", null: false
+    t.boolean "dry_run", default: true, null: false
+    t.json "error_messages"
+    t.json "options"
+    t.datetime "previous_watermark"
+    t.string "resume_token", null: false
+    t.string "source", null: false
+    t.string "source_instance", default: "default", null: false
+    t.datetime "started_at", null: false
+    t.json "stats"
+    t.string "status", default: "running", null: false
+    t.bigint "tenant_id", null: false
+    t.json "unmapped"
+    t.datetime "updated_at", null: false
+    t.datetime "watermark"
+    t.index ["resume_token"], name: "index_import_runs_on_resume_token", unique: true
+    t.index ["tenant_id", "source", "source_instance", "status"], name: "index_import_runs_for_resume"
+    t.index ["tenant_id"], name: "index_import_runs_on_tenant_id"
+  end
+
+  create_table "lead_capture_forms", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.text "consent_disclosure"
+    t.datetime "created_at", null: false
+    t.json "field_mapping", default: {}, null: false
+    t.boolean "is_default", default: false, null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "slug"], name: "index_lead_capture_forms_on_tenant_id_and_slug", unique: true
+    t.index ["tenant_id"], name: "index_lead_capture_forms_on_tenant_id"
+    t.index ["tenant_id"], name: "index_lead_capture_forms_one_default", unique: true, where: "is_default"
+  end
+
   create_table "leads", force: :cascade do |t|
     t.string "company_name"
+    t.datetime "consent_captured_at"
+    t.string "consent_source"
     t.integer "contact_id"
     t.datetime "converted_at"
     t.integer "converted_deal_id"
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "email"
+    t.boolean "email_consent", default: false, null: false
+    t.datetime "email_unsubscribed_at"
     t.string "external_id"
     t.json "labels"
+    t.datetime "merged_at"
+    t.bigint "merged_into_id"
     t.string "name", null: false
     t.text "notes"
     t.integer "owner_id"
     t.string "phone"
+    t.json "provenance", default: {}, null: false
     t.boolean "sms_consent", default: false, null: false
     t.integer "source", default: 2, null: false
     t.integer "source_connector_id"
@@ -382,21 +629,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["deleted_at"], name: "index_leads_on_deleted_at"
     t.index ["email"], name: "index_leads_on_email"
     t.index ["external_id"], name: "index_leads_on_external_id"
+    t.index ["merged_into_id"], name: "index_leads_on_merged_into_id"
     t.index ["owner_id"], name: "index_leads_on_owner_id"
     t.index ["source_connector_id"], name: "index_leads_on_source_connector_id"
     t.index ["status"], name: "index_leads_on_status"
+    t.index ["tenant_id", "merged_into_id"], name: "index_leads_on_tenant_id_and_merged_into_id"
     t.index ["tenant_id"], name: "index_leads_on_tenant_id"
+  end
+
+  create_table "legal_holds", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.bigint "placed_by_id"
+    t.text "reason", null: false
+    t.datetime "released_at"
+    t.bigint "released_by_id"
+    t.bigint "subject_id", null: false
+    t.string "subject_type", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["placed_by_id"], name: "index_legal_holds_on_placed_by_id"
+    t.index ["released_by_id"], name: "index_legal_holds_on_released_by_id"
+    t.index ["subject_type", "subject_id"], name: "index_legal_holds_on_subject"
+    t.index ["tenant_id", "subject_type", "subject_id", "released_at"], name: "index_legal_holds_on_active_subject"
+    t.index ["tenant_id"], name: "index_legal_holds_on_tenant_id"
   end
 
   create_table "macros", force: :cascade do |t|
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.string "message_kind"
     t.string "name", null: false
+    t.bigint "set_assignee_id"
+    t.string "set_priority"
+    t.bigint "set_queue_id"
+    t.string "set_status"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_macros_on_deleted_at"
-    t.index ["tenant_id", "name"], name: "index_macros_on_tenant_id_and_name", unique: true, where: "deleted_at IS NULL"
+    t.index ["set_assignee_id"], name: "index_macros_on_set_assignee_id"
+    t.index ["set_queue_id"], name: "index_macros_on_set_queue_id"
+    t.index ["tenant_id", "name"], name: "index_macros_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_macros_on_tenant_id"
   end
 
@@ -412,6 +686,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.string "external_message_id"
     t.integer "kind", default: 0, null: false
     t.json "metadata"
+    t.string "source_author_name"
     t.integer "source_connector_id"
     t.string "subject"
     t.integer "tenant_id", null: false
@@ -422,8 +697,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["deleted_at"], name: "index_messages_on_deleted_at"
     t.index ["email_message_id"], name: "index_messages_on_email_message_id"
     t.index ["source_connector_id"], name: "index_messages_on_source_connector_id"
-    t.index ["tenant_id", "source_connector_id", "external_message_id"], name: "index_messages_on_tenant_connector_external_id", unique: true, where: "source_connector_id IS NOT NULL AND external_message_id IS NOT NULL"
+    t.index ["tenant_id", "source_connector_id", "external_message_id"], name: "index_messages_on_tenant_connector_external_id", unique: true, where: "((source_connector_id IS NOT NULL) AND (external_message_id IS NOT NULL))"
     t.index ["tenant_id"], name: "index_messages_on_tenant_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "actor_id"
+    t.string "actor_type"
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.string "dedupe_key", null: false
+    t.integer "email_attempts", default: 0, null: false
+    t.datetime "email_claimed_at"
+    t.integer "email_delivery_count", default: 0, null: false
+    t.text "email_last_error"
+    t.integer "email_status", default: 0, null: false
+    t.datetime "emailed_at"
+    t.integer "kind", null: false
+    t.datetime "last_occurred_at", null: false
+    t.json "metadata"
+    t.bigint "notifiable_id", null: false
+    t.string "notifiable_type", null: false
+    t.integer "occurrences", default: 1, null: false
+    t.datetime "read_at"
+    t.integer "severity", default: 0, null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["actor_type", "actor_id"], name: "index_notifications_on_actor"
+    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
+    t.index ["tenant_id", "email_status"], name: "index_notifications_on_tenant_id_and_email_status"
+    t.index ["tenant_id", "user_id", "dedupe_key"], name: "index_notifications_on_recipient_and_dedupe", unique: true
+    t.index ["tenant_id"], name: "index_notifications_on_tenant_id"
+    t.index ["user_id", "read_at", "created_at"], name: "index_notifications_on_user_inbox"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+    t.check_constraint "email_delivery_count >= 0", name: "notifications_email_delivery_count_nonnegative"
+    t.check_constraint "occurrences > 0", name: "notifications_occurrences_positive"
   end
 
   create_table "oauth_access_tokens", force: :cascade do |t|
@@ -450,7 +760,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_organisations_on_deleted_at"
     t.index ["external_ref"], name: "index_organisations_on_external_ref"
-    t.index ["tenant_id", "name"], name: "index_organisations_on_tenant_id_and_name", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "name"], name: "index_organisations_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_organisations_on_tenant_id"
   end
 
@@ -479,8 +789,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_pipelines_on_deleted_at"
-    t.index ["tenant_id", "slug"], name: "index_pipelines_on_tenant_id_and_slug", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "slug"], name: "index_pipelines_on_tenant_id_and_slug", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_pipelines_on_tenant_id"
+  end
+
+  create_table "privacy_erasure_requests", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.string "erasure_token", null: false
+    t.text "failure_reason"
+    t.bigint "requested_by_id"
+    t.integer "status", default: 0, null: false
+    t.bigint "subject_id", null: false
+    t.string "subject_type", null: false
+    t.json "summary", default: {}, null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["erasure_token"], name: "index_privacy_erasure_requests_on_erasure_token", unique: true
+    t.index ["requested_by_id"], name: "index_privacy_erasure_requests_on_requested_by_id"
+    t.index ["subject_type", "subject_id"], name: "index_privacy_erasure_requests_on_subject"
+    t.index ["tenant_id"], name: "index_privacy_erasure_requests_on_tenant_id"
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.bigint "default_unit_price_cents"
+    t.datetime "deleted_at"
+    t.text "description"
+    t.string "name", null: false
+    t.string "sku", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "sku"], name: "index_products_on_tenant_id_and_sku", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["tenant_id"], name: "index_products_on_tenant_id"
   end
 
   create_table "project_memberships", force: :cascade do |t|
@@ -495,6 +838,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["user_id"], name: "index_project_memberships_on_user_id"
   end
 
+  create_table "project_template_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "due_offset_days"
+    t.decimal "estimate", precision: 8, scale: 2
+    t.integer "kind", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.integer "priority", default: 1, null: false
+    t.bigint "project_template_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_template_id"], name: "index_project_template_items_on_project_template_id"
+    t.index ["tenant_id", "project_template_id", "position"], name: "index_project_template_items_order"
+    t.index ["tenant_id"], name: "index_project_template_items_on_tenant_id"
+  end
+
+  create_table "project_templates", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "key_prefix", default: "ONB", null: false
+    t.string "name", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "name"], name: "index_project_templates_on_tenant_id_and_name", unique: true
+    t.index ["tenant_id"], name: "index_project_templates_on_tenant_id"
+  end
+
   create_table "projects", force: :cascade do |t|
     t.boolean "archived", default: false, null: false
     t.datetime "created_at", null: false
@@ -504,12 +876,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "last_item_number", default: 0, null: false
     t.integer "lead_id"
     t.string "name", null: false
+    t.bigint "onboarding_deal_id"
+    t.bigint "project_template_id"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
     t.index ["deleted_at"], name: "index_projects_on_deleted_at"
     t.index ["lead_id"], name: "index_projects_on_lead_id"
-    t.index ["tenant_id", "key"], name: "index_projects_on_tenant_id_and_key", unique: true, where: "deleted_at IS NULL"
+    t.index ["onboarding_deal_id"], name: "index_projects_on_onboarding_deal_id"
+    t.index ["project_template_id"], name: "index_projects_on_project_template_id"
+    t.index ["tenant_id", "key"], name: "index_projects_on_tenant_id_and_key", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["tenant_id", "onboarding_deal_id"], name: "index_projects_on_tenant_onboarding_deal", unique: true, where: "(onboarding_deal_id IS NOT NULL)"
+    t.index ["tenant_id", "visibility"], name: "index_projects_on_tenant_id_and_visibility"
     t.index ["tenant_id"], name: "index_projects_on_tenant_id"
+    t.check_constraint "visibility IN (0, 1)", name: "projects_visibility_valid"
   end
 
   create_table "queue_memberships", force: :cascade do |t|
@@ -531,8 +911,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_queues_on_deleted_at"
-    t.index ["tenant_id", "name"], name: "index_queues_on_tenant_id_and_name", unique: true, where: "deleted_at IS NULL"
-    t.index ["tenant_id", "slug"], name: "index_queues_on_tenant_id_and_slug", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "name"], name: "index_queues_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["tenant_id", "slug"], name: "index_queues_on_tenant_id_and_slug", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_queues_on_tenant_id"
   end
 
@@ -549,16 +929,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "visibility", default: 0, null: false
     t.index ["category_id"], name: "index_reference_docs_on_category_id"
     t.index ["deleted_at"], name: "index_reference_docs_on_deleted_at"
-    t.index ["tenant_id", "slug"], name: "index_reference_docs_on_tenant_id_and_slug", unique: true, where: "slug IS NOT NULL AND deleted_at IS NULL"
-    t.index ["tenant_id", "title"], name: "index_reference_docs_on_tenant_id_and_title", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "slug"], name: "index_reference_docs_on_tenant_id_and_slug", unique: true, where: "((slug IS NOT NULL) AND (deleted_at IS NULL))"
+    t.index ["tenant_id", "title"], name: "index_reference_docs_on_tenant_id_and_title", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_reference_docs_on_tenant_id"
+  end
+
+  create_table "routing_rule_executions", force: :cascade do |t|
+    t.bigint "case_id", null: false
+    t.datetime "case_status_changed_at", null: false
+    t.text "changes_summary"
+    t.datetime "created_at", null: false
+    t.datetime "executed_at", null: false
+    t.bigint "routing_rule_id"
+    t.string "rule_name", null: false
+    t.datetime "scheduled_for", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["case_id"], name: "index_routing_rule_executions_on_case_id"
+    t.index ["routing_rule_id", "case_id", "case_status_changed_at"], name: "index_routing_executions_on_rule_case_episode", unique: true
+    t.index ["routing_rule_id"], name: "index_routing_rule_executions_on_routing_rule_id"
+    t.index ["tenant_id"], name: "index_routing_rule_executions_on_tenant_id"
   end
 
   create_table "routing_rules", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.integer "after_minutes"
     t.datetime "created_at", null: false
     t.string "if_channel"
     t.string "if_priority"
+    t.string "if_status"
     t.string "if_subject_contains"
     t.integer "match_category_id"
     t.string "name", null: false
@@ -569,13 +968,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "then_category_id"
     t.string "then_priority"
     t.integer "then_queue_id"
+    t.string "trigger_type", default: "case_created", null: false
     t.datetime "updated_at", null: false
+    t.boolean "use_business_hours", default: true, null: false
     t.index ["match_category_id"], name: "index_routing_rules_on_match_category_id"
     t.index ["tenant_id", "position"], name: "index_routing_rules_on_tenant_id_and_position"
     t.index ["tenant_id"], name: "index_routing_rules_on_tenant_id"
     t.index ["then_assignee_id"], name: "index_routing_rules_on_then_assignee_id"
     t.index ["then_category_id"], name: "index_routing_rules_on_then_category_id"
     t.index ["then_queue_id"], name: "index_routing_rules_on_then_queue_id"
+  end
+
+  create_table "saved_views", force: :cascade do |t|
+    t.integer "context_id"
+    t.datetime "created_at", null: false
+    t.json "filters", default: {}, null: false
+    t.string "name", null: false
+    t.string "resource_type", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["tenant_id", "user_id", "resource_type", "context_id", "name"], name: "index_saved_work_views_on_owner_context_and_name", unique: true, where: "(context_id IS NOT NULL)"
+    t.index ["tenant_id", "user_id", "resource_type", "name"], name: "index_saved_case_views_on_owner_and_name", unique: true, where: "(context_id IS NULL)"
+    t.index ["tenant_id"], name: "index_saved_views_on_tenant_id"
+    t.index ["user_id"], name: "index_saved_views_on_user_id"
   end
 
   create_table "security_events", force: :cascade do |t|
@@ -630,6 +1046,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["enrollable_type", "enrollable_id"], name: "index_sequence_enrollments_on_enrollable"
     t.index ["sequence_id"], name: "index_sequence_enrollments_on_sequence_id"
     t.index ["status", "next_run_at"], name: "index_sequence_enrollments_on_status_and_next_run_at"
+    t.index ["tenant_id", "sequence_id", "enrollable_type", "enrollable_id"], name: "index_sequence_enrollments_on_unique_active_target", unique: true, where: "((status = 0) AND (deleted_at IS NULL))"
     t.index ["tenant_id"], name: "index_sequence_enrollments_on_tenant_id"
   end
 
@@ -692,8 +1109,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "tenant_id"
     t.datetime "updated_at", null: false
     t.json "value"
-    t.index ["key"], name: "index_settings_on_key_global", unique: true, where: "tenant_id IS NULL"
-    t.index ["tenant_id", "key"], name: "index_settings_on_tenant_id_and_key", unique: true, where: "tenant_id IS NOT NULL"
+    t.index ["key"], name: "index_settings_on_key_global", unique: true, where: "(tenant_id IS NULL)"
+    t.index ["tenant_id", "key"], name: "index_settings_on_tenant_id_and_key", unique: true, where: "(tenant_id IS NOT NULL)"
     t.index ["tenant_id"], name: "index_settings_on_tenant_id"
   end
 
@@ -707,19 +1124,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_shared_credentials_on_deleted_at"
-    t.index ["tenant_id", "name"], name: "index_shared_credentials_on_tenant_id_and_name_live", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "name"], name: "index_shared_credentials_on_tenant_id_and_name_live", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_shared_credentials_on_tenant_id"
   end
 
+  create_table "sla_clock_events", force: :cascade do |t|
+    t.bigint "case_id", null: false
+    t.integer "clock_kind", null: false
+    t.datetime "created_at", null: false
+    t.integer "event_kind", null: false
+    t.json "metadata"
+    t.datetime "occurred_at", null: false
+    t.string "reason"
+    t.integer "remaining_minutes"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["case_id", "clock_kind", "occurred_at"], name: "index_sla_clock_events_timeline"
+    t.index ["case_id"], name: "index_sla_clock_events_on_case_id"
+    t.index ["tenant_id"], name: "index_sla_clock_events_on_tenant_id"
+    t.check_constraint "remaining_minutes >= 0", name: "sla_clock_events_remaining_nonnegative"
+  end
+
   create_table "sla_policies", force: :cascade do |t|
+    t.bigint "business_calendar_id"
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "description"
     t.string "name", null: false
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["business_calendar_id"], name: "index_sla_policies_on_business_calendar_id"
     t.index ["deleted_at"], name: "index_sla_policies_on_deleted_at"
-    t.index ["tenant_id", "name"], name: "index_sla_policies_on_tenant_id_and_name", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "name"], name: "index_sla_policies_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_sla_policies_on_tenant_id"
   end
 
@@ -747,8 +1183,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_sprints_on_deleted_at"
+    t.index ["project_id"], name: "index_sprints_on_one_active_per_project", unique: true, where: "status = 1 AND deleted_at IS NULL"
     t.index ["project_id"], name: "index_sprints_on_project_id"
     t.index ["tenant_id"], name: "index_sprints_on_tenant_id"
+  end
+
+  create_table "storage_deletions", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.string "blob_key", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.text "last_error"
+    t.bigint "owner_tenant_id", null: false
+    t.string "service_name", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["blob_key"], name: "index_storage_deletions_on_blob_key", unique: true
+    t.index ["owner_tenant_id"], name: "index_storage_deletions_on_owner_tenant_id"
+    t.index ["status", "created_at"], name: "index_storage_deletions_on_status_and_created_at"
+  end
+
+  create_table "tenant_export_receipts", force: :cascade do |t|
+    t.integer "attachment_count", default: 0, null: false
+    t.datetime "completed_at", null: false
+    t.datetime "created_at", null: false
+    t.string "export_id", null: false
+    t.string "export_path", null: false
+    t.string "inventory_sha256", null: false
+    t.string "manifest_sha256", null: false
+    t.json "row_counts", default: {}, null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["export_id"], name: "index_tenant_export_receipts_on_export_id", unique: true
+    t.index ["tenant_id"], name: "index_tenant_export_receipts_on_tenant_id"
+    t.check_constraint "attachment_count >= 0", name: "tenant_export_receipts_attachment_count_nonnegative"
   end
 
   create_table "tenants", force: :cascade do |t|
@@ -768,6 +1236,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "email_address", null: false
+    t.text "email_signature"
     t.string "locale"
     t.string "name", default: "", null: false
     t.string "password_digest", null: false
@@ -776,7 +1245,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["role"], name: "index_users_on_role"
-    t.index ["tenant_id", "email_address"], name: "index_users_on_tenant_id_and_email_address", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "email_address"], name: "index_users_on_tenant_id_and_email_address", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_users_on_tenant_id"
   end
 
@@ -810,12 +1279,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["tenant_id"], name: "index_webhook_endpoints_on_tenant_id"
   end
 
+  create_table "work_assignment_rules", force: :cascade do |t|
+    t.bigint "assignee_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "work_kind", null: false
+    t.index ["assignee_id"], name: "index_work_assignment_rules_on_assignee_id"
+    t.index ["project_id"], name: "index_work_assignment_rules_on_project_id"
+    t.index ["tenant_id", "project_id", "work_kind"], name: "index_work_assignment_rules_on_project_and_kind", unique: true
+    t.index ["tenant_id"], name: "index_work_assignment_rules_on_tenant_id"
+  end
+
   create_table "work_comments", force: :cascade do |t|
-    t.integer "author_id", null: false
-    t.string "author_type", null: false
+    t.integer "author_id"
+    t.string "author_type"
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.string "source_author_name"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.integer "work_item_id", null: false
@@ -825,10 +1308,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["work_item_id"], name: "index_work_comments_on_work_item_id"
   end
 
+  create_table "work_item_relations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "relation_type", null: false
+    t.bigint "source_id", null: false
+    t.bigint "target_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_work_item_relations_on_created_by_id"
+    t.index ["source_id"], name: "index_work_item_relations_on_source_id"
+    t.index ["target_id"], name: "index_work_item_relations_on_target_id"
+    t.index ["tenant_id", "source_id", "target_id", "relation_type"], name: "index_work_relations_on_tenant_pair_and_type", unique: true
+    t.index ["tenant_id"], name: "index_work_item_relations_on_tenant_id"
+    t.check_constraint "source_id <> target_id", name: "work_item_relations_distinct_items"
+  end
+
   create_table "work_items", force: :cascade do |t|
     t.integer "assignee_id"
     t.datetime "closed_at"
     t.datetime "created_at", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.text "description"
     t.date "due_on"
@@ -851,7 +1351,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["deleted_at"], name: "index_work_items_on_deleted_at"
     t.index ["parent_id"], name: "index_work_items_on_parent_id"
     t.index ["project_id", "number"], name: "index_work_items_on_project_id_and_number", unique: true
-    t.index ["project_id", "source_key"], name: "index_work_items_on_project_id_and_source_key", unique: true, where: "source_key IS NOT NULL AND deleted_at IS NULL"
+    t.index ["project_id", "source_key"], name: "index_work_items_on_project_id_and_source_key", unique: true, where: "((source_key IS NOT NULL) AND (deleted_at IS NULL))"
     t.index ["project_id"], name: "index_work_items_on_project_id"
     t.index ["reporter_id"], name: "index_work_items_on_reporter_id"
     t.index ["sprint_id"], name: "index_work_items_on_sprint_id"
@@ -904,6 +1404,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
     t.index ["tenant_id"], name: "index_workflow_states_on_tenant_id"
   end
 
+  add_foreign_key "action_mailbox_inbound_emails", "tenants"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_tokens", "users"
@@ -912,6 +1413,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
   add_foreign_key "approval_requests", "tenants"
   add_foreign_key "approval_requests", "users", column: "decided_by_id"
   add_foreign_key "approval_requests", "users", column: "requested_by_id"
+  add_foreign_key "business_calendar_exceptions", "business_calendars"
+  add_foreign_key "business_calendar_windows", "business_calendars"
+  add_foreign_key "business_calendars", "tenants"
+  add_foreign_key "case_presences", "cases", on_delete: :cascade
+  add_foreign_key "case_presences", "tenants", on_delete: :cascade
+  add_foreign_key "case_presences", "users", on_delete: :cascade
+  add_foreign_key "cases", "cases", column: "merged_into_id", on_delete: :restrict
   add_foreign_key "cases", "categories"
   add_foreign_key "cases", "contacts"
   add_foreign_key "cases", "queues"
@@ -920,6 +1428,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
   add_foreign_key "cases", "tenants"
   add_foreign_key "cases", "users", column: "assignee_id"
   add_foreign_key "categories", "tenants"
+  add_foreign_key "competitors", "tenants", on_delete: :cascade
   add_foreign_key "connector_invocations", "connectors"
   add_foreign_key "connector_invocations", "tenants"
   add_foreign_key "connector_invocations", "users", column: "approved_by_id"
@@ -929,6 +1438,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
   add_foreign_key "connectors", "tenants"
   add_foreign_key "contacts", "organisations"
   add_foreign_key "contacts", "tenants"
+  add_foreign_key "csat_surveys", "cases", on_delete: :cascade
+  add_foreign_key "csat_surveys", "contacts", on_delete: :nullify
+  add_foreign_key "csat_surveys", "tenants", on_delete: :cascade
+  add_foreign_key "custom_field_definitions", "tenants", on_delete: :cascade
+  add_foreign_key "deal_competitors", "competitors", on_delete: :restrict
+  add_foreign_key "deal_competitors", "deals", on_delete: :cascade
+  add_foreign_key "deal_competitors", "tenants", on_delete: :cascade
+  add_foreign_key "deal_line_items", "deals", on_delete: :cascade
+  add_foreign_key "deal_line_items", "products", on_delete: :restrict
+  add_foreign_key "deal_line_items", "tenants", on_delete: :cascade
   add_foreign_key "deals", "contacts"
   add_foreign_key "deals", "leads"
   add_foreign_key "deals", "organisations"
@@ -941,21 +1460,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
   add_foreign_key "decision_appeals", "tenants"
   add_foreign_key "decision_appeals", "users", column: "reviewed_by_id"
   add_foreign_key "decisions", "tenants"
+  add_foreign_key "import_conflicts", "import_identities"
+  add_foreign_key "import_conflicts", "import_runs"
+  add_foreign_key "import_conflicts", "tenants"
+  add_foreign_key "import_identities", "import_runs", column: "last_seen_run_id"
+  add_foreign_key "import_identities", "tenants"
+  add_foreign_key "import_runs", "tenants"
+  add_foreign_key "lead_capture_forms", "tenants", on_delete: :cascade
   add_foreign_key "leads", "contacts"
   add_foreign_key "leads", "deals", column: "converted_deal_id"
+  add_foreign_key "leads", "leads", column: "merged_into_id", on_delete: :restrict
   add_foreign_key "leads", "tenants"
   add_foreign_key "leads", "users", column: "owner_id"
+  add_foreign_key "legal_holds", "tenants"
+  add_foreign_key "legal_holds", "users", column: "placed_by_id"
+  add_foreign_key "legal_holds", "users", column: "released_by_id"
+  add_foreign_key "macros", "queues", column: "set_queue_id", on_delete: :nullify
   add_foreign_key "macros", "tenants"
+  add_foreign_key "macros", "users", column: "set_assignee_id", on_delete: :nullify
   add_foreign_key "messages", "cases"
   add_foreign_key "messages", "connectors", column: "source_connector_id"
   add_foreign_key "messages", "tenants"
+  add_foreign_key "notifications", "tenants"
+  add_foreign_key "notifications", "users"
   add_foreign_key "oauth_access_tokens", "service_accounts"
   add_foreign_key "organisations", "tenants"
   add_foreign_key "pipeline_stages", "pipelines"
   add_foreign_key "pipelines", "tenants"
+  add_foreign_key "privacy_erasure_requests", "tenants"
+  add_foreign_key "privacy_erasure_requests", "users", column: "requested_by_id"
+  add_foreign_key "products", "tenants", on_delete: :cascade
   add_foreign_key "project_memberships", "projects"
   add_foreign_key "project_memberships", "tenants"
   add_foreign_key "project_memberships", "users"
+  add_foreign_key "project_template_items", "project_templates", on_delete: :cascade
+  add_foreign_key "project_template_items", "tenants", on_delete: :cascade
+  add_foreign_key "project_templates", "tenants", on_delete: :cascade
+  add_foreign_key "projects", "deals", column: "onboarding_deal_id", on_delete: :restrict
+  add_foreign_key "projects", "project_templates", on_delete: :nullify
   add_foreign_key "projects", "tenants"
   add_foreign_key "projects", "users", column: "lead_id"
   add_foreign_key "queue_memberships", "queues"
@@ -963,11 +1505,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
   add_foreign_key "queues", "tenants"
   add_foreign_key "reference_docs", "categories"
   add_foreign_key "reference_docs", "tenants"
+  add_foreign_key "routing_rule_executions", "cases", on_delete: :cascade
+  add_foreign_key "routing_rule_executions", "routing_rules", on_delete: :nullify
+  add_foreign_key "routing_rule_executions", "tenants", on_delete: :cascade
   add_foreign_key "routing_rules", "categories", column: "match_category_id"
   add_foreign_key "routing_rules", "categories", column: "then_category_id"
   add_foreign_key "routing_rules", "queues", column: "then_queue_id"
   add_foreign_key "routing_rules", "tenants"
   add_foreign_key "routing_rules", "users", column: "then_assignee_id"
+  add_foreign_key "saved_views", "tenants"
+  add_foreign_key "saved_views", "users"
   add_foreign_key "security_events", "tenants"
   add_foreign_key "sequence_deliveries", "connectors"
   add_foreign_key "sequence_deliveries", "sequence_enrollments"
@@ -981,15 +1528,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_090200) do
   add_foreign_key "service_accounts", "tenants"
   add_foreign_key "sessions", "users"
   add_foreign_key "shared_credentials", "tenants"
+  add_foreign_key "sla_clock_events", "cases"
+  add_foreign_key "sla_clock_events", "tenants"
+  add_foreign_key "sla_policies", "business_calendars"
   add_foreign_key "sla_policies", "tenants"
   add_foreign_key "sla_targets", "sla_policies"
   add_foreign_key "sprints", "projects"
   add_foreign_key "sprints", "tenants"
+  add_foreign_key "tenant_export_receipts", "tenants"
   add_foreign_key "users", "tenants"
   add_foreign_key "webhook_deliveries", "webhook_endpoints"
   add_foreign_key "webhook_endpoints", "tenants"
+  add_foreign_key "work_assignment_rules", "projects", on_delete: :cascade
+  add_foreign_key "work_assignment_rules", "tenants", on_delete: :cascade
+  add_foreign_key "work_assignment_rules", "users", column: "assignee_id", on_delete: :cascade
   add_foreign_key "work_comments", "tenants"
   add_foreign_key "work_comments", "work_items"
+  add_foreign_key "work_item_relations", "tenants", on_delete: :cascade
+  add_foreign_key "work_item_relations", "users", column: "created_by_id", on_delete: :nullify
+  add_foreign_key "work_item_relations", "work_items", column: "source_id", on_delete: :cascade
+  add_foreign_key "work_item_relations", "work_items", column: "target_id", on_delete: :cascade
   add_foreign_key "work_items", "projects"
   add_foreign_key "work_items", "sprints"
   add_foreign_key "work_items", "tenants"

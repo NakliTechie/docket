@@ -33,12 +33,37 @@ class ImportsTest < ActiveSupport::TestCase
     assert_equal 1, item.work_comments.count
   end
 
+  test "Jira explicitly maps typed custom fields and reports the rest" do
+    CustomFieldDefinition.create!(resource_type: "work_items", key: "story_points",
+                                  label: "Story points", field_type: :integer)
+    payload = jira_export("customfield_10010" => "8", "customfield_99999" => "unmapped")
+    result = Imports::Jira.call(payload: payload, project: projects(:pep), actor: users(:admin),
+                                custom_field_map: { story_points: "customfield_10010" })
+
+    item = projects(:pep).work_items.find_by!(source_key: "PEP-77")
+    assert_equal 8, item.custom_fields.fetch("story_points")
+    assert_includes result.serialized_unmapped["dropped.issue.fields"], "customfield_99999"
+    refute_includes result.serialized_unmapped["dropped.issue.fields"], "customfield_10010"
+  end
+
+  test "Jira reports invalid custom-field coercions in the returned result" do
+    CustomFieldDefinition.create!(resource_type: "work_items", key: "story_points",
+                                  label: "Story points", field_type: :integer)
+    result = Imports::Jira.call(
+      payload: jira_export("customfield_10010" => "not-a-number"),
+      project: projects(:pep), actor: users(:admin),
+      custom_field_map: { story_points: "customfield_10010" }
+    )
+
+    assert_includes result.serialized_unmapped["custom_field.story_points"], "not-a-number"
+  end
+
   test "a dry run reports without writing" do
     result = Imports::Jira.call(payload: jira_export, project: projects(:pep),
                                 actor: users(:admin), dry_run: true)
 
     assert_equal 1, result.created["issues"], "it says what it would do"
-    assert_nil projects(:pep).work_items.find_by(number: 77), "and writes nothing"
+    assert_not WorkItem.exists?(project: projects(:pep), number: 77), "and writes nothing"
   end
 
   test "an unknown status is REPORTED, never guessed" do
@@ -47,7 +72,8 @@ class ImportsTest < ActiveSupport::TestCase
 
     assert_includes result.to_h[:unmapped]["status"], "Awaiting Vendor"
     item = projects(:pep).work_items.find_by(number: 77)
-    assert_equal projects(:pep).default_state, item.workflow_state, "falls back, and says so"
+    assert_nil item, "an unmapped state is not guessed into a live workflow column"
+    assert result.errors.any?
   end
 
   test "re-running updates rather than duplicating" do
@@ -99,6 +125,33 @@ class ImportsTest < ActiveSupport::TestCase
     assert kase.messages.first.kind_internal_note?, "a private Freshdesk note stays internal"
   end
 
+  test "Freshdesk explicitly maps typed custom fields and reports the rest" do
+    CustomFieldDefinition.create!(resource_type: "cases", key: "account_tier",
+                                  label: "Account tier", field_type: :single_select,
+                                  options: %w[Gold Silver])
+    payload = freshdesk_export
+    payload["tickets"][0]["custom_fields"] = { "cf_tier" => "Gold", "cf_legacy" => "keep visible" }
+    result = Imports::Freshdesk.call(payload: payload,
+                                     custom_field_map: { account_tier: "cf_tier" })
+
+    assert_equal "Gold", Case.find_by!(external_id: "freshdesk:4321").custom_fields.fetch("account_tier")
+    assert_includes result.serialized_unmapped["dropped.ticket.custom_fields"], "cf_legacy"
+    refute_includes result.serialized_unmapped["dropped.ticket.custom_fields"], "cf_tier"
+  end
+
+  test "Freshdesk reports invalid custom-field coercions in the returned result" do
+    CustomFieldDefinition.create!(resource_type: "cases", key: "account_tier",
+                                  label: "Account tier", field_type: :single_select,
+                                  options: %w[Gold Silver])
+    payload = freshdesk_export
+    payload["tickets"][0]["custom_fields"] = { "cf_tier" => "Bronze" }
+    result = Imports::Freshdesk.call(
+      payload: payload, custom_field_map: { account_tier: "cf_tier" }
+    )
+
+    assert_includes result.serialized_unmapped["custom_field.account_tier"], "Bronze"
+  end
+
   test "Freshdesk re-runs are idempotent on the ticket id" do
     Imports::Freshdesk.call(payload: freshdesk_export)
     assert_difference "Case.count", 0 do
@@ -112,6 +165,90 @@ class ImportsTest < ActiveSupport::TestCase
     result = Imports::Freshdesk.call(payload: payload)
 
     assert_includes result.to_h[:unmapped]["status"], "42"
+  end
+
+  test "Freshdesk delta re-import applies a status change and a new conversation" do
+    initial = freshdesk_export
+    initial["tickets"][0].merge!("status" => 2, "conversations" => [
+      { "id" => 1, "body_text" => "first", "private" => true, "incoming" => false }
+    ])
+    Imports::Freshdesk.call(payload: initial)
+
+    delta = freshdesk_export
+    delta["tickets"][0].merge!("status" => 5, "closed_at" => "2025-01-03T12:00:00Z",
+                                "conversations" => [
+      { "id" => 1, "body_text" => "first", "private" => true, "incoming" => false },
+      { "id" => 2, "body_text" => "closing note", "private" => true, "incoming" => false }
+    ])
+    result = Imports::Freshdesk.call(payload: delta)
+
+    kase = Case.find_by(external_id: "freshdesk:4321")
+    assert kase.status_closed?, result.to_h.inspect
+    assert_equal 2, kase.messages.count
+    assert_equal Date.new(2025, 1, 3), kase.closed_at.to_date
+  end
+
+  test "Freshdesk sparse contact rows do not erase enriched local data" do
+    payload = freshdesk_export
+    payload["contacts"][0]["phone"] = "+919812345678"
+    Imports::Freshdesk.call(payload: payload)
+    contact = Contact.find_by(email: "ravi@northwind.test")
+
+    Imports::Freshdesk.call(payload: { "contacts" => [
+      { "id" => 5, "email" => "ravi@northwind.test" }
+    ], "tickets" => [] })
+
+    assert_equal "Ravi Kumar", contact.reload.name
+    assert_equal "+919812345678", contact.phone
+    assert_equal "Northwind Ltd", contact.organisation.name
+  end
+
+  test "Freshdesk does not overwrite a contact with a customer SSO identity" do
+    protected_contact = Contact.create!(name: "Portal Ravi", email: "portal.ravi@example.test",
+                                        external_id: "SSO-RAVI-1")
+    result = Imports::Freshdesk.call(payload: {
+      "contacts" => [ { "id" => 55, "name" => "Source Ravi",
+                         "email" => protected_contact.email } ], "tickets" => []
+    })
+
+    assert_equal "Portal Ravi", protected_contact.reload.name
+    assert_includes result.serialized_unmapped["protected_contact"], "55"
+  end
+
+  test "Freshdesk reconstructs first response and SLA dates from source history" do
+    Setting.set("default_sla_policy_id", sla_policies(:standard).id)
+    historic = freshdesk_export
+    historic["tickets"][0].merge!(
+      "created_at" => "2024-01-01T09:00:00Z", "status" => 4,
+      "resolved_at" => "2024-01-20T09:00:00Z",
+      "conversations" => [ {
+        "id" => 99, "body_text" => "late staff response", "private" => false,
+        "incoming" => false, "created_at" => "2024-01-16T09:00:00Z"
+      } ]
+    )
+
+    Imports::Freshdesk.call(payload: historic)
+    kase = Case.find_by(external_id: "freshdesk:4321")
+
+    assert_equal Time.zone.parse("2024-01-16T09:00:00Z"), kase.first_responded_at
+    assert_equal Time.zone.parse("2024-01-01T09:30:00Z"), kase.first_response_due_at
+    assert kase.first_response_breached?
+    assert_equal Time.zone.parse("2024-01-01T17:00:00Z"), kase.resolution_due_at
+    assert kase.resolution_breached?
+  ensure
+    Setting.unset("default_sla_policy_id")
+  end
+
+  test "Jira uses the source resolution time for completed work" do
+    payload = jira_export(
+      "status" => { "name" => "Done" },
+      "resolutiondate" => "2024-05-04T10:30:00Z",
+      "created" => "2024-05-01T08:00:00Z"
+    )
+    Imports::Jira.call(payload: payload, project: projects(:pep), actor: users(:admin))
+
+    item = projects(:pep).work_items.find_by(source_key: "PEP-77")
+    assert_equal Time.zone.parse("2024-05-04T10:30:00Z"), item.closed_at
   end
 
   # ── KanZen → project ──────────────────────────────────────────────────────
@@ -143,18 +280,32 @@ class ImportsTest < ActiveSupport::TestCase
     assert_match(/could not parse/, result.errors.first)
   end
 
+  test "KanZen source identities preserve duplicate titles and make re-runs idempotent" do
+    board = { "id" => "BOARD-1", "title" => "Duplicate titles", "columns" => [
+      { "id" => "todo", "title" => "Todo", "cards" => [ { "id" => "A", "title" => "Review" } ] },
+      { "id" => "done", "title" => "Done", "cards" => [ { "id" => "B", "title" => "Review" } ] }
+    ] }
+    Imports::Kanzen.call(payload: board, key: "DUP", actor: users(:admin))
+    second = Imports::Kanzen.call(payload: board, key: "DUP", actor: users(:admin))
+
+    project = Project.find_by(key: "DUP")
+    assert_equal 2, project.work_items.where(title: "Review").count
+    assert_equal 2, second.updated["cards"]
+    assert_equal 0, second.created["cards"]
+  end
+
   # ── Regressions from the 2026-07-28 adversarial review ────────────────────
   test "issues from different Jira projects do not collapse onto one item" do
     payload = { "issues" => [
-      { "key" => "AAA-1", "fields" => { "summary" => "from AAA", "status" => { "name" => "To Do" } } },
-      { "key" => "BBB-1", "fields" => { "summary" => "from BBB", "status" => { "name" => "To Do" } } },
-      { "key" => "CCC-1", "fields" => { "summary" => "from CCC", "status" => { "name" => "To Do" } } }
+      { "key" => "AAA-1", "fields" => { "summary" => "from AAA", "status" => { "name" => "Backlog" } } },
+      { "key" => "BBB-1", "fields" => { "summary" => "from BBB", "status" => { "name" => "Backlog" } } },
+      { "key" => "CCC-1", "fields" => { "summary" => "from CCC", "status" => { "name" => "Backlog" } } }
     ] }
     before = projects(:pep).work_items.find_by(number: 1).title
 
     result = Imports::Jira.call(payload: payload, project: projects(:pep), actor: users(:admin))
 
-    assert_equal 3, result.created["issues"], "three distinct issues are three items"
+    assert_equal 3, result.created["issues"], result.to_h.inspect
     assert_equal before, projects(:pep).work_items.find_by(number: 1).reload.title,
                  "a pre-existing item must never be overwritten by an import"
     %w[AAA-1 BBB-1 CCC-1].each do |key|
@@ -169,7 +320,7 @@ class ImportsTest < ActiveSupport::TestCase
     result = Imports::Jira.call(payload: jira_export("summary" => "second run"),
                                 project: projects(:pep), actor: users(:admin))
 
-    assert_equal 1, result.created["issues"], "a tombstone is not an existing row to update"
+    assert_equal 1, result.created["issues"], result.to_h.inspect
     assert projects(:pep).work_items.exists?(title: "second run"), "the re-import must be visible"
   end
 

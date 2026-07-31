@@ -17,6 +17,11 @@ class SequenceEnrollment < ApplicationRecord
   belongs_to :current_step, class_name: "SequenceStep", optional: true
   has_many :sequence_deliveries, dependent: nil
 
+  validates :sequence_id, uniqueness: {
+    scope: %i[tenant_id enrollable_type enrollable_id],
+    conditions: -> { status_active.where(deleted_at: nil) }
+  }, if: :status_active?
+
   scope :due, -> { status_active.where("next_run_at <= ?", Time.current) }
 
   def due_step
@@ -72,6 +77,10 @@ class SequenceEnrollment < ApplicationRecord
     !!enrollable.try(:sms_consent)
   end
 
+  def recipient_email_consent?
+    !!enrollable.try(:email_consent) && enrollable.try(:email_unsubscribed_at).blank?
+  end
+
   def interpolation_vars
     {
       "contact_name" => enrollable.try(:name),
@@ -95,13 +104,18 @@ class SequenceEnrollment < ApplicationRecord
 
   def email_delivery_attributes(step)
     recipient = recipient_email.presence
+    reason = if recipient.blank?
+      "recipient has no email"
+    elsif !recipient_email_consent?
+      "recipient has not consented to marketing email"
+    end
     {
       tenant: tenant,
       sequence_step: step,
       channel: "email",
       recipient: recipient,
-      status: recipient ? :pending : :skipped,
-      last_error: ("recipient has no email" unless recipient),
+      status: reason ? :skipped : :pending,
+      last_error: reason,
       payload: {
         "subject" => step.render_subject(interpolation_vars).presence || sequence.name,
         "body" => step.render_body(interpolation_vars)

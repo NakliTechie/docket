@@ -50,6 +50,18 @@ class ConnectorsInboundTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "a signed malformed inbound message is rejected without losing it as accepted" do
+    wa = whatsapp
+    body = '{"entry":'
+
+    assert_no_difference "Case.count" do
+      post connector_webhook_path(wa), params: body,
+           headers: { "X-Hub-Signature-256" => signed("shh", body), "CONTENT_TYPE" => "text/plain" }
+    end
+
+    assert_response :bad_request
+  end
+
   test "the WhatsApp GET handshake echoes the challenge only on a matching verify token" do
     wa = whatsapp
     get connector_webhook_verify_path(wa), params: {

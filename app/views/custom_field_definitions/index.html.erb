@@ -1,0 +1,50 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <div class="page-actions">
+    <% if CustomFieldReportPolicy.new(Current.user, @resource_type).index? %>
+      <%= link_to t("custom_fields.index.report"), custom_field_report_path(resource_type: @resource_type), class: "btn" %>
+    <% end %>
+    <%= link_to t(".cases"), custom_fields_path(resource_type: "cases"),
+                class: "btn #{'btn-primary' if @resource_type == 'cases'}" %>
+    <%= link_to t(".work_items"), custom_fields_path(resource_type: "work_items"),
+                class: "btn #{'btn-primary' if @resource_type == 'work_items'}" %>
+    <% candidate = CustomFieldDefinition.new(resource_type: @resource_type) %>
+    <% if policy(candidate).create? %>
+      <%= link_to t(".new_field"), new_custom_field_path(resource_type: @resource_type), class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+<p class="page-intro"><%= t(".intro") %></p>
+
+<% if @definitions.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th><%= t(".columns.label") %></th>
+        <th><%= t(".columns.key") %></th>
+        <th><%= t(".columns.type") %></th>
+        <th><%= t(".columns.required") %></th>
+        <th><%= t(".columns.status") %></th>
+        <th class="actions"><%= t("tables.actions") %></th>
+      </tr></thead>
+      <tbody>
+        <% @definitions.each do |definition| %>
+          <tr class="<%= 'muted-row' unless definition.active? %>">
+            <td><%= definition.label %></td>
+            <td class="mono"><%= definition.key %></td>
+            <td><%= t("custom_fields.enum.field_type.#{definition.field_type}") %></td>
+            <td><%= definition.required? ? t("custom_fields.values.yes") : t("custom_fields.values.no") %></td>
+            <td><span class="badge"><%= t("custom_fields.values.#{definition.active? ? 'active' : 'inactive'}") %></span></td>
+            <td class="actions"><%= link_to t("actions.edit"), edit_custom_field_path(definition), class: "btn btn-sm" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+        action: policy(CustomFieldDefinition.new(resource_type: @resource_type)).create? ?
+          link_to(t(".new_field"), new_custom_field_path(resource_type: @resource_type), class: "btn btn-primary") : nil %>
+<% end %>

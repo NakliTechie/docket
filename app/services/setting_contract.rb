@@ -18,11 +18,15 @@ module SettingContract
     "default_queue_id" => :int,
     "default_sla_policy_id" => :int,
     "outbound_email_from" => :string,
+    "notification_email_enabled" => :bool,
+    "csat_enabled" => :bool,
+    "sla_risk_minutes" => :int,
     "cors_allowed_origins" => :string,
     "app_base_url" => :string,
     "sso_staff_oidc_issuer" => :string,
     "sso_staff_oidc_client_id" => :string,
     "sso_staff_oidc_client_secret" => :secret,
+    "sso_staff_jit_domains" => :string,
     "sso_staff_role_claim" => :string,
     "sso_staff_role_mapping" => :string,
     "sso_staff_saml_idp_sso_url" => :string,
@@ -55,7 +59,11 @@ module SettingContract
     end
     return INVALID if value.nil? && raw.present?
 
-    Setting::PROBABILITY_KEYS.include?(key.to_s) ? value.clamp(0.0, 1.0) : value
+    return value.clamp(0.0, 1.0) if Setting::PROBABILITY_KEYS.include?(key.to_s)
+    return value.clamp(1, 10_080) if key.to_s == "sla_risk_minutes"
+    return INVALID if key.to_s == "llm_endpoint_url" && !valid_http_url?(value)
+
+    value
   end
 
   def invalid?(value)
@@ -72,4 +80,12 @@ module SettingContract
     end
   end
   private_class_method :valid_shape?
+
+  def valid_http_url?(value)
+    uri = URI.parse(value.to_s)
+    uri.is_a?(URI::HTTP) && uri.host.present?
+  rescue URI::InvalidURIError
+    false
+  end
+  private_class_method :valid_http_url?
 end

@@ -3,6 +3,8 @@ require "test_helper"
 class SsoTest < ActionDispatch::IntegrationTest
   setup do
     OmniAuth.config.test_mode = true
+    Setting.set("sso_staff_oidc_issuer", "https://idp.example")
+    Setting.set("sso_staff_jit_domains", "example.com")
   end
 
   teardown do
@@ -10,10 +12,13 @@ class SsoTest < ActionDispatch::IntegrationTest
     OmniAuth.config.mock_auth.delete(:staff_oidc)
     OmniAuth.config.mock_auth.delete(:staff_saml)
     OmniAuth.config.mock_auth.delete(:customer_oidc)
+    Setting.unset("sso_staff_oidc_issuer")
+    Setting.unset("sso_staff_jit_domains")
   end
 
-  def mock_staff_oidc(email:, name: "SSO User", groups: nil, email_verified: nil)
-    raw = {}
+  def mock_staff_oidc(email:, name: "SSO User", groups: nil, email_verified: nil,
+                      issuer: "https://idp.example")
+    raw = { "iss" => issuer }
     raw["groups"] = groups unless groups.nil?
     raw["email_verified"] = email_verified unless email_verified.nil?
     OmniAuth.config.mock_auth[:staff_oidc] = OmniAuth::AuthHash.new(
@@ -72,6 +77,29 @@ class SsoTest < ActionDispatch::IntegrationTest
     assert_difference "User.count" do
       get "/auth/staff_oidc/callback"
     end
+  end
+
+  test "staff oidc rejects a callback asserting another issuer" do
+    mock_staff_oidc(email: "wrong-issuer@example.com", issuer: "https://attacker.example")
+    assert_no_difference "User.count" do
+      get "/auth/staff_oidc/callback"
+    end
+    assert_redirected_to new_session_path
+  end
+
+  test "staff JIT rejects an email outside the configured domains" do
+    mock_staff_oidc(email: "outsider@vendor.example")
+    assert_no_difference "User.count" do
+      get "/auth/staff_oidc/callback"
+    end
+    assert_redirected_to new_session_path
+  end
+
+  test "the JIT domain allowlist does not block an existing staff user" do
+    mock_staff_oidc(email: users(:agent_a).email_address)
+    Setting.set("sso_staff_jit_domains", "different.example")
+    get "/auth/staff_oidc/callback"
+    assert_redirected_to root_url
   end
 
   test "role mapping demotes a user no longer in any mapped group (M7)" do

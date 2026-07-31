@@ -18,11 +18,10 @@ module Webhooks
     return if owner && !Features.enabled?(owner)
 
     WebhookEndpoint.subscribed_to(event).each do |endpoint|
-      delivery = endpoint.webhook_deliveries.create!(
+      endpoint.webhook_deliveries.create!(
         event: event,
         payload: { event: event, occurred_at: Time.current.utc.iso8601(3), data: payload }
       )
-      WebhookDeliveryJob.perform_later(delivery)
     end
   end
 

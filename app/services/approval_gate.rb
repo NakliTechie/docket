@@ -38,6 +38,30 @@ module ApprovalGate
     end
   end
 
+  # --- work-item transitions -------------------------------------------------
+
+  def guarded_work_transition?(item, state)
+    ApprovalProcess.for_work_transition(item, state).present?
+  end
+
+  def work_transition_cleared?(item, state)
+    process = ApprovalProcess.for_work_transition(item, state)
+    return true unless process
+
+    item.approval_requests.status_approved.where(consumed_at: nil)
+        .exists?(approval_process_id: process.id, requested_action: state.id.to_s)
+  end
+
+  def submit_work_transition!(item, state, requested_by:)
+    process = ApprovalProcess.for_work_transition(item, state)
+    return nil unless process
+
+    item.approval_requests.status_pending
+        .find_or_create_by!(approval_process: process, requested_action: state.id.to_s) do |request|
+      request.requested_by = requested_by
+    end
+  end
+
   # --- effector actions -------------------------------------------------------
 
   # Should this connector action be forced to human review (overriding the
@@ -89,7 +113,28 @@ module ApprovalGate
   def perform!(request, approver)
     case request.approval_process.trigger_type
     when "case_transition"
-      Current.set(actor: approver) { request.subject.transition_to!(request.requested_action) }
+      Current.set(actor: approver) do
+        request.subject.transition_to!(request.requested_action)
+        publish_system_resolution!(request) if request.requested_action == "resolved"
+      end
+    when "work_item_transition"
+      state = request.subject.project.workflow_states.find(request.requested_action)
+      Current.set(actor: approver) { request.subject.transition_to!(state) }
     end
+  end
+
+  def publish_system_resolution!(request)
+    proposal = request.subject.messages.where(kind: :internal_note).order(id: :desc)
+                      .detect do |message|
+      message.metadata&.dig("ai") == "resolve_proposal" &&
+        message.metadata&.dig("approval_request_id") == request.id
+    end
+    return unless proposal
+
+    request.subject.messages.create!(
+      kind: :agent_turn, direction: :outbound, author: nil,
+      body: "#{proposal.body}\n\n#{I18n.t("cases.agent.human_handoff_footer")}",
+      metadata: proposal.metadata.merge("ai" => "resolve", "approved_from_message_id" => proposal.id)
+    )
   end
 end

@@ -23,15 +23,22 @@ class Lead < ApplicationRecord
   belongs_to :converted_deal, -> { with_deleted }, class_name: "Deal", optional: true
   # Which connector ingested this record (nil for portal/manual/API-created).
   belongs_to :source_connector, class_name: "Connector", optional: true
+  belongs_to :merged_into, -> { with_deleted }, class_name: "Lead", optional: true
+  has_many :merged_leads, class_name: "Lead", foreign_key: :merged_into_id, dependent: nil,
+                          inverse_of: :merged_into
 
   normalizes :email, with: ->(e) { e.strip.downcase.presence }
   normalizes :phone, with: ->(p) { p.gsub(/[^\d+]/, "").presence }
 
+  before_validation :clear_email_unsubscribed_at_on_opt_in
+
   validates :name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
   validate :reachable_somehow
+  validate :merge_lineage_is_valid
 
   scope :open_leads, -> { where(status: OPEN_STATUSES) }
+  scope :canonical, -> { where(merged_into_id: nil) }
   scope :search, ->(q) {
     next all if q.blank?
     term = "%#{sanitize_sql_like(q.strip.downcase)}%"
@@ -42,6 +49,7 @@ class Lead < ApplicationRecord
   # open a Deal in the default pipeline, and stamp the lead converted.
   # Idempotent. Returns the Contact.
   def convert!
+    raise ActiveRecord::RecordInvalid.new(self) if merged_into_id?
     return contact if status_converted? && contact
 
     transaction do
@@ -54,6 +62,15 @@ class Lead < ApplicationRecord
 
   def mark_unqualified!
     update!(status: :unqualified)
+  end
+
+  def canonical_record
+    record = self
+    seen = Set.new
+    while record.merged_into && seen.add?(record.id)
+      record = record.merged_into
+    end
+    record
   end
 
   # The UI works in whole currency units; the column stores cents.
@@ -73,6 +90,7 @@ class Lead < ApplicationRecord
     return existing if existing
 
     Contact.create!(name: name, email: email, phone: phone,
+                    email_consent: email_consent, email_unsubscribed_at: email_unsubscribed_at,
                     organisation: resolve_organisation, preferred_language: "en")
   end
 
@@ -98,5 +116,17 @@ class Lead < ApplicationRecord
   def reachable_somehow
     return if email.present? || phone.present?
     errors.add(:base, :unreachable)
+  end
+
+  def clear_email_unsubscribed_at_on_opt_in
+    self.email_unsubscribed_at = nil if will_save_change_to_email_consent? && email_consent?
+  end
+
+  def merge_lineage_is_valid
+    return if merged_into.nil?
+
+    errors.add(:merged_into, :cannot_be_self) if merged_into.equal?(self) || merged_into_id == id
+    errors.add(:merged_into, :already_merged) if merged_into.merged_into_id?
+    errors.add(:merged_into, :cross_tenant) if merged_into.tenant_id != tenant_id
   end
 end

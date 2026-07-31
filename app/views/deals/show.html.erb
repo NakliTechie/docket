@@ -13,6 +13,72 @@
 </div>
 
 <div class="panel">
+  <h2 class="panel-title"><%= t("deals.show.products") %></h2>
+  <% if @deal.deal_line_items.any? %>
+    <div class="table-wrap"><table><thead><tr>
+      <th><%= t("deals.show.line_item") %></th><th><%= t("deals.show.quantity") %></th>
+      <th><%= t("deals.show.unit_price") %></th><th><%= t("deals.show.total") %></th><th></th>
+    </tr></thead><tbody>
+      <% @deal.deal_line_items.includes(:product).each do |item| %><tr>
+        <td><%= item.description %> <span class="muted mono"><%= item.product.sku %></span></td>
+        <td><%= item.quantity %></td><td><%= format_money(item.unit_price_cents, item.currency) %></td>
+        <td><%= format_money(item.total_cents, item.currency) %></td>
+        <td><% if policy(item).destroy? %>
+          <%= button_to t("actions.delete"), deal_line_item_path(item), method: :delete, class: "btn btn-sm" %>
+        <% end %></td>
+      </tr><% end %>
+    </tbody><tfoot><tr><th colspan="3"><%= t("deals.show.total") %></th>
+      <th><%= format_money(@deal.line_items_total_cents, @deal.currency) %></th><th></th></tr></tfoot></table></div>
+  <% else %><p class="muted"><%= t("deals.show.no_products") %></p><% end %>
+  <% if @available_products.any? && policy(@line_item).create? %>
+    <%= form_with model: [@deal, @line_item], class: "inline-form" do |f| %>
+      <%= f.collection_select :product_id, @available_products, :id, :name %>
+      <%= f.number_field :quantity, min: 0.001, step: 0.001, value: 1, aria: { label: t("deals.show.quantity") } %>
+      <%= f.number_field :unit_price, min: 0, step: 0.01, placeholder: t("deals.show.catalog_price"), aria: { label: t("deals.show.unit_price") } %>
+      <%= f.submit t("deals.show.add_product"), class: "btn" %>
+    <% end %>
+  <% end %>
+</div>
+
+<div class="panel">
+  <h2 class="panel-title"><%= t("deals.show.competitors") %></h2>
+  <% if @deal.deal_competitors.any? %><ul class="stack-sm">
+    <% @deal.deal_competitors.includes(:competitor).each do |link| %><li>
+      <%= link.competitor.name %> · <%= link.human_disposition %>
+      <% if policy(link).destroy? %>
+        <%= button_to t("actions.delete"), deal_competitor_path(link), method: :delete,
+              class: "btn btn-sm", form: { class: "inline-form" } %>
+      <% end %>
+    </li><% end %>
+  </ul><% else %><p class="muted"><%= t("deals.show.no_competitors") %></p><% end %>
+  <% if @available_competitors.any? && policy(@deal_competitor).create? %>
+    <%= form_with model: [@deal, @deal_competitor], url: deal_competitor_links_path(@deal), class: "inline-form" do |f| %>
+      <%= f.collection_select :competitor_id, @available_competitors, :id, :name %>
+      <%= f.select :disposition, DealCompetitor.dispositions.keys.map { |value| [t("deal_competitors.dispositions.#{value}"), value] } %>
+      <%= f.submit t("deals.show.add_competitor"), class: "btn" %>
+    <% end %>
+  <% end %>
+</div>
+
+<% if @deal.status_won? && feature?("work") && policy(@deal).onboard? %>
+  <div class="panel">
+    <h2 class="panel-title"><%= t("deals.show.onboarding") %></h2>
+    <% if @deal.onboarding_project %>
+      <p><%= link_to @deal.onboarding_project.display_label, project_path(@deal.onboarding_project) %></p>
+    <% elsif @project_templates.any? %>
+      <%= form_with url: onboard_deal_path(@deal), class: "inline-form" do |f| %>
+        <%= f.label :project_template_id, t("deals.show.onboarding_template") %>
+        <%= f.collection_select :project_template_id, @project_templates, :id, :name %>
+        <%= f.submit t("deals.show.start_onboarding"), class: "btn btn-primary" %>
+      <% end %>
+    <% else %>
+      <p class="muted"><%= t("deals.show.no_onboarding_templates") %>
+        <%= link_to t("deals.show.create_template"), new_project_template_path %></p>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="panel">
   <h2 class="panel-title"><%= t(".details") %></h2>
   <dl class="meta-list">
     <dt><%= t("deals.fields.pipeline") %></dt><dd><%= @deal.pipeline.name %></dd>
@@ -21,7 +87,7 @@
       <dt><%= t("deals.fields.lost_reason") %></dt><dd><%= @deal.human_lost_reason %></dd>
     <% end %>
     <% if @deal.value_cents %>
-      <dt><%= t("deals.fields.value") %></dt><dd><%= number_to_currency(@deal.value, unit: "₹") %></dd>
+      <dt><%= t("deals.fields.value") %></dt><dd><%= format_money(@deal.value_cents, @deal.currency) %></dd>
     <% end %>
     <dt><%= t("deals.fields.owner") %></dt><dd><%= @deal.owner&.name || t("forms.none") %></dd>
     <% if @deal.contact %>

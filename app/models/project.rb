@@ -6,6 +6,11 @@ class Project < ApplicationRecord
   include SoftDeletable
   include Audited
   include TenantReferentialIntegrity
+  include HumanEnums
+
+  humanizes_enums :visibility
+
+  enum :visibility, { tenant_wide: 0, restricted: 1 }, default: :tenant_wide, prefix: true
 
   KEY_FORMAT = /\A[A-Z][A-Z0-9]{1,9}\z/
 
@@ -20,6 +25,8 @@ class Project < ApplicationRecord
   ].freeze
 
   belongs_to :lead, -> { with_deleted }, class_name: "User", optional: true
+  belongs_to :onboarding_deal, -> { with_deleted }, class_name: "Deal", optional: true
+  belongs_to :project_template, optional: true
 
   # dependent: nil, not :destroy — cascading into workflow_states hit their
   # restrict_with_error guard and SoftDeletable#destroy! re-raised it, so
@@ -35,9 +42,14 @@ class Project < ApplicationRecord
                                 reject_if: ->(attrs) { attrs["id"].blank? }
   has_many :work_items, dependent: nil
   has_many :sprints, dependent: nil
-  has_many :project_memberships, dependent: :destroy
+  # Memberships are part of a soft-deleted project's recoverable access model.
+  # A restore must not silently turn a restricted project into an empty shell.
+  has_many :project_memberships, dependent: nil
   has_many :members, through: :project_memberships, source: :user
   has_many :audit_entries, as: :auditable, dependent: nil
+  has_many :work_assignment_rules, dependent: nil
+  accepts_nested_attributes_for :work_assignment_rules, allow_destroy: true,
+                                reject_if: ->(attrs) { attrs["assignee_id"].blank? }
 
   validates :name, presence: true
   validates :key, presence: true, format: { with: KEY_FORMAT },
@@ -46,15 +58,61 @@ class Project < ApplicationRecord
 
   normalizes :key, with: ->(key) { key.to_s.strip.upcase }
 
-  validates_same_tenant :lead
+  validates_same_tenant :lead, :onboarding_deal, :project_template
 
   after_create :seed_default_states
 
   scope :active, -> { where(archived: false) }
+  scope :visible_to, ->(user, manage: false) {
+    if manage || user&.can?("project:manage")
+      all
+    elsif user
+      membership_projects = ProjectMembership.where(user_id: user.id).select(:project_id)
+      where(visibility: visibilities.fetch("tenant_wide")).or(where(id: membership_projects))
+    else
+      where(visibility: Project.visibilities.fetch("tenant_wide"))
+    end
+  }
 
   def display_label = "#{key} — #{name}"
 
   def default_state = workflow_states.first
+
+  def visible_to?(user, manage: false)
+    manage || user&.can?("project:manage") || visibility_tenant_wide? ||
+      (user.present? && project_memberships.any? { |membership| membership.user_id == user.id })
+  end
+
+  # Project deletion is one recoverable lifecycle event. Children that were
+  # live at that instant receive the exact same tombstone; restore clears only
+  # that matching stamp, preserving anything deleted earlier on its own.
+  def destroy
+    return self if deleted?
+
+    result = nil
+    transaction do
+      stamp = Time.current
+      lifecycle_children.each do |association|
+        association.with_deleted.where(deleted_at: nil).update_all(deleted_at: stamp)
+      end
+      result = run_callbacks(:destroy) { update_columns(deleted_at: stamp) && self }
+      raise ActiveRecord::Rollback unless result
+    end
+    result
+  end
+
+  def restore!
+    stamp = deleted_at
+    return self if stamp.blank?
+
+    transaction do
+      lifecycle_children.each do |association|
+        association.with_deleted.where(deleted_at: stamp).update_all(deleted_at: nil)
+      end
+      update!(deleted_at: nil)
+    end
+    self
+  end
 
   # Mint the next KEY-123 number. Locks the project row so two concurrent
   # creates cannot read the same counter — the alternative (MAX(number)+1)
@@ -74,6 +132,10 @@ class Project < ApplicationRecord
   end
 
   private
+
+  def lifecycle_children
+    [ workflow_states, work_items, sprints ]
+  end
 
   def seed_default_states
     DEFAULT_STATES.each_with_index do |attrs, index|

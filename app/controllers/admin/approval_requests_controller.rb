@@ -3,7 +3,7 @@ module Admin
   # reasoned order (which performs the guarded action) or rejected (it's
   # blocked). invocation:review tier — the human of record.
   class ApprovalRequestsController < ApplicationController
-    require_feature "service_desk.approvals"
+    require_feature "approvals"
     before_action :set_request, only: %i[approve reject]
 
     def index
@@ -18,7 +18,8 @@ module Admin
       authorize @request
       ApprovalGate.approve!(@request, approver: Current.user, reason: params[:reason].to_s)
       redirect_to admin_approval_requests_path, notice: t(".approved")
-    rescue ApprovalGate::Error, Case::InvalidTransition => e
+    rescue ApprovalGate::Error, Case::InvalidTransition, ActiveRecord::RecordInvalid,
+           ActiveRecord::RecordNotFound => e
       redirect_to admin_approval_requests_path, alert: e.message
     end
 

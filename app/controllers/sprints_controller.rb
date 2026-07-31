@@ -50,6 +50,8 @@ class SprintsController < ApplicationController
       redirect_to project_sprints_path(@project),
                   alert: @sprint.errors.full_messages.to_sentence
     end
+  rescue ActiveRecord::RecordNotUnique
+    redirect_to project_sprints_path(@project), alert: I18n.t("activerecord.errors.models.sprint.attributes.status.another_sprint_active")
   end
 
   # Closing must decide what happens to work that didn't finish. Default is the

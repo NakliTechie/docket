@@ -2,10 +2,10 @@ module Api
   module V1
     class LeadsController < BaseController
       require_feature "crm"
-      before_action :set_lead, only: %i[show update destroy convert]
+      before_action :set_lead, only: %i[show update destroy convert merge]
 
       def index
-        scope = api_scope(Lead, scope: "crm:read").search(params[:q])
+        scope = api_scope(Lead, scope: "crm:read").canonical.search(params[:q])
         scope = scope.where(status: params[:status]) if params[:status].present?
         scope = scope.where(owner_id: params[:owner_id]) if params[:owner_id].present?
         pagy, records = pagy(scope.order(created_at: :desc))
@@ -50,15 +50,26 @@ module Api
         render json: { data: Serialize.lead(@lead.reload), contact: Serialize.contact(contact) }
       end
 
+      def merge
+        authorize_api!(@lead, :merge?, scope: "crm:write")
+        source = api_scope(Lead, scope: "crm:write").canonical.find(params.require(:source_lead_id))
+        authorize_api!(source, :merge?, scope: "crm:write")
+        LeadMerge.call(source: source, target: @lead, actor: Current.actor)
+        render json: { data: Serialize.lead(@lead.reload) }
+      rescue LeadMerge::Error => error
+        render_error("invalid_merge", detail: error.message, status: :unprocessable_entity)
+      end
+
       private
 
       def set_lead
-        @lead = Lead.find(params[:id])
+        @lead = Lead.find(params[:id]).canonical_record
       end
 
       def lead_params
         params.require(:lead).permit(:name, :email, :phone, :company_name,
-                                     :source, :owner_id, :value_estimate_cents, :notes, :sms_consent)
+                                     :source, :owner_id, :value_estimate_cents, :notes,
+                                     :sms_consent, :email_consent)
       end
     end
   end

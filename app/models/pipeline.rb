@@ -11,6 +11,7 @@ class Pipeline < ApplicationRecord
   accepts_nested_attributes_for :pipeline_stages, allow_destroy: true
 
   before_validation :ensure_slug, on: :create
+  before_destroy :prevent_destroy_with_live_deals
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }
@@ -28,6 +29,13 @@ class Pipeline < ApplicationRecord
   end
 
   private
+
+  def prevent_destroy_with_live_deals
+    return unless deals.exists?
+
+    errors.add(:base, "move live deals to another pipeline before removing this pipeline")
+    throw :abort
+  end
 
   def ensure_slug
     self.slug = name.to_s.parameterize if slug.blank?

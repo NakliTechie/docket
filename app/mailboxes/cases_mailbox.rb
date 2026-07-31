@@ -10,6 +10,7 @@ class CasesMailbox < ApplicationMailbox
 
   def process
     tenant = resolve_tenant
+    inbound_email.update_column(:tenant_id, tenant.id)
     # A tenant without the service desk has no cases to open. Bounce rather
     # than silently manufacturing one — inbound mail was the last unguarded
     # way into the desk.
@@ -70,7 +71,7 @@ class CasesMailbox < ApplicationMailbox
   def existing_case
     return @existing_case if defined?(@existing_case)
     tracking_id = mail.subject.to_s[TRACKING_ID_PATTERN]
-    @existing_case = tracking_id && Case.find_by(tracking_id: tracking_id)
+    @existing_case = tracking_id && Case.find_by(tracking_id: tracking_id)&.canonical_record
   end
 
   def sender_matches?(kase)

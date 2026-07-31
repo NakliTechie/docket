@@ -3,6 +3,7 @@
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
     <% if policy(Lead).create? %>
+      <%= link_to t("lead_capture_forms.index.title"), lead_capture_forms_path, class: "btn" %>
       <%= link_to new_lead_path, class: "btn btn-primary" do %>
         <%= icon "plus" %><%= t(".new_lead") %>
       <% end %>

@@ -1,8 +1,25 @@
 require "active_support/core_ext/integer/time"
+require "uri"
+
+# DOCKET_BASE_URL is the canonical public origin. Reuse it for generated mail
+# links and Host authorization so a documented Compose deployment cannot serve
+# successfully while emailing localhost:3000 URLs or rejecting its own public
+# hostname. Existing deployments that only set DOCKET_HOST/DOCKET_PORT keep the
+# compatibility fallback below.
+public_base_uri = if ENV["DOCKET_BASE_URL"].present?
+  uri = URI.parse(ENV.fetch("DOCKET_BASE_URL"))
+  origin_only = (uri.path.blank? || uri.path == "/") && uri.query.nil? && uri.fragment.nil?
+  unless uri.is_a?(URI::HTTP) && uri.host.present? && uri.userinfo.nil? && origin_only
+    raise ArgumentError, "DOCKET_BASE_URL must be an http(s) origin without userinfo, path, query, or fragment"
+  end
+  uri
+end
 
 Rails.application.configure do
-  # Prepare the ingress controller used to receive mail
-  # config.action_mailbox.ingress = :relay
+  # The generic relay ingress accepts complete RFC 822 messages from the
+  # operator-owned mail pipeline. Rails protects it with
+  # RAILS_INBOUND_EMAIL_PASSWORD; Compose forwards that variable explicitly.
+  config.action_mailbox.ingress = :relay if ENV["RAILS_INBOUND_EMAIL_PASSWORD"].present?
 
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -69,6 +86,7 @@ Rails.application.configure do
   # gateway; with no SMTP configured, mail is silently discarded —
   # never any other egress (handoff §8).
   if ENV["SMTP_ADDRESS"].present?
+    config.x.outbound_mail_available = true
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {
       address: ENV["SMTP_ADDRESS"],
@@ -79,14 +97,23 @@ Rails.application.configure do
       enable_starttls_auto: ENV["SMTP_STARTTLS"] != "false"
     }.compact
   else
-    config.action_mailer.delivery_method = :test
+    config.x.outbound_mail_available = false
+    config.action_mailer.delivery_method = :docket_null
   end
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = {
-    host: ENV.fetch("DOCKET_HOST", "localhost"),
-    port: ENV["DOCKET_PORT"].presence
-  }.compact
+  config.action_mailer.default_url_options = if public_base_uri
+    {
+      host: public_base_uri.host,
+      protocol: public_base_uri.scheme,
+      port: (public_base_uri.port unless public_base_uri.port == public_base_uri.default_port)
+    }.compact
+  else
+    {
+      host: ENV.fetch("DOCKET_HOST", "localhost"),
+      port: ENV["DOCKET_PORT"].presence
+    }.compact
+  end
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
@@ -107,13 +134,14 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # DNS-rebinding / Host-header protection is OPT-IN: set DOCKET_ALLOWED_HOSTS
-  # (comma-separated hostnames) to restrict which Host headers are accepted.
-  # Left unset, Rails allows all hosts (its default), so existing
-  # proxy/localhost/IP deploys are unaffected. The configured app host is
-  # always allowed; /up stays reachable for health checks regardless.
+  # DNS-rebinding / Host-header protection follows the canonical base URL.
+  # DOCKET_ALLOWED_HOSTS adds proxy/IP aliases and DOCKET_HOST remains a
+  # compatibility input. Only a legacy deployment with all three unset keeps
+  # Rails' unrestricted default. /up and operator-grade /healthz stay reachable
+  # for health checks regardless.
   allowed_hosts = ENV["DOCKET_ALLOWED_HOSTS"].to_s.split(",").map(&:strip).reject(&:blank?)
   allowed_hosts << ENV["DOCKET_HOST"] if ENV["DOCKET_HOST"].present?
+  allowed_hosts << public_base_uri.host if public_base_uri
   # Shared deployments serve every tenant on a subdomain of the base domain, so
   # allow the whole `*.base-domain` space (a leading dot matches the domain and
   # all its subdomains). Isolated deployments stay pinned to their single host.
@@ -121,5 +149,5 @@ Rails.application.configure do
     allowed_hosts << ".#{ENV['DOCKET_BASE_DOMAIN']}"
   end
   config.hosts.concat(allowed_hosts.uniq) if allowed_hosts.any?
-  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { %w[/up /healthz].include?(request.path) } }
 end

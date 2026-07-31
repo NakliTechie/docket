@@ -2,6 +2,8 @@ module Api
   module V1
     # OAuth2 client-credentials grant for service accounts.
     class OauthController < ActionController::API
+      include TenantResolution
+
       def token
         unless params[:grant_type] == "client_credentials"
           return render json: { error: "unsupported_grant_type" }, status: :bad_request

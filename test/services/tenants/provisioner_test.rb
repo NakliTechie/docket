@@ -1,6 +1,13 @@
 require "test_helper"
 
 class Tenants::ProvisionerTest < ActiveSupport::TestCase
+  setup do
+    @original_mode = Rails.application.config.x.tenancy_mode
+    Rails.application.config.x.tenancy_mode = "shared"
+  end
+
+  teardown { Rails.application.config.x.tenancy_mode = @original_mode }
+
   test "provisions a tenant with its own defaults and a client_admin" do
     result = Tenants::Provisioner.call(name: "Beta Corp", subdomain: "Beta",
                                        admin_email: "Boss@Beta.test")
@@ -23,6 +30,23 @@ class Tenants::ProvisionerTest < ActiveSupport::TestCase
     # The provisioned queue is invisible to other tenants.
     ActsAsTenant.with_tenant(tenants(:primary)) do
       refute CaseQueue.exists?(queue_id), "beta's queue must not leak into primary"
+    end
+  end
+
+  test "rolls the tenant and seeded defaults back when the first admin is invalid" do
+    assert_no_difference "Tenant.count" do
+      assert_raises(ActiveRecord::RecordInvalid) do
+        Tenants::Provisioner.call(name: "Broken Corp", subdomain: "broken", admin_email: "not-an-email")
+      end
+    end
+    assert_nil Tenant.find_by(slug: "broken")
+  end
+
+  test "rejects provisioning outside shared mode" do
+    Rails.application.config.x.tenancy_mode = "isolated"
+
+    assert_raises(ArgumentError) do
+      Tenants::Provisioner.call(name: "Orphan", subdomain: "orphan")
     end
   end
 end

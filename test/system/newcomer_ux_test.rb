@@ -10,9 +10,23 @@ class NewcomerUxTest < ApplicationSystemTestCase
     visit setup_path
 
     assert_text I18n.t("setups.show.title")
+    assert_selector "ol.setup-list > li", count: 6
     click_button I18n.t("setups.show.portal.copy")
     assert_text I18n.t("setups.show.portal.copied")
     assert_link I18n.t("setups.show.portal.open"), href: portal_root_path
+  end
+
+  test "setup names the workspace inline and keeps advanced navigation disclosed" do
+    sign_in_with_form users(:admin)
+    visit setup_path
+
+    assert_text I18n.t("layout.nav.explore")
+    assert_no_text I18n.t("layout.nav.sales")
+    fill_in I18n.t("setups.show.brand.field"), with: "Northstar Support"
+    click_button I18n.t("setups.show.brand.action")
+
+    assert_current_path setup_path
+    assert_text "Northstar Support"
   end
 
   test "staff create a first contact inline and keep the case details" do
@@ -39,10 +53,20 @@ class NewcomerUxTest < ApplicationSystemTestCase
 
     assert_no_selector ".case-table thead", visible: true
     assert_selector ".case-table td[data-label]"
+    assert_no_selector ".header-search", visible: true
     click_button I18n.t("layout.nav.menu")
     assert_selector ".app-nav.menu-open"
+    overflowing = page.evaluate_script(<<~JS)
+      Array.from(document.querySelectorAll("body *")).filter((element) => {
+        const box = element.getBoundingClientRect()
+        return box.right > window.innerWidth + 1 || box.left < -1
+      }).slice(0, 10).map((element) => ({
+        tag: element.tagName, className: element.className, width: element.scrollWidth,
+        left: element.getBoundingClientRect().left, right: element.getBoundingClientRect().right
+      }))
+    JS
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"), :<=,
-                    page.evaluate_script("window.innerWidth")
+                    page.evaluate_script("window.innerWidth"), overflowing.inspect
 
     customers = find("summary", text: I18n.t("layout.nav.customers"))
     administration = find("summary", text: I18n.t("layout.nav.administration"))

@@ -34,4 +34,29 @@ class RoutingRuleTest < ActiveSupport::TestCase
                            then_assignee: users(:agent_a)).valid?
     refute RoutingRule.new(name: "r", if_priority: "nonsense", then_queue: queues(:pensions)).valid?
   end
+
+  test "elapsed-time rules require a status and bounded positive duration" do
+    rule = RoutingRule.new(
+      name: "Escalate stale", trigger_type: :elapsed_time, if_status: :in_progress,
+      after_minutes: 240, then_priority: :urgent
+    )
+    assert rule.valid?
+
+    rule.if_status = nil
+    refute rule.valid?
+    rule.if_status = :in_progress
+    rule.after_minutes = 0
+    refute rule.valid?
+  end
+
+  test "creation rules reject hidden schedule settings" do
+    rule = RoutingRule.new(
+      name: "Mixed trigger", trigger_type: :case_created, if_status: :new,
+      after_minutes: 60, then_priority: :urgent
+    )
+
+    refute rule.valid?
+    assert_includes rule.errors[:base],
+                    I18n.t("activerecord.errors.models.routing_rule.attributes.base.intake_has_schedule")
+  end
 end

@@ -3,8 +3,8 @@
 # a per-tenant client_admin cannot provision or suspend tenants.
 class TenantPolicy < ApplicationPolicy
   def index?    = permit?("tenant:manage")
-  def new?      = index?
-  def create?   = permit?("tenant:manage")
+  def new?      = index? && Tenant.shared_deployment?
+  def create?   = new?
   def suspend?  = permit?("tenant:manage")
   def activate? = permit?("tenant:manage")
   # Entitlements are packaging, not per-tenant configuration: only the platform

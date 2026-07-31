@@ -12,8 +12,12 @@
 #     later soft-delete never rewrites past figures.
 class OperationalReport
   attr_reader :from, :to
+  MAX_RANGE_DAYS = 366
 
   def initialize(from:, to:)
+    raise ArgumentError, "report start must not be after its end" if from > to
+    raise ArgumentError, "report range cannot exceed #{MAX_RANGE_DAYS} days" if (to - from).to_i > MAX_RANGE_DAYS
+
     @from = from
     @to = to
   end

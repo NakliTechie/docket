@@ -33,6 +33,8 @@ class User < ApplicationRecord
   has_many :queue_memberships, dependent: :destroy
   has_many :queues, through: :queue_memberships, source: :queue
   has_many :assigned_cases, class_name: "Case", foreign_key: :assignee_id, dependent: nil, inverse_of: :assignee
+  has_many :notifications, dependent: :destroy
+  has_many :saved_views, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
@@ -43,6 +45,7 @@ class User < ApplicationRecord
   validates :email_address, presence: true,
             uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } },
             format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :email_signature, length: { maximum: 2_000 }
   # A user can only be granted a role at or below the acting user's own rank, so
   # a per-tenant client_admin can't mint a cross-tenant super_admin (C2).
   # Enforced at the model so every path (admin UI, API, future) is covered;
@@ -55,6 +58,10 @@ class User < ApplicationRecord
   # roles are the only other non-readonly roles, and it extends to the new
   # functional roles for free.)
   scope :staff, -> { where.not(role: :readonly) }
+  scope :case_assignees, -> {
+    capable = roles.keys.select { |role| Authz.permissions_for(role).include?("case:write") }
+    active.where(role: capable)
+  }
 
   # The single authority chokepoint. Policies and the effector gate ask this,
   # never a bare role name. When tenancy lands, a `tenant:` keyword is added
@@ -64,11 +71,10 @@ class User < ApplicationRecord
   # entitlements say what the TENANT bought. A super_admin still cannot touch a
   # module the tenant doesn't have — the module isn't there to touch.
   #
-  # Entitlements are read from THIS USER'S OWN tenant, never the ambient one.
-  # Reading the ambient tenant meant a user was judged by whichever tenant
-  # happened to be in scope — the platform console iterates tenants with
-  # `with_tenant`, and a tenantless background job would have evaluated every
-  # permission as fully entitled.
+  # In a request or explicit tenant block, the ambient tenant is authoritative:
+  # a cross-tenant platform operator must be constrained by the customer's
+  # package while acting there. Outside a tenant context (background identity
+  # work), the user's own tenant remains the safe fallback.
   def can?(permission)
     return false unless Authz.permissions_for(role).include?(permission.to_s)
 
@@ -78,16 +84,12 @@ class User < ApplicationRecord
     entitlement_tenant&.feature?(owner) || false
   end
 
-  # The tenant whose packaging judges this user — always their OWN, never
-  # whichever one happens to be ambient. When the ambient tenant IS theirs we
-  # reuse that instance rather than the association: `user.tenant` is a
-  # separately-loaded copy, so it can carry entitlements that were already
-  # stale by the time the check runs.
   def entitlement_tenant
-    current = ActsAsTenant.current_tenant
-    return current if current && (tenant_id.nil? || current.id == tenant_id)
+    ActsAsTenant.current_tenant || tenant
+  end
 
-    tenant
+  def case_assignee?
+    active? && can?("case:write")
   end
 
   def deactivate!

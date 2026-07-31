@@ -3,6 +3,10 @@ shared: &shared
     class: SlaBreachSweepJob
     queue: default
     schedule: every 5 minutes
+  sla_risk_sweep:
+    class: SlaRiskSweepJob
+    queue: default
+    schedule: every 5 minutes
   sequence_runner:
     class: SequenceRunnerJob
     queue: default
@@ -23,6 +27,18 @@ shared: &shared
     class: DecisioningRunJob
     queue: default
     schedule: every hour at minute 40
+  routing_rule_scheduler:
+    class: RoutingRuleSchedulerJob
+    queue: default
+    schedule: every 5 minutes
+  storage_deletion_sweep:
+    class: StorageDeletionSweepJob
+    queue: default
+    schedule: every 5 minutes
+  mail_delivery_sweep:
+    class: MailDeliverySweepJob
+    queue: default
+    schedule: every 5 minutes
 
 development:
   <<: *shared

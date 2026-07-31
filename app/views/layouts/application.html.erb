@@ -19,6 +19,7 @@
     <a class="skip-link" href="#main"><%= t("layout.skip_to_content") %></a>
 
     <% if authenticated? %>
+      <%= turbo_stream_from Current.user, :notifications %>
       <header class="app-header">
         <nav class="app-nav" aria-label="<%= t("layout.primary_navigation") %>"
              data-controller="navigation"
@@ -37,6 +38,27 @@
               <%= nav_link t("layout.nav.inbox"), cases_path, active: controller_name == "cases" %>
             <% end %>
 
+            <% if first_run_setup? %>
+              <% if feature?("service_desk.portal") %>
+                <%= nav_link t("layout.nav.customer_portal"), portal_root_path %>
+              <% end %>
+              <%= nav_group t("layout.nav.explore"), active: false do %>
+                <%= nav_link t("layout.nav.customers"), contacts_path %>
+                <% if feature?("crm") && policy(Lead).index? %>
+                  <%= nav_link t("layout.nav.sales"), leads_path %>
+                <% end %>
+                <% if feature?("work") && policy(Project).index? %>
+                  <%= nav_link t("layout.nav.delivery"), projects_path %>
+                <% end %>
+                <% if policy(ReferenceDoc).index? %>
+                  <%= nav_link t("layout.nav.knowledge_automation"), admin_reference_docs_path %>
+                <% end %>
+                <% if DashboardPolicy.new(Current.user, :dashboard).index? %>
+                  <%= nav_link t("layout.nav.insights"), dashboard_path %>
+                <% end %>
+                <%= nav_link t("layout.nav.administration"), admin_settings_path %>
+              <% end %>
+            <% else %>
             <%= nav_group t("layout.nav.customers"),
                   active: %w[contacts organisations].include?(controller_name) do %>
               <%= nav_link t("layout.nav.contacts"), contacts_path, active: controller_name == "contacts" %>
@@ -45,12 +67,14 @@
 
             <% if feature?("crm") && policy(Lead).index? %>
               <%= nav_group t("layout.nav.sales"),
-                    active: %w[leads deals pipelines sequences sales_reports].include?(controller_name) do %>
+                    active: %w[leads lead_capture_forms deals products competitors pipelines sequences sales_reports].include?(controller_name) do %>
                 <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
                 <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
                 <%= nav_link t("layout.nav.sales_report"), sales_report_path, active: controller_name == "sales_reports" %>
                 <% if policy(Pipeline).create? %>
                   <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
+                  <%= nav_link t("layout.nav.products"), products_path, active: controller_name == "products" %>
+                  <%= nav_link t("layout.nav.competitors"), competitors_path, active: controller_name == "competitors" %>
                   <% if feature?("crm.sequences") %>
                     <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
                   <% end %>
@@ -67,15 +91,20 @@
             <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? ||
                   policy(ConnectorInvocation).index? %>
               <%= nav_group t("layout.nav.knowledge_automation"),
-                    active: %w[case_queues categories sla_policies macros routing_rules approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
+                    active: %w[case_queues categories sla_policies business_calendars macros routing_rules custom_field_definitions approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
                 <% if policy(CaseQueue).create? %>
                   <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                   <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
                   <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
+                  <%= nav_link t("layout.nav.business_calendars"), business_calendars_path, active: controller_name == "business_calendars" %>
                   <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
                 <% end %>
                 <% if policy(RoutingRule).index? %>
                   <%= nav_link t("layout.nav.routing_rules"), routing_rules_path, active: controller_name == "routing_rules" %>
+                <% end %>
+                <% if policy(CustomFieldDefinition).index? %>
+                  <%= nav_link t("layout.nav.custom_fields"), custom_fields_path,
+                               active: controller_name == "custom_field_definitions" %>
                 <% end %>
                 <% if policy(ApprovalProcess).index? %>
                   <%= nav_link t("layout.nav.approval_processes"), approval_processes_path, active: controller_name == "approval_processes" %>
@@ -142,9 +171,20 @@
                 <% end %>
               <% end %>
             <% end %>
+            <% end %>
           </div>
         </nav>
         <div class="app-header-right">
+          <%= form_with url: search_path, method: :get, class: "inline-form header-search", role: "search" do |f| %>
+            <%= f.label :q, t("search.index.label"), for: "global-search", class: "visually-hidden" %>
+            <%= f.search_field :q, id: "global-search", value: params[:q],
+                  placeholder: t("search.index.short_placeholder") %>
+          <% end %>
+          <%= link_to notifications_path, class: "notification-link",
+                      aria: { label: t("layout.nav.notifications") } do %>
+            <%= icon "alert" %>
+            <%= render "notifications/badge", user: Current.user %>
+          <% end %>
           <button type="button" class="btn btn-ghost btn-sm" data-action="hotkeys#openHelp"
                   aria-haspopup="dialog" aria-controls="help-modal">
             <%= icon "help" %><span class="visually-hidden"><%= t("help.title") %></span>

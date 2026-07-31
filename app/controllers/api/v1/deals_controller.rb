@@ -2,7 +2,7 @@ module Api
   module V1
     class DealsController < BaseController
       require_feature "crm"
-      before_action :set_deal, only: %i[show update destroy move]
+      before_action :set_deal, only: %i[show update destroy move onboard]
 
       def index
         scope = api_scope(Deal, scope: "crm:read")
@@ -47,6 +47,16 @@ module Api
         stage = @deal.pipeline.pipeline_stages.find(params[:pipeline_stage_id])
         @deal.move_to_stage!(stage)
         render json: { data: Serialize.deal(@deal) }
+      end
+
+      def onboard
+        authorize_api!(@deal, :onboard?, scope: "crm:write")
+        template = api_scope(ProjectTemplate, scope: "work:manage")
+                   .active.find(params.require(:project_template_id))
+        project = DealOnboarding.call(deal: @deal, template: template, actor: Current.actor)
+        render json: { data: Serialize.project(project) }, status: :created
+      rescue DealOnboarding::Error => error
+        render_error("invalid_onboarding", detail: error.message, status: :unprocessable_entity)
       end
 
       private

@@ -1,0 +1,2 @@
+class DealCompetitorPolicy < DealLineItemPolicy
+end

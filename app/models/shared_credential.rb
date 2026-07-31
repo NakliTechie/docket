@@ -7,7 +7,7 @@ class SharedCredential < ApplicationRecord
   include SoftDeletable
   include Audited
 
-  encrypts :secrets
+  encrypts :secrets, key_provider: Docket::VaultKeyring.current.provider
 
   # The secret fields the admin form offers (the union the providers read).
   COMMON_FIELDS = %w[api_key api_secret authkey key_id key_secret webhook_url license_id token].freeze

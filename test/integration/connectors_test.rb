@@ -107,6 +107,20 @@ class ConnectorsTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "a correctly signed malformed webhook asks the provider to retry" do
+    connector = create_connector
+    body = '{"event":'
+    sig = "sha256=#{OpenSSL::HMAC.hexdigest("SHA256", connector.webhook_secret, body)}"
+
+    assert_no_enqueued_jobs only: ConnectorSyncJob do
+      post connector_webhook_path(connector), params: body,
+           headers: { "X-Docket-Signature" => sig, "CONTENT_TYPE" => "text/plain" }
+    end
+
+    assert_response :bad_request
+    assert_equal "request body must be valid JSON", response.parsed_body["error"]
+  end
+
   test "a webhook to an unknown / paused connector is a 404" do
     paused = create_connector(status: :paused)
     body = "{}"
@@ -127,5 +141,14 @@ class ConnectorsTest < ActionDispatch::IntegrationTest
       ConnectorSchedulerJob.perform_now
     end
     assert_enqueued_with(job: ConnectorSyncJob, args: [ due.id, { trigger: "scheduled" } ])
+  end
+
+  test "the scheduler does not enqueue a connector that already has a running claim" do
+    due = create_connector(schedule_interval_minutes: 30, last_synced_at: 2.hours.ago)
+    due.connector_runs.create!(status: :running, trigger: :manual, started_at: 1.minute.ago)
+
+    assert_no_enqueued_jobs only: ConnectorSyncJob do
+      ConnectorSchedulerJob.perform_now
+    end
   end
 end

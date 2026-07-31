@@ -22,13 +22,13 @@ class SsoSessionsController < ApplicationController
     # otherwise an account on an IdP with unverified emails could assert a
     # victim's address (M6). Absent claim (e.g. SAML) is allowed; only an
     # explicit false is rejected.
-    if email.blank? || email_unverified?(auth)
-      SecurityEvent.record("sso_rejected", email: email, ip_address: request.remote_ip,
-                           user_agent: request.user_agent, metadata: { provider: auth&.provider })
-      return redirect_to new_session_path, alert: t("sessions.sso_failed")
-    end
+    return reject_sso(auth, email, "identity") if email.blank? || email_unverified?(auth)
+    return reject_sso(auth, email, "issuer") unless trusted_issuer?(auth)
 
-    user = User.find_by(email_address: email) || jit_provision(email, auth)
+    user = User.find_by(email_address: email)
+    return reject_sso(auth, email, "jit_domain") if user.nil? && !Sso.staff_jit_allowed?(email)
+
+    user ||= jit_provision(email, auth)
     apply_role_mapping(user, auth)
 
     if user.active?
@@ -54,6 +54,21 @@ class SsoSessionsController < ApplicationController
       password: SecureRandom.hex(24),
       role: DEFAULT_SSO_ROLE
     )
+  end
+
+  def trusted_issuer?(auth)
+    return true unless auth&.provider.to_s == "staff_oidc"
+
+    asserted = auth.extra&.raw_info&.[]("iss").to_s
+    expected = Sso.staff_oidc_issuer.to_s
+    expected.present? && asserted == expected
+  end
+
+  def reject_sso(auth, email, reason)
+    SecurityEvent.record("sso_rejected", email: email, ip_address: request.remote_ip,
+                         user_agent: request.user_agent,
+                         metadata: { provider: auth&.provider, reason: reason })
+    redirect_to new_session_path, alert: t("sessions.sso_failed")
   end
 
   def email_unverified?(auth)

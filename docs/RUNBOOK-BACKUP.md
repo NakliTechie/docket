@@ -13,7 +13,7 @@ Docket runs **four** Postgres databases and keeps attachments **on disk**:
 | `cache` | `CACHE_DATABASE_URL` | rebuildable; back it up anyway, it is cheap |
 | `queue` | `QUEUE_DATABASE_URL` | in-flight and failed jobs, and the record of what failed |
 | `cable` | `CABLE_DATABASE_URL` | live-update channels; rebuildable |
-| attachments | `storage/` volume | **every file anyone ever uploaded** — these are not in Postgres |
+| attachments and generated secrets | `storage/` volume | uploaded files and, in default Compose, `secret_key_base` plus `vault_keys.json` |
 
 The README used to suggest a single `pg_dump` of the primary. That silently
 loses three databases and every attachment.
@@ -22,6 +22,23 @@ loses three databases and every attachment.
 
 ```bash
 bin/backup /var/backups/docket
+```
+
+Set `DOCKET_BACKUP_SIGNING_KEY` to a private 64-character hexadecimal key kept
+outside the backup destination (for example in the host secret manager). The
+same key is required by `bin/restore`. Backup directories and files are created
+with private permissions, and restore authenticates the signed checksum
+manifest before it overwrites any database.
+
+The production image includes PostgreSQL 16 `pg_dump`/`pg_restore`, matching the
+Compose database major. For a Compose deployment, mount an encrypted host or
+remote-backup filesystem outside `/rails/storage` (nesting the destination in
+the storage volume would make the storage archive contain itself):
+
+```bash
+docker compose run --rm --no-deps \
+  -v /var/backups/docket:/backups \
+  app bin/backup /backups
 ```
 
 Writes `docket-<UTC timestamp>/` containing four `.dump` files (custom format —
@@ -46,13 +63,35 @@ nothing worth surviving. Sync to object storage or another host.
 DOCKET_RESTORE_CONFIRM=yes bin/restore /var/backups/docket/docket-20260728T021500Z
 ```
 
+For Compose, stop the web process first and run the restore in a one-off app
+container against the target database and storage volume:
+
+```bash
+docker compose stop app
+docker compose run --rm --no-deps \
+  -e DOCKET_RESTORE_CONFIRM=yes \
+  -v /var/backups/docket:/backups:ro \
+  app bin/restore /backups/docket-20260728T021500Z
+docker compose up -d app
+```
+
 It refuses to run without `DOCKET_RESTORE_CONFIRM=yes` — restore overwrites live
 databases and should not be one keystroke away.
 
 The last thing it does is `bin/rails audit:verify`, which walks the audit hash
-chain. **This is the point.** Docket's audit log is a hash chain, so a partial,
-truncated or tampered restore breaks it and is *detected here* — not discovered
-months later when somebody asks who changed a record.
+chain and compares its head hash and row count with the external checkpoint
+bundled beside the database dump. In-place edits break the chain; tail deletion
+or a full wipe disagrees with the checkpoint. All three are detected here.
+
+For an existing deployment upgrading from a release without the external
+checkpoint, inspect and verify the chain once, then deliberately initialize it:
+
+```bash
+DOCKET_AUDIT_CHECKPOINT_CONFIRM=yes bin/rails audit:checkpoint:init
+```
+
+Do not use that command to silence a mismatch: it blesses the current state and
+therefore refuses to overwrite an existing checkpoint.
 
 ## The drill — do this before go-live, then quarterly
 
@@ -72,13 +111,29 @@ Record your intended RTO/RPO here once measured:
 | RPO (data you can afford to lose) | e.g. 24h | — | — |
 | RTO (time to be serving again) | e.g. 4h | — | — |
 
+### Local release-artifact reference (2026-08-01)
+
+An isolated Compose source stack backed up all four databases plus its storage volume in
+**6.89s**. A second clean stack restored a **35-entry** audit chain and the exact bytes of
+an attached text file in **4.69s**, then served a healthy `/healthz` in another **4.55s**.
+Clean stack provisioning itself took **8.57s**, so active clean-target-to-serving work was
+**17.81s** (or **9.24s** when the clean target already exists). The restored target then
+passed the complete 12-step release smoke. These local, tiny-dataset numbers verify the
+procedure; they are not a production RTO/RPO commitment. Measure again with representative
+Netcore volume, storage, networking, and off-site backup media.
+
 ## What this does not cover
 
 - **Point-in-time recovery.** These are nightly snapshots. If you need "restore
   to 14:32", enable Postgres WAL archiving — a database-level concern, not an
   application one.
 - **Off-site replication and encryption at rest** — your infrastructure's job.
-- **Secrets.** `SECRET_KEY_BASE` is *not* in the backup, and it derives the
-  encryption keys for the connector credential vault. Restoring a database with
-  a different `SECRET_KEY_BASE` leaves those credentials unreadable. **Store it
-  with your backups' access controls, not inside the backup.**
+- **Externally managed secrets.** Default Compose generates `secret_key_base`
+  and `vault_keys.json` in the storage volume, so both are present in
+  `storage.tar.gz`; the backup must therefore be encrypted and access-controlled
+  as secret material. If you supply `SECRET_KEY_BASE`, `DOCKET_VAULT_KEYS`, or a
+  `DOCKET_VAULT_KEYS_PATH` outside `DOCKET_STORAGE_DIR`, they are not captured.
+  Retain the exact session secret and every still-readable vault-key version
+  alongside the matching backup generation. A different session secret
+  invalidates sessions/tokens; a missing vault key makes encrypted connector,
+  OAuth, shared-credential, and SSO values unreadable.

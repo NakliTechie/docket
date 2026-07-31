@@ -14,7 +14,7 @@ class ApprovalsTest < ActionDispatch::IntegrationTest
     kase
   end
 
-  # --- approval-rule CRUD (case_config:manage) ---
+  # --- approval-rule CRUD (cross-module reviewer governance) ---
 
   test "a config manager can list, create, and delete approval rules" do
     sign_in_as users(:client_admin)
@@ -43,10 +43,20 @@ class ApprovalsTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "approval-rule CRUD is gated on case_config:manage" do
+  test "approval-rule CRUD is gated on approval review authority" do
     sign_in_as users(:customer_service)
     get approval_processes_path
     assert_response :forbidden
+  end
+
+  test "Work-only tenants retain the approval configuration and review surfaces" do
+    ActsAsTenant.current_tenant.apply_preset!("work_only")
+    sign_in_as users(:client_admin)
+
+    get approval_processes_path
+    assert_response :success
+    get admin_approval_requests_path
+    assert_response :success
   end
 
   # --- the guarded closure flow (maker → checker) ---

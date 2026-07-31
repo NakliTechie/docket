@@ -25,14 +25,32 @@ class Deal < ApplicationRecord
   belongs_to :lead, -> { with_deleted }, optional: true
   # Which connector ingested this record (nil for portal/manual/API-created).
   belongs_to :source_connector, class_name: "Connector", optional: true
+  has_one :onboarding_project, class_name: "Project", foreign_key: :onboarding_deal_id,
+                               dependent: :restrict_with_error, inverse_of: :onboarding_deal
+  has_many :work_links, as: :linkable, dependent: :destroy
+  has_many :linked_work_items, through: :work_links, source: :work_item
+  has_many :deal_line_items, dependent: nil
+  has_many :products, through: :deal_line_items
+  has_many :deal_competitors, dependent: nil
+  has_many :competitors, through: :deal_competitors
 
   validates :name, presence: true
+  validates :currency, format: { with: /\A[A-Z]{3}\z/ }
   validate :stage_belongs_to_pipeline
+  validate :currency_is_locked_by_line_items
+
+  normalizes :currency, with: ->(currency) { currency.to_s.strip.upcase }
 
   before_validation :apply_default_pipeline, on: :create
   before_save :derive_status_from_stage, if: :will_save_change_to_pipeline_stage_id?
 
   scope :open_deals, -> { where(status: :open) }
+  scope :search, ->(query) {
+    next all if query.blank?
+
+    term = "%#{sanitize_sql_like(query.strip.downcase)}%"
+    where("LOWER(deals.name) LIKE :term ESCAPE '\\'", term: term)
+  }
 
   # The UI works in whole currency units; the column stores cents.
   def value
@@ -41,6 +59,10 @@ class Deal < ApplicationRecord
 
   def value=(amount)
     self.value_cents = Cents.from(amount)
+  end
+
+  def line_items_total_cents
+    deal_line_items.sum { |item| item.total_cents }
   end
 
   # Move the card to another stage (the kanban drag). Validates the stage
@@ -66,5 +88,11 @@ class Deal < ApplicationRecord
   def stage_belongs_to_pipeline
     return if pipeline_stage.nil? || pipeline.nil?
     errors.add(:pipeline_stage, :not_in_pipeline) if pipeline_stage.pipeline_id != pipeline_id
+  end
+
+  def currency_is_locked_by_line_items
+    return unless will_save_change_to_currency? && persisted? && deal_line_items.exists?
+
+    errors.add(:currency, "cannot change while the deal has line items")
   end
 end

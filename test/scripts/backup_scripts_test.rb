@@ -30,7 +30,11 @@ class BackupScriptsTest < ActiveSupport::TestCase
     assert_equal %w[cable cache primary queue], configured.sort,
                  "database.yml changed — the backup script must be updated to match"
     configured.each do |name|
-      assert_match(/dump #{name}\b/, body, "#{name} database is not backed up")
+      if name == "primary"
+        assert_match(/AuditCheckpoint\.capture_backup!/, body, "primary database is not backed up")
+      else
+        assert_match(/dump #{name}\b/, body, "#{name} database is not backed up")
+      end
     end
   end
 
@@ -49,16 +53,31 @@ class BackupScriptsTest < ActiveSupport::TestCase
   # H20: sibling DB URLs are derived before any ?query (not concatenated onto the
   # whole URL), and the script runs from the app root so a relative storage path
   # resolves wherever it's invoked from.
-  test "the backup derives sibling URLs safely and runs from the app root" do
-    body = File.read(BACKUP)
-    assert_match(/sibling_url/, body, "sibling URLs must be parsed, not string-concatenated")
-    assert_no_match(/\$\{DATABASE_URL\}_cache/, body, "no naive concatenation onto the whole URL")
-    assert_match(%r{cd "\$\(dirname "\$0"\)/\.\."}, body, "must cd to the app root")
+  test "backup and restore derive sibling URLs safely and backup runs from the app root" do
+    [ BACKUP, RESTORE ].each do |script|
+      body = File.read(script)
+      assert_match(/sibling_url/, body, "#{script.basename} must parse sibling URLs")
+      assert_no_match(/\$\{DATABASE_URL\}_cache/, body,
+                      "#{script.basename} must not concatenate onto the whole URL")
+    end
+    assert_match(%r{cd "\$\(dirname "\$0"\)/\.\."}, File.read(BACKUP),
+                 "backup must cd to the app root")
   end
 
   test "a partial failure fails the whole backup" do
     assert_match(/set -euo pipefail/, File.read(BACKUP),
                  "a backup that half-worked must not report success")
+  end
+
+  test "backup bytes are private and restore authenticates them before overwrite" do
+    backup = File.read(BACKUP)
+    restore = File.read(RESTORE)
+
+    assert_match(/umask 077/, backup)
+    assert_match(/DOCKET_BACKUP_SIGNING_KEY/, backup)
+    assert_match(/SHA256SUMS\.hmac/, backup)
+    assert_match(/fixed_length_secure_compare/, restore)
+    assert_operator restore.index("fixed_length_secure_compare"), :<, restore.index("load primary")
   end
 
   test "restore refuses to run without explicit confirmation" do
@@ -69,5 +88,24 @@ class BackupScriptsTest < ActiveSupport::TestCase
   test "restore ends by verifying the audit chain" do
     assert_match(/audit:verify/, File.read(RESTORE),
                  "a partial or tampered restore must be DETECTED, not assumed")
+  end
+
+  test "restore validates every dump and attachments before mutating a database" do
+    body = File.read(RESTORE)
+    preflight = body.index("for name in primary cache queue cable")
+    first_restore = body.index("load primary")
+
+    assert preflight, "all four dumps need a preflight loop"
+    assert_match(/pg_restore --list/, body, "existence alone does not prove a dump is readable")
+    assert_match(/tar -tzf/, body, "the attachment archive must be readable before restore")
+    assert_match(/audit_checkpoint\.json/, body, "restore must require the external audit anchor")
+    assert_operator preflight, :<, first_restore, "preflight must finish before primary is overwritten"
+  end
+
+  test "primary dump and external audit checkpoint are captured under one chain lock" do
+    body = File.read(BACKUP)
+
+    assert_match(/AuditCheckpoint\.capture_backup!/, body)
+    assert_match(/audit_checkpoint: present/, body)
   end
 end

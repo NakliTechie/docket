@@ -20,7 +20,8 @@ module Admin
     def create
       @user = User.new(user_params)
       authorize @user
-      if @user.save
+      role_valid = assign_requested_role(@user)
+      if role_valid && @user.save
         redirect_to admin_users_path, notice: t(".created")
       else
         render :new, status: :unprocessable_entity
@@ -35,7 +36,9 @@ module Admin
       authorize @user
       attrs = user_params
       attrs = attrs.except(:password) if attrs[:password].blank?
-      if @user.update(attrs)
+      @user.assign_attributes(attrs)
+      role_valid = assign_requested_role(@user)
+      if role_valid && @user.save
         redirect_to admin_users_path, notice: t(".updated")
       else
         render :edit, status: :unprocessable_entity
@@ -72,7 +75,21 @@ module Admin
     end
 
     def user_params
-      params.require(:user).permit(:name, :email_address, :password, :role, :locale, queue_ids: [])
+      params.require(:user).permit(:name, :email_address, :password, :locale,
+                                   :email_signature, queue_ids: [])
+    end
+
+    def assign_requested_role(user)
+      return true unless params.require(:user).key?(:role)
+
+      role = params.require(:user)[:role]
+      if role.is_a?(String) && User.roles.key?(role)
+        user.role = role
+        true
+      else
+        user.errors.add(:role, :inclusion)
+        false
+      end
     end
   end
 end

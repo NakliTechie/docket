@@ -1,6 +1,6 @@
 class CasesController < ApplicationController
   require_feature "service_desk"
-  before_action :set_case, only: %i[show edit update destroy transition assign run_agent escalate]
+  before_action :set_case, only: %i[show edit update destroy transition assign run_agent escalate merge split]
 
   # Optimistic-locking conflict: someone else changed this case since it was
   # loaded. Don't clobber — ask the agent to reload and retry.
@@ -9,8 +9,10 @@ class CasesController < ApplicationController
   end
 
   def index
-    @filters = filter_params
-    scope = policy_scope(Case).includes(:contact, :queue, :assignee, :category)
+    @saved_views = Current.user.saved_views.for_resource("cases").order(:name)
+    @current_saved_view = @saved_views.find_by(id: params[:saved_view_id])
+    @filters = @current_saved_view ? ActionController::Parameters.new(@current_saved_view.filters) : filter_params
+    scope = policy_scope(Case).canonical.includes(:contact, :queue, :assignee, :category)
     @has_any_cases = scope.exists?
     cases = scope.search(@filters[:q])
     cases = cases.where(status: @filters[:status]) if @filters[:status].present?
@@ -20,14 +22,35 @@ class CasesController < ApplicationController
     @pagy, @cases = pagy(cases.order(sort_clause))
   end
 
+  def bulk_update
+    cases = selected_cases
+    action = params.require(:bulk_action)
+    cases.each { |kase| authorize kase, bulk_policy_action(action) }
+
+    result = Case.transaction do
+      case action
+      when "assign" then bulk_assign(cases)
+      when "transition" then bulk_transition(cases)
+      when "priority" then bulk_priority(cases)
+      else raise ActionController::BadRequest, "unsupported bulk action"
+      end
+    end
+    redirect_back fallback_location: cases_path,
+                  notice: t("cases.bulk_update.updated", count: cases.size, submitted: result[:submitted])
+  end
+
   def show
     authorize @case
+    CasePresence.touch_for!(@case, Current.user)
+    @active_presences = CasePresence.active.where(case: @case).where.not(user: Current.user).includes(:user)
     @messages = @case.messages.with_attached_files.includes(:author).order(:created_at)
     @message = Message.new(kind: params[:note] ? :internal_note : :public_reply,
                            body: flash[:compose_body]) # preserved after a failed save (M30)
     @contact_cases = @case.contact.cases.where.not(id: @case.id).order(created_at: :desc).limit(10)
     @macros = Macro.order(:name)
     @next_case = next_open_case
+    @merge_candidates = policy_scope(Case).canonical.where(contact: @case.contact).where.not(id: @case.id)
+                                    .order(created_at: :desc).limit(100)
   end
 
   def new
@@ -59,7 +82,11 @@ class CasesController < ApplicationController
 
   def update
     authorize @case
-    if @case.update(case_update_params)
+    attributes = case_update_params
+    custom_fields = attributes.delete(:custom_fields)
+    @case.assign_attributes(attributes)
+    @case.assign_custom_fields(custom_fields) if custom_fields
+    if @case.save
       redirect_to @case, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity
@@ -90,7 +117,7 @@ class CasesController < ApplicationController
 
   def assign
     authorize @case
-    assignee = params[:assignee_id].presence && User.active.find_by(id: params[:assignee_id])
+    assignee = params[:assignee_id].presence && User.case_assignees.find_by(id: params[:assignee_id])
     if params[:assignee_id].present? && assignee.nil? # unknown / inactive / other tenant (L2)
       return redirect_to @case, alert: t(".invalid_assignee"), status: :see_other
     end
@@ -126,6 +153,25 @@ class CasesController < ApplicationController
                 notice: t(".escalated", reference: result.work_item.reference)
   end
 
+  def merge
+    authorize @case, :merge?
+    source = policy_scope(Case).canonical.find(params.require(:source_case_id))
+    authorize source, :merge?
+    CaseMerge.call(source: source, target: @case, actor: Current.user)
+    redirect_to case_path(@case), notice: t(".merged", tracking_id: source.tracking_id)
+  rescue ArgumentError => error
+    redirect_to case_path(@case), alert: error.message, status: :see_other
+  end
+
+  def split
+    authorize @case, :split?
+    created = CaseSplit.call(source: @case, message_ids: params[:message_ids],
+                             subject: params[:subject], actor: Current.user)
+    redirect_to case_path(created), notice: t(".split", tracking_id: created.tracking_id)
+  rescue ArgumentError => error
+    redirect_to case_path(@case), alert: error.message, status: :see_other
+  end
+
   private
 
   # Next-case hotkey target: oldest open case in the same queue, else
@@ -137,12 +183,13 @@ class CasesController < ApplicationController
   end
 
   def set_case
-    @case = Case.find(params[:id])
+    @case = Case.find(params[:id]).canonical_record
   end
 
   def case_params
     params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                 :queue_id, :assignee_id, :contact_id, :sla_policy_id)
+                                 :queue_id, :assignee_id, :contact_id, :sla_policy_id,
+                                 custom_fields: {})
   end
 
   def inline_contact_params
@@ -173,11 +220,54 @@ class CasesController < ApplicationController
   # so the submitted (possibly stale) value drives optimistic-lock detection.
   def case_update_params
     params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                 :queue_id, :assignee_id, :sla_policy_id, :lock_version)
+                                 :queue_id, :assignee_id, :sla_policy_id, :lock_version,
+                                 custom_fields: {})
   end
 
   def filter_params
     params.permit(:q, :status, :priority, :queue_id, :assignee_id, :sort, :dir, :page)
+  end
+
+  def selected_cases
+    ids = Array(params[:case_ids]).map(&:to_s).uniq
+    raise ActionController::BadRequest, "select between 1 and 100 cases" unless ids.size.between?(1, 100)
+
+    records = policy_scope(Case).where(id: ids).to_a
+    raise ActiveRecord::RecordNotFound unless records.size == ids.size
+
+    records
+  end
+
+  def bulk_policy_action(action)
+    { "assign" => :assign?, "transition" => :transition?, "priority" => :update? }
+      .fetch(action) { raise ActionController::BadRequest, "unsupported bulk action" }
+  end
+
+  def bulk_assign(cases)
+    assignee_id = params[:assignee_id].presence
+    assignee = assignee_id && User.case_assignees.find_by(id: assignee_id)
+    raise ActionController::BadRequest, "invalid assignee" if assignee_id && assignee.nil?
+
+    cases.each { |kase| kase.update!(assignee: assignee) }
+    { submitted: 0 }
+  end
+
+  def bulk_transition(cases)
+    status = params.require(:status).to_s
+    raise ActionController::BadRequest, "invalid status" unless Case.statuses.key?(status)
+
+    submitted = cases.count do |kase|
+      !kase.guarded_transition_to(status, requested_by: Current.user)
+    end
+    { submitted: submitted }
+  end
+
+  def bulk_priority(cases)
+    priority = params.require(:priority).to_s
+    raise ActionController::BadRequest, "invalid priority" unless Case.priorities.key?(priority)
+
+    cases.each { |kase| kase.update!(priority: priority) }
+    { submitted: 0 }
   end
 
   SORTABLE = { "created_at" => "cases.created_at", "priority" => "cases.priority",

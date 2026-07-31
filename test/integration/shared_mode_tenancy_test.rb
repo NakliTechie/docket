@@ -66,6 +66,30 @@ class SharedModeTenancyTest < ActionDispatch::IntegrationTest
     assert_response :not_found # unknown subdomain resolves no tenant
   end
 
+  test "client credentials are issued only on their tenant host" do
+    acme_account = ActsAsTenant.with_tenant(@acme) do
+      ServiceAccount.create!(name: "Acme machine", scopes: %w[cases:read])
+    end
+    acme_secret = acme_account.raw_client_secret
+    primary_account = ActsAsTenant.with_tenant(tenants(:primary)) do
+      ServiceAccount.create!(name: "Primary machine", scopes: %w[cases:read])
+    end
+    primary_secret = primary_account.raw_client_secret
+    host! "acme.docket.app"
+
+    post "/api/v1/oauth/token", params: {
+      grant_type: "client_credentials", client_id: acme_account.client_id,
+      client_secret: acme_secret
+    }
+    assert_response :success
+
+    post "/api/v1/oauth/token", params: {
+      grant_type: "client_credentials", client_id: primary_account.client_id,
+      client_secret: primary_secret
+    }
+    assert_response :unauthorized
+  end
+
   # SharedCredential had no tenant_id and no acts_as_tenant — its policy Scope
   # returns `scope.all` and the controller does an unscoped find, so the console
   # listed every tenant's credentials at once.
@@ -99,16 +123,22 @@ class SharedModeTenancyTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  # NOT COVERED HERE: `Connector validates_same_tenant :shared_credential`, added
-  # alongside the tenant_id column so a connector cannot bind another tenant's
-  # credential. It is verified working outside the suite — with two real tenants,
-  # `Connector.new(shared_credential_id: <other tenant's>)` produces
-  # `{:shared_credential=>[{:error=>:cross_tenant}]}` — but it will not reproduce
-  # in this suite, because test_helper pins `ActsAsTenant.test_tenant` to :primary
-  # for every test and that pin wins over with_tenant, a `tenant:` argument, and a
-  # direct tenant_id assignment at validation time. Covering it properly means
-  # giving the suite a way to run as a second tenant; until then this is a known
-  # coverage hole, not a passing test pretending otherwise.
+  test "a connector cannot bind another tenant's shared credential" do
+    primary_credential = ActsAsTenant.with_tenant(tenants(:primary)) do
+      SharedCredential.create!(name: "primary_guard", label: "Primary Guard",
+                               secrets_hash: { "api_key" => "secret" })
+    end
+
+    connector = ActsAsTenant.with_tenant(@acme) do
+      record = Connector.new(name: "Cross tenant", provider: "http_json",
+                             shared_credential_id: primary_credential.id)
+      refute record.valid?
+      record
+    end
+    assert_equal @acme.id, connector.tenant_id
+    assert_includes connector.errors.details[:shared_credential], { error: :cross_tenant },
+                    connector.errors.details.inspect
+  end
 
   # H8: the platform API-token console listed and revoked ApiToken.all, which is
   # every tenant's tokens (ApiToken has no tenant_id — it inherits tenancy from

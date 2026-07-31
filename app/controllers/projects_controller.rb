@@ -9,7 +9,10 @@ class ProjectsController < ApplicationController
     authorize Project
     @projects = policy_scope(Project).includes(:lead).order(:key)
     @projects = @projects.active unless params[:archived] == "1"
-    @open_counts = WorkItem.open.where(project: @projects).group(:project_id).count
+    # This becomes a SELECT id subquery. Strip display ordering: PostgreSQL
+    # rejects ORDER BY key on the DISTINCT membership scope when the subquery
+    # selects only id (SQLite happened to accept it).
+    @open_counts = WorkItem.open.where(project: @projects.reorder(nil)).group(:project_id).count
   end
 
   def show
@@ -34,6 +37,7 @@ class ProjectsController < ApplicationController
 
   def edit
     authorize @project
+    build_missing_assignment_rules
   end
 
   def update
@@ -41,6 +45,7 @@ class ProjectsController < ApplicationController
     if @project.update(project_params)
       redirect_to projects_path, notice: t(".updated")
     else
+      build_missing_assignment_rules
       render :edit, status: :unprocessable_entity
     end
   end
@@ -65,7 +70,16 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:key, :name, :description, :lead_id,
-                                    workflow_states_attributes: %i[id name position wip_limit])
+    params.require(:project).permit(:key, :name, :description, :lead_id, :visibility,
+                                    member_ids: [],
+                                    workflow_states_attributes: %i[id name position wip_limit],
+                                    work_assignment_rules_attributes: %i[id work_kind assignee_id _destroy])
+  end
+
+  def build_missing_assignment_rules
+    existing = @project.work_assignment_rules.map(&:work_kind)
+    (WorkItem.kinds.keys - existing).each do |kind|
+      @project.work_assignment_rules.build(work_kind: kind)
+    end
   end
 end

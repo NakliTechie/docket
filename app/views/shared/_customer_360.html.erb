@@ -1,0 +1,45 @@
+<h2><%= t("customer_360.title") %></h2>
+
+<% if feature?("service_desk") && policy(Case).index? %>
+  <div class="panel">
+    <h3 class="panel-title"><%= t("customer_360.cases", count: @case_count) %></h3>
+    <% if @cases.any? %>
+      <ul class="stack-sm">
+        <% @cases.each do |kase| %>
+          <li><%= link_to kase.tracking_id, case_path(kase), class: "mono" %>
+            · <%= link_to kase.subject, case_path(kase) %> <%= status_badge(kase) %></li>
+        <% end %>
+      </ul>
+    <% else %><p class="muted"><%= t("customer_360.no_cases") %></p><% end %>
+  </div>
+<% end %>
+
+<% if feature?("crm") && policy(Deal).index? %>
+  <div class="panel">
+    <h3 class="panel-title"><%= t("customer_360.deals", count: @deal_count) %></h3>
+    <% if @deals.any? %>
+      <ul class="stack-sm">
+        <% @deals.each do |deal| %>
+          <li><%= link_to deal.name, deal_path(deal) %>
+            <span class="badge badge-<%= deal.status %>"><%= deal.human_status %></span>
+            <% if deal.value_cents %>· <%= format_money(deal.value_cents, deal.currency) %><% end %></li>
+        <% end %>
+      </ul>
+    <% else %><p class="muted"><%= t("customer_360.no_deals") %></p><% end %>
+  </div>
+<% end %>
+
+<% if feature?("work") && policy(WorkItem).index? %>
+  <div class="panel">
+    <h3 class="panel-title"><%= t("customer_360.work_items", count: @work_item_count) %></h3>
+    <% if @work_items.any? %>
+      <ul class="stack-sm">
+        <% @work_items.each do |item| %>
+          <li><%= link_to item.reference, work_item_path(item), class: "mono" %>
+            · <%= link_to item.title, work_item_path(item) %>
+            <span class="badge"><%= item.workflow_state.name %></span></li>
+        <% end %>
+      </ul>
+    <% else %><p class="muted"><%= t("customer_360.no_work_items") %></p><% end %>
+  </div>
+<% end %>

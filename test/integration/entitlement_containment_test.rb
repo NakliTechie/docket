@@ -162,16 +162,16 @@ class EntitlementContainmentTest < ActionDispatch::IntegrationTest
     assert tenant.feature?("crm")
   end
 
-  test "a user is judged by their OWN tenant, never the ambient one" do
+  test "the ambient request tenant is authoritative for entitlements" do
     tenants(:acme).set_feature!("crm", false)
     admin = users(:admin) # belongs to primary, where crm is on
 
     ActsAsTenant.with_tenant(tenants(:acme)) do
-      assert admin.can?("lead:read"), "another tenant's packaging must not judge this user"
+      refute admin.can?("lead:read"), "a platform operator is constrained by the tenant being served"
     end
 
     ActsAsTenant.current_tenant.set_feature!("crm", false)
-    refute admin.can?("lead:read"), "their own packaging does"
+    refute admin.can?("lead:read"), "the user's own tenant remains the fallback"
   end
 
   test "work API paths and MCP tools drop with the work module" do

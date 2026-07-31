@@ -1,0 +1,35 @@
+<% content_for :title, t("business_calendars.index.title") %>
+
+<div class="page-header">
+  <div>
+    <h1><%= t("business_calendars.index.title") %></h1>
+    <p class="page-subtitle"><%= t("business_calendars.index.subtitle") %></p>
+  </div>
+  <% if policy(BusinessCalendar).create? %>
+    <%= link_to t("business_calendars.index.new"), new_business_calendar_path,
+                class: "btn btn-primary" %>
+  <% end %>
+</div>
+
+<div class="stack">
+  <% @business_calendars.each do |calendar| %>
+    <section class="panel">
+      <div class="page-header">
+        <div>
+          <h2><%= calendar.name %></h2>
+          <p class="muted"><%= calendar.time_zone %> ·
+            <%= t("business_calendars.index.windows", count: calendar.business_calendar_windows.size) %> ·
+            <%= t("business_calendars.index.exceptions", count: calendar.business_calendar_exceptions.size) %></p>
+        </div>
+        <div class="form-actions">
+          <% if calendar.is_default? %><span class="badge"><%= t("business_calendars.index.default") %></span><% end %>
+          <% if policy(calendar).update? %><%= link_to t("actions.edit"), edit_business_calendar_path(calendar), class: "btn" %><% end %>
+          <% if policy(calendar).destroy? %>
+            <%= button_to t("actions.delete"), business_calendar_path(calendar), method: :delete,
+                          class: "btn btn-danger", form: { data: { turbo_confirm: t("business_calendars.index.confirm_delete") } } %>
+          <% end %>
+        </div>
+      </div>
+    </section>
+  <% end %>
+</div>

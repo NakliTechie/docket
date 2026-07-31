@@ -24,20 +24,23 @@ class SalesReportTest < ActiveSupport::TestCase
     @report = SalesReport.new(from: @from, to: @to)
   end
 
-  def open_deal(stage, value, owner: nil)
-    Deal.create!(name: "open", pipeline: @pipeline, pipeline_stage: stage, value: value, owner: owner)
+  def open_deal(stage, value, owner: nil, currency: "INR")
+    Deal.create!(name: "open", pipeline: @pipeline, pipeline_stage: stage,
+                 value: value, owner: owner, currency: currency)
   end
 
   # closed_at is auto-stamped to now on the terminal move; override it so the
   # deal lands inside or outside the report window deterministically.
-  def closed_deal(stage, value, closed_at:, owner: nil)
-    deal = Deal.create!(name: "closed", pipeline: @pipeline, pipeline_stage: stage, value: value, owner: owner)
+  def closed_deal(stage, value, closed_at:, owner: nil, currency: "INR")
+    deal = Deal.create!(name: "closed", pipeline: @pipeline, pipeline_stage: stage,
+                        value: value, owner: owner, currency: currency)
     deal.update_column(:closed_at, closed_at)
     deal
   end
 
-  def lost_with_reason(reason, value, closed_at:)
-    deal = Deal.create!(name: "lost", pipeline: @pipeline, pipeline_stage: @lost, value: value, lost_reason: reason)
+  def lost_with_reason(reason, value, closed_at:, currency: "INR")
+    deal = Deal.create!(name: "lost", pipeline: @pipeline, pipeline_stage: @lost,
+                        value: value, lost_reason: reason, currency: currency)
     deal.update_column(:closed_at, closed_at)
     deal
   end
@@ -56,7 +59,7 @@ class SalesReportTest < ActiveSupport::TestCase
   test "weighted pipeline applies stage probability" do
     open_deal(@new, 1000)        # 100_000 * 0.10 = 10_000
     open_deal(@qualified, 2000)  # 200_000 * 0.50 = 100_000
-    assert_equal 110_000, @report.weighted_pipeline_cents
+    assert_equal({ "INR" => 110_000 }, @report.weighted_pipeline_by_currency)
   end
 
   test "won/lost are windowed by closed_at and drive the win rate" do
@@ -67,10 +70,22 @@ class SalesReportTest < ActiveSupport::TestCase
 
     stats = @report.stats
     assert_equal 2, stats[:won_count]
-    assert_equal 600_000, stats[:won_value_cents]
+    assert_equal({ "INR" => 600_000 }, stats[:won_values_by_currency])
     assert_equal 1, stats[:lost_count]
-    assert_equal 400_000, stats[:lost_value_cents]
+    assert_equal({ "INR" => 400_000 }, stats[:lost_values_by_currency])
     assert_equal 66.7, stats[:win_rate]
+  end
+
+  test "money totals are separated by currency instead of adding unlike units" do
+    open_deal(@new, 1000, currency: "INR")
+    open_deal(@new, 20, currency: "usd")
+    closed_deal(@won, 500, closed_at: 1.day.ago, currency: "INR")
+    closed_deal(@won, 30, closed_at: 1.day.ago, currency: "USD")
+
+    assert_equal({ "INR" => 100_000, "USD" => 2_000 }, @report.stats[:open_values_by_currency])
+    assert_equal({ "INR" => 50_000, "USD" => 3_000 }, @report.stats[:won_values_by_currency])
+    rows = @report.pipeline_by_stage.select { |row| row[:stage] == @new }
+    assert_equal %w[INR USD], rows.map { |row| row[:currency] }
   end
 
   test "lead conversion windows leads by created/converted" do
@@ -122,5 +137,10 @@ class SalesReportTest < ActiveSupport::TestCase
     # the stages it dwelt in are reconstructed from the audit log
     assert_includes v[:stage_dwell].map { |row| row[:stage]&.name }, "New"
     assert_includes v[:stage_dwell].map { |row| row[:stage]&.name }, "Qualified"
+
+    json_rows = @report.as_json.dig(:velocity, :stage_dwell)
+    assert_includes json_rows.map { |row| row[:stage] }, "New"
+    assert json_rows.all? { |row| row[:stage_id].is_a?(Integer) }
+    refute json_rows.any? { |row| row[:stage].is_a?(PipelineStage) }
   end
 end

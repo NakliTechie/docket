@@ -21,7 +21,7 @@ module Sso
   # itself. Unknown subdomain in a shared deploy → no tenant → the block runs
   # unscoped and the provider fails closed, which is correct.
   def with_request_tenant(env)
-    tenant = Tenant.resolve_by_subdomain(ActionDispatch::Request.new(env).subdomain)
+    tenant = Tenant.resolve_by_host(ActionDispatch::Request.new(env).host)
     return yield if tenant.nil?
 
     ActsAsTenant.with_tenant(tenant) { yield }
@@ -30,13 +30,16 @@ module Sso
   # -- staff OIDC --------------------------------------------------------
 
   def staff_oidc_enabled?
-    setting("sso_staff_oidc_issuer", "DOCKET_STAFF_OIDC_ISSUER").present? &&
+    staff_oidc_issuer.present? &&
       setting("sso_staff_oidc_client_id", "DOCKET_STAFF_OIDC_CLIENT_ID").present?
   end
 
+  def staff_oidc_issuer
+    setting("sso_staff_oidc_issuer", "DOCKET_STAFF_OIDC_ISSUER")
+  end
+
   def staff_oidc_options
-    issuer = setting("sso_staff_oidc_issuer", "DOCKET_STAFF_OIDC_ISSUER")
-    allow_http_discovery_for(issuer)
+    issuer = staff_oidc_issuer
     {
       name: :staff_oidc,
       issuer: issuer,
@@ -68,6 +71,21 @@ module Sso
     {}
   end
 
+  # JIT is deliberately opt-in by email domain. Existing users can keep using
+  # SSO regardless of this list; it only controls who an IdP may create.
+  def staff_jit_domains
+    setting("sso_staff_jit_domains", "DOCKET_STAFF_JIT_DOMAINS")
+      .to_s.split(/[\s,]+/).filter_map do |domain|
+        normalized = domain.strip.downcase.delete_prefix("@")
+        normalized if normalized.match?(/\A[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\z/)
+      end.uniq
+  end
+
+  def staff_jit_allowed?(email)
+    domain = email.to_s.downcase.split("@", 2).last
+    domain.present? && staff_jit_domains.include?(domain)
+  end
+
   # -- staff SAML --------------------------------------------------------
 
   def staff_saml_enabled?
@@ -95,7 +113,6 @@ module Sso
 
   def customer_oidc_options
     issuer = setting("sso_customer_oidc_issuer", "DOCKET_CUSTOMER_OIDC_ISSUER")
-    allow_http_discovery_for(issuer)
     {
       name: :customer_oidc,
       issuer: issuer,
@@ -117,17 +134,7 @@ module Sso
   end
 
   def base_url
-    setting("app_base_url", "DOCKET_BASE_URL") || "http://localhost:3000"
-  end
-
-  # swd/webfinger build OIDC discovery URLs with URI::HTTPS regardless of
-  # the issuer's scheme, so an explicitly http:// issuer (local IdP, the CI
-  # Keycloak) can never be discovered. Process-global, but only ever relaxed
-  # for an issuer an admin deliberately configured as plain http.
-  def allow_http_discovery_for(issuer)
-    return unless issuer.to_s.start_with?("http://")
-    SWD.url_builder = URI::HTTP
-    WebFinger.url_builder = URI::HTTP
+    Docket::TenantUrl.base_url
   end
 
   # Browsers enforce CSP form-action against the redirect target of a form

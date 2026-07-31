@@ -1,12 +1,15 @@
-# Derive ActiveRecord encryption keys from the deployment's own
-# secret_key_base so the connector credential vault works with zero extra
-# operator setup — the same sovereign-secret model as the rest of Docket
-# (the entrypoint persists secret_key_base; we never ship a key).
-secret = Rails.application.secret_key_base.to_s
-if secret.present?
-  gen = ActiveSupport::KeyGenerator.new(secret, hash_digest_class: OpenSSL::Digest::SHA256)
-  enc = Rails.application.config.active_record.encryption
-  enc.primary_key        = gen.generate_key("docket-ar-encryption-primary", 32).unpack1("H*")
-  enc.deterministic_key  = gen.generate_key("docket-ar-encryption-deterministic", 32).unpack1("H*")
-  enc.key_derivation_salt = gen.generate_key("docket-ar-encryption-salt", 32).unpack1("H*")
-end
+require Rails.root.join("lib/docket/vault_keyring")
+
+keyring = Docket::VaultKeyring.current
+encryption = Rails.application.config.active_record.encryption
+
+# The connector/shared-credential vault uses Docket::VaultKeyring's explicit
+# versioned provider. These global credentials keep any future `encrypts`
+# declaration independent from SECRET_KEY_BASE too; the last key is active and
+# earlier keys remain readable during rotation.
+encryption.primary_key = keyring.secrets_in_read_order
+encryption.deterministic_key = keyring.active_secret
+encryption.key_derivation_salt = Digest::SHA256.hexdigest("docket-vault-key-derivation-v1")
+encryption.store_key_references = true
+
+Rails.application.config.x.vault_keyring = keyring

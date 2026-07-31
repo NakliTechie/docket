@@ -46,7 +46,7 @@ module Api
       end
 
       def policy_params
-        params.require(:sla_policy).permit(:name, :description,
+        params.require(:sla_policy).permit(:name, :description, :business_calendar_id,
           sla_targets_attributes: %i[id priority first_response_minutes resolution_minutes _destroy])
       end
     end

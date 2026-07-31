@@ -27,6 +27,9 @@ module Api
           closed_at: c.closed_at,
           first_response_breached: c.first_response_breached,
           resolution_breached: c.resolution_breached,
+          custom_fields: c.custom_fields,
+          merged_into_id: c.merged_into_id, merged_at: c.merged_at,
+          merged_case_ids: c.merged_cases.ids,
           reopen_count: c.reopen_count,
           allowed_transitions: Case::TRANSITIONS.fetch(c.status, []),
           created_at: c.created_at,
@@ -67,7 +70,9 @@ module Api
         {
           id: c.id, name: c.name, email: c.email, phone: c.phone,
           external_id: c.external_id, organisation_id: c.organisation_id,
-          preferred_language: c.preferred_language, notes: c.notes, sms_consent: c.sms_consent,
+          preferred_language: c.preferred_language, notes: c.notes,
+          sms_consent: c.sms_consent, email_consent: c.email_consent,
+          email_unsubscribed_at: c.email_unsubscribed_at,
           created_at: c.created_at, updated_at: c.updated_at
         }
       end
@@ -80,8 +85,26 @@ module Api
       def project(p)
         {
           id: p.id, key: p.key, name: p.name, description: p.description,
-          lead_id: p.lead_id, archived: p.archived,
+          lead_id: p.lead_id, archived: p.archived, visibility: p.visibility,
+          onboarding_deal_id: p.onboarding_deal_id, project_template_id: p.project_template_id,
+          member_ids: p.project_memberships.map(&:user_id),
+          assignment_rules: p.work_assignment_rules.map { |rule|
+            { id: rule.id, work_kind: rule.work_kind, assignee_id: rule.assignee_id }
+          },
           created_at: p.created_at, updated_at: p.updated_at
+        }
+      end
+
+      def project_template(template)
+        {
+          id: template.id, name: template.name, key_prefix: template.key_prefix,
+          description: template.description, active: template.active,
+          items: template.project_template_items.map { |item|
+            { id: item.id, title: item.title, description: item.description,
+              kind: item.kind, priority: item.priority, estimate: item.estimate&.to_f,
+              due_offset_days: item.due_offset_days, position: item.position }
+          },
+          created_at: template.created_at, updated_at: template.updated_at
         }
       end
 
@@ -95,8 +118,26 @@ module Api
           assignee_id: i.assignee_id, reporter_id: i.reporter_id,
           parent_id: i.parent_id, sprint_id: i.sprint_id,
           labels: i.labels, estimate: i.estimate&.to_f, due_on: i.due_on,
+          custom_fields: i.custom_fields,
+          relations: relation_summaries(i),
           closed_at: i.closed_at, created_at: i.created_at, updated_at: i.updated_at
         }
+      end
+
+      def work_item_relation(relation)
+        {
+          id: relation.id, relation_type: relation.relation_type,
+          source_id: relation.source_id, source_reference: relation.source.reference,
+          target_id: relation.target_id, target_reference: relation.target.reference,
+          created_by_id: relation.created_by_id, created_at: relation.created_at
+        }
+      end
+
+      def relation_summaries(item)
+        (item.outgoing_relations.includes(:source, :target).to_a +
+          item.incoming_relations.includes(:source, :target).to_a).uniq.map do |relation|
+          work_item_relation(relation)
+        end
       end
 
       def sprint(s)
@@ -120,9 +161,20 @@ module Api
           id: l.id, name: l.name, email: l.email, phone: l.phone,
           company_name: l.company_name, source: l.source, status: l.status,
           owner_id: l.owner_id, contact_id: l.contact_id, converted_deal_id: l.converted_deal_id,
-          value_estimate_cents: l.value_estimate_cents, notes: l.notes, sms_consent: l.sms_consent,
+          value_estimate_cents: l.value_estimate_cents, notes: l.notes,
+          sms_consent: l.sms_consent, email_consent: l.email_consent,
+          email_unsubscribed_at: l.email_unsubscribed_at,
+          consent_captured_at: l.consent_captured_at, consent_source: l.consent_source,
+          provenance: l.provenance, merged_into_id: l.merged_into_id, merged_at: l.merged_at,
+          merged_lead_ids: l.merged_leads.ids,
           converted_at: l.converted_at, created_at: l.created_at, updated_at: l.updated_at
         }
+      end
+
+      def lead_capture_form(form)
+        { id: form.id, name: form.name, slug: form.slug, field_mapping: form.field_mapping,
+          consent_disclosure: form.consent_disclosure, active: form.active,
+          is_default: form.is_default, created_at: form.created_at, updated_at: form.updated_at }
       end
 
       def deal(d)
@@ -131,8 +183,36 @@ module Api
           status: d.status, value_cents: d.value_cents, currency: d.currency,
           owner_id: d.owner_id, contact_id: d.contact_id, organisation_id: d.organisation_id,
           lead_id: d.lead_id, expected_close_on: d.expected_close_on, closed_at: d.closed_at,
-          lost_reason: d.lost_reason, created_at: d.created_at, updated_at: d.updated_at
+          lost_reason: d.lost_reason, onboarding_project_id: d.onboarding_project&.id,
+          line_items_total_cents: d.line_items_total_cents,
+          line_items: d.deal_line_items.map { |item| deal_line_item(item) },
+          competitors: d.deal_competitors.map { |link| deal_competitor(link) },
+          created_at: d.created_at, updated_at: d.updated_at
         }
+      end
+
+      def product(product)
+        { id: product.id, name: product.name, sku: product.sku, description: product.description,
+          default_unit_price_cents: product.default_unit_price_cents, currency: product.currency,
+          active: product.active, created_at: product.created_at, updated_at: product.updated_at }
+      end
+
+      def deal_line_item(item)
+        { id: item.id, deal_id: item.deal_id, product_id: item.product_id,
+          description: item.description, quantity: item.quantity.to_f,
+          unit_price_cents: item.unit_price_cents, total_cents: item.total_cents,
+          currency: item.currency, created_at: item.created_at, updated_at: item.updated_at }
+      end
+
+      def competitor(competitor)
+        { id: competitor.id, name: competitor.name, website: competitor.website,
+          notes: competitor.notes, created_at: competitor.created_at, updated_at: competitor.updated_at }
+      end
+
+      def deal_competitor(link)
+        { id: link.id, deal_id: link.deal_id, competitor_id: link.competitor_id,
+          competitor_name: link.competitor.name, disposition: link.disposition, notes: link.notes,
+          created_at: link.created_at, updated_at: link.updated_at }
       end
 
       def pipeline(p)
@@ -183,6 +263,7 @@ module Api
 
       def sla_policy(p)
         { id: p.id, name: p.name, description: p.description,
+          business_calendar_id: p.business_calendar_id,
           targets: p.sla_targets.map { |t|
             { priority: t.priority, first_response_minutes: t.first_response_minutes,
               resolution_minutes: t.resolution_minutes }
@@ -190,8 +271,38 @@ module Api
           created_at: p.created_at, updated_at: p.updated_at }
       end
 
+      def business_calendar(calendar)
+        {
+          id: calendar.id, name: calendar.name, time_zone: calendar.time_zone,
+          is_default: calendar.is_default,
+          windows: calendar.business_calendar_windows.map { |window|
+            { id: window.id, weekday: window.weekday,
+              starts_at: window.starts_at, ends_at: window.ends_at }
+          },
+          exceptions: calendar.business_calendar_exceptions.map { |exception|
+            { id: exception.id, on_date: exception.on_date, name: exception.name,
+              closed: exception.closed, starts_at: exception.starts_at, ends_at: exception.ends_at }
+          },
+          created_at: calendar.created_at, updated_at: calendar.updated_at
+        }
+      end
+
+      def custom_field_definition(definition)
+        {
+          id: definition.id, resource_type: definition.resource_type,
+          key: definition.key, label: definition.label, field_type: definition.field_type,
+          options: definition.options, required: definition.required,
+          active: definition.active, reportable: definition.reportable,
+          position: definition.position,
+          created_at: definition.created_at, updated_at: definition.updated_at
+        }
+      end
+
       def macro(m)
-        { id: m.id, name: m.name, body: m.body, created_at: m.created_at, updated_at: m.updated_at }
+        { id: m.id, name: m.name, body: m.body, message_kind: m.message_kind,
+          set_status: m.set_status, set_priority: m.set_priority,
+          set_queue_id: m.set_queue_id, set_assignee_id: m.set_assignee_id,
+          created_at: m.created_at, updated_at: m.updated_at }
       end
 
       def reference_doc(d)
@@ -200,7 +311,8 @@ module Api
 
       def user(u)
         { id: u.id, name: u.name, email_address: u.email_address, role: u.role,
-          active: u.active, locale: u.locale, queue_ids: u.queue_memberships.map(&:queue_id),
+          active: u.active, locale: u.locale, email_signature: u.email_signature,
+          queue_ids: u.queue_memberships.map(&:queue_id),
           created_at: u.created_at, updated_at: u.updated_at }
       end
 

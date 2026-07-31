@@ -1,8 +1,20 @@
 require "test_helper"
 
 class AdminTenantsTest < ActionDispatch::IntegrationTest
+  setup do
+    @original_mode = Rails.application.config.x.tenancy_mode
+    Rails.application.config.x.tenancy_mode = "shared"
+    host! "acme.example.com"
+    @platform_admin = ActsAsTenant.with_tenant(tenants(:acme)) do
+      User.create!(name: "Platform Admin", email_address: "platform-admin@acme.test",
+                   password: "long-enough-password", role: :super_admin)
+    end
+  end
+
+  teardown { Rails.application.config.x.tenancy_mode = @original_mode }
+
   test "super_admin lists, provisions, and suspends tenants" do
-    sign_in_as users(:super_admin)
+    sign_in_as @platform_admin
 
     get admin_tenants_path
     assert_response :success
@@ -27,18 +39,43 @@ class AdminTenantsTest < ActionDispatch::IntegrationTest
   end
 
   test "the primary tenant cannot be suspended" do
-    sign_in_as users(:super_admin)
+    sign_in_as @platform_admin
     post suspend_admin_tenant_path(tenants(:primary))
     assert tenants(:primary).reload.active?, "primary stays active"
   end
 
   test "non-super_admins cannot reach the platform console" do
-    sign_in_as users(:client_admin)
+    client_admin = ActsAsTenant.with_tenant(tenants(:acme)) do
+      User.create!(name: "Acme client admin", email_address: "client-admin@acme.test",
+                   password: "long-enough-password", role: :client_admin)
+    end
+    sign_in_as client_admin
     get admin_tenants_path
     assert_response :forbidden
 
-    sign_in_as users(:finance)
+    finance = ActsAsTenant.with_tenant(tenants(:acme)) do
+      User.create!(name: "Acme finance", email_address: "finance-role@acme.test",
+                   password: "long-enough-password", role: :finance)
+    end
+    sign_in_as finance
     get admin_tenants_path
+    assert_response :forbidden
+  end
+
+  test "an isolated deployment can inspect tenants but cannot provision another" do
+    Rails.application.config.x.tenancy_mode = "isolated"
+    host! "www.example.com"
+    sign_in_as users(:super_admin)
+
+    get admin_tenants_path
+    assert_response :success
+    assert_no_match I18n.t("admin.tenants.index.provision"), response.body
+
+    get new_admin_tenant_path
+    assert_response :forbidden
+    assert_no_difference "Tenant.count" do
+      post admin_tenants_path, params: { tenant: { name: "Orphan", subdomain: "orphan" } }
+    end
     assert_response :forbidden
   end
 end

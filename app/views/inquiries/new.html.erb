@@ -3,9 +3,32 @@
   <h1><%= t(".title") %></h1>
   <p class="form-hint"><%= t(".intro") %></p>
 
-  <%= form_with model: @inquiry, url: inquiry_path, method: :post, class: "form" do |f| %>
+  <%= form_with model: @inquiry,
+        url: @capture_form ? lead_capture_path(@capture_form.slug) : inquiry_path,
+        method: :post, class: "form" do |f| %>
     <%= render "shared/form_errors", record: @inquiry %>
 
+    <% if @capture_form %>
+      <% @capture_form.mapping.each do |source_name, target| %>
+        <div class="form-row">
+          <%= label_tag "lead_inquiry_fields_#{source_name}", t("inquiries.fields.#{target == 'notes' ? 'message' : target}", default: source_name.humanize) %>
+          <% input_name = "lead_inquiry[fields][#{source_name}]" %>
+          <% if target == "notes" %>
+            <%= text_area_tag input_name, params.dig(:lead_inquiry, :fields, source_name), rows: 5,
+                  id: "lead_inquiry_fields_#{source_name}" %>
+          <% elsif target == "email" %>
+            <%= email_field_tag input_name, params.dig(:lead_inquiry, :fields, source_name),
+                  id: "lead_inquiry_fields_#{source_name}", autocomplete: "email" %>
+          <% elsif target == "phone" %>
+            <%= telephone_field_tag input_name, params.dig(:lead_inquiry, :fields, source_name),
+                  id: "lead_inquiry_fields_#{source_name}", autocomplete: "tel" %>
+          <% else %>
+            <%= text_field_tag input_name, params.dig(:lead_inquiry, :fields, source_name),
+                  id: "lead_inquiry_fields_#{source_name}", required: target == "name" %>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
     <div class="form-row">
       <%= f.label :name, t("inquiries.fields.name") %>
       <%= f.text_field :name, required: true, autocomplete: "name" %>
@@ -30,6 +53,16 @@
     <div class="form-row">
       <%= f.label :message, t("inquiries.fields.message") %>
       <%= f.text_area :message, rows: 5 %>
+    </div>
+    <% end %>
+
+    <div class="form-row">
+      <% if @capture_form&.consent_disclosure.present? %>
+        <p class="form-hint"><%= @capture_form.consent_disclosure %></p>
+      <% end %>
+      <label><%= f.check_box :email_consent %> <%= t("inquiries.fields.email_consent") %></label>
+      <label><%= f.check_box :sms_consent %> <%= t("inquiries.fields.sms_consent") %></label>
+      <p class="form-hint"><%= t("inquiries.fields.consent_hint") %></p>
     </div>
 
     <%# Honeypot: hidden from real users; bots that fill it are silently dropped. %>

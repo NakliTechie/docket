@@ -90,20 +90,21 @@ module Imports
     def import_cards(project, states)
       Array(@board["columns"] || @board["lists"]).each_with_index do |col, index|
         state = states[index] || project.default_state
-        Array(col["cards"]).each do |card|
+        Array(col["cards"]).each_with_index do |card, card_index|
           title = card["title"].presence || card["name"].presence
           next @result.skip!("cards") if title.blank?
-          next @result.skip!("cards") if project.work_items.exists?(title: title)
-
-          item = project.work_items.create!(
-            title: title,
-            description: card["description"].presence || card["desc"].presence,
-            workflow_state: state,
-            priority: priority_for(card),
-            due_on: parse_date(card["dueDate"] || card["due"]),
-            reporter: @actor
-          )
-          @result.create!("cards")
+          source_key = card_source_key(col, index, card, card_index)
+          item = project.work_items.find_or_initialize_by(source_key: source_key)
+          was_new = item.new_record?
+          attributes = { title: title, workflow_state: state, priority: priority_for(card) }
+          if card.key?("description") || card.key?("desc")
+            attributes[:description] = card["description"].presence || card["desc"].presence
+          end
+          attributes[:due_on] = parse_date(card["dueDate"] || card["due"]) if card.key?("dueDate") || card.key?("due")
+          attributes[:reporter] = @actor if was_new
+          item.assign_attributes(attributes)
+          item.save!
+          was_new ? @result.create!("cards") : @result.update!("cards")
           import_checklist(item, card, project, state)
           import_comments(item, card)
         end
@@ -122,13 +123,18 @@ module Imports
     def parse_date(value) = value.present? ? (Date.parse(value.to_s) rescue nil) : nil
 
     def import_checklist(parent, card, project, state)
-      Array(card["checklist"] || card["checklists"]).each do |entry|
+      Array(card["checklist"] || card["checklists"]).each_with_index do |entry, index|
         text = entry.is_a?(Hash) ? entry["text"].presence || entry["title"].presence : entry.to_s
         next if text.blank?
 
-        project.work_items.create!(title: text, parent: parent, workflow_state: state,
-                                   kind: :task, reporter: @actor)
-        @result.create!("checklist_items")
+        entry_id = entry.is_a?(Hash) ? entry["id"].presence : nil
+        source_key = "#{parent.source_key}:checklist:#{entry_id || index}"
+        item = project.work_items.find_or_initialize_by(source_key: source_key)
+        was_new = item.new_record?
+        item.assign_attributes(title: text, parent: parent, workflow_state: state,
+                               kind: :task, reporter: @actor)
+        item.save!
+        was_new ? @result.create!("checklist_items") : @result.update!("checklist_items")
       end
     end
 
@@ -140,9 +146,25 @@ module Imports
         body = comment.is_a?(Hash) ? comment["text"].presence || comment["body"].presence : comment.to_s
         next if body.blank?
 
-        item.work_comments.create!(body: body, author: author)
-        @result.create!("comments")
+        if item.work_comments.exists?(body: body)
+          @result.skip!("comments")
+        else
+          item.work_comments.create!(body: body, author: author)
+          @result.create!("comments")
+        end
       end
+    end
+
+    def card_source_key(column, column_index, card, card_index)
+      board_id = @board["id"].presence || @board["uuid"].presence || @key.presence ||
+                 @board["title"].presence || @board["name"].presence || "board"
+      card_id = card["id"].presence || card["uuid"].presence
+      unless card_id
+        @result.unmapped!(:unstable_card_identity, "column #{column_index + 1} card #{card_index + 1}")
+        column_id = column["id"].presence || column["uuid"].presence || column_index
+        card_id = "#{column_id}:#{card_index}"
+      end
+      "kanzen:#{Digest::SHA256.hexdigest([ board_id, card_id ].join("\0"))[0, 32]}"
     end
   end
 end

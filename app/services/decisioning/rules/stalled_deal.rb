@@ -7,6 +7,7 @@ module Decisioning
       DWELL_LIMIT = 14.days
 
       def self.decision_class = :autonomous
+      def self.owner_feature = "crm"
 
       def evaluate
         Deal.open_deals.find_each.filter_map do |deal|

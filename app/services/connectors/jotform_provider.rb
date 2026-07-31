@@ -19,11 +19,27 @@ module Connectors
     # collection as { responseCode:, content: [...] } — we return the content
     # array of submission Hashes.
     def fetch
-      uri = build_uri(base, "/form/#{require_config('form_id')}/submissions")
-      response = ensure_ok!(get(uri, headers: auth_headers), "Jotform")
-      body = parse_json(response.body)
-      content = body.is_a?(Hash) ? body["content"] : nil
-      Array(content).select { |r| r.is_a?(Hash) }
+      records = []
+      offset = 0
+      limit = 1_000
+
+      loop do
+        query = URI.encode_www_form(limit: limit, offset: offset)
+        uri = build_uri(base, "/form/#{require_config('form_id')}/submissions?#{query}")
+        response = ensure_ok!(get(uri, headers: auth_headers), "Jotform")
+        body = parse_json(response.body)
+        raise Connectors::Error, "Jotform returned an invalid submissions page" unless body.is_a?(Hash)
+
+        content = body["content"]
+        content = [] if content.nil?
+        raise Connectors::Error, "Jotform submissions page is invalid" unless content.is_a?(Array)
+        records.concat(content.select { |record| record.is_a?(Hash) })
+        break if content.length < limit
+
+        offset += limit
+      end
+
+      records
     end
 
     private

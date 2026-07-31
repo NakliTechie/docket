@@ -74,10 +74,15 @@ module Comms
 
     def request(req, uri)
       http = Net::HTTP.new(uri.host, uri.port)
+      if http.respond_to?(:ipaddr=)
+        http.ipaddr = Docket::OutboundUrl.vetted_address(uri.host, port: uri.port)
+      end
       http.use_ssl = uri.scheme == "https"
       http.open_timeout = OPEN_TIMEOUT
       http.read_timeout = READ_TIMEOUT
       http.request(req)
+    rescue Docket::OutboundUrl::Blocked, Docket::OutboundUrl::ResolutionError => e
+      raise Error, "sms send blocked: #{e.message}"
     end
 
     def parse(raw)

@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3"
+gem "rails", "~> 8.1.3", ">= 8.1.3.1"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use sqlite3 as the database for Active Record (dev/test/demo); Postgres in production
@@ -29,6 +29,8 @@ gem "acts_as_tenant", "~> 1.0"
 
 # Public portal rate limiting
 gem "rack-attack", "~> 6.7"
+# Bound web requests so a stuck upstream or query cannot occupy a Puma thread forever.
+gem "rack-timeout", "~> 0.7", require: "rack/timeout/base"
 
 # Pagination — dependency-free
 gem "pagy", "~> 9.4"

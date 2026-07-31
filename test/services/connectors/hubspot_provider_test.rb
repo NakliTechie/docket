@@ -2,8 +2,9 @@ require "test_helper"
 
 class Connectors::HubspotProviderTest < ActiveSupport::TestCase
   class FakeResponse
-    def initialize(code, body) = (@code = code; @body = body)
+    def initialize(code, body, headers = {}) = (@code = code; @body = body; @headers = headers)
     attr_reader :code, :body
+    def [](name) = @headers[name]
   end
   class FakeHttp
     attr_reader :last
@@ -14,9 +15,17 @@ class Connectors::HubspotProviderTest < ActiveSupport::TestCase
     def request(req) = (@last = req; @r)
   end
   def with_http(code, body = "{}")
+    with_http_seq([ code, body ]) { |requests| yield requests }
+  end
+  def with_http_seq(*responses)
     captured = []
+    index = -1
     original = Net::HTTP.method(:new)
-    Net::HTTP.define_singleton_method(:new) { |*_a| FakeHttp.new(FakeResponse.new(code.to_s, body)).tap { |h| captured << h } }
+    Net::HTTP.define_singleton_method(:new) do |*_a|
+      index += 1
+      code, body, headers = responses[index] || responses.last
+      FakeHttp.new(FakeResponse.new(code.to_s, body, headers || {})).tap { |h| captured << h }
+    end
     yield captured
   ensure
     Net::HTTP.define_singleton_method(:new, original)
@@ -126,7 +135,7 @@ class Connectors::HubspotProviderTest < ActiveSupport::TestCase
       assert_equal "Byron", records.last["lastname"]
 
       req = reqs.last.last
-      assert_equal "/crm/v3/objects/contacts?properties=email,firstname,lastname,phone", req.path
+      assert_equal "/crm/v3/objects/contacts?properties=email%2Cfirstname%2Clastname%2Cphone&limit=100", req.path
       assert_kind_of Net::HTTP::Get, req
       assert_equal "Bearer pat-na1-secret", req["Authorization"]
     end
@@ -135,6 +144,18 @@ class Connectors::HubspotProviderTest < ActiveSupport::TestCase
   test "fetch returns an empty array when there are no results" do
     with_http(200, %({"results":[]})) do |_reqs|
       assert_equal [], provider.fetch
+    end
+  end
+
+  test "fetch follows every contacts cursor" do
+    first = { "results" => [ { "id" => "1", "properties" => { "email" => "one@example.test" } } ],
+              "paging" => { "next" => { "after" => "cursor-1" } } }.to_json
+    second = { "results" => [ { "id" => "2", "properties" => { "email" => "two@example.test" } } ] }.to_json
+
+    with_http_seq([ 200, first ], [ 200, second ]) do |requests|
+      records = provider.fetch
+      assert_equal %w[1 2], records.map { |record| record["id"] }
+      assert_includes requests.last.last.path, "after=cursor-1"
     end
   end
 

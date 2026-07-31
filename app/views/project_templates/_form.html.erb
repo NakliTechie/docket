@@ -1,0 +1,35 @@
+<%= form_with model: template, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: template %>
+  <div class="form-row"><%= f.label :name, t("project_templates.fields.name") %>
+    <%= f.text_field :name, required: true %></div>
+  <div class="form-row"><%= f.label :key_prefix, t("project_templates.fields.key_prefix") %>
+    <%= f.text_field :key_prefix, required: true, maxlength: 10, pattern: "[A-Za-z][A-Za-z0-9]{1,9}" %></div>
+  <div class="form-row"><%= f.label :description, t("project_templates.fields.description") %>
+    <%= f.text_area :description %></div>
+  <label class="checkbox-row"><%= f.check_box :active %><%= t("project_templates.fields.active") %></label>
+
+  <fieldset><legend><%= t("project_templates.fields.items") %></legend>
+    <%= f.fields_for :project_template_items do |item_fields| %>
+      <div class="panel">
+        <div class="form-row"><%= item_fields.label :title, t("project_templates.fields.item_title") %>
+          <%= item_fields.text_field :title %></div>
+        <div class="form-grid">
+          <div class="form-row"><%= item_fields.label :kind, t("work_items.fields.kind") %>
+            <%= item_fields.select :kind, WorkItem.kinds.keys.map { |kind| [t("work_items.enum.kind.#{kind}"), kind] } %></div>
+          <div class="form-row"><%= item_fields.label :priority, t("work_items.fields.priority") %>
+            <%= item_fields.select :priority, WorkItem.priorities.keys.map { |priority| [t("work_items.enum.priority.#{priority}"), priority] } %></div>
+          <div class="form-row"><%= item_fields.label :due_offset_days, t("project_templates.fields.due_offset_days") %>
+            <%= item_fields.number_field :due_offset_days, min: 0 %></div>
+          <div class="form-row"><%= item_fields.label :estimate, t("work_items.fields.estimate") %>
+            <%= item_fields.number_field :estimate, min: 0, step: 0.25 %></div>
+        </div>
+        <% if item_fields.object.persisted? %>
+          <label class="checkbox-row"><%= item_fields.check_box :_destroy %><%= t("actions.delete") %></label>
+        <% end %>
+      </div>
+    <% end %>
+  </fieldset>
+  <p class="form-hint"><%= t("project_templates.form.items_hint") %></p>
+  <div class="form-actions"><%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), project_templates_path, class: "btn" %></div>
+<% end %>

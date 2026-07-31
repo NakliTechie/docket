@@ -113,6 +113,23 @@
       <%= label_tag :outbound_email_from, t(".fields.outbound_email_from") %>
       <%= text_field_tag :outbound_email_from, Setting.get("outbound_email_from"), placeholder: "support@example.com" %>
     </div>
+    <div class="checkbox-row form-row">
+      <%= hidden_field_tag :notification_email_enabled, "0" %>
+      <%= check_box_tag :notification_email_enabled, "1",
+                        Setting.get("notification_email_enabled", false) == true %>
+      <%= label_tag :notification_email_enabled, t(".fields.notification_email_enabled") %>
+    </div>
+    <div class="form-row checkbox-row">
+      <%= hidden_field_tag :csat_enabled, "0" %>
+      <%= check_box_tag :csat_enabled, "1", Setting.get("csat_enabled", false) == true %>
+      <%= label_tag :csat_enabled, t(".fields.csat_enabled") %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sla_risk_minutes, t(".fields.sla_risk_minutes") %>
+      <%= number_field_tag :sla_risk_minutes, Setting.get("sla_risk_minutes", 60),
+                           min: 1, max: 10_080 %>
+      <p class="form-hint"><%= t(".fields.sla_risk_minutes_hint") %></p>
+    </div>
   </fieldset>
   </details>
 
@@ -150,6 +167,12 @@
       <%= label_tag :sso_staff_oidc_client_secret, t(".fields.oidc_client_secret") %>
       <%= password_field_tag :sso_staff_oidc_client_secret, nil, autocomplete: "off",
             placeholder: Setting.get("sso_staff_oidc_client_secret").present? ? t(".fields.secret_set") : "" %>
+    </div>
+    <div class="form-row">
+      <%= label_tag :sso_staff_jit_domains, t(".fields.jit_domains") %>
+      <%= text_field_tag :sso_staff_jit_domains, Setting.get("sso_staff_jit_domains"),
+            placeholder: "example.com, subsidiary.example.com" %>
+      <p class="form-hint"><%= t(".fields.jit_domains_hint") %></p>
     </div>
     <div class="form-row">
       <%= label_tag :sso_staff_role_claim, t(".fields.role_claim") %>

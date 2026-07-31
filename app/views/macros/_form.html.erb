@@ -14,6 +14,37 @@
     <% macro.errors[:body].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
   </div>
 
+  <fieldset class="fieldset">
+    <legend><%= t("macros.form.actions") %></legend>
+    <p class="form-hint"><%= t("macros.form.actions_hint") %></p>
+    <div class="form-row">
+      <%= f.label :message_kind, t("macros.fields.message_kind") %>
+      <%= f.select :message_kind,
+            %w[public_reply internal_note].map { |kind| [t("messages.enum.kind.#{kind}"), kind] },
+            { include_blank: t("macros.values.keep") } %>
+    </div>
+    <div class="form-row">
+      <%= f.label :set_status, t("macros.fields.set_status") %>
+      <%= f.select :set_status, Case.statuses.keys.map { |status|
+            [t("cases.enum.status.#{status}"), status] }, { include_blank: t("macros.values.keep") } %>
+    </div>
+    <div class="form-row">
+      <%= f.label :set_priority, t("macros.fields.set_priority") %>
+      <%= f.select :set_priority, Case.priorities.keys.map { |priority|
+            [t("cases.enum.priority.#{priority}"), priority] }, { include_blank: t("macros.values.keep") } %>
+    </div>
+    <div class="form-row">
+      <%= f.label :set_queue_id, t("macros.fields.set_queue") %>
+      <%= f.collection_select :set_queue_id, CaseQueue.order(:name), :id, :name,
+            { include_blank: t("macros.values.keep") } %>
+    </div>
+    <div class="form-row">
+      <%= f.label :set_assignee_id, t("macros.fields.set_assignee") %>
+      <%= f.collection_select :set_assignee_id, User.case_assignees.order(:name), :id, :name,
+            { include_blank: t("macros.values.keep") } %>
+    </div>
+  </fieldset>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), macros_path, class: "btn" %>

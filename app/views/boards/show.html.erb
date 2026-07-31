@@ -40,9 +40,11 @@
        data-kanban-param-value="workflow_state_id">
     <% @states.each do |state| %>
       <% items = @items_by_state[state.id] || [] %>
-      <% over = state.over_wip_limit?(items.size) %>
+      <% total = @totals_by_state[state.id].to_i %>
+      <% over = state.over_wip_limit?(total) %>
       <section class="kanban-column<%= " is-over-wip" if over %>"
                data-target-id="<%= state.id %>"
+               data-total-count="<%= total %>"
                data-wip-limit="<%= state.wip_limit %>"
                data-board-target="column"
                aria-label="<%= state.name %>"
@@ -52,7 +54,6 @@
                   aria-label="<%= t(".toggle_column", name: state.name) %>">
             <%= state.name %>
           </button>
-          <% total = @totals_by_state[state.id].to_i %>
           <span class="kanban-count"><%= total %></span>
           <% if state.wip_limit.present? %>
             <span class="kanban-wip<%= " is-over" if over %>"
@@ -60,15 +61,16 @@
           <% end %>
         </h2>
 
-        <% if over %>
-          <p class="board-wip-warning"><%= t(".over_wip", limit: state.wip_limit) %></p>
+        <% if state.wip_limit.present? %>
+          <p class="board-wip-warning" <%= "hidden" unless over %>><%= t(".over_wip", limit: state.wip_limit) %></p>
         <% end %>
 
         <div class="kanban-cards">
           <% items.each do |item| %>
-            <article class="kanban-card" draggable="true" data-item-id="<%= item.id %>"
+            <% draggable = policy(item).transition? %>
+            <article class="kanban-card" draggable="<%= draggable %>" data-item-id="<%= item.id %>"
                      data-board-target="card"
-                     data-action="dragstart->kanban#dragstart dragend->kanban#dragend">
+                     <% if draggable %>data-action="dragstart->kanban#dragstart dragend->kanban#dragend"<% end %>>
               <div class="kanban-card-head">
                 <%= link_to item.reference, work_item_path(item), class: "mono" %>
                 <span class="badge badge-<%= item.priority %>"><%= item.human_priority %></span>

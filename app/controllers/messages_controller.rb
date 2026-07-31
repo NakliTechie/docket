@@ -7,14 +7,24 @@ class MessagesController < ApplicationController
     @message.direction = :outbound
     metadata = {}
     if (macro = Macro.find_by(id: params[:macro_id]))
-      metadata.merge!("macro_id" => macro.id, "macro_name" => macro.name)
+      metadata.merge!("macro_id" => macro.id, "macro_name" => macro.name,
+                      "macro_actions" => macro.actions_summary)
+      @message.kind = macro.message_kind if macro.message_kind.present?
     end
     # Suggested-reply usage is noted for audit (handoff §4).
     metadata["ai_suggested"] = true if params[:ai_suggested] == "true"
+    if @message.kind_public_reply? && Current.user.email_signature.present?
+      metadata["signature"] = Current.user.email_signature
+    end
     @message.metadata = metadata.presence
     authorize @message
 
-    if @message.save
+    saved = Message.transaction do
+      @message.save! if @message.valid?
+      macro&.apply_to!(@case, requested_by: Current.user) if @message.persisted?
+      @message.persisted?
+    end
+    if saved
       redirect_to case_path(@case), notice: t(".created")
     else
       # Preserve the typed reply so a save failure (e.g. a rejected
@@ -24,6 +34,10 @@ class MessagesController < ApplicationController
                   alert: @message.errors.full_messages.to_sentence,
                   flash: { compose_body: @message.body }
     end
+  rescue ActiveRecord::RecordInvalid, Case::InvalidTransition => error
+    @message.errors.add(:base, error.message) if @message.errors.empty?
+    redirect_to case_path(@case), alert: @message.errors.full_messages.to_sentence,
+                flash: { compose_body: @message.body }
   end
 
   private

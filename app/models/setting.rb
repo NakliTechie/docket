@@ -4,6 +4,12 @@
 class Setting < ApplicationRecord
   include Audited
 
+  # Encrypt all values because the same nullable-fallback table mixes ordinary
+  # configuration with LLM and OIDC secrets. Encrypting the whole attribute
+  # avoids a fragile key-name-dependent storage path while preserving key-based
+  # lookup and tenant fallback semantics.
+  encrypts :value, key_provider: Docket::VaultKeyring.current.provider
+
   SECRET_KEY_PATTERN = /(_secret|_password|_api_key|_client_secret|_token)\z/
   PROBABILITY_KEYS = %w[ai_route_confidence ai_resolve_confidence].freeze
 

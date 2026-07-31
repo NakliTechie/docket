@@ -8,11 +8,12 @@ class Connector < ApplicationRecord
   include TenantReferentialIntegrity
 
   # Credential vault: secrets (api keys, tokens) encrypted at rest.
-  encrypts :credentials
+  encrypts :credentials, key_provider: Docket::VaultKeyring.current.provider
   # OAuth2 access/refresh token bundle, encrypted at rest — kept SEPARATE from
   # the operator-entered `credentials` (client secret) so saving the admin form
   # never clobbers a live connection's tokens.
-  encrypts :oauth_credentials
+  encrypts :oauth_credentials, key_provider: Docket::VaultKeyring.current.provider
+  encrypts :webhook_secret, key_provider: Docket::VaultKeyring.current.provider
 
   TARGETS = %w[contacts leads deals cases].freeze
 
@@ -159,7 +160,7 @@ class Connector < ApplicationRecord
   end
 
   def audit_redacted_attributes
-    super | %w[credentials webhook_secret]
+    super | %w[credentials oauth_credentials webhook_secret]
   end
 
   private

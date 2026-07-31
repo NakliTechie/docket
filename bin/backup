@@ -10,6 +10,7 @@
 #
 # Exits non-zero if ANY part fails — a backup that half-worked is not a backup.
 set -euo pipefail
+umask 077
 
 DEST="${1:-${DOCKET_BACKUP_DIR:-}}"
 if [ -z "$DEST" ]; then
@@ -25,6 +26,11 @@ OUT="$DEST/docket-$STAMP"
 mkdir -p "$OUT"
 
 : "${DATABASE_URL:?DATABASE_URL must be set}"
+: "${DOCKET_BACKUP_SIGNING_KEY:?DOCKET_BACKUP_SIGNING_KEY must be a private 64-character hex key}"
+if [[ ! "$DOCKET_BACKUP_SIGNING_KEY" =~ ^[0-9a-fA-F]{64}$ ]]; then
+  echo "DOCKET_BACKUP_SIGNING_KEY must be exactly 64 hexadecimal characters" >&2
+  exit 64
+fi
 
 # H20: derive the sibling DB URLs by appending the suffix to the database NAME,
 # BEFORE any ?query — concatenating onto the whole URL corrupts one carrying
@@ -46,7 +52,11 @@ dump() {
 }
 
 echo "Docket backup -> $OUT"
-dump primary "$DATABASE_URL"
+echo "  dumping primary with a frozen external audit checkpoint"
+DOCKET_PRIMARY_DUMP_PATH="$OUT/primary.dump" \
+DOCKET_BACKUP_CHECKPOINT_PATH="$OUT/audit_checkpoint.json" \
+  bin/rails runner \
+  'AuditCheckpoint.capture_backup!(dump_path: ENV.fetch("DOCKET_PRIMARY_DUMP_PATH"), checkpoint_path: ENV.fetch("DOCKET_BACKUP_CHECKPOINT_PATH"))'
 dump cache   "$CACHE_URL"
 dump queue   "$QUEUE_URL"
 dump cable   "$CABLE_URL"
@@ -67,10 +77,27 @@ docket backup
 taken_at: $STAMP
 host: $(hostname)
 databases: primary cache queue cable
+audit_checkpoint: present
 storage: $([ -f "$OUT/storage.tar.gz" ] && echo present || echo MISSING)
 restore: bin/restore $OUT
 verify_after_restore: bin/rails audit:verify
 MANIFEST
+
+# Authenticate every restorable byte with a key that is retained outside the
+# backup. Hashes catch accidental damage; the HMAC prevents an attacker who can
+# rewrite backup media from replacing both a file and its checksum.
+(
+  cd "$OUT"
+  sha256sum primary.dump cache.dump queue.dump cable.dump storage.tar.gz \
+    audit_checkpoint.json MANIFEST.txt > SHA256SUMS
+)
+DOCKET_MANIFEST_PATH="$OUT/SHA256SUMS" DOCKET_SIGNATURE_PATH="$OUT/SHA256SUMS.hmac" \
+  ruby -ropenssl -rbase64 -e '
+    key = [ENV.fetch("DOCKET_BACKUP_SIGNING_KEY")].pack("H*")
+    data = File.binread(ENV.fetch("DOCKET_MANIFEST_PATH"))
+    File.binwrite(ENV.fetch("DOCKET_SIGNATURE_PATH"), Base64.strict_encode64(OpenSSL::HMAC.digest("SHA256", key, data)) + "\n")
+  '
+chmod 600 "$OUT"/*
 
 echo "OK  $(du -sh "$OUT" | cut -f1) in $OUT"
 echo "Restore with: bin/restore $OUT"

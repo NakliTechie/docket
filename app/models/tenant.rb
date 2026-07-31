@@ -17,6 +17,8 @@ class Tenant < ApplicationRecord
   validates :subdomain, uniqueness: true, allow_blank: true,
             format: { with: /\A[a-z0-9][a-z0-9-]*\z/ }, allow_nil: true
 
+  after_update_commit :quiesce_background_work, if: -> { saved_change_to_status? && suspended? }
+
   # Deployment topology (set from DOCKET_DEPLOYMENT_MODE in the tenancy
   # initializer). isolated = one DB per client (default, the procurement asset);
   # shared = many tenants on shared infra, resolved by subdomain.
@@ -46,7 +48,37 @@ class Tenant < ApplicationRecord
   # runs before it and must read per-tenant settings — M1). isolated → the
   # singleton; shared → the active tenant for the subdomain, or nil (unknown).
   def self.resolve_by_subdomain(subdomain)
-    shared_deployment? ? active.find_by(subdomain: subdomain.presence) : primary
+    return primary if isolated_deployment?
+    return if subdomain.blank?
+
+    active.find_by(subdomain: subdomain)
+  end
+
+  def self.resolve_by_host(host)
+    return primary if isolated_deployment?
+
+    subdomain = subdomain_from_host(host)
+    subdomain.present? ? active.find_by(subdomain: subdomain) : nil
+  end
+
+  def self.subdomain_from_host(host)
+    host = host.to_s.downcase.delete_suffix(".")
+    return if host.blank?
+
+    base_domain = ENV["DOCKET_BASE_DOMAIN"].to_s.downcase
+                     .delete_prefix(".").delete_suffix(".").presence
+    if base_domain
+      suffix = ".#{base_domain}"
+      return unless host.end_with?(suffix)
+
+      candidate = host.delete_suffix(suffix)
+      return candidate if candidate.match?(/\A[a-z0-9][a-z0-9-]*\z/)
+
+      return
+    end
+
+    candidate = host.split(".").first
+    candidate if candidate&.match?(/\A[a-z0-9][a-z0-9-]*\z/)
   end
 
   # ── Entitlements ───────────────────────────────────────────────────────────
@@ -96,6 +128,10 @@ class Tenant < ApplicationRecord
   end
 
   private
+
+  def quiesce_background_work
+    Tenants::Quiesce.call(tenant: self)
+  end
 
   def entitlements_keys_are_known
     if entitlements.nil?

@@ -16,6 +16,39 @@
     <p class="form-hint"><%= t("routing_rules.form.active_hint") %></p>
   </div>
 
+  <fieldset data-controller="routing-rule-trigger">
+    <legend><%= t("routing_rules.form.trigger_legend") %></legend>
+    <div class="form-row">
+      <%= f.label :trigger_type, t("routing_rules.fields.trigger_type") %>
+      <%= f.select :trigger_type,
+            RoutingRule.trigger_types.keys.map { |trigger| [ t("routing_rules.enum.trigger_type.#{trigger}"), trigger ] },
+            {}, data: { routing_rule_trigger_target: "type", action: "routing-rule-trigger#sync" } %>
+      <p class="form-hint"><%= t("routing_rules.form.trigger_hint") %></p>
+    </div>
+
+    <div data-routing-rule-trigger-target="schedule">
+      <div class="form-row">
+        <%= f.label :if_status, t("routing_rules.fields.if_status") %>
+        <%= f.select :if_status, Case.statuses.keys.map { |status| [ t("cases.enum.status.#{status}"), status ] },
+              { include_blank: t("routing_rules.form.choose_status") } %>
+      </div>
+
+      <div class="form-row">
+        <%= f.label :after_minutes, t("routing_rules.fields.after_minutes") %>
+        <%= f.number_field :after_minutes, min: 1, max: 525_600, step: 1 %>
+        <p class="form-hint"><%= t("routing_rules.form.after_minutes_hint") %></p>
+      </div>
+
+      <div class="form-row">
+        <label class="checkbox-row">
+          <%= f.check_box :use_business_hours %>
+          <%= t("routing_rules.fields.use_business_hours") %>
+        </label>
+        <p class="form-hint"><%= t("routing_rules.form.business_hours_hint") %></p>
+      </div>
+    </div>
+  </fieldset>
+
   <fieldset>
     <legend><%= t("routing_rules.form.conditions_legend") %></legend>
     <p class="form-hint"><%= t("routing_rules.form.conditions_hint") %></p>
@@ -76,7 +109,7 @@
 
     <div class="form-row">
       <%= f.label :then_assignee_id, t("routing_rules.fields.then_assignee") %>
-      <%= f.collection_select :then_assignee_id, User.active.staff.order(:name), :id, :display_label,
+      <%= f.collection_select :then_assignee_id, User.case_assignees.order(:name), :id, :display_label,
             { include_blank: t("routing_rules.form.unassigned") } %>
       <% rule.errors[:then_assignee_id].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
     </div>

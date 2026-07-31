@@ -9,9 +9,13 @@ module CaseRouting
 
   # → the matching RoutingRule (truthy) or false.
   def apply(kase)
-    rule = RoutingRule.active.ordered.detect { |r| r.matches?(kase) }
+    rule = RoutingRule.active.intake.ordered.detect { |r| r.matches?(kase) }
     return false unless rule
 
+    apply_rule(kase, rule, complete_triage: true)
+  end
+
+  def apply_rule(kase, rule, complete_triage:)
     attrs = { routed_by_rule_id: rule.id }
     attrs[:queue] = rule.then_queue if rule.then_queue_id
     attrs[:category] = rule.then_category if rule.then_category_id
@@ -21,7 +25,9 @@ module CaseRouting
     kase.update!(attrs)
 
     # No AI loop will triage this case → the rule's routing is its triage.
-    kase.transition_to!(:triaged) if kase.status_new? && !kase.ai_triage_eligible?
+    if complete_triage && kase.status_new? && !kase.ai_triage_eligible?
+      kase.guarded_transition_to(:triaged)
+    end
     rule
   end
 
@@ -35,21 +41,21 @@ module CaseRouting
       return nil unless queue
 
       case rule.then_assignment
-      when "specific_user" then (rule.then_assignee if rule.then_assignee&.active?)
+      when "specific_user" then (rule.then_assignee if rule.then_assignee&.case_assignee?)
       when "round_robin"   then round_robin(queue)
       when "least_loaded"  then least_loaded(queue)
       end
     end
 
     def members(queue)
-      queue.members.where(active: true).order(:id).to_a
+      queue.members.merge(User.case_assignees).order(:id).to_a
     end
 
     # Stateless rotation: distribute by the queue's case count.
     def round_robin(queue)
       pool = members(queue)
       return nil if pool.empty?
-      pool[Case.where(queue_id: queue.id).count % pool.size]
+      pool[Case.canonical.where(queue_id: queue.id).count % pool.size]
     end
 
     # The active member with the fewest open assigned cases.

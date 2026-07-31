@@ -37,6 +37,22 @@ module Api
       assert item.reload.done?
     end
 
+    test "an ordinary API patch cannot bypass a guarded Work transition" do
+      item = work_items(:pep_one)
+      done = workflow_states(:pep_done)
+      ApprovalProcess.create!(name: "API done review", trigger_type: :work_item_transition,
+                              trigger_key: "PEP:Done")
+
+      patch "/api/v1/work_items/#{item.id}",
+            params: { work_item: { title: "API safe edit", workflow_state_id: done.id } },
+            headers: auth_header(@token), as: :json
+
+      assert_response :accepted
+      assert_equal "API safe edit", item.reload.title
+      assert_equal workflow_states(:pep_backlog), item.workflow_state
+      assert_equal done.id.to_s, response.parsed_body.dig("approval_request", "requested_action")
+    end
+
     test "sprints close over the API and report what moved" do
       sprint = projects(:pep).sprints.create!(name: "S1", status: :active)
       work_items(:pep_one).update!(sprint: sprint)

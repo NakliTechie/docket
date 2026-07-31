@@ -18,7 +18,7 @@ class SalesReportsTest < ActionDispatch::IntegrationTest
     get sales_report_path(format: :csv)
     assert_response :success
     assert_equal "text/csv", @response.media_type
-    assert_match "section,label,count,value_rupees,from,to", response.body
+    assert_match "section,label,count,value,currency,from,to", response.body
   end
 
   test "the nav links a sales rep to the sales report under CRM" do

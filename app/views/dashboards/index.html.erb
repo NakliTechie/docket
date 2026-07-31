@@ -1,7 +1,7 @@
 <% page_title t(".title") %>
 <% op = @overview.operational %>
-<% act = @overview.activity.stats %>
-<% sal = @overview.sales.stats %>
+<% act = @overview.activity&.stats %>
+<% sal = @overview.sales&.stats %>
 
 <div class="page-header">
   <h1><%= t(".title") %></h1>
@@ -43,6 +43,7 @@
         <dd><%= t(".reply_share_value", ai: act[:agent_turns], human: act[:human_replies]) %></dd>
       </dl>
       <%= link_to t(".view_cases"), cases_path, class: "btn btn-ghost btn-sm" %>
+      <%= link_to t(".view_csat"), csat_report_path(from: @from, to: @to), class: "btn btn-ghost btn-sm" %>
     </div>
 
     <div class="panel">
@@ -107,8 +108,8 @@
 <div class="panel">
   <h2 class="panel-title"><%= t(".sales") %></h2>
   <dl class="meta-list">
-    <dt><%= t(".open_pipeline") %></dt><dd><%= format_cents(sal[:open_value_cents]) %></dd>
-    <dt><%= t(".weighted_forecast") %></dt><dd><%= format_cents(sal[:weighted_value_cents]) %></dd>
+    <dt><%= t(".open_pipeline") %></dt><dd><%= format_money_totals(sal[:open_values_by_currency]) %></dd>
+    <dt><%= t(".weighted_forecast") %></dt><dd><%= format_money_totals(sal[:weighted_values_by_currency]) %></dd>
     <dt><%= t(".win_rate") %></dt>
     <dd><%= sal[:win_rate] ? t(".percent", value: sal[:win_rate]) : "—" %></dd>
     <dt><%= t(".avg_days_to_win") %></dt>

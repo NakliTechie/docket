@@ -9,6 +9,8 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=3.3.6
+FROM docker.io/library/postgres:16-bookworm AS postgres-client
+
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 # Rails app lives here
@@ -19,6 +21,12 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libpq5 libvips && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# bin/backup and bin/restore run beside Rails so the audit checkpoint and the
+# database snapshot are captured under one lock. Ship server-major-matched
+# clients instead of relying on an arbitrary (and often older) host pg_dump.
+COPY --from=postgres-client /usr/lib/postgresql/16/bin/pg_dump /usr/local/bin/pg_dump
+COPY --from=postgres-client /usr/lib/postgresql/16/bin/pg_restore /usr/local/bin/pg_restore
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \
@@ -51,8 +59,14 @@ COPY . .
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+# Precompile without production secrets. The fixed build-only vault value is
+# intentionally non-secret and exists only for initializer boot in this layer;
+# runtime still requires the generated/persisted keyring from the entrypoint or
+# an operator-supplied DOCKET_VAULT_KEYS(_PATH).
+RUN SECRET_KEY_BASE_DUMMY=1 \
+    DOCKET_VAULT_INCLUDE_LEGACY_KEY=false \
+    DOCKET_VAULT_KEYS='{"active":"build-only","keys":{"build-only":"0000000000000000000000000000000000000000000000000000000000000000"}}' \
+    ./bin/rails assets:precompile
 
 
 

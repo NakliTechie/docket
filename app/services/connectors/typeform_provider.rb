@@ -20,11 +20,31 @@ module Connectors
     # Pull form responses inbound; each maps onto a Lead via the connector
     # field-mapping. GET /forms/{form_id}/responses → { "items" => [...] }.
     def fetch
-      uri = build_uri(base, "/forms/#{require_config('form_id')}/responses")
-      response = ensure_ok!(get(uri, headers: auth_headers), "Typeform")
-      body = parse_json(response.body)
-      items = body.is_a?(Hash) ? body["items"] : body
-      items.is_a?(Array) ? items : []
+      records = []
+      before = nil
+      seen = Set.new
+
+      loop do
+        query = { page_size: 1_000 }
+        query[:since] = (connector.last_synced_at - 5.minutes).to_i if connector.last_synced_at
+        query[:before] = before if before.present?
+        uri = build_uri(base, "/forms/#{require_config('form_id')}/responses?#{URI.encode_www_form(query)}")
+        response = ensure_ok!(get(uri, headers: auth_headers), "Typeform")
+        body = parse_json(response.body)
+        raise Connectors::Error, "Typeform returned an invalid responses page" unless body.is_a?(Hash)
+
+        items = body["items"]
+        items = [] if items.nil? && body["total_items"].to_i.zero?
+        raise Connectors::Error, "Typeform responses page is missing items" unless items.is_a?(Array)
+        records.concat(items.select { |record| record.is_a?(Hash) })
+        break if items.length < 1_000
+
+        before = items.last.is_a?(Hash) ? items.last["token"].to_s.presence : nil
+        raise Connectors::Error, "Typeform did not provide a pagination token" unless before
+        raise Connectors::Error, "Typeform repeated its pagination token" unless seen.add?(before)
+      end
+
+      records
     end
 
     private

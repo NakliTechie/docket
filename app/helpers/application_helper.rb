@@ -15,6 +15,17 @@ module ApplicationHelper
     number_to_currency((cents || 0) / 100.0, unit: "₹", precision: 0)
   end
 
+  def format_money(cents, currency)
+    code = currency.to_s.upcase.presence || "INR"
+    number_to_currency((cents || 0) / 100.0, unit: "#{code} ", precision: 2)
+  end
+
+  def format_money_totals(totals)
+    return format_money(0, "INR") if totals.blank?
+
+    safe_join(totals.sort.map { |currency, cents| tag.span(format_money(cents, currency)) }, tag.br)
+  end
+
   # Inline SVG sprite reference (vendored icons, no icon font, no CDN).
   def icon(name, size: 16, **options)
     options[:class] = [ "icon", options[:class] ].compact.join(" ")
@@ -77,6 +88,14 @@ module ApplicationHelper
 
   def nav_section(label)
     tag.span(label, class: "nav-menu-section")
+  end
+
+  def first_run_setup?
+    return false unless authenticated? && Current.user
+    return false unless PlatformAreaPolicy.new(Current.user, :settings).show?
+
+    @first_run_setup ||= SetupProgress.new(actor: Current.user, base_url: request.base_url)
+                                      .needs_attention?
   end
 
   # Single-key status shortcuts on the case view; documented in the
