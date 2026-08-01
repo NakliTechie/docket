@@ -1189,10 +1189,13 @@ hi:
     fields:
       name: "नाम"
       kind: "प्रकार"
+      parent: "मूल खाता"
       external_ref: "बाह्य संदर्भ"
       notes: "टिप्पणियाँ"
     form:
       external_ref_hint: "इस संगठन के लिए आपका अपना कोड (जैसे शाखा कोड)।"
+      no_parent: "कोई नहीं (शीर्ष-स्तरीय खाता)"
+      parent_hint: "खाता-पदानुक्रम रिपोर्टिंग के लिए इस खाते को किसी मूल खाते के अंतर्गत रखें।"
     index:
       title: "संगठन"
       new_organisation: "नया संगठन"
@@ -1207,6 +1210,8 @@ hi:
       confirm_delete: "यह संगठन हटाएँ?"
       contacts: "संपर्क"
       no_contacts: "इस संगठन में अभी कोई संपर्क नहीं"
+      parent: "मूल खाता"
+      sub_accounts: "उप-खाते"
     new:
       title: "नया संगठन"
     edit:

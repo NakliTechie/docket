@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_120000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -893,10 +893,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_110000) do
     t.string "kind", default: "department", null: false
     t.string "name", null: false
     t.text "notes"
+    t.integer "parent_id"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_organisations_on_deleted_at"
     t.index ["external_ref"], name: "index_organisations_on_external_ref"
+    t.index ["parent_id"], name: "index_organisations_on_parent_id"
     t.index ["tenant_id", "name"], name: "index_organisations_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_organisations_on_tenant_id"
   end
@@ -1703,6 +1705,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_110000) do
   add_foreign_key "notifications", "tenants"
   add_foreign_key "notifications", "users"
   add_foreign_key "oauth_access_tokens", "service_accounts"
+  add_foreign_key "organisations", "organisations", column: "parent_id", on_delete: :nullify
   add_foreign_key "organisations", "tenants"
   add_foreign_key "pipeline_stages", "pipelines"
   add_foreign_key "pipelines", "tenants"

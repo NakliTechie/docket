@@ -13,6 +13,14 @@
 </div>
 
 <p class="muted"><%= @organisation.human_kind %><% if @organisation.external_ref.present? %> · <span class="mono"><%= @organisation.external_ref %></span><% end %></p>
+<% if @organisation.parent %>
+  <p class="muted"><%= t(".parent") %>: <%= link_to @organisation.parent.name, organisation_path(@organisation.parent) %></p>
+<% end %>
+<% if @organisation.children.any? %>
+  <p class="muted"><%= t(".sub_accounts") %>:
+    <%= safe_join(@organisation.children.order(:name).map { |child| link_to(child.name, organisation_path(child)) }, ", ") %>
+  </p>
+<% end %>
 <% if @organisation.notes.present? %><p><%= @organisation.notes %></p><% end %>
 
 <h2><%= t(".contacts") %></h2>
