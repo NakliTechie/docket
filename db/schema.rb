@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_160000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -512,6 +512,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
     t.index ["subject_type", "subject_id"], name: "index_decisions_on_subject_type_and_subject_id"
     t.index ["tenant_id", "rule", "subject_type", "subject_id"], name: "index_decisions_unique_per_tenant_rule_subject", unique: true
     t.index ["tenant_id"], name: "index_decisions_on_tenant_id"
+  end
+
+  create_table "deliverable_studies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "deliverable_id", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "work_item_id", null: false
+    t.index ["deliverable_id", "work_item_id"], name: "index_deliverable_studies_uniqueness", unique: true
+    t.index ["deliverable_id"], name: "index_deliverable_studies_on_deliverable_id"
+    t.index ["tenant_id"], name: "index_deliverable_studies_on_tenant_id"
+    t.index ["work_item_id"], name: "index_deliverable_studies_on_work_item_id"
+  end
+
+  create_table "deliverables", force: :cascade do |t|
+    t.text "approval_reason"
+    t.integer "approved_by_id"
+    t.datetime "created_at", null: false
+    t.integer "deal_id", null: false
+    t.datetime "deleted_at"
+    t.datetime "issued_at"
+    t.integer "project_id"
+    t.json "scope_items", default: [], null: false
+    t.integer "status", default: 0, null: false
+    t.integer "submitted_by_id"
+    t.text "summary"
+    t.integer "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_deliverables_on_approved_by_id"
+    t.index ["deal_id"], name: "index_deliverables_on_deal_id"
+    t.index ["project_id"], name: "index_deliverables_on_project_id"
+    t.index ["submitted_by_id"], name: "index_deliverables_on_submitted_by_id"
+    t.index ["tenant_id", "deal_id"], name: "index_deliverables_on_tenant_id_and_deal_id"
+    t.index ["tenant_id", "status"], name: "index_deliverables_on_tenant_id_and_status"
+    t.index ["tenant_id"], name: "index_deliverables_on_tenant_id"
   end
 
   create_table "import_conflicts", force: :cascade do |t|
@@ -1461,6 +1497,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
   add_foreign_key "decision_appeals", "tenants"
   add_foreign_key "decision_appeals", "users", column: "reviewed_by_id"
   add_foreign_key "decisions", "tenants"
+  add_foreign_key "deliverable_studies", "deliverables", on_delete: :cascade
+  add_foreign_key "deliverable_studies", "tenants", on_delete: :cascade
+  add_foreign_key "deliverable_studies", "work_items", on_delete: :cascade
+  add_foreign_key "deliverables", "deals", on_delete: :cascade
+  add_foreign_key "deliverables", "projects", on_delete: :nullify
+  add_foreign_key "deliverables", "tenants", on_delete: :cascade
+  add_foreign_key "deliverables", "users", column: "approved_by_id", on_delete: :nullify
+  add_foreign_key "deliverables", "users", column: "submitted_by_id", on_delete: :nullify
   add_foreign_key "import_conflicts", "import_identities"
   add_foreign_key "import_conflicts", "import_runs"
   add_foreign_key "import_conflicts", "tenants"

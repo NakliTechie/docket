@@ -743,6 +743,20 @@ hi:
     engage:
       created: "एंगेजमेंट प्रोजेक्ट %{project} बनाया गया।"
 
+  deliverables:
+    enum:
+      status:
+        draft: "मसौदा"
+        in_review: "समीक्षाधीन"
+        approved: "अनुमोदित"
+        issued: "जारी"
+    fields:
+      title: "शीर्षक"
+      summary: "सारांश"
+      status: "स्थिति"
+      deal: "सौदा"
+      project: "एंगेजमेंट"
+
   deal_line_items:
     create:
       created: "उत्पाद सौदे में जोड़ा गया।"
