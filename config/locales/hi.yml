@@ -333,6 +333,7 @@ hi:
         walk_in: "प्रत्यक्ष आगमन"
         whatsapp: "व्हाट्सऐप"
         telegram: "टेलीग्राम"
+        sms: "एसएमएस"
     sort:
       created_at: "बनाया गया"
       priority: "प्राथमिकता"

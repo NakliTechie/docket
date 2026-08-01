@@ -333,6 +333,7 @@ en:
         walk_in: "Walk-in"
         whatsapp: "WhatsApp"
         telegram: "Telegram"
+        sms: "SMS"
     sort:
       created_at: "Created"
       priority: "Priority"

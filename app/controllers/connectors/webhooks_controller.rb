@@ -30,7 +30,9 @@ module Connectors
 
       if connector.ingests?
         return head :unauthorized unless connector.provider_instance.inbound_authentic?(request)
-        Connectors::Inbound.process(connector, parsed_payload)
+        # The provider decides how to read its own body (JSON, or form-encoded
+        # for SMS providers) — see Provider#inbound_payload.
+        Connectors::Inbound.process(connector, connector.provider_instance.inbound_payload(request))
         head :ok
       else
         return head :unauthorized unless valid_signature?(connector)

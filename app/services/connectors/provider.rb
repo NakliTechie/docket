@@ -109,6 +109,13 @@ module Connectors
       ActiveSupport::SecurityUtils.secure_compare(provided, expected)
     end
 
+    # Extract the raw payload the webhook controller hands to #ingest. Default:
+    # parse the JSON body. Providers whose platform posts form-encoded webhooks
+    # (e.g. Twilio SMS) override this to read the form params instead.
+    def inbound_payload(request)
+      JSON.parse(request.raw_post.presence || "{}")
+    end
+
     # Normalize a webhook payload into zero or more inbound messages. Each:
     #   { sender: { name:, phone:, external_id: }, external_thread_id:,
     #     body:, channel:, external_message_id: }

@@ -100,4 +100,41 @@ class ConnectorsInboundTest < ActionDispatch::IntegrationTest
     end
     assert_response :accepted
   end
+
+  # --- PG4: SMS inbound (form-encoded Twilio; the signature IS the auth) ---
+
+  def twilio
+    Connector.create!(name: "SMS", provider: "twilio_sms", status: :active,
+                      config: { "account_sid" => "AC1", "from" => "+15550000000" },
+                      credentials_hash: { "auth_token" => "AUTHTOK" })
+  end
+
+  def twilio_signature(token, url, params)
+    data = url + params.sort.map { |key, value| "#{key}#{value}" }.join
+    Base64.strict_encode64(OpenSSL::HMAC.digest("SHA1", token, data))
+  end
+
+  test "a correctly signed Twilio SMS webhook (form-encoded) opens a case on the sms channel" do
+    sms = twilio
+    params = { "From" => "+15551112222", "Body" => "meter reading dispute", "MessageSid" => "SM9" }
+    url = connector_webhook_url(sms, host: "www.example.com")
+    assert_difference "Case.count", 1 do
+      post connector_webhook_path(sms), params: params,
+           headers: { "X-Twilio-Signature" => twilio_signature("AUTHTOK", url, params) }
+    end
+    assert_response :ok
+    kase = Case.order(:id).last
+    assert_equal "sms", kase.channel
+    assert_equal sms, kase.source_connector
+    assert_equal "meter reading dispute", kase.messages.last.body
+  end
+
+  test "a bad Twilio signature is rejected and creates nothing" do
+    sms = twilio
+    assert_no_difference "Case.count" do
+      post connector_webhook_path(sms), params: { "From" => "+1", "Body" => "spoof", "MessageSid" => "SMX" },
+           headers: { "X-Twilio-Signature" => "forged" }
+    end
+    assert_response :unauthorized
+  end
 end

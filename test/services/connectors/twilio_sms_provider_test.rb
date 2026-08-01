@@ -129,4 +129,48 @@ class Connectors::TwilioSmsProviderTest < ActiveSupport::TestCase
   test "an unknown action raises" do
     assert_raises(Connectors::Error) { provider.invoke("nope", {}) }
   end
+
+  # --- inbound (PG4) ---
+
+  def inbound_request(params:, headers: {}, url: "https://desk.example.com/connectors/webhooks/1")
+    Struct.new(:request_parameters, :headers, :original_url, keyword_init: true)
+          .new(request_parameters: params, headers: headers, original_url: url)
+  end
+
+  def twilio_signature(token, url, params)
+    data = url + params.sort.map { |key, value| "#{key}#{value}" }.join
+    Base64.strict_encode64(OpenSSL::HMAC.digest("SHA1", token, data))
+  end
+
+  test "is an inbound (ingesting) provider that reads form params" do
+    assert Connectors::TwilioSmsProvider.ingests?
+    request = inbound_request(params: { "From" => "+1", "Body" => "hi" })
+    assert_equal({ "From" => "+1", "Body" => "hi" }, provider.inbound_payload(request))
+  end
+
+  test "accepts a correctly signed inbound webhook" do
+    url = "https://desk.example.com/connectors/webhooks/1"
+    params = { "From" => "+15551112222", "Body" => "hello", "MessageSid" => "SM1" }
+    sig = twilio_signature("tok-secret", url, params)
+    assert provider.inbound_authentic?(inbound_request(params: params, headers: { "X-Twilio-Signature" => sig }, url: url))
+  end
+
+  test "rejects a bad, missing, or unconfigured inbound signature (fail-closed)" do
+    params = { "From" => "+1", "Body" => "x" }
+    refute provider.inbound_authentic?(inbound_request(params: params, headers: { "X-Twilio-Signature" => "wrong" }))
+    refute provider.inbound_authentic?(inbound_request(params: params, headers: {}))
+    url = "https://desk.example.com/connectors/webhooks/1"
+    sig = twilio_signature("tok-secret", url, params)
+    refute provider(creds: { "auth_token" => "" })
+             .inbound_authentic?(inbound_request(params: params, headers: { "X-Twilio-Signature" => sig }, url: url))
+  end
+
+  test "ingest normalizes an inbound SMS onto the sms channel; drops status callbacks" do
+    msg = provider.ingest({ "From" => "+15551112222", "Body" => "meter issue", "MessageSid" => "SM9" }).sole
+    assert_equal "sms", msg[:channel]
+    assert_equal "+15551112222", msg[:sender][:external_id]
+    assert_equal "meter issue", msg[:body]
+    assert_equal "SM9", msg[:external_message_id]
+    assert_empty provider.ingest({ "MessageStatus" => "delivered", "MessageSid" => "SM9" })
+  end
 end
