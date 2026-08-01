@@ -36,4 +36,9 @@ class Connectors::Msg91ProviderTest < ActiveSupport::TestCase
 
     assert_empty provider.ingest({ "status" => "delivered" })
   end
+
+  test "ingest tolerates a non-object JSON body without raising" do
+    assert_empty provider.ingest([ 1, 2, 3 ])
+    assert_empty provider.ingest("just a string")
+  end
 end

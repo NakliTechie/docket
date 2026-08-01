@@ -33,6 +33,8 @@ module Connectors
     # webhook versions, so accept the common aliases; a payload with no sender
     # (e.g. a delivery report) yields nothing.
     def ingest(payload)
+      return [] unless payload.is_a?(Hash) # a non-object JSON body (array/scalar) is not a message
+
       sender = (payload["sender"] || payload["from"] || payload["mobile"]).to_s
       return [] if sender.blank?
 
