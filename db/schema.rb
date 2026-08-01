@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_130000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -438,6 +438,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_120000) do
     t.index ["deal_id"], name: "index_deal_competitors_on_deal_id"
     t.index ["tenant_id", "deal_id", "competitor_id"], name: "idx_on_tenant_id_deal_id_competitor_id_e0499f3a34", unique: true
     t.index ["tenant_id"], name: "index_deal_competitors_on_tenant_id"
+  end
+
+  create_table "deal_contact_roles", force: :cascade do |t|
+    t.integer "contact_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "deal_id", null: false
+    t.integer "role", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_id"], name: "index_deal_contact_roles_on_contact_id"
+    t.index ["deal_id"], name: "index_deal_contact_roles_on_deal_id"
+    t.index ["tenant_id", "deal_id", "contact_id"], name: "idx_on_tenant_id_deal_id_contact_id_32b9f19b5f", unique: true
+    t.index ["tenant_id"], name: "index_deal_contact_roles_on_tenant_id"
   end
 
   create_table "deal_line_items", force: :cascade do |t|
@@ -1647,6 +1660,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_120000) do
   add_foreign_key "deal_competitors", "competitors", on_delete: :restrict
   add_foreign_key "deal_competitors", "deals", on_delete: :cascade
   add_foreign_key "deal_competitors", "tenants", on_delete: :cascade
+  add_foreign_key "deal_contact_roles", "contacts", on_delete: :cascade
+  add_foreign_key "deal_contact_roles", "deals", on_delete: :cascade
+  add_foreign_key "deal_contact_roles", "tenants", on_delete: :cascade
   add_foreign_key "deal_line_items", "deals", on_delete: :cascade
   add_foreign_key "deal_line_items", "products", on_delete: :restrict
   add_foreign_key "deal_line_items", "tenants", on_delete: :cascade

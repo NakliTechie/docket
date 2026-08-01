@@ -1,4 +1,25 @@
 {
-  "ignored_warnings": [],
+  "ignored_warnings": [
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "364419089deffc9c47e794e0023f424b908b55517fb5eaf084d0e4c724403a41",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/deal_contact_roles_controller.rb",
+      "code": "params.require(:deal_contact_role).permit(:contact_id, :role)",
+      "note": "PG8: `role` here is the DealContactRole enum (decision_maker/champion/influencer/…), not a privilege attribute. Authorization is the deal:write policy; no escalation surface. False positive from Brakeman's generic dangerous-key heuristic."
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "659a0a63a88acad516ffc0f6c31808da2c762667c01887d48eab81bbbad03962",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/api/v1/deal_contact_roles_controller.rb",
+      "code": "params.require(:deal_contact_role).permit(:contact_id, :role)",
+      "note": "PG8: `role` here is the DealContactRole enum, not a privilege attribute. Authorization is the crm:write scope + deal:write policy. False positive from Brakeman's generic dangerous-key heuristic."
+    }
+  ],
   "brakeman_version": "8.0.5"
 }

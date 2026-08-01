@@ -738,6 +738,9 @@ en:
       competitors: "Competitors"
       add_competitor: "Add competitor"
       no_competitors: "No competitors linked."
+      contact_roles: "Contact roles"
+      add_contact_role: "Add role"
+      no_contact_roles: "No contact roles on this deal."
     new:
       title: "New deal"
     edit:
@@ -860,6 +863,22 @@ en:
       updated: "Competitor outcome updated."
     destroy:
       deleted: "Competitor removed from the deal."
+
+  deal_contact_roles:
+    enum:
+      role:
+        decision_maker: "Decision maker"
+        economic_buyer: "Economic buyer"
+        champion: "Champion"
+        influencer: "Influencer"
+        technical: "Technical"
+        other: "Other"
+    create:
+      created: "Contact role added to the deal."
+    update:
+      updated: "Contact role updated."
+    destroy:
+      deleted: "Contact role removed from the deal."
   decisions:
     run:
       ran: "Decisioning run — autonomous signals applied; confirm/of-record proposals are awaiting you."

@@ -35,6 +35,9 @@ class Deal < ApplicationRecord
   has_many :deliverables, dependent: nil
   has_many :deal_competitors, dependent: nil
   has_many :competitors, through: :deal_competitors
+  # PG8 — contact roles on this deal.
+  has_many :deal_contact_roles, dependent: nil
+  has_many :role_contacts, through: :deal_contact_roles, source: :contact
 
   validates :name, presence: true
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }

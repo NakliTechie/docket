@@ -96,6 +96,9 @@ module Docket
           DealCompetitor: object_schema(id: :integer, deal_id: :integer, competitor_id: :integer,
                                         competitor_name: :string, disposition: :string, notes: :string,
                                         created_at: :datetime, updated_at: :datetime),
+          DealContactRole: object_schema(id: :integer, deal_id: :integer, contact_id: :integer,
+                                         contact_name: :string, role: enum(DealContactRole.roles.keys),
+                                         created_at: :datetime, updated_at: :datetime),
           Pipeline: object_schema(id: :integer, name: :string, slug: :string, position: :integer, active: :boolean,
                                   stages: { type: "array", items: { type: "object" } },
                                   created_at: :datetime, updated_at: :datetime),
@@ -278,6 +281,14 @@ module Docket
         patch: op("Update competitor disposition", params: [ id_param ],
                   request: { deal_competitor: :object }, schema: "DealCompetitor"),
         delete: op("Remove a competitor link", params: [ id_param ])
+      }
+      result["/deals/{deal_id}/contact_roles"] = { post: op(
+        "Assign a contact a role on a deal", params: [ path_param("deal_id") ],
+        request: { deal_contact_role: :object }, schema: "DealContactRole") }
+      result["/deal_contact_roles/{id}"] = {
+        patch: op("Change a contact's role on a deal", params: [ id_param ],
+                  request: { deal_contact_role: :object }, schema: "DealContactRole"),
+        delete: op("Remove a contact role", params: [ id_param ])
       }
       # Work module (WM5). Documented here is what makes these reachable as MCP
       # tools too — the catalogue is derived from this document.

@@ -216,6 +216,12 @@ module Api
           notes: competitor.notes, created_at: competitor.created_at, updated_at: competitor.updated_at }
       end
 
+      def deal_contact_role(link)
+        { id: link.id, deal_id: link.deal_id, contact_id: link.contact_id,
+          contact_name: link.contact.name, role: link.role,
+          created_at: link.created_at, updated_at: link.updated_at }
+      end
+
       def deal_competitor(link)
         { id: link.id, deal_id: link.deal_id, competitor_id: link.competitor_id,
           competitor_name: link.competitor.name, disposition: link.disposition, notes: link.notes,
