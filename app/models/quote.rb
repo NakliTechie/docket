@@ -80,7 +80,11 @@ class Quote < ApplicationRecord
     if kinds.first == :amount
       milestones.sum { |milestone| milestone.amount_cents.to_i } == total_cents
     else
-      milestones.sum { |milestone| milestone.percentage.to_d } == 100
+      # Percentages must sum to 100 AND resolve to non-negative cents: on a tiny
+      # total, intermediate roundings can overshoot so the drift-absorbing last
+      # milestone would go negative — that schedule is not billable.
+      milestones.sum { |milestone| milestone.percentage.to_d } == 100 &&
+        milestone_amounts.values.none?(&:negative?)
     end
   end
 

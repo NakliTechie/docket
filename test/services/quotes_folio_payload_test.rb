@@ -70,4 +70,19 @@ class QuotesFolioPayloadTest < ActiveSupport::TestCase
     quote.update!(billing_type: :milestone)
     assert_raises(Quotes::FolioPayload::Error) { Quotes::FolioPayload.build(quote) }
   end
+
+  # A percentage schedule can sum to 100% yet, on a tiny total, round so the
+  # drift-absorbing last milestone would go negative — never emit that.
+  test "a percentage schedule that resolves to a negative cent is refused" do
+    quote = Quote.create!(deal: @deal, currency: "INR", billing_type: :milestone)
+    quote.quote_line_items.create!(description: "Tiny", quantity: 1, unit_price_cents: 4, tax_rate: 0)
+    Quotes.send!(quote, actor: @actor)
+    Quotes.accept!(quote, actor: @actor)
+    [ 40, 40, 15, 5 ].each_with_index do |pct, index|
+      quote.quote_milestones.create!(name: "M#{index}", percentage: pct, position: index)
+    end
+
+    refute quote.milestones_balanced?, "overshoot on a 4-cent total is not billable"
+    assert_raises(Quotes::FolioPayload::Error) { Quotes::FolioPayload.build(quote) }
+  end
 end
