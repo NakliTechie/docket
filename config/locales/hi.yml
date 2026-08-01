@@ -38,6 +38,7 @@ hi:
       business_calendars: "कार्य कैलेंडर"
       macros: "मैक्रो"
       routing_rules: "रूटिंग नियम"
+      escalation_rules: "एस्केलेशन नियम"
       custom_fields: "कस्टम फ़ील्ड"
       approval_processes: "अनुमोदन नियम"
       approval_requests: "अनुमोदन"
@@ -1445,6 +1446,72 @@ hi:
       elapsed: "%{status} में %{count} %{clock} बाद"
       business_minutes: "कार्य मिनट"
       minutes: "मिनट"
+
+  escalation_rules:
+    fields:
+      name: "नाम"
+      active: "सक्रिय"
+      trigger_type: "एस्केलेट कब करें"
+      breach_clock: "SLA घड़ी"
+      if_status: "केस स्थिति"
+      if_priority: "प्राथमिकता"
+      after_minutes: "इतने मिनट बाद"
+      then_assignee: "पुनः सौंपें"
+      notify_user: "सूचित करें"
+    enum:
+      trigger_type:
+        sla_breach: "जब कोई SLA भंग हो"
+        elapsed_time: "जब कोई केस किसी स्थिति में बहुत देर रहे"
+      breach_clock:
+        resolution: "समाधान SLA"
+        first_response: "प्रथम-उत्तर SLA"
+    form:
+      any: "कोई भी"
+      any_status: "कोई भी खुली स्थिति"
+      keep: "वर्तमान असाइनी रखें"
+      no_one: "कोई नहीं"
+      remove_tier: "यह स्तर हटाएँ"
+      active_hint: "निष्क्रिय नियम रखे जाते हैं पर एस्केलेशन स्वीप में छोड़ दिए जाते हैं।"
+      when_legend: "यह कब एस्केलेट होना चाहिए?"
+      trigger_hint: "भंग नियम घड़ी SLA नियत समय से शुरू करते हैं; स्थिति नियम उस क्षण से जब केस उस स्थिति में आया।"
+      breach_clock_hint: "केवल SLA भंग पर एस्केलेट करते समय उपयोग होता है।"
+      if_status_hint: "स्थिति-में-समय पर एस्केलेट करते समय आवश्यक।"
+      tiers_legend: "एस्केलेशन स्तर"
+      tiers_hint: "हर स्तर एक बार, देरी के क्रम में चलता है: संदर्भ समय से इतने मिनट बाद यह केस पुनः सौंपता है और/या किसी को सूचित करता है। किसी स्तर के मिनट खाली छोड़ने पर वह अनदेखा हो जाता है।"
+    index:
+      title: "एस्केलेशन नियम"
+      new_rule: "नया नियम"
+      intro: "क्रमबद्ध स्तर जो केस के SLA भंग होने या किसी स्थिति में पुराने होने पर पुनः सौंपते और सूचित करते हैं। क्रम में मूल्यांकित; हर स्तर प्रति केस एक बार चलता है।"
+      active: "सक्रिय"
+      inactive: "निष्क्रिय"
+      move_up: "ऊपर ले जाएँ"
+      move_down: "नीचे ले जाएँ"
+      confirm_delete: "यह एस्केलेशन नियम हटाएँ? पहले से एस्केलेट किए गए केस अपना असाइनी बनाए रखेंगे।"
+      tier_count:
+        one: "1 स्तर"
+        other: "%{count} स्तर"
+      columns:
+        order: "#"
+        name: "नाम"
+        when: "कब"
+        tiers: "स्तर"
+        status: "स्थिति"
+      empty:
+        title: "अभी कोई एस्केलेशन नियम नहीं"
+        hint: "भंग या पुराने केस एस्केलेट करने के लिए नियम जोड़ें — उदाहरण के लिए, समाधान SLA भंग के बाद, 30 मिनट बाद सुपरवाइज़र को पुनः सौंपें और डेस्क लीड को सूचित करें।"
+    new:
+      title: "नया एस्केलेशन नियम"
+    edit:
+      title: "एस्केलेशन नियम %{name} संपादित करें"
+    create:
+      created: "एस्केलेशन नियम बनाया गया।"
+    update:
+      updated: "एस्केलेशन नियम अद्यतन किया गया।"
+    destroy:
+      deleted: "एस्केलेशन नियम हटाया गया।"
+    summary:
+      on_breach: "%{clock} SLA भंग पर"
+      in_status: "%{status} में रुका हुआ"
 
   lead_routing_rules:
     fields:

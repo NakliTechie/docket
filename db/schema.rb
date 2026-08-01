@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_01_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_171000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -548,6 +548,51 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_170000) do
     t.index ["tenant_id", "deal_id"], name: "index_deliverables_on_tenant_id_and_deal_id"
     t.index ["tenant_id", "status"], name: "index_deliverables_on_tenant_id_and_status"
     t.index ["tenant_id"], name: "index_deliverables_on_tenant_id"
+  end
+
+  create_table "escalation_executions", force: :cascade do |t|
+    t.integer "case_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "escalation_level_id", null: false
+    t.datetime "executed_at", null: false
+    t.datetime "reference_at", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["case_id"], name: "index_escalation_executions_on_case_id"
+    t.index ["escalation_level_id", "case_id", "reference_at"], name: "index_escalation_executions_idempotency", unique: true
+    t.index ["escalation_level_id"], name: "index_escalation_executions_on_escalation_level_id"
+    t.index ["tenant_id"], name: "index_escalation_executions_on_tenant_id"
+  end
+
+  create_table "escalation_levels", force: :cascade do |t|
+    t.integer "after_minutes", null: false
+    t.datetime "created_at", null: false
+    t.integer "escalation_rule_id", null: false
+    t.integer "notify_user_id"
+    t.integer "position", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.integer "then_assignee_id"
+    t.datetime "updated_at", null: false
+    t.index ["escalation_rule_id"], name: "index_escalation_levels_on_escalation_rule_id"
+    t.index ["notify_user_id"], name: "index_escalation_levels_on_notify_user_id"
+    t.index ["tenant_id", "escalation_rule_id", "position"], name: "idx_on_tenant_id_escalation_rule_id_position_b715169712"
+    t.index ["tenant_id"], name: "index_escalation_levels_on_tenant_id"
+    t.index ["then_assignee_id"], name: "index_escalation_levels_on_then_assignee_id"
+  end
+
+  create_table "escalation_rules", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "breach_clock", default: "resolution", null: false
+    t.datetime "created_at", null: false
+    t.string "if_priority"
+    t.string "if_status"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.integer "trigger_type", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "position"], name: "index_escalation_rules_on_tenant_id_and_position"
+    t.index ["tenant_id"], name: "index_escalation_rules_on_tenant_id"
   end
 
   create_table "import_conflicts", force: :cascade do |t|
@@ -1582,6 +1627,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_170000) do
   add_foreign_key "deliverables", "tenants", on_delete: :cascade
   add_foreign_key "deliverables", "users", column: "approved_by_id", on_delete: :nullify
   add_foreign_key "deliverables", "users", column: "submitted_by_id", on_delete: :nullify
+  add_foreign_key "escalation_executions", "cases", on_delete: :cascade
+  add_foreign_key "escalation_executions", "escalation_levels", on_delete: :cascade
+  add_foreign_key "escalation_executions", "tenants", on_delete: :cascade
+  add_foreign_key "escalation_levels", "escalation_rules", on_delete: :cascade
+  add_foreign_key "escalation_levels", "tenants", on_delete: :cascade
+  add_foreign_key "escalation_levels", "users", column: "notify_user_id", on_delete: :nullify
+  add_foreign_key "escalation_levels", "users", column: "then_assignee_id", on_delete: :nullify
+  add_foreign_key "escalation_rules", "tenants", on_delete: :cascade
   add_foreign_key "import_conflicts", "import_identities"
   add_foreign_key "import_conflicts", "import_runs"
   add_foreign_key "import_conflicts", "tenants"

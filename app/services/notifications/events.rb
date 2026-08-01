@@ -53,6 +53,20 @@ module Notifications
       end
     end
 
+    # PG3: alert a notify-user that a case reached an escalation level. (The new
+    # assignee, if any, is separately notified by the case_assigned hook.)
+    def case_escalated(kase, recipient, level:)
+      return if suppressed? || recipient.nil?
+
+      publish(
+        recipient: recipient, kind: :escalation, severity: :critical, notifiable: kase,
+        dedupe_key: "case:#{kase.id}:escalation:level:#{level.id}",
+        title: "Case escalated",
+        body: "#{kase.tracking_id}: #{kase.subject} escalated (tier at +#{level.after_minutes} min)",
+        metadata: { reference: kase.tracking_id, subject: kase.subject, after_minutes: level.after_minutes }
+      )
+    end
+
     def sla_risk(kase, clock)
       publish_sla(kase, clock, kind: :sla_risk, severity: :warning, repeat: false)
     end
