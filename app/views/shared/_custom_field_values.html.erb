@@ -1,0 +1,10 @@
+<% values = record.custom_fields.to_h %>
+<% definitions = CustomFieldDefinition.for_resource(resource_type).ordered.select { |field| field.active? || values.key?(field.key) } %>
+<% if definitions.any? %>
+  <dl class="detail-list custom-field-values">
+    <% definitions.each do |definition| %>
+      <dt><%= definition.label %></dt>
+      <dd><%= CustomFields::Type.human(definition, values[definition.key]) %></dd>
+    <% end %>
+  </dl>
+<% end %>

@@ -1,1 +1,5 @@
 <%= @body %>
+<% if @unsubscribe_url %>
+
+<%= t("crm_mailer.sequence_step.unsubscribe") %>: <%= @unsubscribe_url %>
+<% end %>

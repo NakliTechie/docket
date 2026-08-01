@@ -10,5 +10,9 @@ class SettingTest < ActiveSupport::TestCase
     assert SettingContract.invalid?(SettingContract.coerce("ai_route_confidence", { bad: true }))
     assert_equal 0.0, SettingContract.coerce("ai_route_confidence", -5)
     assert_equal 1.0, SettingContract.coerce("ai_resolve_confidence", "5")
+    assert SettingContract.invalid?(SettingContract.coerce("llm_endpoint_url", "not a url"))
+    assert_equal "https://models.example.test/v1", SettingContract.coerce(
+      "llm_endpoint_url", "https://models.example.test/v1"
+    )
   end
 end

@@ -25,20 +25,25 @@ class SalesReport
   # derives the deal away from `open`, so this is exactly the active funnel.
   def pipeline_by_stage
     @pipeline_by_stage ||= begin
-      counts = Deal.open_deals.group(:pipeline_stage_id).count
-      values = Deal.open_deals.group(:pipeline_stage_id).sum(:value_cents)
-      stages = PipelineStage.with_deleted.where(id: counts.keys).index_by(&:id)
-      counts.keys.map do |sid|
-        { stage: stages[sid], count: counts[sid], value_cents: values[sid] || 0 }
-      end.sort_by { |row| [ row[:stage]&.pipeline_id || 0, row[:stage]&.position || 0 ] }
+      counts = Deal.open_deals.group(:pipeline_stage_id, :currency).count
+      values = Deal.open_deals.group(:pipeline_stage_id, :currency).sum(:value_cents)
+      stages = PipelineStage.with_deleted.where(id: counts.keys.map(&:first)).index_by(&:id)
+      counts.keys.map do |sid, currency|
+        { stage: stages[sid], currency: currency, count: counts[[ sid, currency ]],
+          value_cents: values[[ sid, currency ]] || 0 }
+      end.sort_by do |row|
+        [ row[:stage]&.pipeline_id || 0, row[:stage]&.position || 0, row[:currency] ]
+      end
     end
   end
 
-  # Probability-weighted open pipeline (a forecast): Σ value × stage odds.
-  def weighted_pipeline_cents
-    @weighted_pipeline_cents ||= pipeline_by_stage.sum do |row|
-      (row[:value_cents] || 0) * (row[:stage]&.probability || 0) / 100.0
-    end.round
+  # Probability-weighted open pipeline (a forecast): Σ value × stage odds,
+  # kept separate by ISO currency. Adding INR and USD creates a plausible but
+  # meaningless number, so reports never expose a mixed scalar.
+  def weighted_pipeline_by_currency
+    @weighted_pipeline_by_currency ||= pipeline_by_stage.each_with_object(Hash.new(0.0)) do |row, totals|
+      totals[row[:currency]] += (row[:value_cents] || 0) * (row[:stage]&.probability || 0) / 100.0
+    end.transform_values(&:round)
   end
 
   def stats
@@ -48,18 +53,19 @@ class SalesReport
       lost_count = closed.status_lost.count
       decided    = won_count + lost_count
       created    = Deal.with_deleted.where(created_at: range)
-      leads_created   = Lead.with_deleted.where(created_at: range).count
-      leads_converted = Lead.with_deleted.where(converted_at: range).count
+      lead_cohort = Lead.with_deleted.where(created_at: range)
+      leads_created = lead_cohort.count
+      leads_converted = lead_cohort.where(converted_at: range).count
       {
         open_deals: Deal.open_deals.count,
-        open_value_cents: Deal.open_deals.sum(:value_cents),
-        weighted_value_cents: weighted_pipeline_cents,
+        open_values_by_currency: currency_sums(Deal.open_deals),
+        weighted_values_by_currency: weighted_pipeline_by_currency,
         deals_created: created.count,
-        deals_created_value_cents: created.sum(:value_cents),
+        deals_created_values_by_currency: currency_sums(created),
         won_count: won_count,
-        won_value_cents: closed.status_won.sum(:value_cents),
+        won_values_by_currency: currency_sums(closed.status_won),
         lost_count: lost_count,
-        lost_value_cents: closed.status_lost.sum(:value_cents),
+        lost_values_by_currency: currency_sums(closed.status_lost),
         win_rate: decided.zero? ? nil : (won_count * 100.0 / decided).round(1),
         leads_created: leads_created,
         leads_converted: leads_converted,
@@ -73,12 +79,27 @@ class SalesReport
   def loss_reasons
     @loss_reasons ||= begin
       lost = Deal.with_deleted.status_lost.where(closed_at: range).where.not(lost_reason: nil)
-      counts = lost.group(:lost_reason).count
-      values = lost.group(:lost_reason).sum(:value_cents)
-      counts.map do |reason, count|
+      counts = lost.group(:lost_reason, :currency).count
+      values = lost.group(:lost_reason, :currency).sum(:value_cents)
+      counts.map do |(reason, currency), count|
         key = reason.is_a?(Integer) ? Deal.lost_reasons.key(reason) : reason.to_s
-        { reason: key, count: count, value_cents: values[reason] || 0 }
-      end.sort_by { |row| -row[:count] }
+        { reason: key, currency: currency, count: count,
+          value_cents: values[[ reason, currency ]] || 0 }
+      end.sort_by { |row| [ -row[:count], row[:reason], row[:currency] ] }
+    end
+  end
+
+  def competitor_losses
+    @competitor_losses ||= begin
+      links = DealCompetitor.disposition_lost_to.joins(:deal)
+                            .where(deals: { status: Deal.statuses.fetch("lost"), closed_at: range })
+      counts = links.group(:competitor_id, "deals.currency").count
+      values = links.group(:competitor_id, "deals.currency").sum("deals.value_cents")
+      competitors = Competitor.with_deleted.where(id: counts.keys.map(&:first)).index_by(&:id)
+      counts.map do |(competitor_id, currency), count|
+        { competitor: competitors[competitor_id], currency: currency, count: count,
+          value_cents: values[[ competitor_id, currency ]] || 0 }
+      end.sort_by { |row| [ -row[:count], row[:competitor]&.name.to_s, row[:currency] ] }
     end
   end
 
@@ -86,14 +107,19 @@ class SalesReport
   # per owner, biggest contributor first.
   def by_owner
     @by_owner ||= begin
-      open_value = Deal.open_deals.where.not(owner_id: nil).group(:owner_id).sum(:value_cents)
+      open_value = Deal.open_deals.where.not(owner_id: nil).group(:owner_id, :currency).sum(:value_cents)
       won_value  = Deal.with_deleted.status_won.where(closed_at: range)
-                       .where.not(owner_id: nil).group(:owner_id).sum(:value_cents)
-      owner_ids = (open_value.keys + won_value.keys).uniq
+                       .where.not(owner_id: nil).group(:owner_id, :currency).sum(:value_cents)
+      keys = (open_value.keys + won_value.keys).uniq
+      owner_ids = keys.map(&:first).uniq
       owners = User.with_deleted.where(id: owner_ids).index_by(&:id)
-      owner_ids.map do |oid|
-        { owner: owners[oid], open_value_cents: open_value[oid] || 0, won_value_cents: won_value[oid] || 0 }
-      end.sort_by { |row| -(row[:open_value_cents] + row[:won_value_cents]) }
+      keys.map do |oid, currency|
+        { owner: owners[oid], currency: currency,
+          open_value_cents: open_value[[ oid, currency ]] || 0,
+          won_value_cents: won_value[[ oid, currency ]] || 0 }
+      end.sort_by do |row|
+        [ row[:currency], -(row[:open_value_cents] + row[:won_value_cents]), row[:owner]&.name.to_s ]
+      end
     end
   end
 
@@ -125,26 +151,65 @@ class SalesReport
   def to_csv
     require "csv"
     CSV.generate do |csv|
-      csv << %w[section label count value_rupees from to]
+      csv << %w[section label count value currency from to]
       pipeline_by_stage.each do |row|
-        csv << [ "pipeline_stage", csv_safe(row[:stage]&.name), row[:count], rupees(row[:value_cents]), from, to ]
+        csv << [ "pipeline_stage", csv_safe(row[:stage]&.name), row[:count],
+                 decimal_value(row[:value_cents]), row[:currency], from, to ]
       end
-      csv << [ "summary", "won", stats[:won_count], rupees(stats[:won_value_cents]), from, to ]
-      csv << [ "summary", "lost", stats[:lost_count], rupees(stats[:lost_value_cents]), from, to ]
-      csv << [ "summary", "win_rate_pct", nil, stats[:win_rate], from, to ]
+      currency_rows(csv, "summary", "won", stats[:won_count], stats[:won_values_by_currency])
+      currency_rows(csv, "summary", "lost", stats[:lost_count], stats[:lost_values_by_currency])
+      csv << [ "summary", "win_rate_pct", nil, stats[:win_rate], nil, from, to ]
       loss_reasons.each do |row|
-        csv << [ "loss_reason", row[:reason], row[:count], rupees(row[:value_cents]), from, to ]
+        csv << [ "loss_reason", row[:reason], row[:count], decimal_value(row[:value_cents]),
+                 row[:currency], from, to ]
+      end
+      competitor_losses.each do |row|
+        csv << [ "competitor_loss", csv_safe(row[:competitor]&.name), row[:count],
+                 decimal_value(row[:value_cents]), row[:currency], from, to ]
       end
       by_owner.each do |row|
-        csv << [ "owner", csv_safe(row[:owner]&.name), nil, rupees(row[:open_value_cents] + row[:won_value_cents]), from, to ]
+        csv << [ "owner", csv_safe(row[:owner]&.name), nil,
+                 decimal_value(row[:open_value_cents] + row[:won_value_cents]),
+                 row[:currency], from, to ]
       end
     end
   end
 
+  def as_json
+    {
+      from: from, to: to, stats: stats,
+      pipeline_by_stage: pipeline_by_stage.map { |row|
+        row.except(:stage).merge(stage_id: row[:stage]&.id, stage: row[:stage]&.name)
+      },
+      loss_reasons: loss_reasons,
+      competitor_losses: competitor_losses.map { |row|
+        row.except(:competitor).merge(competitor_id: row[:competitor]&.id,
+                                      competitor: row[:competitor]&.name)
+      },
+      velocity: velocity.merge(stage_dwell: velocity[:stage_dwell].map { |row|
+        row.except(:stage).merge(stage_id: row[:stage]&.id, stage: row[:stage]&.name)
+      })
+    }
+  end
+
   private
 
-  def rupees(cents)
+  def decimal_value(cents)
     (cents || 0) / 100.0
+  end
+
+  def currency_sums(scope)
+    scope.group(:currency).sum(:value_cents).transform_keys(&:to_s).sort.to_h
+  end
+
+  def currency_rows(csv, section, label, count, totals)
+    if totals.empty?
+      csv << [ section, label, count, 0, nil, from, to ]
+    else
+      totals.each do |currency, cents|
+        csv << [ section, label, count, decimal_value(cents), currency, from, to ]
+      end
+    end
   end
 
   # Spreadsheet formula-injection guard for text cells.

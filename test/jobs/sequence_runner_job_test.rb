@@ -13,7 +13,7 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
 
   test "advances a due enrollment, sends the step, and schedules the next" do
     seq = two_step_sequence
-    lead = Lead.create!(name: "Asha", email: "asha.seq@example.com")
+    lead = Lead.create!(name: "Asha", email: "asha.seq@example.com", email_consent: true)
     enr = seq.enroll!(lead)
 
     assert_enqueued_with(job: SequenceDeliveryJob) do
@@ -31,7 +31,7 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
 
   test "completes the enrollment after the last step" do
     seq = two_step_sequence
-    lead = Lead.create!(name: "Bee", email: "bee.seq@example.com")
+    lead = Lead.create!(name: "Bee", email: "bee.seq@example.com", email_consent: true)
     enr = seq.enroll!(lead)
 
     SequenceRunnerJob.perform_now            # step 0 sent, advance to 1
@@ -61,6 +61,18 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     assert_no_enqueued_jobs(only: SequenceDeliveryJob) { SequenceRunnerJob.perform_now }
     assert enr.sequence_deliveries.reload.first.status_skipped?
     assert_equal 1, enr.reload.current_step_position
+  end
+
+  test "an email step is skipped without marketing consent" do
+    seq = two_step_sequence
+    lead = Lead.create!(name: "No Email Consent", email: "no-consent@example.com")
+    enrollment = seq.enroll!(lead)
+
+    assert_no_enqueued_jobs(only: SequenceDeliveryJob) { SequenceRunnerJob.perform_now }
+
+    delivery = enrollment.sequence_deliveries.reload.first
+    assert delivery.status_skipped?
+    assert_includes delivery.last_error, "not consented"
   end
 
   def sms_sequence

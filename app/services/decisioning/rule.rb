@@ -16,6 +16,7 @@ module Decisioning
       def key = name.demodulize.underscore
       def version = "1"
       def decision_class = :autonomous
+      def owner_feature = nil
       # Descriptive audit metadata only — gating is on decision_class, never
       # effect (S8). Recorded on the Decision for the accountability trail.
       def effect = :read

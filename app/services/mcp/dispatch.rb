@@ -11,6 +11,8 @@ module Mcp
     module_function
 
     def call(operation, arguments, authorization:, host:, remote_ip: nil)
+      outer_tenant = ActsAsTenant.current_tenant
+      outer_current = Current.attributes.symbolize_keys
       args = (arguments || {}).dup
       path = operation[:path_template].dup
       operation[:path_names].each { |name| path = path.sub("{#{name}}", args.delete(name).to_s) }
@@ -36,10 +38,30 @@ module Mcp
       )
       env["REMOTE_ADDR"] = remote_ip if remote_ip
 
-      status, _headers, rack_body = Rails.application.call(env)
       text = +""
-      rack_body.each { |part| text << part }
-      rack_body.close if rack_body.respond_to?(:close)
+      rack_body = nil
+      begin
+        status, _headers, rack_body = ActsAsTenant.with_tenant(outer_tenant) do
+          # Dispatch through the route set, not Rails.application. Calling the
+          # full Rack stack recursively enters ActionDispatch::Executor with
+          # reset: true; that completes the still-running outer executor and
+          # corrupts CurrentAttributes when the MCP response later closes.
+          # The route set still runs the real API controller, including tenant
+          # resolution, bearer auth, feature gates, scopes, Pundit and params.
+          Rails.application.routes.call(env)
+        end
+        rack_body.each { |part| text << part }
+        rack_body.close if rack_body.respond_to?(:close)
+        rack_body = nil
+      ensure
+        rack_body.close if rack_body&.respond_to?(:close)
+        # Rails' executor resets Current when the nested request completes.
+        # Re-establish the outer JSON-RPC request explicitly so another call in
+        # the same batch cannot inherit nil/the inner actor or tenant.
+        Current.reset
+        outer_current.each { |name, value| Current.public_send("#{name}=", value) }
+        ActsAsTenant.current_tenant = outer_tenant
+      end
 
       { status: status.to_i, text: text }
     end

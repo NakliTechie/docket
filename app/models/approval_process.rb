@@ -11,11 +11,15 @@ class ApprovalProcess < ApplicationRecord
 
   has_many :approval_requests, dependent: :destroy
 
-  enum :trigger_type, { case_transition: 0, effector_action: 1 }, prefix: :trigger
+  enum :trigger_type, { case_transition: 0, effector_action: 1, work_item_transition: 2 },
+       prefix: :trigger
 
   validates :name, presence: true
   validates :trigger_key, presence: true, uniqueness: { scope: [ :tenant_id, :trigger_type ] }
   validate :transition_key_is_a_real_status, if: :trigger_case_transition?
+  validate :work_transition_key_is_valid, if: :trigger_work_item_transition?
+
+  normalizes :trigger_key, with: ->(key) { key.to_s.strip.downcase }
 
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(:trigger_type, :trigger_key) }
@@ -28,10 +32,24 @@ class ApprovalProcess < ApplicationRecord
     active.trigger_effector_action.find_by(trigger_key: key.to_s)
   end
 
+  def self.for_work_transition(item, state)
+    active.trigger_work_item_transition.find_by(trigger_key: work_transition_key(item, state))
+  end
+
+  def self.work_transition_key(item, state)
+    "#{item.project.key}:#{state.name}".downcase
+  end
+
   private
 
   def transition_key_is_a_real_status
     return if Case.statuses.key?(trigger_key.to_s)
     errors.add(:trigger_key, :not_a_status)
+  end
+
+  def work_transition_key_is_valid
+    return if trigger_key.to_s.match?(/\A[a-z][a-z0-9]{1,9}:.+\z/i)
+
+    errors.add(:trigger_key, "must use PROJECT_KEY:State name")
   end
 end

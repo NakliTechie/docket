@@ -7,6 +7,7 @@
 # partial or tampered restore breaks the chain and is DETECTED here rather than
 # discovered months later. A backup nobody has restored is a hope, not a backup.
 set -euo pipefail
+umask 077
 
 SRC="${1:-}"
 if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
@@ -15,10 +16,61 @@ if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
 fi
 
 : "${DATABASE_URL:?DATABASE_URL must be set}"
-CACHE_URL="${CACHE_DATABASE_URL:-${DATABASE_URL}_cache}"
-QUEUE_URL="${QUEUE_DATABASE_URL:-${DATABASE_URL}_queue}"
-CABLE_URL="${CABLE_DATABASE_URL:-${DATABASE_URL}_cable}"
+: "${DOCKET_BACKUP_SIGNING_KEY:?DOCKET_BACKUP_SIGNING_KEY must match the key used for backup}"
+if [[ ! "$DOCKET_BACKUP_SIGNING_KEY" =~ ^[0-9a-fA-F]{64}$ ]]; then
+  echo "DOCKET_BACKUP_SIGNING_KEY must be exactly 64 hexadecimal characters" >&2
+  exit 64
+fi
+sibling_url() {
+  local url="$1" suffix="$2"
+  if [[ "$url" == *\?* ]]; then echo "${url%%\?*}${suffix}?${url#*\?}"; else echo "${url}${suffix}"; fi
+}
+CACHE_URL="${CACHE_DATABASE_URL:-$(sibling_url "$DATABASE_URL" _cache)}"
+QUEUE_URL="${QUEUE_DATABASE_URL:-$(sibling_url "$DATABASE_URL" _queue)}"
+CABLE_URL="${CABLE_DATABASE_URL:-$(sibling_url "$DATABASE_URL" _cable)}"
 STORAGE_DIR="${DOCKET_STORAGE_DIR:-storage}"
+AUDIT_CHECKPOINT_PATH="${DOCKET_AUDIT_CHECKPOINT_PATH:-$STORAGE_DIR/audit_checkpoint.json}"
+
+if [ ! -f "$SRC/SHA256SUMS" ] || [ ! -f "$SRC/SHA256SUMS.hmac" ]; then
+  echo "  missing authenticated backup manifest" >&2
+  exit 66
+fi
+DOCKET_MANIFEST_PATH="$SRC/SHA256SUMS" DOCKET_SIGNATURE_PATH="$SRC/SHA256SUMS.hmac" \
+  ruby -ropenssl -rbase64 -e '
+    key = [ENV.fetch("DOCKET_BACKUP_SIGNING_KEY")].pack("H*")
+    data = File.binread(ENV.fetch("DOCKET_MANIFEST_PATH"))
+    expected = OpenSSL::HMAC.digest("SHA256", key, data)
+    actual = Base64.strict_decode64(File.read(ENV.fetch("DOCKET_SIGNATURE_PATH")).strip)
+    abort "backup manifest authentication failed" unless expected.bytesize == actual.bytesize && OpenSSL.fixed_length_secure_compare(expected, actual)
+  '
+if ! (cd "$SRC" && sha256sum --check --strict SHA256SUMS); then
+  echo "  backup content digest verification failed" >&2
+  exit 66
+fi
+
+# Validate the COMPLETE backup set before the first destructive pg_restore.
+# Discovering a missing/corrupt cable dump after primary has been overwritten
+# leaves an avoidable half-restored deployment.
+for name in primary cache queue cable; do
+  file="$SRC/$name.dump"
+  if [ ! -f "$file" ]; then
+    echo "  missing $name.dump" >&2
+    exit 66
+  fi
+  if ! pg_restore --list "$file" >/dev/null; then
+    echo "  invalid $name.dump" >&2
+    exit 66
+  fi
+done
+if [ ! -f "$SRC/storage.tar.gz" ] || ! tar -tzf "$SRC/storage.tar.gz" >/dev/null; then
+  echo "  missing or invalid storage.tar.gz" >&2
+  exit 66
+fi
+if [ ! -f "$SRC/audit_checkpoint.json" ] || \
+   ! ruby -rjson -e 'JSON.parse(File.read(ARGV.fetch(0)))' "$SRC/audit_checkpoint.json"; then
+  echo "  missing or invalid audit_checkpoint.json" >&2
+  exit 66
+fi
 
 if [ "${DOCKET_RESTORE_CONFIRM:-}" != "yes" ]; then
   echo "This OVERWRITES the databases at DATABASE_URL and its cache/queue/cable siblings." >&2
@@ -28,7 +80,6 @@ fi
 
 load() {
   local name="$1" url="$2"
-  [ -f "$SRC/$name.dump" ] || { echo "  missing $name.dump" >&2; return 1; }
   echo "  restoring $name"
   pg_restore --clean --if-exists --no-owner --no-acl --dbname="$url" "$SRC/$name.dump"
 }
@@ -39,12 +90,11 @@ load cache   "$CACHE_URL"
 load queue   "$QUEUE_URL"
 load cable   "$CABLE_URL"
 
-if [ -f "$SRC/storage.tar.gz" ]; then
-  echo "  restoring attachments"
-  tar -xzf "$SRC/storage.tar.gz" -C "$(dirname "$STORAGE_DIR")"
-else
-  echo "  WARNING: backup contains no storage archive — attachments NOT restored" >&2
-fi
+echo "  restoring attachments"
+tar -xzf "$SRC/storage.tar.gz" -C "$(dirname "$STORAGE_DIR")"
+mkdir -p "$(dirname "$AUDIT_CHECKPOINT_PATH")"
+cp "$SRC/audit_checkpoint.json" "$AUDIT_CHECKPOINT_PATH"
+chmod 600 "$AUDIT_CHECKPOINT_PATH"
 
 echo "Verifying the audit chain (a partial restore breaks it)…"
 bin/rails audit:verify

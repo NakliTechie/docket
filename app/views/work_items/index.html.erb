@@ -2,6 +2,7 @@
 <div class="page-header">
   <h1><%= t(".title", key: @project.key) %></h1>
   <div class="page-actions">
+    <%= link_to t(".my_work"), project_work_items_path(@project, assignee_id: Current.user.id, open: 1), class: "btn" %>
     <%= link_to t(".board"), project_board_path(@project), class: "btn" %>
     <% if policy(WorkItem).create? %>
       <%= link_to new_project_work_item_path(@project), class: "btn btn-primary" do %>
@@ -12,24 +13,50 @@
 </div>
 
 <% if @has_any_items %>
+  <div class="saved-view-bar">
+    <% if @saved_views.any? %>
+      <%= form_with url: project_work_items_path(@project), method: :get, class: "inline-form" do |f| %>
+        <%= f.label :saved_view_id, t("saved_views.choose"), class: "visually-hidden" %>
+        <%= f.select :saved_view_id, @saved_views.pluck(:name, :id),
+                     { include_blank: t("saved_views.choose"), selected: @current_saved_view&.id } %>
+        <%= f.submit t("saved_views.apply"), class: "btn btn-sm" %>
+      <% end %>
+    <% end %>
+    <%= form_with url: saved_views_path, method: :post, class: "inline-form saved-view-create" do |f| %>
+      <%= f.hidden_field :resource_type, value: "work_items" %>
+      <%= f.hidden_field :context_id, value: @project.id %>
+      <% @filters.each do |key, value| %>
+        <%= hidden_field_tag "filters[#{key}]", value %>
+      <% end %>
+      <%= f.label :name, t("saved_views.name"), class: "visually-hidden" %>
+      <%= f.text_field :name, required: true, maxlength: 80, placeholder: t("saved_views.name") %>
+      <%= f.submit t("saved_views.save"), class: "btn btn-sm" %>
+    <% end %>
+    <% if @current_saved_view %>
+      <%= button_to t("saved_views.delete"), saved_view_path(@current_saved_view), method: :delete,
+                    class: "btn btn-ghost btn-sm",
+                    form: { data: { turbo_confirm: t("saved_views.confirm_delete") } } %>
+    <% end %>
+  </div>
+
   <%= form_with url: project_work_items_path(@project), method: :get, class: "filter-bar" do |f| %>
   <div class="form-row">
     <%= f.label :q, t("filters.search") %>
-    <%= f.search_field :q, value: params[:q] %>
+    <%= f.search_field :q, value: @filters[:q] %>
   </div>
   <div class="form-row">
     <%= f.label :assignee_id, t("filters.assignee") %>
     <%= f.collection_select :assignee_id, User.staff.order(:name), :id, :name,
-          { include_blank: t("filters.any"), selected: params[:assignee_id] } %>
+          { include_blank: t("filters.any"), selected: @filters[:assignee_id] } %>
   </div>
   <div class="form-row">
     <%= f.label :state_id, t("work_items.fields.state") %>
     <%= f.collection_select :state_id, @project.workflow_states.ordered, :id, :name,
-          { include_blank: t("filters.any"), selected: params[:state_id] } %>
+          { include_blank: t("filters.any"), selected: @filters[:state_id] } %>
   </div>
   <div class="form-row">
     <%= f.label :open, t(".open_only") %>
-    <%= f.check_box :open, checked: params[:open] == "1" %>
+    <%= f.check_box :open, checked: @filters[:open] == "1" %>
   </div>
   <%= f.submit t("filters.apply"), class: "btn" %>
     <%= link_to t("filters.clear"), project_work_items_path(@project), class: "btn btn-ghost btn-sm" %>
@@ -37,10 +64,35 @@
 <% end %>
 
 <% if @items.any? %>
+  <% bulk_allowed = @items.any? { |item| policy(item).update? } %>
+  <%= form_with url: bulk_update_project_work_items_path(@project), method: :post, class: "bulk-form" do |f| %>
+  <% if bulk_allowed %>
+    <div class="bulk-action-bar">
+      <strong><%= t("bulk_actions.selected") %></strong>
+      <%= f.label :bulk_action, t("bulk_actions.action"), for: "work_bulk_action", class: "visually-hidden" %>
+      <%= f.select :bulk_action, [
+            [t("bulk_actions.assign"), "assign"],
+            [t("bulk_actions.transition"), "transition"],
+            [t("bulk_actions.priority"), "priority"]
+          ], {}, id: "work_bulk_action" %>
+      <%= f.label :assignee_id, t("filters.assignee"), for: "work_bulk_assignee", class: "visually-hidden" %>
+      <%= f.select :assignee_id, User.active.staff.order(:name).pluck(:name, :id),
+                   { include_blank: t("bulk_actions.unassign") }, id: "work_bulk_assignee" %>
+      <%= f.label :workflow_state_id, t("work_items.fields.state"), for: "work_bulk_state", class: "visually-hidden" %>
+      <%= f.collection_select :workflow_state_id, @project.workflow_states.ordered, :id, :name,
+                              {}, id: "work_bulk_state" %>
+      <%= f.label :priority, t("filters.priority"), for: "work_bulk_priority", class: "visually-hidden" %>
+      <%= f.select :priority, WorkItem.priorities.keys.map { |priority| [t("work_items.enum.priority.#{priority}"), priority] },
+                   {}, id: "work_bulk_priority" %>
+      <%= f.submit t("bulk_actions.apply"), class: "btn btn-sm" %>
+      <span class="muted"><%= t("bulk_actions.limit") %></span>
+    </div>
+  <% end %>
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
+          <% if bulk_allowed %><th><span class="visually-hidden"><%= t("bulk_actions.select") %></span></th><% end %>
           <th><%= t(".columns.reference") %></th>
           <th><%= t(".columns.title") %></th>
           <th><%= t(".columns.kind") %></th>
@@ -53,6 +105,11 @@
       <tbody>
         <% @items.each do |item| %>
           <tr>
+            <% if bulk_allowed %>
+              <td><%= check_box_tag "work_item_ids[]", item.id, false,
+                                    aria: { label: t("bulk_actions.select_record", name: item.reference) },
+                                    disabled: !policy(item).update? %></td>
+            <% end %>
             <td class="mono"><%= link_to item.reference, work_item_path(item) %></td>
             <td><%= link_to item.title, work_item_path(item) %></td>
             <td><%= item.human_kind %></td>
@@ -65,6 +122,7 @@
       </tbody>
     </table>
   </div>
+  <% end %>
   <%= render "shared/pagination", pagy: @pagy %>
 <% else %>
   <% if @has_any_items %>

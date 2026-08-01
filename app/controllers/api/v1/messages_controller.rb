@@ -25,6 +25,9 @@ module Api
           message.kind = :public_reply if message.author.is_a?(Contact)
         end
         message.direction = :outbound if current_user
+        if current_user && message.kind_public_reply? && current_user.email_signature.present?
+          message.metadata = { "signature" => current_user.email_signature }
+        end
         message.files = extract_attachments(params[:message])
 
         if message.save
@@ -37,7 +40,8 @@ module Api
       private
 
       def set_case
-        @case = params[:case_id].to_s.start_with?("DKT-") ? Case.find_by!(tracking_id: params[:case_id]) : Case.find(params[:case_id])
+        found = params[:case_id].to_s.start_with?("DKT-") ? Case.find_by!(tracking_id: params[:case_id]) : Case.find(params[:case_id])
+        @case = found.canonical_record
       end
 
       def message_params

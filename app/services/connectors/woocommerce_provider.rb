@@ -59,10 +59,30 @@ module Connectors
     # Pull customers inbound; they map to Contact via the connector
     # field-mapping. GET /wp-json/wc/v3/customers → a JSON array.
     def fetch
-      uri = build_uri(base, "/wp-json/wc/v3/customers")
-      response = ensure_ok!(get(uri, headers: auth_headers), "WooCommerce")
-      records = parse_json(response.body)
-      records.is_a?(Array) ? records : []
+      records = []
+      page = 1
+      total_pages = nil
+
+      loop do
+        params = { per_page: 100, page: page, orderby: "id", order: "asc" }
+        params[:modified_after] = (connector.last_synced_at - 5.minutes).utc.iso8601 if connector.last_synced_at
+        query = URI.encode_www_form(params)
+        uri = build_uri(base, "/wp-json/wc/v3/customers?#{query}")
+        response = ensure_ok!(get(uri, headers: auth_headers), "WooCommerce")
+        batch = parse_json(response.body)
+        raise Connectors::Error, "WooCommerce returned an invalid customers page" unless batch.is_a?(Array)
+
+        records.concat(batch.select { |record| record.is_a?(Hash) })
+        if response.respond_to?(:[])
+          header_pages = response["X-WP-TotalPages"].to_i
+          total_pages = header_pages if header_pages.positive?
+        end
+        break if total_pages ? page >= total_pages : batch.length < 100
+
+        page += 1
+      end
+
+      records
     end
 
     private

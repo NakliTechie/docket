@@ -62,4 +62,16 @@ class PipelineTest < ActiveSupport::TestCase
     refute_includes p.reload.pipeline_stages.map(&:id), stage.id, "and dropped from the collection"
     assert_equal 2, p.pipeline_stages.count
   end
+
+  test "live deals block stage and pipeline removal" do
+    pipeline = build_pipeline(name: "Live deals")
+    pipeline.save!
+    stage = pipeline.pipeline_stages.first
+    Deal.create!(name: "Do not strand", pipeline: pipeline, pipeline_stage: stage)
+
+    refute stage.destroy
+    assert stage.errors[:base].any?
+    refute pipeline.destroy
+    assert pipeline.errors[:base].any?
+  end
 end

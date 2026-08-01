@@ -3,7 +3,7 @@
 # moves items, an admin creates projects and edits workflow states.
 class ProjectPolicy < ApplicationPolicy
   def index?   = permit?("work:read")
-  def show?    = permit?("work:read")
+  def show?    = permit?("work:read") && record.visible_to?(user)
   def create?  = permit?("project:manage")
   def update?  = permit?("project:manage")
   def destroy? = permit?("project:manage")
@@ -11,7 +11,7 @@ class ProjectPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      permit?("work:read") ? scope.all : scope.none
+      permit?("work:read") ? scope.visible_to(user) : scope.none
     end
   end
 end

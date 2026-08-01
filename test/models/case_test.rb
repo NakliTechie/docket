@@ -64,6 +64,18 @@ class CaseTest < ActiveSupport::TestCase
     assert_nil kase.closed_at
   end
 
+  test "status episode timestamp changes only with status" do
+    kase = cases(:pension_case)
+    original = kase.status_changed_at
+    kase.update!(subject: "Same status, edited subject")
+    assert_equal original, kase.reload.status_changed_at
+
+    travel 1.minute do
+      kase.transition_to!(:triaged)
+    end
+    assert_operator kase.reload.status_changed_at, :>, original
+  end
+
   test "record_first_response! only stamps once" do
     kase = cases(:pension_case)
     kase.record_first_response!(at: Time.current)

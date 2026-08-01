@@ -25,6 +25,9 @@ class Sprint < ApplicationRecord
   validate :one_active_sprint_per_project
 
   scope :ordered, -> { order(Arel.sql("starts_on IS NULL"), :starts_on, :id) }
+  scope :visible_to, ->(user, manage: false) {
+    joins(:project).merge(Project.visible_to(user, manage: manage))
+  }
 
   def display_label = "#{project&.key} #{name}"
 

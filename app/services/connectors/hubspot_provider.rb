@@ -59,11 +59,32 @@ module Connectors
     # Pull contacts inbound so each maps onto a Contact record. HubSpot wraps
     # records as { id:, properties: {...} } — we return the flat properties.
     def fetch
-      uri = build_uri(base, "/crm/v3/objects/contacts?properties=email,firstname,lastname,phone")
-      response = ensure_ok!(get(uri, headers: auth_headers), "HubSpot")
-      body = parse_json(response.body)
-      results = body.is_a?(Hash) ? body["results"] : nil
-      Array(results).filter_map { |r| r.is_a?(Hash) ? r["properties"] : nil }
+      records = []
+      after = nil
+      seen = Set.new
+
+      loop do
+        query = { properties: "email,firstname,lastname,phone", limit: 100 }
+        query[:after] = after if after.present?
+        uri = build_uri(base, "/crm/v3/objects/contacts?#{URI.encode_www_form(query)}")
+        response = ensure_ok!(get(uri, headers: auth_headers), "HubSpot")
+        body = parse_json(response.body)
+        raise Connectors::Error, "HubSpot returned an invalid contacts page" unless body.is_a?(Hash)
+
+        results = body["results"]
+        raise Connectors::Error, "HubSpot contacts page is missing results" unless results.is_a?(Array)
+        results.each do |record|
+          next unless record.is_a?(Hash) && record["properties"].is_a?(Hash)
+
+          records << record["properties"].merge("id" => record["id"])
+        end
+
+        after = body.dig("paging", "next", "after").to_s.presence
+        break unless after
+        raise Connectors::Error, "HubSpot repeated its pagination cursor" unless seen.add?(after)
+      end
+
+      records
     end
 
     private

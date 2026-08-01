@@ -3,6 +3,7 @@
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
     <% if policy(Project).create? %>
+      <%= link_to t("project_templates.index.title"), project_templates_path, class: "btn" %>
       <%= link_to new_project_path, class: "btn btn-primary" do %>
         <%= icon "plus" %><%= t(".new_project") %>
       <% end %>
@@ -23,6 +24,7 @@
           <th><%= t(".columns.key") %></th>
           <th><%= t(".columns.name") %></th>
           <th><%= t(".columns.lead") %></th>
+          <th><%= t(".columns.visibility") %></th>
           <th><%= t(".columns.open_items") %></th>
           <th><%= t("tables.actions") %></th>
         </tr>
@@ -33,6 +35,7 @@
             <td class="mono"><%= link_to project.key, project_board_path(project) %></td>
             <td><%= project.name %></td>
             <td><%= project.lead&.name || t("forms.none") %></td>
+            <td><%= project.human_visibility %></td>
             <td><%= @open_counts[project.id].to_i %></td>
             <td class="table-actions">
               <%= link_to t(".backlog"), project_work_items_path(project), class: "btn btn-sm" %>

@@ -16,40 +16,9 @@
 </div>
 
 <div class="two-column">
-  <% if feature?("service_desk") %>
-  <section aria-label="<%= t(".case_history") %>">
-    <h2 class="panel-title"><%= t(".case_history") %></h2>
-    <% if @cases.any? %>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th><%= t("cases.index.columns.tracking_id") %></th>
-              <th><%= t("cases.index.columns.subject") %></th>
-              <th><%= t("cases.index.columns.status") %></th>
-              <th><%= t("cases.index.columns.queue") %></th>
-              <th><%= t("cases.index.columns.created") %></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @cases.each do |kase| %>
-              <tr>
-                <td class="mono"><%= link_to kase.tracking_id, case_path(kase) %></td>
-                <td><%= link_to kase.subject, case_path(kase) %></td>
-                <td><%= status_badge(kase) %></td>
-                <td><%= kase.queue&.name %></td>
-                <td class="table-meta"><%= l kase.created_at, format: :short %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-      <%= render "shared/pagination", pagy: @pagy %>
-    <% else %>
-      <%= render "shared/empty_state", title: t(".no_cases") %>
-    <% end %>
+  <section aria-label="<%= t("customer_360.title") %>">
+    <%= render "shared/customer_360" %>
   </section>
-  <% end %>
 
   <aside>
     <div class="panel">

@@ -6,6 +6,7 @@ pension_case:
   channel: web_portal
   status: new
   priority: normal
+  status_changed_at: <%= 1.hour.ago %>
   queue: pensions
   contact: asha
   sla_policy: standard
@@ -20,6 +21,7 @@ assigned_case:
   queue: sanitation
   contact: ravi
   assignee: agent_a
+  status_changed_at: <%= 1.hour.ago %>
 
 waiting_case:
   tenant: primary
@@ -30,6 +32,7 @@ waiting_case:
   priority: low
   queue: sanitation
   contact: asha
+  status_changed_at: <%= 1.hour.ago %>
 
 resolved_case:
   tenant: primary
@@ -40,3 +43,4 @@ resolved_case:
   priority: normal
   contact: ravi
   resolved_at: <%= 2.days.ago %>
+  status_changed_at: <%= 2.days.ago %>

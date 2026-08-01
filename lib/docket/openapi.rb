@@ -11,6 +11,7 @@ module Docket
         info: {
           title: "Docket API",
           version: "v1",
+          "x-docket-version": Docket::VERSION,
           description: "Sovereign case-management API. Every action the UI can perform is available here. " \
                        "Auth: per-user tokens (`Authorization: Bearer dkt_…`) carry that user's console permissions; " \
                        "service accounts exchange client credentials at /oauth/token for a scoped bearer (`dkts_…`). " \
@@ -37,6 +38,9 @@ module Docket
             sla_policy_id: :integer, first_response_due_at: :datetime, resolution_due_at: :datetime,
             first_responded_at: :datetime, resolved_at: :datetime, closed_at: :datetime,
             first_response_breached: :boolean, resolution_breached: :boolean, reopen_count: :integer,
+            custom_fields: :object,
+            merged_into_id: :integer, merged_at: :datetime,
+            merged_case_ids: { type: "array", items: { type: "integer" } },
             allowed_transitions: { type: "array", items: { type: "string" } },
             created_at: :datetime, updated_at: :datetime
           ),
@@ -48,7 +52,8 @@ module Docket
           ),
           Contact: object_schema(
             id: :integer, name: :string, email: :string, phone: :string, external_id: :string,
-            organisation_id: :integer, preferred_language: :string, notes: :string, sms_consent: :boolean,
+            organisation_id: :integer, preferred_language: :string, notes: :string,
+            sms_consent: :boolean, email_consent: :boolean, email_unsubscribed_at: :datetime,
             created_at: :datetime, updated_at: :datetime
           ),
           Organisation: object_schema(id: :integer, name: :string, kind: :string, external_ref: :string,
@@ -56,14 +61,37 @@ module Docket
           Lead: object_schema(id: :integer, name: :string, email: :string, phone: :string,
                               company_name: :string, source: enum(Lead.sources.keys), status: enum(Lead.statuses.keys),
                               owner_id: :integer, contact_id: :integer, converted_deal_id: :integer, value_estimate_cents: :integer,
-                              notes: :string, sms_consent: :boolean,
+                              notes: :string, sms_consent: :boolean, email_consent: :boolean,
+                              email_unsubscribed_at: :datetime,
+                              consent_captured_at: :datetime, consent_source: :string,
+                              provenance: :object, merged_into_id: :integer, merged_at: :datetime,
+                              merged_lead_ids: { type: "array", items: { type: "integer" } },
                               converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
+          LeadCaptureForm: object_schema(id: :integer, name: :string, slug: :string,
+                                         field_mapping: :object, consent_disclosure: :string,
+                                         active: :boolean, is_default: :boolean,
+                                         created_at: :datetime, updated_at: :datetime),
           Deal: object_schema(id: :integer, name: :string, pipeline_id: :integer, pipeline_stage_id: :integer,
                               status: enum(Deal.statuses.keys), value_cents: :integer, currency: :string,
                               owner_id: :integer, contact_id: :integer, organisation_id: :integer, lead_id: :integer,
                               expected_close_on: :datetime, closed_at: :datetime,
-                              lost_reason: enum(Deal.lost_reasons.keys),
+                              lost_reason: enum(Deal.lost_reasons.keys), onboarding_project_id: :integer,
+                              line_items_total_cents: :integer,
+                              line_items: { type: "array", items: { type: "object" } },
+                              competitors: { type: "array", items: { type: "object" } },
                               created_at: :datetime, updated_at: :datetime),
+          Product: object_schema(id: :integer, name: :string, sku: :string, description: :string,
+                                 default_unit_price_cents: :integer, currency: :string,
+                                 active: :boolean, created_at: :datetime, updated_at: :datetime),
+          DealLineItem: object_schema(id: :integer, deal_id: :integer, product_id: :integer,
+                                      description: :string, quantity: :number,
+                                      unit_price_cents: :integer, total_cents: :integer,
+                                      currency: :string, created_at: :datetime, updated_at: :datetime),
+          Competitor: object_schema(id: :integer, name: :string, website: :string, notes: :string,
+                                    created_at: :datetime, updated_at: :datetime),
+          DealCompetitor: object_schema(id: :integer, deal_id: :integer, competitor_id: :integer,
+                                        competitor_name: :string, disposition: :string, notes: :string,
+                                        created_at: :datetime, updated_at: :datetime),
           Pipeline: object_schema(id: :integer, name: :string, slug: :string, position: :integer, active: :boolean,
                                   stages: { type: "array", items: { type: "object" } },
                                   created_at: :datetime, updated_at: :datetime),
@@ -81,12 +109,29 @@ module Docket
           Category: object_schema(id: :integer, name: :string, description: :string,
                                   ai_auto_resolve: :boolean, created_at: :datetime, updated_at: :datetime),
           SlaPolicy: object_schema(id: :integer, name: :string, description: :string,
+                                   business_calendar_id: :integer,
                                    targets: { type: "array", items: { type: "object" } },
                                    created_at: :datetime, updated_at: :datetime),
-          Macro: object_schema(id: :integer, name: :string, body: :string, created_at: :datetime, updated_at: :datetime),
+          BusinessCalendar: object_schema(id: :integer, name: :string, time_zone: :string,
+                                          is_default: :boolean,
+                                          windows: { type: "array", items: { type: "object" } },
+                                          exceptions: { type: "array", items: { type: "object" } },
+                                          created_at: :datetime, updated_at: :datetime),
+          CustomFieldDefinition: object_schema(
+            id: :integer, resource_type: enum(CustomFieldDefinition::RESOURCE_TYPES),
+            key: :string, label: :string, field_type: enum(CustomFieldDefinition::FIELD_TYPES),
+            options: { type: "array", items: { type: "string" } }, required: :boolean,
+            active: :boolean, reportable: :boolean, position: :integer,
+            created_at: :datetime, updated_at: :datetime
+          ),
+          Macro: object_schema(id: :integer, name: :string, body: :string,
+                               message_kind: :string, set_status: :string, set_priority: :string,
+                               set_queue_id: :integer, set_assignee_id: :integer,
+                               created_at: :datetime, updated_at: :datetime),
           ReferenceDoc: object_schema(id: :integer, title: :string, body: :string, created_at: :datetime, updated_at: :datetime),
           User: object_schema(id: :integer, name: :string, email_address: :string,
                               role: enum(User.roles.keys), active: :boolean, locale: :string,
+                              email_signature: :string,
                               queue_ids: { type: "array", items: { type: "integer" } },
                               created_at: :datetime, updated_at: :datetime),
           AuditEntry: object_schema(id: :integer, action: :string, actor_type: :string, actor_id: :integer,
@@ -104,14 +149,21 @@ module Docket
           ApiToken: object_schema(id: :integer, user_id: :integer, name: :string,
                                   last_used_at: :datetime, revoked_at: :datetime, created_at: :datetime),
           Project: object_schema(id: :integer, key: :string, name: :string, description: :string,
-                                 lead_id: :integer, archived: :boolean,
+                                 lead_id: :integer, archived: :boolean, visibility: :string,
+                                 onboarding_deal_id: :integer, project_template_id: :integer,
+                                 assignment_rules: { type: "array", items: { type: "object" } },
                                  created_at: :datetime, updated_at: :datetime),
+          ProjectTemplate: object_schema(id: :integer, name: :string, key_prefix: :string,
+                                         description: :string, active: :boolean,
+                                         items: { type: "array", items: { type: "object" } },
+                                         created_at: :datetime, updated_at: :datetime),
           WorkItem: object_schema(id: :integer, reference: :string, project_id: :integer, number: :integer,
                                   title: :string, description: :string, kind: :string, priority: :string,
                                   workflow_state_id: :integer, workflow_state: :string, state_category: :string,
                                   assignee_id: :integer, reporter_id: :integer, parent_id: :integer,
                                   sprint_id: :integer, labels: :object, estimate: :string,
-                                  due_on: :datetime, closed_at: :datetime,
+                                  due_on: :datetime, custom_fields: :object,
+                                  relations: { type: "array", items: { type: "object" } }, closed_at: :datetime,
                                   created_at: :datetime, updated_at: :datetime),
           WorkComment: object_schema(id: :integer, work_item_id: :integer,
                                      author_type: :string, author_id: :integer, body: :string,
@@ -156,6 +208,12 @@ module Docket
         responses: { "200" => "Transitioned", "422" => "Illegal transition" }) }
       result["/cases/{id}/assign"] = { post: op("Assign or unassign the case",
         params: [ id_param ], request: { assignee_id: :integer }) }
+      result["/cases/{id}/merge"] = { post: op(
+        "Merge another same-contact case into this case", params: [ id_param ],
+        request: { source_case_id: :integer }) }
+      result["/cases/{id}/split"] = { post: op(
+        "Move selected messages into a new same-contact case", params: [ id_param ],
+        request: { subject: :string, message_ids: { type: "array", items: { type: "integer" } } }) }
       result["/cases/{case_id}/messages"] = {
         get: op("List messages on a case", params: [ case_id_param ]),
         post: op("Add a message (public_reply or internal_note). Service accounts may pass on_behalf_of to author as the contact. " \
@@ -172,25 +230,64 @@ module Docket
       crud(result, "leads", "Lead", extra_params: %w[q status owner_id])
       result["/leads/{id}/convert"] = { post: op("Convert a lead — upserts/links a Contact and stamps the lead converted",
         params: [ id_param ], responses: { "200" => "Converted" }) }
+      result["/leads/{id}/merge"] = { post: op(
+        "Merge another reviewed lead into this canonical lead; the source remains in the audit lineage",
+        params: [ id_param ], request: { source_lead_id: :integer }) }
+      crud(result, "lead_capture_forms", "LeadCaptureForm",
+           create_note: "Maps public field names to lead attributes and records consent provenance. Requires crm:write.")
       crud(result, "pipelines", "Pipeline")
       crud(result, "deals", "Deal", extra_params: %w[pipeline_id status])
       result["/deals/{id}/move"] = { post: op("Move a deal to another stage in its pipeline (the kanban drag)",
         params: [ id_param ], request: { pipeline_stage_id: :integer }, responses: { "200" => "Moved" }) }
+      result["/deals/{id}/onboard"] = { post: op(
+        "Idempotently create an onboarding project for a won deal from a project template",
+        params: [ id_param ], request: { project_template_id: :integer }, schema: "Project",
+        responses: { "201" => "Created", "422" => "Deal is not won or template is invalid" }) }
+      crud(result, "products", "Product")
+      crud(result, "competitors", "Competitor")
+      result["/deals/{deal_id}/line_items"] = { post: op(
+        "Add a catalog product to a deal; all line-item currency must match the deal",
+        params: [ path_param("deal_id") ], request: { deal_line_item: :object }, schema: "DealLineItem") }
+      result["/deal_line_items/{id}"] = {
+        patch: op("Update quantity or price", params: [ id_param ], request: { deal_line_item: :object },
+                  schema: "DealLineItem"),
+        delete: op("Remove a deal line item", params: [ id_param ])
+      }
+      result["/deals/{deal_id}/competitor_links"] = { post: op(
+        "Link a competitor and disposition to a deal", params: [ path_param("deal_id") ],
+        request: { deal_competitor: :object }, schema: "DealCompetitor") }
+      result["/deal_competitors/{id}"] = {
+        patch: op("Update competitor disposition", params: [ id_param ],
+                  request: { deal_competitor: :object }, schema: "DealCompetitor"),
+        delete: op("Remove a competitor link", params: [ id_param ])
+      }
       # Work module (WM5). Documented here is what makes these reachable as MCP
       # tools too — the catalogue is derived from this document.
       crud(result, "projects", "Project", extra_params: %w[archived],
            create_note: "key is uppercase and unique per tenant; a new project seeds its default board columns. Service accounts need the work:manage scope for create/update/delete — configuring a workspace sits a tier above doing the work in it.")
+      crud(result, "project_templates", "ProjectTemplate",
+           create_note: "Reusable work-item checklist for explicit won-deal onboarding. Requires work:manage.")
       crud(result, "work_items", "WorkItem",
            extra_params: %w[project_id assignee_id sprint_id open],
            create_note: "work_item[project_id] is required on create. Identity is KEY-123, minted per project.")
-      result["/work_items/{id}/transition"] = { post: op("Move a work item to another workflow state (audited; echoes to any linked case)",
+      result["/work_items/{id}/transition"] = { post: op("Move a work item to another workflow state (audited; may return 202 when maker-checker approval is required)",
         params: [ id_param ], request: { workflow_state_id: :integer },
-        responses: { "200" => "Moved", "404" => "State not in this project" }) }
+        responses: { "200" => "Moved", "202" => "Submitted for approval", "404" => "State not in this project" }) }
       result["/work_items/{work_item_id}/work_comments"] = {
         get: op("List comments on a work item", params: [ path_param("work_item_id") ], schema: "WorkComment"),
         post: op("Comment on a work item", params: [ path_param("work_item_id") ],
                  request: { work_comment: :object }, schema: "WorkComment")
       }
+      result["/work_comments/{id}"] = {
+        patch: op("Edit the caller's work comment", params: [ id_param ], request: { work_comment: :object },
+                  schema: "WorkComment"),
+        delete: op("Delete the caller's work comment", params: [ id_param ])
+      }
+      result["/work_items/{work_item_id}/relations"] = { post: op(
+        "Relate work items as blocks or duplicates", params: [ path_param("work_item_id") ],
+        request: { work_item_relation: :object }) }
+      result["/work_item_relations/{id}"] = { delete: op(
+        "Remove a work-item relation", params: [ id_param ]) }
       crud(result, "sprints", "Sprint", extra_params: %w[project_id], only: %i[index show create update],
            create_note: "sprint[project_id] is required on create. One sprint may be active per project. status is NOT settable here — close through POST /sprints/{id}/close so unfinished work is dealt with.")
       result["/projects/{project_id}/sprint_report"] = {
@@ -214,6 +311,10 @@ module Docket
       crud(result, "categories", "Category")
       result["/categories/{id}/toggle_auto_resolve"] = { post: op("Flip AI auto-resolve for the category (admin user tokens only)", params: [ id_param ]) }
       crud(result, "sla_policies", "SlaPolicy")
+      crud(result, "business_calendars", "BusinessCalendar")
+      crud(result, "custom_fields", "CustomFieldDefinition", extra_params: %w[resource_type],
+           only: %i[index show create update],
+           create_note: "resource_type is cases or work_items; key is immutable after creation. Deactivate a field to preserve historical values.")
       crud(result, "macros", "Macro")
       crud(result, "reference_docs", "ReferenceDoc")
 
@@ -261,6 +362,15 @@ module Docket
       result["/reports/activity"] = { get: op(
         "Activity & Usage report: per-user action counts, login history, case volume by queue/staff, " \
         "resolution rate, SLA breach count and compliance, AI-vs-human reply split (admin or audit:read)",
+        params: [ query_param("from"), query_param("to") ]) }
+      result["/reports/custom_fields"] = { get: op(
+        "Distribution report for one reportable case or work-item custom field",
+        params: [ query_param("resource_type"), query_param("field") ]) }
+      result["/reports/csat"] = { get: op(
+        "CSAT invitations, response rate, average, and score distribution",
+        params: [ query_param("from"), query_param("to") ]) }
+      result["/reports/sales"] = { get: op(
+        "Currency-separated pipeline, win/loss, competitor losses, and velocity",
         params: [ query_param("from"), query_param("to") ]) }
 
       result["/settings"] = {

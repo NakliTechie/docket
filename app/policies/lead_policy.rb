@@ -5,6 +5,7 @@ class LeadPolicy < ApplicationPolicy
   def update?  = permit?("lead:write")
   def convert? = permit?("lead:write")
   def mark_unqualified? = permit?("lead:write")
+  def merge?   = permit?("lead:write") && permit?("lead:delete")
   def destroy? = permit?("lead:delete")
 
   class Scope < Scope

@@ -1,0 +1,8 @@
+<% page_title t("sequence_unsubscribes.show.title") %>
+<div class="auth-card">
+  <h1><%= t("sequence_unsubscribes.show.title") %></h1>
+  <p><%= t("sequence_unsubscribes.show.explanation") %></p>
+  <%= button_to t("sequence_unsubscribes.show.confirm"),
+        sequence_unsubscribe_path(token: params[:token]), method: :post,
+        class: "btn btn-primary" %>
+</div>

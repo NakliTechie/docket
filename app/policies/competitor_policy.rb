@@ -1,0 +1,2 @@
+class CompetitorPolicy < ProductPolicy
+end

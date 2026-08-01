@@ -6,6 +6,8 @@ class WebhookEndpoint < ApplicationRecord
   include SoftDeletable
   include Audited
 
+  encrypts :secret, key_provider: Docket::VaultKeyring.current.provider
+
   EVENTS = %w[
     case.created
     case.status_changed

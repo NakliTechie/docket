@@ -36,6 +36,23 @@ class BoardScaleTest < ActionDispatch::IntegrationTest
                  "and it must offer the way to see the rest"
   end
 
+  test "WIP evaluates the true total even when the rendered column is capped" do
+    state = workflow_states(:pep_backlog)
+    state.update!(wip_limit: BoardsController::COLUMN_LIMIT + 5)
+    total = BoardsController::COLUMN_LIMIT + 15
+    (total - 1).times do |i|
+      project.work_items.create!(title: "wip #{i}", workflow_state: state, reporter: users(:admin))
+    end
+
+    sign_in_as users(:admin)
+    get project_board_path(project)
+
+    column = css_select("section[data-target-id='#{state.id}']").first
+    assert_equal total.to_s, column["data-total-count"]
+    assert_includes column["class"], "is-over-wip"
+    assert_empty column.css(".board-wip-warning[hidden]")
+  end
+
   test "a small board is unchanged — no truncation notice, all cards shown" do
     sign_in_as users(:admin)
     get project_board_path(project)

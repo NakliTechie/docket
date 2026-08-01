@@ -32,7 +32,7 @@ class DashboardsTest < ActionDispatch::IntegrationTest
     get dashboard_path(format: :csv)
     assert_response :success
     assert_equal "text/csv", @response.media_type
-    assert_match "section,metric,value,from,to", response.body
+    assert_match "section,metric,value,currency,from,to", response.body
     assert_match "effector,autonomy_rate_pct", response.body
   end
 

@@ -33,8 +33,9 @@ module Features
   REGISTRY = {
     "service_desk" => %w[case:read case:write case:delete case_config:manage],
     "service_desk.kb" => %w[reference_doc:manage],
-    "service_desk.approvals" => %w[invocation:review],
     "service_desk.portal" => [],
+
+    "approvals" => %w[invocation:review],
 
     "crm" => %w[lead:read lead:write lead:delete deal:read deal:write deal:delete
                 pipeline:read pipeline:manage report:sales],
@@ -95,17 +96,30 @@ module Features
     "sla_policies" => "service_desk", "macros" => "service_desk", "messages" => "service_desk",
     "reports" => "service_desk",
     "reference_docs" => "service_desk.kb",
-    "leads" => "crm", "deals" => "crm", "pipelines" => "crm",
+    "leads" => "crm", "lead_capture_forms" => "crm", "deals" => "crm",
+    "deal_line_items" => "crm", "deal_competitors" => "crm", "products" => "crm",
+    "competitors" => "crm", "pipelines" => "crm",
     "sequences" => "crm.sequences", "sequence_enrollments" => "crm.sequences",
-    "projects" => "work", "work_items" => "work", "sprints" => "work.sprints"
+    "projects" => "work", "project_templates" => "work", "work_items" => "work",
+    "work_item_relations" => "work", "work_comments" => "work",
+    "sprints" => "work.sprints"
   }.freeze
 
   def owner_of_api_path(path)
-    API_RESOURCE_OWNER[path.to_s.delete_prefix("/").split("/").first.to_s]
+    normalized_path = path.to_s.delete_prefix("/")
+    return "crm" if normalized_path.start_with?("reports/sales")
+
+    API_RESOURCE_OWNER[normalized_path.split("/").first.to_s]
   end
 
   # Is this api/v1 path available to the tenant in scope?
   def api_path_enabled?(path)
+    normalized_path = path.to_s.delete_prefix("/")
+    return enabled?("service_desk") || enabled?("work") if normalized_path.start_with?("reports/custom_fields")
+
+    resource = normalized_path.split("/").first.to_s
+    return enabled?("service_desk") || enabled?("work") if resource == "custom_fields"
+
     owner = owner_of_api_path(path)
     owner.nil? || enabled?(owner)
   end
@@ -125,9 +139,9 @@ module Features
   PRESETS = {
     "full" => [],
     "service_only" => %w[crm crm.sequences work work.sprints],
-    "crm_only" => %w[service_desk service_desk.kb service_desk.approvals
+    "crm_only" => %w[service_desk service_desk.kb
                      service_desk.portal work work.sprints],
-    "work_only" => %w[service_desk service_desk.kb service_desk.approvals
+    "work_only" => %w[service_desk service_desk.kb
                       service_desk.portal crm crm.sequences]
   }.freeze
 

@@ -67,10 +67,18 @@ module Connectors
 
     def perform(req, uri)
       http = Net::HTTP.new(uri.host, uri.port)
+      # Resolve and validate immediately before the connection, then pin
+      # Net::HTTP to that address. This closes the DNS-rebinding window between
+      # the earlier URL check and the socket connection.
+      if http.respond_to?(:ipaddr=)
+        http.ipaddr = Docket::OutboundUrl.vetted_address(uri.host, port: uri.port)
+      end
       http.use_ssl = uri.scheme == "https"
       http.open_timeout = OPEN_TIMEOUT
       http.read_timeout = READ_TIMEOUT
       http.request(req)
+    rescue Docket::OutboundUrl::Blocked, Docket::OutboundUrl::ResolutionError => e
+      raise Connectors::Error, "request blocked: #{e.message}"
     rescue *NET_ERRORS => e
       raise Connectors::Error, "request failed: #{e.class}: #{e.message}"
     end
@@ -85,6 +93,28 @@ module Connectors
       JSON.parse(raw)
     rescue JSON::ParserError
       raw
+    end
+
+    # Follow provider pagination links only on the exact authenticated origin.
+    # A provider-controlled cross-origin Link header must never receive the
+    # connector's Authorization header.
+    def next_link_uri(response, origin:)
+      header = response.respond_to?(:[]) ? response["Link"].to_s : ""
+      part = header.split(",").find { |entry| entry.match?(/\brel\s*=\s*["']?next["']?/i) }
+      return nil unless part
+
+      href = part[/<([^>]+)>/, 1]
+      raise Connectors::Error, "pagination Link header is malformed" if href.blank?
+
+      uri = URI.join(origin.to_s, href)
+      same_origin = uri.scheme == origin.scheme && uri.host.to_s.casecmp?(origin.host.to_s) && uri.port == origin.port
+      raise Connectors::Error, "pagination Link changed origin" unless same_origin
+      if (reason = Docket::OutboundUrl.blocked_reason(uri.host))
+        raise Connectors::Error, "pagination endpoint blocked: #{reason}"
+      end
+      uri
+    rescue URI::InvalidURIError
+      raise Connectors::Error, "pagination Link is not a valid URL"
     end
 
     def base_headers

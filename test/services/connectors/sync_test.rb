@@ -65,6 +65,29 @@ class Connectors::SyncTest < ActiveSupport::TestCase
     assert conn.reload.status_error?
   end
 
+  test "an in-flight run prevents an overlapping sync from claiming the connector" do
+    conn = connector
+    existing = conn.connector_runs.create!(status: :running, trigger: :webhook, started_at: 5.minutes.ago)
+
+    assert_no_difference "ConnectorRun.count" do
+      assert_nil Connectors::Sync.run(conn, trigger: "scheduled")
+    end
+    assert existing.reload.status_running?
+    assert conn.reload.status_active?
+  end
+
+  test "an expired claim is failed before a new sync starts" do
+    conn = connector
+    stale = conn.connector_runs.create!(status: :running, trigger: :scheduled, started_at: 2.hours.ago)
+    stub_fetch(conn, [])
+
+    fresh = Connectors::Sync.run(conn, trigger: "manual")
+
+    assert stale.reload.status_failed?
+    assert_equal "sync claim expired", stale.error
+    assert fresh.status_success?
+  end
+
   # --- HttpJsonProvider (network stubbed) ---
 
   class FakeResponse

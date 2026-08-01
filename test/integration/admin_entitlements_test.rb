@@ -71,12 +71,18 @@ class AdminEntitlementsTest < ActionDispatch::IntegrationTest
   end
 
   test "provisioning takes a preset; the default is every module" do
-    full = Tenants::Provisioner.call(name: "Full Co", subdomain: "fullco").tenant
-    assert full.feature?("crm")
-    assert full.feature?("work")
+    original = Rails.application.config.x.tenancy_mode
+    Rails.application.config.x.tenancy_mode = "shared"
+    begin
+      full = Tenants::Provisioner.call(name: "Full Co", subdomain: "fullco").tenant
+      assert full.feature?("crm")
+      assert full.feature?("work")
 
-    desk = Tenants::Provisioner.call(name: "Desk Co", subdomain: "deskco", preset: "service_only").tenant
-    assert desk.feature?("service_desk")
-    refute desk.feature?("crm")
+      desk = Tenants::Provisioner.call(name: "Desk Co", subdomain: "deskco", preset: "service_only").tenant
+      assert desk.feature?("service_desk")
+      refute desk.feature?("crm")
+    ensure
+      Rails.application.config.x.tenancy_mode = original
+    end
   end
 end

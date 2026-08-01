@@ -14,7 +14,12 @@ module Decisioning
     ].freeze
 
     def run(rules: RULES)
-      rules.flat_map { |klass| klass.new.evaluate }
+      rules.select { |klass| klass.owner_feature.nil? || Features.enabled?(klass.owner_feature) }
+           .flat_map { |klass| klass.new.evaluate }
+    end
+
+    def owner_feature(rule_key)
+      RULES.find { |klass| klass.key == rule_key.to_s }&.owner_feature
     end
 
     # Counts grouped by accountability tier — the headline for the dashboard.

@@ -5,20 +5,46 @@
 #   # Production (put a TLS-terminating proxy in front):
 #   POSTGRES_PASSWORD=$(openssl rand -hex 16) docker compose up --build -d
 #
-#   # Try the demo on localhost (seeds fictional data, serves plain HTTP):
-#   DOCKET_SEED_DEMO=true DOCKET_FORCE_SSL=false docker compose up --build
+#   # Try the demo on localhost (rich demo seeding is an explicit one-off operation):
+#   export POSTGRES_PASSWORD=$(openssl rand -hex 16)
+#   DOCKET_FORCE_SSL=false docker compose up --build -d db migrate
+#   docker compose run --rm -e DOCKET_ALLOW_DEMO_SEED=1 app \
+#     ./bin/rails db:prepare db:seed demo:seed
+#   DOCKET_FORCE_SSL=false docker compose up
 #
 # then open http://localhost:3000 (staff console) and /portal. In demo
 # mode the demo logins (arjun@docket.local / docket-demo) print on first
 # boot. The break-glass admin (admin@docket.local) gets a random password
 # printed once unless you set DOCKET_ADMIN_PASSWORD.
+x-docket-environment: &docket-environment
+  DATABASE_URL: postgres://docket:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before starting Docket}@db/docket_production
+  SECRET_KEY_BASE: ${SECRET_KEY_BASE:-}
+  DOCKET_FORCE_SSL: "${DOCKET_FORCE_SSL:-true}"
+  DOCKET_DEPLOYMENT_MODE: "${DOCKET_DEPLOYMENT_MODE:-isolated}"
+  DOCKET_BASE_DOMAIN: "${DOCKET_BASE_DOMAIN:-}"
+  DOCKET_DEFAULT_TIME_ZONE: "${DOCKET_DEFAULT_TIME_ZONE:-UTC}"
+  DOCKET_VAULT_KEYS: "${DOCKET_VAULT_KEYS:-}"
+  DOCKET_VAULT_KEYS_PATH: "${DOCKET_VAULT_KEYS_PATH:-/rails/storage/vault_keys.json}"
+  DOCKET_VAULT_INCLUDE_LEGACY_KEY: "${DOCKET_VAULT_INCLUDE_LEGACY_KEY:-true}"
+  # Solid Queue's in-Puma supervisor needs five connections. Keep the web
+  # thread count and every database pool at or above that shared floor.
+  RAILS_MAX_THREADS: "${RAILS_MAX_THREADS:-5}"
+  DOCKET_DB_CHECKOUT_TIMEOUT_SECONDS: "${DOCKET_DB_CHECKOUT_TIMEOUT_SECONDS:-5}"
+  DOCKET_DB_CONNECT_TIMEOUT_SECONDS: "${DOCKET_DB_CONNECT_TIMEOUT_SECONDS:-5}"
+  DOCKET_DB_STATEMENT_TIMEOUT: "${DOCKET_DB_STATEMENT_TIMEOUT:-30s}"
+  DOCKET_DB_LOCK_TIMEOUT: "${DOCKET_DB_LOCK_TIMEOUT:-5s}"
+  DOCKET_DB_IDLE_TRANSACTION_TIMEOUT: "${DOCKET_DB_IDLE_TRANSACTION_TIMEOUT:-60s}"
+
+x-docket-volumes: &docket-volumes
+  - app-storage:/rails/storage
+
 services:
   db:
     image: postgres:16
     restart: unless-stopped
     environment:
       POSTGRES_USER: docket
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-docket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before starting Docket}
       POSTGRES_DB: docket_production
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -29,30 +55,73 @@ services:
       timeout: 5s
       retries: 20
 
+  migrate:
+    build: .
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *docket-environment
+      # Read only by the first-create base seed in bin/release. It is not
+      # exposed to the long-running web process below.
+      DOCKET_ADMIN_PASSWORD: "${DOCKET_ADMIN_PASSWORD:-}"
+      DOCKET_TENANT_NAME: "${DOCKET_TENANT_NAME:-Docket}"
+    volumes: *docket-volumes
+    command: [ "./bin/release" ]
+
   app:
     build: .
     restart: unless-stopped
     ports:
       - "${DOCKET_PORT:-3000}:3000"
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
-      DATABASE_URL: postgres://docket:${POSTGRES_PASSWORD:-docket}@db/docket_production
+      <<: *docket-environment
+      DOCKET_BASE_URL: "${DOCKET_BASE_URL:-}"
+      DOCKET_ALLOWED_HOSTS: "${DOCKET_ALLOWED_HOSTS:-}"
+      DOCKET_HOST: "${DOCKET_HOST:-localhost}"
+      DOCKET_PORT: "${DOCKET_PORT:-3000}"
+      DOCKET_MAIL_FROM: "${DOCKET_MAIL_FROM:-no-reply@docket.local}"
+      SMTP_ADDRESS: "${SMTP_ADDRESS:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USERNAME: "${SMTP_USERNAME:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      SMTP_STARTTLS: "${SMTP_STARTTLS:-true}"
+      DOCKET_DKIM_DOMAIN: "${DOCKET_DKIM_DOMAIN:-}"
+      DOCKET_DKIM_SELECTOR: "${DOCKET_DKIM_SELECTOR:-}"
+      DOCKET_DKIM_PRIVATE_KEY: "${DOCKET_DKIM_PRIVATE_KEY:-}"
+      DOCKET_DKIM_PRIVATE_KEY_PATH: "${DOCKET_DKIM_PRIVATE_KEY_PATH:-}"
+      RAILS_INBOUND_EMAIL_PASSWORD: "${RAILS_INBOUND_EMAIL_PASSWORD:-}"
+      DOCKET_STAFF_OIDC_ISSUER: "${DOCKET_STAFF_OIDC_ISSUER:-}"
+      DOCKET_STAFF_OIDC_CLIENT_ID: "${DOCKET_STAFF_OIDC_CLIENT_ID:-}"
+      DOCKET_STAFF_OIDC_CLIENT_SECRET: "${DOCKET_STAFF_OIDC_CLIENT_SECRET:-}"
+      DOCKET_STAFF_ROLE_CLAIM: "${DOCKET_STAFF_ROLE_CLAIM:-}"
+      DOCKET_STAFF_ROLE_MAPPING: "${DOCKET_STAFF_ROLE_MAPPING:-}"
+      DOCKET_STAFF_JIT_DOMAINS: "${DOCKET_STAFF_JIT_DOMAINS:-}"
+      DOCKET_STAFF_SAML_SP_ENTITY_ID: "${DOCKET_STAFF_SAML_SP_ENTITY_ID:-}"
+      DOCKET_STAFF_SAML_IDP_SSO_URL: "${DOCKET_STAFF_SAML_IDP_SSO_URL:-}"
+      DOCKET_STAFF_SAML_IDP_CERT: "${DOCKET_STAFF_SAML_IDP_CERT:-}"
+      DOCKET_CUSTOMER_OIDC_ISSUER: "${DOCKET_CUSTOMER_OIDC_ISSUER:-}"
+      DOCKET_CUSTOMER_OIDC_CLIENT_ID: "${DOCKET_CUSTOMER_OIDC_CLIENT_ID:-}"
+      DOCKET_CUSTOMER_OIDC_CLIENT_SECRET: "${DOCKET_CUSTOMER_OIDC_CLIENT_SECRET:-}"
+      DOCKET_CUSTOMER_EXTERNAL_ID_CLAIM: "${DOCKET_CUSTOMER_EXTERNAL_ID_CLAIM:-sub}"
+      DOCKET_OUTBOUND_ALLOW_CIDRS: "${DOCKET_OUTBOUND_ALLOW_CIDRS:-}"
+      RAILS_LOG_LEVEL: "${RAILS_LOG_LEVEL:-info}"
+      WEB_CONCURRENCY: "${WEB_CONCURRENCY:-1}"
+      JOB_CONCURRENCY: "${JOB_CONCURRENCY:-1}"
+      RACK_TIMEOUT_SERVICE_TIMEOUT: "${RACK_TIMEOUT_SERVICE_TIMEOUT:-25}"
+      DOCKET_SWEEP_STARTUP_GRACE_SECONDS: "${DOCKET_SWEEP_STARTUP_GRACE_SECONDS:-7200}"
       # Left unset, the entrypoint generates a unique key and persists it
       # to the storage volume. Override to manage it yourself: bin/rails secret
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-}
       # Production-safe defaults: SSL enforced, no demo accounts. The
       # localhost demo overrides both (see the header comment).
-      DOCKET_FORCE_SSL: "${DOCKET_FORCE_SSL:-true}"
-      DOCKET_SEED_DEMO: "${DOCKET_SEED_DEMO:-false}"
-      DOCKET_HOST: ${DOCKET_HOST:-localhost}
-      DOCKET_PORT: ${DOCKET_PORT:-3000}
       # Outbound mail stays off unless you configure your gateway:
       # SMTP_ADDRESS, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD
       SOLID_QUEUE_IN_PUMA: "true"
-    volumes:
-      - app-storage:/rails/storage
+    volumes: *docket-volumes
     # /up returns 200 once the app boots cleanly. assume_ssl makes Rails
     # treat this in-container http probe as already-SSL, so force_ssl
     # doesn't redirect it (works in both the prod and demo profiles).

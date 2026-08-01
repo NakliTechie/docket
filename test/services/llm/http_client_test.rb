@@ -54,4 +54,9 @@ class Llm::HttpClientTest < ActiveSupport::TestCase
       assert_equal Llm::HttpClient::DEFAULT_READ_TIMEOUT, http.read_timeout
     end
   end
+
+  test "a malformed or non-http endpoint is normalized to Llm::Error" do
+    assert_raises(Llm::Error) { Llm::HttpClient.new(endpoint: "not a url", model: "m") }
+    assert_raises(Llm::Error) { Llm::HttpClient.new(endpoint: "file:///tmp/model", model: "m") }
+  end
 end

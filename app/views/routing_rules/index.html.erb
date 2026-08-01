@@ -19,6 +19,7 @@
         <tr>
           <th class="num"><%= t(".columns.order") %></th>
           <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.trigger") %></th>
           <th><%= t(".columns.conditions") %></th>
           <th><%= t(".columns.actions") %></th>
           <th><%= t(".columns.status") %></th>
@@ -41,6 +42,7 @@
               </div>
             </td>
             <td><%= rule.name %></td>
+            <td><%= t("routing_rules.enum.trigger_type.#{rule.trigger_type}") %></td>
             <td><%= rule.conditions_summary.join(" · ").presence || tag.span(t(".any"), class: "muted") %></td>
             <td><%= rule.actions_summary.join(" · ").presence || tag.span("—", class: "muted") %></td>
             <td>

@@ -1,9 +1,9 @@
 class LeadsController < ApplicationController
   require_feature "crm"
-  before_action :set_lead, only: %i[show edit update destroy convert mark_unqualified]
+  before_action :set_lead, only: %i[show edit update destroy convert mark_unqualified merge]
 
   def index
-    scope = policy_scope(Lead).includes(:owner, :contact).search(params[:q])
+    scope = policy_scope(Lead).canonical.includes(:owner, :contact).search(params[:q])
     scope = scope.where(status: params[:status]) if params[:status].present?
     scope = scope.where(owner_id: params[:owner_id]) if params[:owner_id].present?
     @pagy, @leads = pagy(scope.order(created_at: :desc))
@@ -11,6 +11,7 @@ class LeadsController < ApplicationController
 
   def show
     authorize @lead
+    @duplicate_leads = LeadDuplicateFinder.call(@lead).order(created_at: :desc)
   end
 
   def new
@@ -59,14 +60,25 @@ class LeadsController < ApplicationController
     redirect_to @lead, notice: t(".unqualified")
   end
 
+  def merge
+    authorize @lead
+    source = policy_scope(Lead).canonical.find(params.require(:source_lead_id))
+    authorize source, :merge?
+    LeadMerge.call(source: source, target: @lead, actor: Current.user)
+    redirect_to lead_path(@lead), notice: t(".merged", name: source.name)
+  rescue LeadMerge::Error => error
+    redirect_to lead_path(@lead), alert: error.message, status: :see_other
+  end
+
   private
 
   def set_lead
-    @lead = Lead.find(params[:id])
+    @lead = Lead.find(params[:id]).canonical_record
   end
 
   def lead_params
     params.require(:lead).permit(:name, :email, :phone, :company_name,
-                                 :source, :owner_id, :value_estimate, :notes, :sms_consent)
+                                 :source, :owner_id, :value_estimate, :notes,
+                                 :sms_consent, :email_consent)
   end
 end

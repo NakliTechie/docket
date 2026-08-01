@@ -2,8 +2,9 @@ require "test_helper"
 
 class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
   class FakeResponse
-    def initialize(code, body) = (@code = code; @body = body)
+    def initialize(code, body, headers = {}) = (@code = code; @body = body; @headers = headers)
     attr_reader :code, :body
+    def [](name) = @headers[name]
   end
   class FakeHttp
     attr_reader :last
@@ -27,8 +28,8 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
     original = Net::HTTP.method(:new)
     Net::HTTP.define_singleton_method(:new) do |*_a|
       i += 1
-      code, body = responses[i] || responses.last
-      FakeHttp.new(FakeResponse.new(code.to_s, body)).tap { |h| captured << h }
+      code, body, headers = responses[i] || responses.last
+      FakeHttp.new(FakeResponse.new(code.to_s, body, headers || {})).tap { |h| captured << h }
     end
     yield captured
   ensure
@@ -177,7 +178,7 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
       assert_equal "a@b.com", records.first["email"]
 
       req = reqs.last.last
-      assert_equal "/admin/api/2025-01/customers.json", req.path
+      assert_equal "/admin/api/2025-01/customers.json?limit=250", req.path
       assert_kind_of Net::HTTP::Get, req
       assert_equal "shpat_token", req["X-Shopify-Access-Token"]
     end
@@ -185,6 +186,25 @@ class Connectors::ShopifyProviderTest < ActiveSupport::TestCase
 
   test "fetch raises on a non-2xx response" do
     with_http(401) do
+      assert_raises(Connectors::Error) { provider.fetch }
+    end
+  end
+
+
+  test "fetch follows same-origin Link pagination" do
+    link = '<https://acme.myshopify.com/admin/api/2025-01/customers.json?limit=250&page_info=next>; rel="next"'
+    with_http_seq(
+      [ 200, { "customers" => [ { "id" => 1 } ] }.to_json, { "Link" => link } ],
+      [ 200, { "customers" => [ { "id" => 2 } ] }.to_json ]
+    ) do |requests|
+      assert_equal [ 1, 2 ], provider.fetch.map { |record| record["id"] }
+      assert_includes requests.last.last.path, "page_info=next"
+    end
+  end
+
+  test "fetch rejects a cross-origin pagination link before reusing credentials" do
+    link = '<https://evil.example/customers.json?page_info=next>; rel="next"'
+    with_http_seq([ 200, { "customers" => [] }.to_json, { "Link" => link } ]) do
       assert_raises(Connectors::Error) { provider.fetch }
     end
   end

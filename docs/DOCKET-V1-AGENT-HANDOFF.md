@@ -1,5 +1,9 @@
 # Docket — v1.0 Agent Handoff
 
+> Historical founding build brief. Its roles, scope examples, and gate plan are
+> not the current operator contract. Use `OPERATOR-GUIDE.md` and the live
+> OpenAPI/roles screens for shipped behavior.
+
 Companion to `DOCKET-VISION-AND-ROADMAP.md`. This document is the complete instruction set for the implementing agent. Read both before writing code.
 
 ---
@@ -79,7 +83,7 @@ No SMS, no IVR, no chat widget in v1.0. Schema must not preclude them (channel i
 
 Two independent identity planes, never mixed:
 
-1. **Staff SSO (internal)** — bank employees sign into the Docket console via the deployment's corporate IdP. **OIDC primary** (omniauth_openid_connect), **SAML 2.0 also shipped** (banks run ADFS). Test both against a containerised Keycloak in CI. JIT user provisioning on first SSO login with default role `agent` (admin promotes); role mapping from an IdP claim/attribute is configurable. Local password auth remains available as break-glass and for deployments without an IdP.
+1. **Staff SSO (internal)** — bank employees sign into the Docket console via the deployment's corporate IdP. **OIDC primary** (omniauth_openid_connect), **SAML 2.0 also shipped** (banks run ADFS). JIT user provisioning on first SSO login now defaults to `customer_service`; role mapping from an IdP claim/attribute is configurable. Local password auth remains available as break-glass and for deployments without an IdP.
 2. **Customer SSO (external)** — the public portal trusts the deployment's *customer* IdP via OIDC (the identity behind netbanking/mobile login). Configured claim → `Contact.external_id` mapping. Customer SSO grants portal-level access only (own cases); it can never reach the staff console — enforce as separate session scopes/guards, separate cookies.
 
 Config for both lives in admin settings (issuer URL, client ID/secret, claim mappings), env-overridable for compose deployments. If neither IdP is configured, both planes silently fall back to v1.0 defaults (local staff auth; anonymous portal).

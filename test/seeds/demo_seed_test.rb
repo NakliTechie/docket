@@ -69,16 +69,25 @@ class DemoSeedTest < ActiveSupport::TestCase
     ENV["DOCKET_ALLOW_DEMO_SEED"] = had_flag if had_flag
   end
 
-  test "the documented compose demo explicitly passes the production seed gate" do
+  test "container web boot never migrates or seeds and the documented demo is explicit" do
     entrypoint = Rails.root.join("bin/docker-entrypoint").read
+    compose = Rails.root.join("docker-compose.yml").read
 
-    assert_includes entrypoint,
-      "DOCKET_ALLOW_DEMO_SEED=1 ./bin/rails db:seed demo:seed"
+    assert_no_match(/db:prepare|db:seed|demo:seed|DOCKET_SEED_DEMO/, entrypoint)
+    assert_includes compose, "docker compose run --rm -e DOCKET_ALLOW_DEMO_SEED=1 app"
+    assert_includes compose, "./bin/rails db:prepare db:seed demo:seed"
+    assert_includes compose, "condition: service_completed_successfully"
+    assert_equal "exec ./bin/rails db:prepare", Rails.root.join("bin/release").read.lines.last.strip
+  end
+
+  test "the one-shot demo task does not run background jobs against the seed transaction" do
+    task = Rails.root.join("lib/tasks/demo.rake").read
+
+    assert_includes task, "ActiveJob::Base.queue_adapter = :test"
   end
 
   test "is idempotent when a fresh process has no tenant context" do
-    previous_test_tenant = ActsAsTenant.test_tenant
-    ActsAsTenant.test_tenant = nil
+    previous_tenant = ActsAsTenant.current_tenant
     ActsAsTenant.current_tenant = nil
 
     seed("saas")
@@ -91,7 +100,6 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert_equal counts_after_first_seed,
       [ Case.count, Message.count, Project.count, WorkItem.count ]
   ensure
-    ActsAsTenant.current_tenant = nil
-    ActsAsTenant.test_tenant = previous_test_tenant
+    ActsAsTenant.current_tenant = previous_tenant
   end
 end

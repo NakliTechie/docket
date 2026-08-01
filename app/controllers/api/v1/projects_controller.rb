@@ -5,7 +5,7 @@ module Api
       before_action :set_project, only: %i[show update destroy]
 
       def index
-        scope = api_scope(Project, scope: "work:read")
+        scope = api_scope(Project, scope: "work:read").includes(:project_memberships)
         scope = scope.active unless params[:archived] == "1"
         pagy, records = pagy(scope.order(:key))
         render json: { data: records.map { |p| Serialize.project(p) }, pagination: pagination_meta(pagy) }
@@ -47,11 +47,15 @@ module Api
       private
 
       def set_project
-        @project = Project.find(params[:id])
+        required_scope = action_name == "show" ? "work:read" : "work:manage"
+        @project = api_scope(Project, scope: required_scope).find(params[:id])
       end
 
       def project_params
-        params.require(:project).permit(:key, :name, :description, :lead_id)
+        params.require(:project).permit(
+          :key, :name, :description, :lead_id, :visibility, member_ids: [],
+          work_assignment_rules_attributes: %i[id work_kind assignee_id _destroy]
+        )
       end
     end
   end

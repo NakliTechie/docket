@@ -1,0 +1,36 @@
+<% page_title t(".title") %>
+<% data = @report.as_json %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+  <%= link_to t(".export_csv"), csat_report_path(format: :csv, from: @from, to: @to), class: "btn" %>
+</div>
+<%= form_with url: csat_report_path, method: :get, class: "filter-bar" do |f| %>
+  <div class="form-row"><%= f.label :from, t(".from") %><%= f.date_field :from, value: @from %></div>
+  <div class="form-row"><%= f.label :to, t(".to") %><%= f.date_field :to, value: @to %></div>
+  <%= f.submit t("filters.apply"), class: "btn" %>
+<% end %>
+<div class="panel">
+  <dl class="meta-list">
+    <dt><%= t(".invitations") %></dt><dd><%= data[:invitations] %></dd>
+    <dt><%= t(".responses") %></dt><dd><%= data[:responses] %></dd>
+    <dt><%= t(".response_rate") %></dt><dd><%= data[:response_rate] ? "#{data[:response_rate]}%" : "—" %></dd>
+    <dt><%= t(".average_score") %></dt><dd><%= data[:average_score] || "—" %></dd>
+  </dl>
+</div>
+<div class="two-column">
+  <section class="panel">
+    <h2 class="panel-title"><%= t(".distribution") %></h2>
+    <table><thead><tr><th><%= t(".score") %></th><th><%= t(".responses") %></th></tr></thead>
+      <tbody><% data[:score_distribution].each do |score, count| %>
+        <tr><td><%= score %></td><td><%= count %></td></tr>
+      <% end %></tbody></table>
+  </section>
+  <aside class="panel">
+    <h2 class="panel-title"><%= t(".comments") %></h2>
+    <% if @report.comments.any? %>
+      <ul class="timeline"><% @report.comments.each do |survey| %>
+        <li><strong><%= survey.score %>/5 · <%= survey.case.tracking_id %></strong><p><%= survey.comment %></p></li>
+      <% end %></ul>
+    <% else %><p class="muted"><%= t(".no_comments") %></p><% end %>
+  </aside>
+</div>

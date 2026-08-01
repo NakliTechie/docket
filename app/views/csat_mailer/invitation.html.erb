@@ -1,0 +1,3 @@
+<p><%= t("csat_mailer.invitation.greeting", name: @survey.contact.name) %></p>
+<p><%= t("csat_mailer.invitation.body", tracking_id: @kase.tracking_id) %></p>
+<p><%= link_to t("csat_mailer.invitation.action"), csat_survey_url(@token) %></p>

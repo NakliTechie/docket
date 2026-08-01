@@ -7,7 +7,9 @@ class SequenceDeliveryJobTest < ActiveJob::TestCase
     sequence = Sequence.new(name: "Welcome")
     sequence.sequence_steps.build(position: 0, delay_days: 0, subject: "Hello", body: "Welcome")
     sequence.save!
-    enrollment = sequence.enroll!(Lead.create!(name: "Asha", email: "asha.delivery@example.com"))
+    enrollment = sequence.enroll!(
+      Lead.create!(name: "Asha", email: "asha.delivery@example.com", email_consent: true)
+    )
     enrollment.advance!
     clear_enqueued_jobs
     enrollment.sequence_deliveries.first
@@ -65,5 +67,18 @@ class SequenceDeliveryJobTest < ActiveJob::TestCase
 
     assert delivery.reload.status_skipped?
     assert_includes delivery.last_error, "not active"
+  end
+
+  test "email is explicitly skipped when the deployment has no outbound transport" do
+    delivery = pending_email_delivery
+    original = Rails.application.config.x.outbound_mail_available
+    Rails.application.config.x.outbound_mail_available = false
+
+    assert_no_emails { SequenceDeliveryJob.perform_now(delivery.id) }
+
+    assert delivery.reload.status_skipped?
+    assert_includes delivery.last_error, "not configured"
+  ensure
+    Rails.application.config.x.outbound_mail_available = original
   end
 end

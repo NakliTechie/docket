@@ -4,6 +4,14 @@ require "test_helper"
 # and `docker logs`. They could not tell whether the queue was draining or
 # whether the SLA sweep had run since Tuesday.
 class HealthCheckTest < ActionDispatch::IntegrationTest
+  def replace_singleton_method(target, name, replacement)
+    original = target.method(name)
+    target.define_singleton_method(name, replacement)
+    yield
+  ensure
+    target.define_singleton_method(name, original)
+  end
+
   def stamp(job, at)
     ActsAsTenant.without_tenant do
       Setting.find_or_initialize_by(tenant_id: nil, key: "job_last_success.#{job}")
@@ -61,10 +69,52 @@ class HealthCheckTest < ActionDispatch::IntegrationTest
     assert JSON.parse(response.body).dig("checks", "recurring_jobs", "last_success", "SlaBreachSweepJob").present?
   end
 
-  test "a never-run sweep is not reported as failure" do
+  test "a never-run sweep stays healthy during the explicit startup grace" do
     get "/healthz"
     assert_response :success,
                     "a fresh deployment has not had a chance yet; crying wolf on boot trains operators to ignore this"
+  end
+
+  test "a never-run sweep degrades health after the startup grace" do
+    replacement = -> { HealthCheck::STARTUP_GRACE.ago - 1.minute }
+    replace_singleton_method(HealthCheck, :booted_at, replacement) do
+      get "/healthz"
+    end
+
+    assert_response :service_unavailable
+    check = JSON.parse(response.body).dig("checks", "recurring_jobs")
+    assert_includes check["never_run"], "SlaBreachSweepJob"
+    assert_includes check["stale"], "SlaBreachSweepJob"
+  end
+
+  test "a non-disk storage service is verified by upload download and delete" do
+    stored = {}
+    service = Object.new
+    service.define_singleton_method(:upload) { |key, io, **| stored[key] = io.read }
+    service.define_singleton_method(:download) { |key| stored.fetch(key) }
+    service.define_singleton_method(:delete) { |key| stored.delete(key) }
+
+    replace_singleton_method(ActiveStorage::Blob, :service, -> { service }) do
+      get "/healthz"
+    end
+
+    assert_response :success
+    assert JSON.parse(response.body).dig("checks", "storage", "ok")
+    assert_empty stored, "the health probe must clean up its object"
+  end
+
+  test "a failing non-disk storage service degrades health without leaking its message" do
+    service = Object.new
+    service.define_singleton_method(:upload) { |*, **| raise IOError, "secret bucket name" }
+
+    replace_singleton_method(ActiveStorage::Blob, :service, -> { service }) do
+      get "/healthz"
+    end
+
+    assert_response :service_unavailable
+    storage = JSON.parse(response.body).dig("checks", "storage")
+    assert_equal "IOError", storage["error"]
+    refute_includes response.body, "secret bucket name"
   end
 
   test "it leaks nothing beyond check names and up/down" do

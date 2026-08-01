@@ -20,6 +20,8 @@ class DashboardsController < ApplicationController
       format.html
       format.csv { send_data @overview.to_csv, filename: "docket-dashboard-#{@from}-#{@to}.csv" }
     end
+  rescue ArgumentError => e
+    redirect_to dashboard_path, alert: e.message
   end
 
   private

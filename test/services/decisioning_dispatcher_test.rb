@@ -61,6 +61,16 @@ class DecisioningDispatcherTest < ActiveSupport::TestCase
     assert_raises(Decisioning::Error) { Decisioning::Dispatcher.approve!(decision, approver: users(:admin)) }
   end
 
+  test "a decision is claimed once before its action can be applied" do
+    decision = Decision.create!(rule: "manual", version: "1", subject: @lead, signal: "once",
+                                decision_class: "autonomous", status: :proposed)
+
+    Decisioning::Dispatcher.apply!(decision)
+
+    assert_raises(Decisioning::Error) { Decisioning::Dispatcher.apply!(decision.reload) }
+    assert_equal [ "once" ], @lead.reload.labels.grep("once")
+  end
+
   test "labels are a reversible, deduped set" do
     @lead.add_label("vip")
     @lead.add_label("vip")

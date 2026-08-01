@@ -104,6 +104,15 @@ class FeaturesTest < ActiveSupport::TestCase
     Features::KEYS.each { |key| assert tenant.feature?(key), "full preset should enable #{key}" }
   end
 
+  test "approval governance remains available in Work-only and CRM-only presets" do
+    tenant = tenants(:acme)
+
+    %w[work_only crm_only].each do |preset|
+      tenant.apply_preset!(preset)
+      assert tenant.feature?("approvals"), "#{preset} must retain cross-module approvals"
+    end
+  end
+
   # ── Ambient resolution ────────────────────────────────────────────────────
   test "Features.enabled? reads the tenant in scope" do
     tenants(:acme).set_feature!("work", false)

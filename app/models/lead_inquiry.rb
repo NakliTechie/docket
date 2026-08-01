@@ -10,6 +10,11 @@ class LeadInquiry
   attribute :phone, :string
   attribute :company_name, :string
   attribute :message, :string
+  attribute :email_consent, :boolean, default: false
+  attribute :sms_consent, :boolean, default: false
+  attribute :consent_captured_at, :datetime
+  attribute :consent_source, :string
+  attribute :provenance, default: -> { {} }
 
   validates :name, presence: true, length: { maximum: 200 }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true, length: { maximum: 255 }
@@ -24,7 +29,10 @@ class LeadInquiry
     Lead.create!(
       name: name, email: email.presence, phone: phone.presence,
       company_name: company_name.presence, notes: message.presence,
-      source: :web_form, status: :new
+      source: :web_form, status: :new,
+      email_consent: email_consent, sms_consent: sms_consent,
+      consent_captured_at: consent_captured_at, consent_source: consent_source,
+      provenance: provenance
     )
   rescue ActiveRecord::RecordInvalid => e
     e.record.errors.each { |err| errors.add(:base, err.full_message) }

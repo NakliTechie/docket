@@ -16,10 +16,14 @@ module ActiveSupport
     fixtures :all
 
     # Default every test to the primary tenant so scoped reads/writes work the
-    # way an isolated deploy does. Cross-tenant tests override with
-    # ActsAsTenant.with_tenant(...) or by resolving a subdomain per request.
-    setup { ActsAsTenant.test_tenant = tenants(:primary) }
-    teardown { ActsAsTenant.test_tenant = nil }
+    # way an isolated deploy does. Use the normal ambient slot, not
+    # ActsAsTenant.test_tenant: that hard pin silently beat `with_tenant` and
+    # made our second-tenant tests continue querying primary.
+    setup { ActsAsTenant.current_tenant = tenants(:primary) }
+    teardown do
+      ActsAsTenant.current_tenant = nil
+      Current.reset
+    end
 
     # Add more helper methods to be used by all tests here...
   end

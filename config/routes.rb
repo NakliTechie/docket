@@ -4,20 +4,31 @@ Rails.application.routes.draw do
   get "healthz", to: "health#show"
 
   root "home#index"
+  get "search", to: "search#index", as: :search
   resource :setup, only: %i[show update]
 
   resource :session
   resources :passwords, param: :token
   post "locale", to: "locales#update", as: :locale
 
+  resources :notifications, only: :index do
+    member { patch :read }
+    collection { patch :read_all }
+  end
+  resources :saved_views, only: %i[create destroy]
+
   resources :cases do
+    collection { post :bulk_update }
     member do
       post :transition
       post :assign
       post :run_agent
       post :escalate
+      post :merge
+      post :split
     end
     resources :messages, only: :create
+    resource :presence, controller: "case_presences", only: %i[create destroy]
     post "assist/summarise", to: "assists#summarise", as: :assist_summarise
     post "assist/suggest_reply", to: "assists#suggest_reply", as: :assist_suggest_reply
   end
@@ -33,12 +44,14 @@ Rails.application.routes.draw do
     end
   end
   resources :sla_policies, except: :show
+  resources :business_calendars, except: :show
   resources :macros, except: :show
   resources :routing_rules, except: :show do
     member do
       patch :move
     end
   end
+  resources :custom_fields, controller: "custom_field_definitions", except: %i[show destroy]
   # Work module (WM). Items are reachable by their own id at /work_items/:id so
   # a KEY-123 link survives a project rename; creation and listing stay nested.
   resources :projects do
@@ -46,7 +59,9 @@ Rails.application.routes.draw do
       post :archive
     end
     resource :board, only: :show
-    resources :work_items, only: %i[index new create]
+    resources :work_items, only: %i[index new create] do
+      collection { post :bulk_update }
+    end
     resources :sprints, except: :show do
       member do
         post :start
@@ -60,7 +75,11 @@ Rails.application.routes.draw do
       post :watch
     end
     resources :work_comments, only: :create
+    resources :relations, controller: "work_item_relations", only: :create
   end
+  resources :work_item_relations, only: :destroy
+  resources :work_comments, only: %i[update destroy]
+  resources :project_templates, except: :show
 
   resources :approval_processes, except: :show
 
@@ -69,17 +88,30 @@ Rails.application.routes.draw do
     member do
       post :convert
       post :mark_unqualified
+      post :merge
     end
   end
+  resources :lead_capture_forms, except: :show
   resources :pipelines, except: :show
   resources :deals do
-    member { post :move }
+    member do
+      post :move
+      post :onboard
+    end
+    resources :line_items, controller: "deal_line_items", only: :create
+    resources :competitor_links, controller: "deal_competitors", only: :create
   end
+  resources :deal_line_items, only: %i[update destroy]
+  resources :deal_competitors, only: %i[update destroy]
+  resources :products, except: :show
+  resources :competitors, except: :show
   resources :sequences
   resources :sequence_enrollments, only: %i[create] do
     member { post :cancel }
   end
   get "reports/sales", to: "sales_reports#index", as: :sales_report
+  get "reports/custom_fields", to: "custom_field_reports#index", as: :custom_field_report
+  get "reports/csat", to: "csat_reports#index", as: :csat_report
   get "dashboard", to: "dashboards#index", as: :dashboard
   post "decisions/run", to: "decisions#run", as: :run_decisions
   post "decisions/:id/approve", to: "decisions#approve", as: :approve_decision
@@ -161,6 +193,8 @@ Rails.application.routes.draw do
   # Public lead-capture form (v1.2 CRM) — unauthenticated.
   get "inquiry", to: "inquiries#new", as: :inquiry
   post "inquiry", to: "inquiries#create"
+  get "inquiry/:slug", to: "inquiries#new", as: :lead_capture
+  post "inquiry/:slug", to: "inquiries#create"
 
   namespace :portal do
     root to: "cases#new"
@@ -184,6 +218,12 @@ Rails.application.routes.draw do
   get "auth/customer_oidc/callback", to: "portal/customer_sessions#create"
   get "auth/failure", to: "sso_failures#show"
 
+  get "sequence_unsubscribe/:token", to: "sequence_unsubscribes#show",
+      as: :sequence_unsubscribe
+  post "sequence_unsubscribe/:token", to: "sequence_unsubscribes#create"
+  get "survey/csat/:token", to: "csat_surveys#show", as: :csat_survey
+  post "survey/csat/:token", to: "csat_surveys#create"
+
   namespace :api do
     namespace :v1 do
       post "oauth/token", to: "oauth#token"
@@ -195,6 +235,8 @@ Rails.application.routes.draw do
         member do
           post :transition
           post :assign
+          post :merge
+          post :split
         end
         resources :messages, only: %i[index create]
         post "assist/summarise", to: "assists#summarise"
@@ -203,23 +245,40 @@ Rails.application.routes.draw do
       resources :contacts, only: %i[index show create update destroy]
       resources :organisations, only: %i[index show create update destroy]
       resources :leads, only: %i[index show create update destroy] do
-        member { post :convert }
+        member do
+          post :convert
+          post :merge
+        end
       end
+      resources :lead_capture_forms, only: %i[index show create update destroy]
       resources :pipelines, only: %i[index show create update destroy]
       resources :deals, only: %i[index show create update destroy] do
-        member { post :move }
+        member do
+          post :move
+          post :onboard
+        end
+        resources :line_items, controller: "deal_line_items", only: :create
+        resources :competitor_links, controller: "deal_competitors", only: :create
       end
+      resources :deal_line_items, only: %i[update destroy]
+      resources :deal_competitors, only: %i[update destroy]
+      resources :products, only: %i[index show create update destroy]
+      resources :competitors, only: %i[index show create update destroy]
       resources :sequences, only: %i[index show create update destroy]
       resources :sequence_enrollments, only: %i[index show create] do
         member { post :cancel }
       end
       # Work module (WM5)
       resources :projects, only: %i[index show create update destroy]
+      resources :project_templates, only: %i[index show create update destroy]
       get "projects/:project_id/sprint_report", to: "sprints#report"
       resources :work_items, only: %i[index show create update destroy] do
         member { post :transition }
         resources :work_comments, only: %i[index create], controller: "work_comments"
+        resources :relations, only: :create, controller: "work_item_relations"
       end
+      resources :work_item_relations, only: :destroy
+      resources :work_comments, only: %i[update destroy]
       resources :sprints, only: %i[index show create update] do
         member { post :close }
       end
@@ -231,6 +290,8 @@ Rails.application.routes.draw do
         end
       end
       resources :sla_policies, only: %i[index show create update destroy]
+      resources :business_calendars, only: %i[index show create update destroy]
+      resources :custom_fields, controller: "custom_fields", only: %i[index show create update]
       resources :macros, only: %i[index show create update destroy]
       resources :reference_docs, only: %i[index show create update destroy]
       resources :users, only: %i[index show create update]
@@ -248,6 +309,9 @@ Rails.application.routes.draw do
       get "audit/entries", to: "audit#entries"
       get "audit/verification", to: "audit#verification"
       get "reports/activity", to: "reports#activity"
+      get "reports/sales", to: "reports#sales"
+      get "reports/custom_fields", to: "custom_field_reports#index"
+      get "reports/csat", to: "reports#csat"
       resource :settings, only: %i[show update]
     end
   end

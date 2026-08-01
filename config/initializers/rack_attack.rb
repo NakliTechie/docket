@@ -1,9 +1,7 @@
-# Public portal abuse protection (handoff §8). Backed by an in-process
-# MemoryStore — no Redis. Note: counters are per-process, so throttles are
-# enforced per Puma worker and reset on restart (fine for a single-node
-# deploy; swap in a shared store before scaling out).
+# Public portal abuse protection (handoff §8). Production Rails.cache is Solid
+# Cache, so every Puma worker and replica observes the same durable counters.
 Rack::Attack.enabled = !Rails.env.test?
-Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
+Rack::Attack.cache.store = Rails.cache
 
 Rack::Attack.throttle("portal/submissions", limit: 20, period: 1.hour) do |request|
   request.ip if request.post? && request.path.start_with?("/portal/cases")
@@ -36,6 +34,13 @@ end
 # tighter bcrypt-protecting throttle above.
 Rack::Attack.throttle("api/general", limit: 300, period: 1.minute) do |request|
   request.ip if request.path.start_with?("/api/") && request.path != "/api/v1/oauth/token"
+end
+
+# The unauthenticated dependency check performs database and storage probes.
+# Leave ample room for normal load-balancer polling while preventing it from
+# becoming an unbounded query/object-store amplifier.
+Rack::Attack.throttle("health/check", limit: 120, period: 1.minute) do |request|
+  request.ip if request.path == "/healthz"
 end
 
 Rack::Attack.throttled_responder = lambda do |_request|

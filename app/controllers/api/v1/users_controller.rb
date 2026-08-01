@@ -20,7 +20,8 @@ module Api
       def create
         authorize User
         user = User.new(user_params)
-        if user.save
+        role_valid = assign_requested_role(user)
+        if role_valid && user.save
           render json: { data: Serialize.user(user) }, status: :created
         else
           render_validation_errors(user)
@@ -31,7 +32,9 @@ module Api
         authorize @user
         attrs = user_params
         attrs = attrs.except(:password) if attrs[:password].blank?
-        if @user.update(attrs)
+        @user.assign_attributes(attrs)
+        role_valid = assign_requested_role(@user)
+        if role_valid && @user.save
           render json: { data: Serialize.user(@user) }
         else
           render_validation_errors(@user)
@@ -49,7 +52,21 @@ module Api
       end
 
       def user_params
-        params.require(:user).permit(:name, :email_address, :password, :role, :locale, :active, queue_ids: [])
+        params.require(:user).permit(:name, :email_address, :password, :locale,
+                                     :active, :email_signature, queue_ids: [])
+      end
+
+      def assign_requested_role(user)
+        return true unless params.require(:user).key?(:role)
+
+        role = params.require(:user)[:role]
+        if role.is_a?(String) && User.roles.key?(role)
+          user.role = role
+          true
+        else
+          user.errors.add(:role, :inclusion)
+          false
+        end
       end
     end
   end

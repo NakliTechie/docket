@@ -12,7 +12,8 @@ class ApprovalRequest < ApplicationRecord
 
   enum :status, { pending: 0, approved: 1, rejected: 2 }, prefix: :status
 
-  validates :requested_action, presence: true, if: -> { approval_process&.trigger_case_transition? }
+  validates :requested_action, presence: true,
+                               if: -> { approval_process&.trigger_case_transition? || approval_process&.trigger_work_item_transition? }
 
   scope :recent_first, -> { order(id: :desc) }
 
@@ -21,6 +22,7 @@ class ApprovalRequest < ApplicationRecord
   def subject_label
     case subject
     when Case then "#{subject.tracking_id} — #{subject.subject}"
+    when WorkItem then "#{subject.reference} — #{subject.title}"
     else subject.to_s
     end
   end

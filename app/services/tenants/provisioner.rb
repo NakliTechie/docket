@@ -22,17 +22,20 @@ module Tenants
     end
 
     def call
-      tenant = Tenant.create!(name: @name, subdomain: @subdomain, slug: @subdomain,
-                              entitlements: Features.preset(@preset))
-      admin = nil
-      password = nil
+      raise ArgumentError, "tenant provisioning is available only in shared deployments" unless Tenant.shared_deployment?
 
-      ActsAsTenant.with_tenant(tenant) do
-        Tenants::Defaults.seed!
-        if @admin_email
-          password = SecureRandom.alphanumeric(24)
-          admin = User.create!(name: @admin_name.presence || @admin_email.split("@").first,
-                               email_address: @admin_email, password: password, role: :client_admin)
+      tenant = admin = password = nil
+      ApplicationRecord.transaction do
+        tenant = Tenant.create!(name: @name, subdomain: @subdomain, slug: @subdomain,
+                                entitlements: Features.preset(@preset))
+
+        ActsAsTenant.with_tenant(tenant) do
+          Tenants::Defaults.seed!
+          if @admin_email
+            password = SecureRandom.alphanumeric(24)
+            admin = User.create!(name: @admin_name.presence || @admin_email.split("@").first,
+                                 email_address: @admin_email, password: password, role: :client_admin)
+          end
         end
       end
 

@@ -51,6 +51,12 @@ module Api
         assert_match(/unknown tool/, res.dig("error", "message"))
       end
 
+      test "nested credential and identity resources are structurally denied" do
+        assert Mcp::Catalog.denied_resource?("/connectors/{connector_id}/settings")
+        assert Mcp::Catalog.denied_resource?("/projects/{project_id}/users/{id}")
+        refute Mcp::Catalog.denied_resource?("/projects/{project_id}/work_items/{id}")
+      end
+
       # H10: tools/call is gated on the tenant's entitlement, not just tools/list.
       test "tools/call rejects a tool whose module the tenant lacks" do
         tenants(:primary).set_feature!("crm", false)
@@ -84,6 +90,31 @@ module Api
                   params: { name: "post_cases_id_transition", arguments: { "id" => kase.id, "status" => "in_progress" } })
         assert_equal false, res.dig("result", "isError")
         assert kase.reload.status_in_progress?
+      end
+
+      test "two tools/call messages in one request preserve outer tenant and actor context" do
+        kase = Case.create!(subject: "Batch progress", channel: :staff, contact: contacts(:asha))
+        kase.transition_to!(:triaged)
+        payload = [
+          { jsonrpc: "2.0", id: 31, method: "tools/call",
+            params: { name: "post_cases_id_transition",
+                      arguments: { id: kase.id, status: "in_progress" } } },
+          { jsonrpc: "2.0", id: 32, method: "tools/call",
+            params: { name: "post_cases_id_transition",
+                      arguments: { id: kase.id, status: "waiting_on_customer" } } }
+        ]
+
+        post "/api/v1/mcp", params: payload.to_json,
+             headers: { "CONTENT_TYPE" => "application/json" }.merge(auth_header(@admin))
+
+        assert_response :success
+        assert_equal [ false, false ], response.parsed_body.map { |item| item.dig("result", "isError") }
+        assert kase.reload.status_waiting_on_customer?
+        status_audits = AuditEntry.where(auditable: kase).order(:id).select { |entry|
+          entry.changeset.to_h.key?("status")
+        }
+        assert_equal users(:admin).id, status_audits.last.actor_id
+        assert_equal tenants(:primary).id, status_audits.last.tenant_id
       end
 
       test "tools/call inherits service-account scopes (a read-only token can't write)" do

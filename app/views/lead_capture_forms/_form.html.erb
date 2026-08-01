@@ -1,0 +1,22 @@
+<%= form_with model: form, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: form %>
+  <div class="form-grid">
+    <div class="form-row"><%= f.label :name, t("lead_capture_forms.fields.name") %><%= f.text_field :name, required: true %></div>
+    <div class="form-row"><%= f.label :slug, t("lead_capture_forms.fields.slug") %><%= f.text_field :slug, required: true %></div>
+  </div>
+  <fieldset><legend><%= t("lead_capture_forms.fields.mapping") %></legend>
+    <% inverse = form.mapping.invert %>
+    <% LeadCaptureForm::TARGET_FIELDS.each do |target| %>
+      <div class="form-row"><%= label_tag "mapping_#{target}", t("lead_capture_forms.targets.#{target}") %>
+        <%= text_field_tag "mapping[#{target}]", inverse[target], id: "mapping_#{target}",
+              required: target == "name" %></div>
+    <% end %>
+    <p class="form-hint"><%= t("lead_capture_forms.form.mapping_hint") %></p>
+  </fieldset>
+  <div class="form-row"><%= f.label :consent_disclosure, t("lead_capture_forms.fields.consent_disclosure") %>
+    <%= f.text_area :consent_disclosure %></div>
+  <label class="checkbox-row"><%= f.check_box :active %><%= t("lead_capture_forms.fields.active") %></label>
+  <label class="checkbox-row"><%= f.check_box :is_default %><%= t("lead_capture_forms.fields.is_default") %></label>
+  <div class="form-actions"><%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), lead_capture_forms_path, class: "btn" %></div>
+<% end %>

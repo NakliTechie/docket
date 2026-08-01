@@ -1,1 +1,5 @@
 <%= simple_format(@body) %>
+<% if @unsubscribe_url %>
+  <hr>
+  <p><%= link_to t("crm_mailer.sequence_step.unsubscribe"), @unsubscribe_url %></p>
+<% end %>

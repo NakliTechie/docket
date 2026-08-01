@@ -15,6 +15,28 @@ class SetupProgress
     Case.none? && Lead.none? && Project.none?
   end
 
+  def started?
+    Setting.get("setup_started") == true
+  end
+
+  def finished?
+    Setting.get("setup_finished") == true
+  end
+
+  def needs_attention?
+    fresh_tenant? || (started? && !finished?)
+  end
+
+  def mark_started!
+    Setting.set("setup_started", true) unless started?
+  end
+
+  def finish!
+    raise ArgumentError, "setup is not complete" unless complete?
+
+    Setting.set("setup_finished", true)
+  end
+
   def brand_ready?
     Setting.get("brand_name").present?
   end
@@ -43,8 +65,41 @@ class SetupProgress
     team_ready? || Setting.get("setup_team_skipped") == true
   end
 
+  def first_value_record
+    @first_value_record ||= if service_desk?
+      Case.canonical.order(:created_at, :id).first
+    elsif crm?
+      Lead.canonical.order(:created_at, :id).first
+    elsif work?
+      Project.order(:created_at, :id).first
+    end
+  end
+
+  def first_value_kind
+    return :service_desk if service_desk?
+    return :crm if crm?
+    return :work if work?
+
+    :none
+  end
+
+  def first_record?
+    first_value_record.present?
+  end
+
   def first_value?
-    Case.exists? || Lead.exists? || Project.exists?
+    record = first_value_record
+    return false unless record
+
+    if service_desk?
+      service_desk_value?(record)
+    elsif crm?
+      record.status_converted?
+    elsif work?
+      record.work_items.closed.exists?
+    else
+      false
+    end
   end
 
   def completed_count
@@ -53,6 +108,10 @@ class SetupProgress
   end
 
   def total_count = 6
+
+  def complete?
+    completed_count == total_count
+  end
 
   def portal_url
     "#{base_url}#{Rails.application.routes.url_helpers.portal_root_path}"
@@ -65,4 +124,13 @@ class SetupProgress
   def service_desk? = Current.tenant&.feature?("service_desk")
   def crm? = Current.tenant&.feature?("crm")
   def work? = Current.tenant&.feature?("work")
+
+  private
+
+  def service_desk_value?(kase)
+    return false unless kase.assignee_id? && (kase.status_resolved? || kase.status_closed?)
+
+    kase.messages.where(direction: :outbound, kind: %i[public_reply agent_turn])
+        .where(author_type: %w[User ServiceAccount]).exists?
+  end
 end

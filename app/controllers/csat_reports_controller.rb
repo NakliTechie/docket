@@ -1,0 +1,25 @@
+class CsatReportsController < ApplicationController
+  require_feature "service_desk"
+
+  def index
+    authorize :csat_report, policy_class: CsatReportPolicy
+    @from = parse_date(params[:from]) || 30.days.ago.to_date
+    @to = parse_date(params[:to]) || Date.current
+    @report = CsatReport.new(from: @from, to: @to)
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        send_data @report.to_csv, filename: "docket-csat-#{@from}-#{@to}.csv"
+      end
+    end
+  end
+
+  private
+
+  def parse_date(value)
+    Date.parse(value.to_s)
+  rescue ArgumentError, TypeError
+    nil
+  end
+end

@@ -23,7 +23,39 @@
           { include_blank: t("forms.none") } %>
   </div>
 
+  <div class="form-row">
+    <%= f.label :visibility, t("projects.fields.visibility") %>
+    <%= f.select :visibility,
+          Project.visibilities.keys.map { |value| [t("projects.enum.visibility.#{value}"), value] } %>
+    <p class="muted"><%= t("projects.fields.visibility_hint") %></p>
+  </div>
+
+  <fieldset class="fieldset">
+    <legend><%= t("projects.fields.members") %></legend>
+    <p class="muted"><%= t("projects.fields.members_hint") %></p>
+    <%= f.collection_checkboxes :member_ids, User.active.order(:name), :id, :name do |box| %>
+      <label class="checkbox-label"><%= box.check_box %> <%= box.text %></label>
+    <% end %>
+  </fieldset>
+
   <% if project.persisted? %>
+    <fieldset class="fieldset">
+      <legend><%= t("projects.fields.assignment_rules") %></legend>
+      <p class="muted"><%= t("projects.fields.assignment_rules_hint") %></p>
+      <%= f.fields_for :work_assignment_rules do |rule_fields| %>
+        <div class="form-row form-row-inline">
+          <%= rule_fields.hidden_field :work_kind %>
+          <%= rule_fields.label :assignee_id,
+                t("work_items.enum.kind.#{rule_fields.object.work_kind}") %>
+          <%= rule_fields.collection_select :assignee_id, User.active.staff.order(:name), :id, :name,
+                { include_blank: t("forms.none") } %>
+          <% if rule_fields.object.persisted? %>
+            <label><%= rule_fields.check_box :_destroy %> <%= t("projects.fields.remove_rule") %></label>
+          <% end %>
+        </div>
+      <% end %>
+    </fieldset>
+
     <fieldset class="fieldset">
       <legend><%= t("projects.fields.columns") %></legend>
       <p class="muted"><%= t("projects.fields.columns_hint") %></p>

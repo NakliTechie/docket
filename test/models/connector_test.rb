@@ -51,13 +51,16 @@ class ConnectorTest < ActiveSupport::TestCase
     assert_equal "topsecret-xyz", c.reload.credentials_hash["api_key"]
   end
 
-  test "credentials and webhook_secret are redacted from the audit log" do
+  test "credentials, OAuth tokens, and webhook_secret are redacted from the audit log" do
     c = build_connector
     c.credentials_hash = { "api_key" => "s3cr3t" }
+    c.oauth_tokens = { "access_token" => "oauth-access-secret", "refresh_token" => "oauth-refresh-secret" }
     c.save!
     entry = AuditEntry.where(auditable: c, action: "connector.create").last
     assert entry, "create should be audited"
     refute_includes entry.changeset.to_json, "s3cr3t"
+    refute_includes entry.changeset.to_json, "oauth-access-secret"
+    refute_includes entry.changeset.to_json, "oauth-refresh-secret"
     refute_includes entry.changeset.to_json, c.webhook_secret
   end
 

@@ -8,6 +8,18 @@ class OrganisationsController < ApplicationController
   def show
     authorize @organisation
     @pagy, @contacts = pagy(@organisation.contacts.order(:name))
+    result = Customer360.new(
+      subject: @organisation,
+      case_scope: feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none,
+      deal_scope: feature?("crm") && policy(Deal).index? ? policy_scope(Deal) : Deal.none,
+      work_scope: feature?("work") && policy(WorkItem).index? ? policy_scope(WorkItem) : WorkItem.none
+    ).call
+    @cases = result.cases
+    @case_count = result.case_count
+    @deals = result.deals
+    @deal_count = result.deal_count
+    @work_items = result.work_items
+    @work_item_count = result.work_item_count
   end
 
   def new

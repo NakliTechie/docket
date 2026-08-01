@@ -41,16 +41,56 @@
     <% end %>
 
     <section class="panel">
+      <h2><%= t(".relations") %></h2>
+      <% relations = (@item.outgoing_relations.includes(:source, :target).to_a +
+                      @item.incoming_relations.includes(:source, :target).to_a).uniq %>
+      <% if relations.any? %>
+        <ul class="linked-list">
+          <% relations.each do |relation| %>
+            <% other = relation.source_id == @item.id ? relation.target : relation.source %>
+            <li>
+              <%= t("work_item_relations.direction.#{relation.relation_type}.#{relation.source_id == @item.id ? 'outgoing' : 'incoming'}") %>
+              <%= link_to other.reference, work_item_path(other), class: "mono" %> <%= other.title %>
+              <% if policy(relation).destroy? %>
+                <%= button_to t("actions.delete"), work_item_relation_path(relation), method: :delete,
+                      class: "btn btn-ghost btn-sm" %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %><p class="muted"><%= t(".no_relations") %></p><% end %>
+      <% if policy(@item).update? && @relation_targets.any? %>
+        <%= form_with model: @relation, url: work_item_relations_path(@item), class: "form form-inline" do |f| %>
+          <%= f.select :relation_type, WorkItemRelation::RELATION_TYPES.map { |type|
+                [t("work_item_relations.types.#{type}"), type] } %>
+          <%= f.collection_select :target_id, @relation_targets, :id, :display_label %>
+          <%= f.submit t(".add_relation"), class: "btn btn-sm" %>
+        <% end %>
+      <% end %>
+    </section>
+
+    <section class="panel">
       <h2><%= t(".comments") %></h2>
       <% if @item.work_comments.any? %>
         <ol class="thread">
           <% @item.work_comments.each do |comment| %>
             <li class="thread-message">
               <header class="thread-message-head">
-                <strong><%= comment.author.name %></strong>
+                <strong><%= comment.author_display_name %></strong>
                 <span class="muted"><%= l comment.created_at, format: :long %></span>
               </header>
               <div class="prose"><%= simple_format comment.body %></div>
+              <% if policy(comment).update? %>
+                <details>
+                  <summary><%= t("actions.edit") %></summary>
+                  <%= form_with model: comment, url: work_comment_path(comment), class: "form" do |f| %>
+                    <%= f.text_area :body, rows: 3, required: true %>
+                    <%= f.submit t("actions.edit"), class: "btn btn-sm" %>
+                  <% end %>
+                  <%= button_to t("actions.delete"), work_comment_path(comment), method: :delete,
+                        class: "btn btn-ghost btn-sm" %>
+                </details>
+              <% end %>
             </li>
           <% end %>
         </ol>
@@ -64,6 +104,7 @@
             <%= f.label :body, t(".add_comment") %>
             <%= f.text_area :body, rows: 3, required: true,
                   placeholder: t(".comment_placeholder") %>
+            <p class="form-hint"><%= t("notifications.mention_hint") %></p>
           </div>
           <%= f.submit t(".post_comment"), class: "btn btn-primary" %>
         <% end %>
@@ -105,6 +146,7 @@
           <dt><%= t("work_items.fields.sprint") %></dt><dd><%= @item.sprint.name %></dd>
         <% end %>
       </dl>
+      <%= render "shared/custom_field_values", record: @item, resource_type: "work_items" %>
     </section>
   </aside>
 </div>

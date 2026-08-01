@@ -1,0 +1,25 @@
+<% page_title t(".title") %>
+<div class="public-card">
+  <h1><%= t(".title") %></h1>
+  <% if @survey.responded_at? %>
+    <p><%= t(".already_answered") %></p>
+  <% else %>
+    <p><%= t(".intro", tracking_id: @survey.case.tracking_id) %></p>
+    <%= form_with model: @survey, url: csat_survey_path(params[:token]), class: "form" do |f| %>
+      <%= render "shared/form_errors", record: @survey %>
+      <fieldset class="form-row">
+        <legend><%= t(".score") %></legend>
+        <div class="rating-options">
+          <% 1.upto(5) do |score| %>
+            <label><%= f.radio_button :score, score, required: true %> <%= score %></label>
+          <% end %>
+        </div>
+      </fieldset>
+      <div class="form-row">
+        <%= f.label :comment, t(".comment") %>
+        <%= f.text_area :comment, rows: 5, maxlength: 2_000 %>
+      </div>
+      <%= f.submit t(".submit"), class: "btn btn-primary" %>
+    <% end %>
+  <% end %>
+</div>

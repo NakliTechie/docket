@@ -34,12 +34,18 @@ module Api
       assert_equal 1, response.parsed_body["data"].size
     end
 
-    test "organisations queues categories sla_policies macros reference_docs crud" do
+    test "organisations queues categories sla_policies calendars macros reference_docs crud" do
       resources = {
         "organisations" => { organisation: { name: "API Org", kind: "department" } },
         "queues" => { queue: { name: "API Queue" } },
         "categories" => { category: { name: "API Category" } },
         "sla_policies" => { sla_policy: { name: "API SLA" } },
+        "business_calendars" => { business_calendar: {
+          name: "API working week", time_zone: "UTC",
+          business_calendar_windows_attributes: {
+            "0" => { weekday: 1, starts_at: "09:00", ends_at: "17:00" }
+          }
+        } },
         "macros" => { macro: { name: "API Macro", body: "Hello {{contact_name}}" } },
         "reference_docs" => { reference_doc: { title: "API Doc", body: "Grounding text." } }
       }

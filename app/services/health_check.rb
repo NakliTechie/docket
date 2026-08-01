@@ -9,21 +9,52 @@ class HealthCheck
   # A sweep is stale when it has not completed in this multiple of its interval.
   # Generous: a late sweep is normal, a sweep that has not run in hours is not.
   STALENESS_FACTOR = 4
+  STARTUP_GRACE = ENV.fetch("DOCKET_SWEEP_STARTUP_GRACE_SECONDS", 2.hours.to_i).to_i.seconds
+  STORAGE_PROBE_TTL = 1.minute
 
-  # name => how often config/recurring.yml says it runs.
-  RECURRING = {
-    "SlaBreachSweepJob" => 5.minutes,
-    "ConnectorSchedulerJob" => 5.minutes,
-    "SequenceRunnerJob" => 1.hour,
-    "SessionSweepJob" => 1.hour,
-    "DecisioningRunJob" => 1.hour
-  }.freeze
+  # Derive the monitored inventory from the same configuration Solid Queue
+  # loads. A newly configured sweep cannot silently be omitted from /healthz.
+  def self.recurring_inventory
+    entries = YAML.load_file(Rails.root.join("config/recurring.yml"), aliases: true).fetch("shared")
+    entries.values.filter_map do |entry|
+      name = entry["class"]
+      schedule = entry["schedule"].to_s
+      next unless name
+
+      interval = case schedule
+      when /every (\d+) minutes?/ then Regexp.last_match(1).to_i.minutes
+      when /every hour/ then 1.hour
+      when /every (\d+) hours?/ then Regexp.last_match(1).to_i.hours
+      end
+      [ name, interval ] if interval
+    end.to_h.freeze
+  end
+
+  RECURRING = recurring_inventory
 
   Result = Struct.new(:ok, :checks, keyword_init: true) do
     def to_h = { status: ok ? "ok" : "degraded", checks: checks, checked_at: Time.current.iso8601 }
   end
 
   def self.call = new.call
+
+  def self.booted_at = @booted_at ||= Time.current
+
+  def self.cached_storage_probe(service)
+    @storage_probe_mutex ||= Mutex.new
+    @storage_probe_mutex.synchronize do
+      now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      cached = @storage_probe_cache
+      if cached && cached[:service_id] == service.object_id &&
+          now - cached[:checked_at] < STORAGE_PROBE_TTL
+        return cached[:result]
+      end
+
+      result = yield
+      @storage_probe_cache = { service_id: service.object_id, checked_at: now, result: result }
+      result
+    end
+  end
 
   def call
     checks = {
@@ -59,12 +90,31 @@ class HealthCheck
   end
 
   def storage
-    root = ActiveStorage::Blob.service.try(:root)
-    return { ok: true, note: "not a disk service" } if root.blank?
+    service = ActiveStorage::Blob.service
+    root = service.try(:root)
+    return probe_remote_storage(service) if root.blank?
 
     { ok: File.writable?(root) }
   rescue StandardError => e
     { ok: false, error: e.class.name }
+  end
+
+  def probe_remote_storage(service)
+    self.class.cached_storage_probe(service) do
+      key = "docket-health/#{SecureRandom.hex(16)}"
+      payload = "docket-storage-probe"
+      uploaded = false
+      begin
+        service.upload(key, StringIO.new(payload), checksum: Digest::MD5.base64digest(payload))
+        uploaded = true
+        downloaded = service.download(key)
+        service.delete(key)
+        uploaded = false
+        { ok: downloaded == payload }
+      ensure
+        service.delete(key) if uploaded
+      end
+    end
   end
 
   # H22: fail CLOSED on a dead queue database. `table_exists?` returns false
@@ -82,18 +132,22 @@ class HealthCheck
 
   def recurring_jobs
     stale = []
+    never_run = []
     seen = {}
     ActsAsTenant.without_tenant do
       RECURRING.each do |name, interval|
         raw = Setting.where(tenant_id: nil, key: "job_last_success.#{name}").pick(:value)
         last = raw.present? ? (Time.zone.parse(raw) rescue nil) : nil
         seen[name] = last&.iso8601
-        # Never-run is not reported as failure: a fresh deployment has not had a
-        # chance yet, and crying wolf on boot trains operators to ignore this.
-        stale << name if last.present? && last < (interval * STALENESS_FACTOR).ago
+        if last.present?
+          stale << name if last < (interval * STALENESS_FACTOR).ago
+        elsif Time.current > self.class.booted_at + STARTUP_GRACE
+          stale << name
+          never_run << name
+        end
       end
     end
-    { ok: stale.empty?, stale: stale, last_success: seen }
+    { ok: stale.empty?, stale: stale, never_run: never_run, last_success: seen }
   rescue StandardError => e
     { ok: false, error: e.class.name }
   end

@@ -47,8 +47,11 @@ module Decisioning
     # of_record reach here only after approve!), so a richer action — routing a
     # case, enrolling a lead — rides the same accountability path as a label.
     def apply!(decision)
-      perform_action!(decision)
-      decision.update!(status: :applied, decided_at: Time.current)
+      decision.with_lock do
+        raise Decisioning::Error, "decision is not awaiting application" unless decision.status_proposed?
+
+        apply_locked!(decision)
+      end
       decision
     end
 
@@ -114,17 +117,22 @@ module Decisioning
     # Human path for confirm / of_record: an approver releases a parked decision.
     # A decision of record needs a reasoned order (a blank rubber-stamp is void).
     def approve!(decision, approver:, reason: nil)
-      raise Decisioning::Error, "decision is not awaiting confirmation" unless decision.status_proposed?
-      if decision.of_record? && reason.to_s.strip.blank?
-        raise Decisioning::Error, "a decision of record requires a reason (a reasoned order)"
+      decision.with_lock do
+        raise Decisioning::Error, "decision is not awaiting confirmation" unless decision.status_proposed?
+        if decision.of_record? && reason.to_s.strip.blank?
+          raise Decisioning::Error, "a decision of record requires a reason (a reasoned order)"
+        end
+        decision.update!(approved_by: approver, decision_reason: reason.presence)
+        apply_locked!(decision)
       end
-      decision.update!(approved_by: approver, decision_reason: reason.presence)
-      apply!(decision)
+      decision
     end
 
     def reject!(decision, approver:)
-      raise Decisioning::Error, "decision is not awaiting confirmation" unless decision.status_proposed?
-      decision.update!(status: :rejected, approved_by: approver, decided_at: Time.current)
+      decision.with_lock do
+        raise Decisioning::Error, "decision is not awaiting confirmation" unless decision.status_proposed?
+        decision.update!(status: :rejected, approved_by: approver, decided_at: Time.current)
+      end
       decision
     end
 
@@ -155,5 +163,25 @@ module Decisioning
       appeal.update!(status: :denied, reviewed_by: reviewer, resolution: reason.presence, resolved_at: Time.current)
       appeal
     end
+
+    def apply_locked!(decision)
+      owner = Engine.owner_feature(decision.rule) || owner_feature_for_subject(decision.subject_type)
+      unless owner && Features.enabled?(owner)
+        raise Decisioning::Error, "decision's owning feature is disabled"
+      end
+
+      perform_action!(decision)
+      decision.update!(status: :applied, decided_at: Time.current)
+    end
+
+    def owner_feature_for_subject(subject_type)
+      case subject_type.to_s
+      when "Case" then "service_desk"
+      when "Lead", "Deal", "Contact", "Organisation" then "crm"
+      when "WorkItem", "Project", "Sprint" then "work"
+      end
+    end
+    private_class_method :owner_feature_for_subject
+    private_class_method :apply_locked!
   end
 end

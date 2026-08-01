@@ -7,7 +7,10 @@ class ConnectorSchedulerJob < ApplicationJob
   def perform
     each_tenant_with_feature("connectors") do
       Connector.active.find_each do |connector|
-        ConnectorSyncJob.perform_later(connector.id, trigger: "scheduled") if connector.due?
+        next unless connector.due?
+        next if connector.connector_runs.status_running.exists?
+
+        ConnectorSyncJob.perform_later(connector.id, trigger: "scheduled")
       end
     end
     record_sweep_success!

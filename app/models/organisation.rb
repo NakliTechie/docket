@@ -10,6 +10,8 @@ class Organisation < ApplicationRecord
   end
 
   has_many :contacts, dependent: nil
+  has_many :cases, through: :contacts
+  has_many :deals, dependent: :nullify
 
   validates :name, presence: true, uniqueness: { scope: :tenant_id, conditions: -> { where(deleted_at: nil) } }
   validates :kind, inclusion: { in: KINDS }

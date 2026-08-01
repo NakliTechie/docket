@@ -1,15 +1,15 @@
-# Defining maker-checker rules is desk configuration — gated case_config:manage,
-# like queues / categories / routing rules.
+# Defining maker-checker rules is cross-module approval governance. Reviewers
+# can configure case, Work, and connector gates even when Service Desk is off.
 class ApprovalProcessPolicy < ApplicationPolicy
-  def index?   = permit?("case_config:manage")
-  def show?    = permit?("case_config:manage")
-  def create?  = permit?("case_config:manage")
-  def update?  = permit?("case_config:manage")
-  def destroy? = permit?("case_config:manage")
+  def index?   = permit?("invocation:review")
+  def show?    = permit?("invocation:review")
+  def create?  = permit?("invocation:review")
+  def update?  = permit?("invocation:review")
+  def destroy? = permit?("invocation:review")
 
   class Scope < Scope
     def resolve
-      user&.can?("case_config:manage") ? scope.all : scope.none
+      user&.can?("invocation:review") ? scope.all : scope.none
     end
   end
 end

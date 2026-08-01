@@ -12,11 +12,18 @@ class Contact < ApplicationRecord
   # Which connector ingested this record (nil for portal/manual/API-created).
   belongs_to :source_connector, class_name: "Connector", optional: true
   has_many :cases, dependent: :restrict_with_error
+  has_many :deals, dependent: :nullify
+  has_many :work_links, as: :linkable, dependent: :destroy
+  has_many :linked_work_items, through: :work_links, source: :work_item
   has_many :messages, as: :author, dependent: nil
+  has_many :legal_holds, as: :subject, dependent: :destroy
+  has_many :privacy_erasure_requests, as: :subject, dependent: :destroy
 
   normalizes :email, with: ->(e) { e.strip.downcase.presence }
   normalizes :phone, with: ->(p) { p.gsub(/[^\d+]/, "").presence }
   normalizes :external_id, with: ->(id) { id.strip.presence }
+
+  before_validation :clear_email_unsubscribed_at_on_opt_in
 
   validates :name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
@@ -35,5 +42,9 @@ class Contact < ApplicationRecord
   def reachable_somehow
     return if email.present? || phone.present? || external_id.present?
     errors.add(:base, :unreachable)
+  end
+
+  def clear_email_unsubscribed_at_on_opt_in
+    self.email_unsubscribed_at = nil if will_save_change_to_email_consent? && email_consent?
   end
 end

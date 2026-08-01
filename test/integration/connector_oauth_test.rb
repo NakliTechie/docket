@@ -16,6 +16,14 @@ class ConnectorOauthTest < ActionDispatch::IntegrationTest
     Rails.application.message_verifier("connector_oauth").generate({ "cid" => connector.id }, expires_in: 15.minutes)
   end
 
+  def with_vetted_address
+    original = Docket::OutboundUrl.method(:vetted_address)
+    Docket::OutboundUrl.define_singleton_method(:vetted_address) { |*, **| "142.250.77.42" }
+    yield
+  ensure
+    Docket::OutboundUrl.define_singleton_method(:vetted_address, original)
+  end
+
   test "oauth_authorize redirects an admin to the vendor with state + scope" do
     sign_in_as users(:admin)
     c = gcal_connector
@@ -44,9 +52,12 @@ class ConnectorOauthTest < ActionDispatch::IntegrationTest
                  body: { access_token: "ya29.x", refresh_token: "1//r", expires_in: 3600 }.to_json,
                  headers: { "Content-Type" => "application/json" })
 
-    get oauth_callback_admin_connectors_path(code: "auth-code", state: valid_state(c))
+    with_vetted_address do
+      get oauth_callback_admin_connectors_path(code: "auth-code", state: valid_state(c))
+    end
 
     assert_redirected_to admin_connector_path(c)
+    assert flash[:alert].blank?, flash[:alert].to_s
     c.reload
     assert c.oauth_connected?
     assert c.status_active?

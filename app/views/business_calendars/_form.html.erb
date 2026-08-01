@@ -1,0 +1,56 @@
+<%= form_with model: business_calendar, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: business_calendar %>
+
+  <div class="form-row">
+    <%= f.label :name, t("business_calendars.fields.name") %>
+    <%= f.text_field :name, required: true %>
+  </div>
+  <div class="form-row">
+    <%= f.label :time_zone, t("business_calendars.fields.time_zone") %>
+    <%= f.time_zone_select :time_zone, ActiveSupport::TimeZone.all, {}, required: true %>
+  </div>
+  <div class="form-row checkbox-row">
+    <%= f.check_box :is_default %>
+    <%= f.label :is_default, t("business_calendars.fields.is_default") %>
+  </div>
+
+  <fieldset>
+    <legend><%= t("business_calendars.fields.weekly_windows") %></legend>
+    <p class="form-hint"><%= t("business_calendars.form.windows_hint") %></p>
+    <%= f.fields_for :business_calendar_windows do |wf| %>
+      <div class="filter-bar">
+        <%= wf.hidden_field :id if wf.object.persisted? %>
+        <%= wf.select :weekday, Date::DAYNAMES.each_with_index.map { |name, index| [name, index] },
+                      { include_blank: true } %>
+        <%= wf.time_field :starts_at %>
+        <%= wf.time_field :ends_at %>
+        <% if wf.object.persisted? %>
+          <label><%= wf.check_box :_destroy %> <%= t("actions.delete") %></label>
+        <% end %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t("business_calendars.fields.exceptions") %></legend>
+    <p class="form-hint"><%= t("business_calendars.form.exceptions_hint") %></p>
+    <%= f.fields_for :business_calendar_exceptions do |ef| %>
+      <div class="filter-bar">
+        <%= ef.hidden_field :id if ef.object.persisted? %>
+        <%= ef.date_field :on_date %>
+        <%= ef.text_field :name, placeholder: t("business_calendars.form.exception_name") %>
+        <label><%= ef.check_box :closed %> <%= t("business_calendars.fields.closed") %></label>
+        <%= ef.time_field :starts_at %>
+        <%= ef.time_field :ends_at %>
+        <% if ef.object.persisted? %>
+          <label><%= ef.check_box :_destroy %> <%= t("actions.delete") %></label>
+        <% end %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), business_calendars_path, class: "btn" %>
+  </div>
+<% end %>

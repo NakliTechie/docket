@@ -10,12 +10,7 @@ class SentimentJob < ApplicationJob
     client = Llm.client
     return if client.nil?
 
-    prompt = <<~PROMPT
-      [TASK:sentiment]
-      Classify the sentiment of this customer message as positive, neutral, or negative.
-      Message: #{message.body.truncate(2000)}
-      Respond with JSON: {"sentiment": ..., "confidence": 0.0-1.0}
-    PROMPT
+    prompt = AssistPrompts.sentiment(message)
 
     result = client.chat([ { role: "user", content: prompt } ], json: true)
     sentiment = result["sentiment"].to_s.presence_in(%w[positive neutral negative])

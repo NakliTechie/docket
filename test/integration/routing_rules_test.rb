@@ -57,4 +57,37 @@ class RoutingRulesTest < ActionDispatch::IntegrationTest
       } }
     end
   end
+
+  test "a manager can configure a business-time status rule" do
+    sign_in_as users(:client_admin)
+
+    assert_difference "RoutingRule.scheduled.count", 1 do
+      post routing_rules_path, params: { routing_rule: {
+        name: "Escalate stale work", trigger_type: "elapsed_time",
+        if_status: "in_progress", after_minutes: "240", use_business_hours: "1",
+        then_priority: "urgent"
+      } }
+    end
+
+    rule = RoutingRule.order(:id).last
+    assert rule.trigger_elapsed_time?
+    assert rule.use_business_hours?
+    assert_equal 240, rule.after_minutes
+    assert_redirected_to routing_rules_path
+  end
+
+  test "deleting a used rule retains the routed case and execution history" do
+    rule = RoutingRule.create!(
+      name: "Used rule", if_priority: "normal", then_queue: queues(:pensions)
+    )
+    kase = Case.create!(subject: "Routed", contact: contacts(:asha), priority: :normal)
+    assert_equal rule, kase.reload.routed_by_rule
+    sign_in_as users(:client_admin)
+
+    assert_difference "RoutingRule.count", -1 do
+      delete routing_rule_path(rule)
+    end
+    assert Case.exists?(kase.id)
+    assert_nil kase.reload.routed_by_rule_id
+  end
 end

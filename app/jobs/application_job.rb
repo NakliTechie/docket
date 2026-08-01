@@ -9,9 +9,12 @@ class ApplicationJob < ActiveJob::Base
   # (acts_as_tenant serializes current_tenant into the job and restores it on
   # perform), so we only fill in when none is set — i.e. the recurring scheduler
   # in an ISOLATED deploy, which defaults to the singleton so scoped writes
-  # work. Shared-mode per-tenant fan-out for the sweeps lands in Phase C.
+  # work. Shared sweeps fan out explicitly through each_tenant_with_feature.
   around_perform do |_job, block|
-    if ActsAsTenant.current_tenant.nil? && Tenant.isolated_deployment?
+    tenant = ActsAsTenant.current_tenant
+    if tenant&.suspended?
+      Rails.logger.info("discarded #{self.class.name} for suspended tenant #{tenant.id}")
+    elsif tenant.nil? && Tenant.isolated_deployment?
       ActsAsTenant.with_tenant(Tenant.primary, &block)
     else
       block.call

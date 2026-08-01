@@ -2,6 +2,7 @@
 <div class="page-header">
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
+    <%= link_to t(".my_tickets"), cases_path(assignee_id: Current.user.id), class: "btn" %>
     <% if @has_any_cases && policy(Case).create? %>
       <%= link_to new_case_path, class: "btn btn-primary" do %>
         <%= icon "plus" %><%= t(".new_case") %>
@@ -11,6 +12,31 @@
 </div>
 
 <% if @has_any_cases %>
+  <div class="saved-view-bar">
+    <% if @saved_views.any? %>
+      <%= form_with url: cases_path, method: :get, class: "inline-form" do |f| %>
+        <%= f.label :saved_view_id, t("saved_views.choose"), class: "visually-hidden" %>
+        <%= f.select :saved_view_id, @saved_views.pluck(:name, :id),
+                     { include_blank: t("saved_views.choose"), selected: @current_saved_view&.id } %>
+        <%= f.submit t("saved_views.apply"), class: "btn btn-sm" %>
+      <% end %>
+    <% end %>
+    <%= form_with url: saved_views_path, method: :post, class: "inline-form saved-view-create" do |f| %>
+      <%= f.hidden_field :resource_type, value: "cases" %>
+      <% @filters.each do |key, value| %>
+        <%= hidden_field_tag "filters[#{key}]", value %>
+      <% end %>
+      <%= f.label :name, t("saved_views.name"), class: "visually-hidden" %>
+      <%= f.text_field :name, required: true, maxlength: 80, placeholder: t("saved_views.name") %>
+      <%= f.submit t("saved_views.save"), class: "btn btn-sm" %>
+    <% end %>
+    <% if @current_saved_view %>
+      <%= button_to t("saved_views.delete"), saved_view_path(@current_saved_view), method: :delete,
+                    class: "btn btn-ghost btn-sm",
+                    form: { data: { turbo_confirm: t("saved_views.confirm_delete") } } %>
+    <% end %>
+  </div>
+
   <%= form_with url: cases_path, method: :get, class: "filter-bar" do |f| %>
   <div class="form-row">
     <%= f.label :q, t("filters.search") %>
@@ -19,22 +45,22 @@
   <div class="form-row">
     <%= f.label :status, t("filters.status") %>
     <%= f.select :status, Case.statuses.keys.map { |s| [ t("cases.enum.status.#{s}"), s ] },
-                 { include_blank: t("filters.any") }, selected: @filters[:status] %>
+                 { include_blank: t("filters.any"), selected: @filters[:status] } %>
   </div>
   <div class="form-row">
     <%= f.label :priority, t("filters.priority") %>
     <%= f.select :priority, Case.priorities.keys.map { |p| [ t("cases.enum.priority.#{p}"), p ] },
-                 { include_blank: t("filters.any") }, selected: @filters[:priority] %>
+                 { include_blank: t("filters.any"), selected: @filters[:priority] } %>
   </div>
   <div class="form-row">
     <%= f.label :queue_id, t("filters.queue") %>
     <%= f.select :queue_id, CaseQueue.order(:name).pluck(:name, :id),
-                 { include_blank: t("filters.any") }, selected: @filters[:queue_id] %>
+                 { include_blank: t("filters.any"), selected: @filters[:queue_id] } %>
   </div>
   <div class="form-row">
     <%= f.label :assignee_id, t("filters.assignee") %>
-    <%= f.select :assignee_id, User.active.order(:name).pluck(:name, :id),
-                 { include_blank: t("filters.any") }, selected: @filters[:assignee_id] %>
+    <%= f.select :assignee_id, User.case_assignees.order(:name).pluck(:name, :id),
+                 { include_blank: t("filters.any"), selected: @filters[:assignee_id] } %>
   </div>
   <div class="form-row">
     <%= f.label :sort, t("filters.sort") %>
@@ -48,10 +74,35 @@
 <% end %>
 
 <% if @cases.any? %>
+  <% bulk_allowed = @cases.any? { |kase| policy(kase).update? } %>
+  <%= form_with url: bulk_update_cases_path, method: :post, class: "bulk-form" do |f| %>
+  <% if bulk_allowed %>
+    <div class="bulk-action-bar">
+      <strong><%= t("bulk_actions.selected") %></strong>
+      <%= f.label :bulk_action, t("bulk_actions.action"), for: "case_bulk_action", class: "visually-hidden" %>
+      <%= f.select :bulk_action, [
+            [t("bulk_actions.assign"), "assign"],
+            [t("bulk_actions.transition"), "transition"],
+            [t("bulk_actions.priority"), "priority"]
+          ], {}, id: "case_bulk_action" %>
+      <%= f.label :assignee_id, t("filters.assignee"), for: "case_bulk_assignee", class: "visually-hidden" %>
+      <%= f.select :assignee_id, User.case_assignees.order(:name).pluck(:name, :id),
+                   { include_blank: t("bulk_actions.unassign") }, id: "case_bulk_assignee" %>
+      <%= f.label :status, t("filters.status"), for: "case_bulk_status", class: "visually-hidden" %>
+      <%= f.select :status, Case.statuses.keys.map { |status| [t("cases.enum.status.#{status}"), status] },
+                   {}, id: "case_bulk_status" %>
+      <%= f.label :priority, t("filters.priority"), for: "case_bulk_priority", class: "visually-hidden" %>
+      <%= f.select :priority, Case.priorities.keys.map { |priority| [t("cases.enum.priority.#{priority}"), priority] },
+                   {}, id: "case_bulk_priority" %>
+      <%= f.submit t("bulk_actions.apply"), class: "btn btn-sm" %>
+      <span class="muted"><%= t("bulk_actions.limit") %></span>
+    </div>
+  <% end %>
   <div class="table-wrap" data-controller="keynav">
     <table class="case-table">
       <thead>
         <tr>
+          <% if bulk_allowed %><th><span class="visually-hidden"><%= t("bulk_actions.select") %></span></th><% end %>
           <th><%= t(".columns.tracking_id") %></th>
           <th><%= t(".columns.subject") %></th>
           <th><%= t(".columns.contact") %></th>
@@ -66,6 +117,11 @@
       <tbody data-keynav-target="list">
         <% @cases.each do |kase| %>
           <tr data-keynav-href="<%= case_path(kase) %>">
+            <% if bulk_allowed %>
+              <td><%= check_box_tag "case_ids[]", kase.id, false,
+                                    aria: { label: t("bulk_actions.select_record", name: kase.tracking_id) },
+                                    disabled: !policy(kase).update? %></td>
+            <% end %>
             <td class="mono" data-label="<%= t(".columns.tracking_id") %>"><%= link_to kase.tracking_id, case_path(kase) %></td>
             <td data-label="<%= t(".columns.subject") %>"><%= link_to kase.subject, case_path(kase) %></td>
             <td data-label="<%= t(".columns.contact") %>"><%= kase.contact.name %></td>
@@ -80,6 +136,7 @@
       </tbody>
     </table>
   </div>
+  <% end %>
   <%= render "shared/pagination", pagy: @pagy %>
 <% else %>
   <% if @has_any_cases %>

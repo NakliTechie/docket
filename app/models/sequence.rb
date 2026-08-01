@@ -21,6 +21,9 @@ class Sequence < ApplicationRecord
 
   # Enroll a target (Lead/Contact); the first step fires after its delay.
   def enroll!(target)
+    existing = sequence_enrollments.status_active.find_by(enrollable: target)
+    return existing if existing
+
     first = ordered_steps.first
     sequence_enrollments.create!(
       enrollable: target,
@@ -29,6 +32,8 @@ class Sequence < ApplicationRecord
       status: :active,
       next_run_at: first ? Time.current + first.delay_days.days : nil
     )
+  rescue ActiveRecord::RecordNotUnique
+    sequence_enrollments.status_active.find_by!(enrollable: target)
   end
 
   private

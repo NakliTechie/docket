@@ -106,6 +106,15 @@ class RoleWalkthroughTest < ApplicationSystemTestCase
     assert_selector "a[href='#{admin_connectors_path}']"
   end
 
+  test "blank global search stays on an authorized empty state" do
+    sign_in_with_form users(:super_admin)
+
+    visit search_path(q: "   ")
+
+    assert_current_path search_path, ignore_query: true
+    assert_text I18n.t("search.index.title")
+  end
+
   private
 
   def assert_forbidden(path)

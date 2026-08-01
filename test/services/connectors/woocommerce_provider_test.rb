@@ -2,8 +2,9 @@ require "test_helper"
 
 class Connectors::WoocommerceProviderTest < ActiveSupport::TestCase
   class FakeResponse
-    def initialize(code, body) = (@code = code; @body = body)
+    def initialize(code, body, headers = {}) = (@code = code; @body = body; @headers = headers)
     attr_reader :code, :body
+    def [](name) = @headers[name]
   end
   class FakeHttp
     attr_reader :last
@@ -14,9 +15,17 @@ class Connectors::WoocommerceProviderTest < ActiveSupport::TestCase
     def request(req) = (@last = req; @r)
   end
   def with_http(code, body = "{}")
+    with_http_seq([ code, body ]) { |requests| yield requests }
+  end
+  def with_http_seq(*responses)
     captured = []
+    index = -1
     original = Net::HTTP.method(:new)
-    Net::HTTP.define_singleton_method(:new) { |*_a| FakeHttp.new(FakeResponse.new(code.to_s, body)).tap { |h| captured << h } }
+    Net::HTTP.define_singleton_method(:new) do |*_a|
+      index += 1
+      code, body, headers = responses[index] || responses.last
+      FakeHttp.new(FakeResponse.new(code.to_s, body, headers || {})).tap { |h| captured << h }
+    end
     yield captured
   ensure
     Net::HTTP.define_singleton_method(:new, original)
@@ -168,21 +177,32 @@ class Connectors::WoocommerceProviderTest < ActiveSupport::TestCase
       assert_equal "a@b.com", records.first["email"]
 
       req = reqs.last.last
-      assert_equal "/wp-json/wc/v3/customers", req.path
+      assert_equal "/wp-json/wc/v3/customers?per_page=100&page=1&orderby=id&order=asc", req.path
       assert_kind_of Net::HTTP::Get, req
       assert_equal expected_auth, req["Authorization"]
     end
   end
 
-  test "fetch returns an empty array when the body is not an array" do
+  test "fetch rejects a non-array body instead of reporting a truncated sync as successful" do
     with_http(200, { "message" => "ok" }.to_json) do
-      assert_equal [], provider.fetch
+      assert_raises(Connectors::Error) { provider.fetch }
     end
   end
 
   test "fetch raises on a non-2xx response" do
     with_http(401) do
       assert_raises(Connectors::Error) { provider.fetch }
+    end
+  end
+
+
+  test "fetch traverses X-WP-TotalPages" do
+    with_http_seq(
+      [ 200, [ { "id" => 1 } ].to_json, { "X-WP-TotalPages" => "2" } ],
+      [ 200, [ { "id" => 2 } ].to_json, { "X-WP-TotalPages" => "2" } ]
+    ) do |requests|
+      assert_equal [ 1, 2 ], provider.fetch.map { |record| record["id"] }
+      assert_includes requests.last.last.path, "page=2"
     end
   end
 end

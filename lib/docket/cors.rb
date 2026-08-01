@@ -41,7 +41,7 @@ module Docket
     # tenant shares the global setting and one tenant's origin is honored on
     # all subdomains (M1). Unknown subdomain (shared) → no app → no CORS.
     def allowed_origins(env)
-      tenant = Tenant.resolve_by_subdomain(ActionDispatch::Request.new(env).subdomain)
+      tenant = Tenant.resolve_by_host(ActionDispatch::Request.new(env).host)
       return [] if tenant.nil?
       ActsAsTenant.with_tenant(tenant) do
         Setting.get("cors_allowed_origins").to_s.split(",").map(&:strip).reject(&:blank?)

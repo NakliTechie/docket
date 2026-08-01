@@ -11,6 +11,7 @@ module Decisioning
 
       def self.decision_class = :confirm
       def self.effect = :write
+      def self.owner_feature = "crm.sequences"
 
       def evaluate
         sequence = Sequence.active.order(:id).first

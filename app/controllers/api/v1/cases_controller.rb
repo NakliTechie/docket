@@ -2,10 +2,10 @@ module Api
   module V1
     class CasesController < BaseController
       require_feature "service_desk"
-      before_action :set_case, only: %i[show update destroy transition assign]
+      before_action :set_case, only: %i[show update destroy transition assign merge split]
 
       def index
-        scope = api_scope(Case, scope: "cases:read")
+        scope = api_scope(Case, scope: "cases:read").canonical
                   .includes(:queue, :category, :contact)
                   .search(params[:q])
         scope = scope.where(status: params[:status]) if params[:status].present?
@@ -53,7 +53,11 @@ module Api
 
       def update
         authorize_api!(@case, :update?, scope: "cases:write")
-        if @case.update(case_params.except(:contact_id))
+        attributes = case_params.except(:contact_id)
+        custom_fields = attributes.delete(:custom_fields)
+        @case.assign_attributes(attributes)
+        @case.assign_custom_fields(custom_fields) if custom_fields
+        if @case.save
           render json: { data: Serialize.kase(@case) }
         else
           render_validation_errors(@case)
@@ -88,7 +92,7 @@ module Api
 
       def assign
         authorize_api!(@case, :assign?, scope: "cases:write")
-        assignee = params[:assignee_id].presence && User.active.find_by(id: params[:assignee_id])
+        assignee = params[:assignee_id].presence && User.case_assignees.find_by(id: params[:assignee_id])
         if params[:assignee_id].present? && assignee.nil? # unknown / inactive / other tenant (L2)
           return render_error("invalid_assignee", detail: "no active user with that id", status: :unprocessable_entity)
         end
@@ -96,15 +100,36 @@ module Api
         render json: { data: Serialize.kase(@case) }
       end
 
+      def merge
+        authorize_api!(@case, :merge?, scope: "cases:write")
+        source = api_scope(Case, scope: "cases:write").canonical.find(params.require(:source_case_id))
+        authorize_api!(source, :merge?, scope: "cases:write")
+        CaseMerge.call(source: source, target: @case, actor: Current.actor)
+        render json: { data: Serialize.kase(@case.reload, include_messages: true) }
+      rescue ArgumentError => error
+        render_error("invalid_merge", detail: error.message, status: :unprocessable_entity)
+      end
+
+      def split
+        authorize_api!(@case, :split?, scope: "cases:write")
+        created = CaseSplit.call(source: @case, message_ids: params[:message_ids],
+                                 subject: params[:subject], actor: Current.actor)
+        render json: { data: Serialize.kase(created, include_messages: true) }, status: :created
+      rescue ArgumentError => error
+        render_error("invalid_split", detail: error.message, status: :unprocessable_entity)
+      end
+
       private
 
       def set_case
-        @case = params[:id].to_s.start_with?("DKT-") ? Case.find_by!(tracking_id: params[:id]) : Case.find(params[:id])
+        found = params[:id].to_s.start_with?("DKT-") ? Case.find_by!(tracking_id: params[:id]) : Case.find(params[:id])
+        @case = found.canonical_record
       end
 
       def case_params
         params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                     :queue_id, :assignee_id, :contact_id, :sla_policy_id, :lock_version)
+                                     :queue_id, :assignee_id, :contact_id, :sla_policy_id, :lock_version,
+                                     custom_fields: {})
       end
 
       # Body (and any attachments) on create land as the initial inbound

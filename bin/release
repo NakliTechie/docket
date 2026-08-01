@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+cd "$(dirname "$0")/.."
+
+# One release process prepares primary + cache + queue + cable before any web
+# replica starts. db:prepare also runs the idempotent base seed when primary is
+# first created, so a fresh host always has its tenant, break-glass admin, and
+# day-one defaults; existing databases are migrated without reseeding.
+exec ./bin/rails db:prepare

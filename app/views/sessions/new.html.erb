@@ -4,6 +4,8 @@
   <p class="auth-brand"><%= brand_name %></p>
   <div class="panel">
     <h1><%= t(".title") %></h1>
+    <p><%= t(".intro") %></p>
+    <p class="form-hint"><%= t(".first_admin_hint") %></p>
     <%= form_with url: session_path do |form| %>
       <div class="form-row">
         <%= form.label :email_address, t(".email") %>

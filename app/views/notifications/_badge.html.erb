@@ -1,0 +1,7 @@
+<span id="notification-badge" class="notification-badge" aria-live="polite">
+  <% count = user.notifications.unread.count %>
+  <% if count.positive? %>
+    <span class="badge badge-notification"><%= count > 99 ? "99+" : count %></span>
+    <span class="visually-hidden"><%= t("notifications.unread_count", count: count) %></span>
+  <% end %>
+</span>

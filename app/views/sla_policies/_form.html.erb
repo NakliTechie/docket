@@ -12,6 +12,12 @@
     <%= f.text_field :description %>
   </div>
 
+  <div class="form-row">
+    <%= f.label :business_calendar_id, t("sla_policies.fields.business_calendar") %>
+    <%= f.collection_select :business_calendar_id, BusinessCalendar.order(:name), :id, :name,
+          include_blank: t("sla_policies.form.default_calendar") %>
+  </div>
+
   <fieldset>
     <legend><%= t("sla_policies.fields.targets") %></legend>
     <p class="form-hint"><%= t("sla_policies.form.targets_hint") %></p>

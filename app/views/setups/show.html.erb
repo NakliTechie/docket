@@ -11,6 +11,24 @@
   </span>
 </div>
 
+<% if @setup.service_desk? %>
+  <section class="setup-resource panel" data-controller="clipboard" aria-labelledby="portal-resource-title">
+    <div>
+      <h2 id="portal-resource-title"><%= t(".portal.title") %></h2>
+      <p><%= t(".portal.body") %></p>
+      <p class="setup-url mono" data-clipboard-target="source"><%= @setup.portal_url %></p>
+      <span class="copy-feedback" data-clipboard-target="feedback" aria-live="polite"></span>
+    </div>
+    <div class="setup-step-actions">
+      <span class="badge"><%= t(".status.ready") %></span>
+      <button type="button" class="btn btn-sm" data-action="clipboard#copy"
+              data-clipboard-label-value="<%= t(".portal.copied") %>"><%= t(".portal.copy") %></button>
+      <%= link_to t(".portal.open"), portal_root_path, class: "btn btn-sm",
+            target: "_blank", rel: "noopener" %>
+    </div>
+  </section>
+<% end %>
+
 <ol class="setup-list">
   <li class="setup-step <%= "complete" if @setup.brand_ready? %>">
     <div>
@@ -19,7 +37,13 @@
     </div>
     <div class="setup-step-actions">
       <span class="badge"><%= t(@setup.brand_ready? ? ".status.done" : ".status.to_do") %></span>
-      <%= link_to t(".brand.action"), admin_settings_path(anchor: "workspace"), class: "btn btn-sm" %>
+      <%= form_with url: setup_path, method: :patch, class: "inline-form setup-brand-form" do %>
+        <%= hidden_field_tag :step, "brand" %>
+        <%= label_tag :setup_brand_name, t(".brand.field"), class: "visually-hidden" %>
+        <%= text_field_tag :brand_name, Setting.get("brand_name"), id: "setup_brand_name",
+              required: true, placeholder: t("layout.product_name") %>
+        <%= submit_tag t(".brand.action"), class: "btn btn-primary btn-sm" %>
+      <% end %>
     </div>
   </li>
 
@@ -52,21 +76,6 @@
       </div>
     </li>
 
-    <li class="setup-step complete" data-controller="clipboard">
-      <div>
-        <h2><%= t(".portal.title") %></h2>
-        <p><%= t(".portal.body") %></p>
-        <p class="setup-url mono" data-clipboard-target="source"><%= @setup.portal_url %></p>
-        <span class="copy-feedback" data-clipboard-target="feedback" aria-live="polite"></span>
-      </div>
-      <div class="setup-step-actions">
-        <span class="badge"><%= t(".status.ready") %></span>
-        <button type="button" class="btn btn-sm" data-action="clipboard#copy"
-                data-clipboard-label-value="<%= t(".portal.copied") %>"><%= t(".portal.copy") %></button>
-        <%= link_to t(".portal.open"), portal_root_path, class: "btn btn-sm",
-              target: "_blank", rel: "noopener" %>
-      </div>
-    </li>
   <% end %>
 
   <li class="setup-step <%= "complete" if @setup.email_decided? %>">
@@ -90,17 +99,20 @@
   <li class="setup-step <%= "complete" if @setup.first_value? %>">
     <div>
       <h2><%= t(".first_request.title") %></h2>
-      <p><%= t(".first_request.body") %></p>
+      <p><%= t(".first_request.body.#{@setup.first_value_kind}") %></p>
     </div>
     <div class="setup-step-actions">
-      <span class="badge"><%= t(@setup.first_value? ? ".status.done" : ".status.to_do") %></span>
-      <% if @setup.service_desk? %>
+      <span class="badge"><%= t(@setup.first_value? ? ".status.done" : (@setup.first_record? ? ".status.in_progress" : ".status.to_do")) %></span>
+      <% if @setup.first_record? && !@setup.first_value? %>
+        <%= link_to t(".first_request.continue"), polymorphic_path(@setup.first_value_record),
+              class: "btn btn-primary btn-sm" %>
+      <% elsif @setup.service_desk? && !@setup.first_value? %>
         <%= link_to t(".first_request.portal"), portal_root_path, class: "btn btn-primary btn-sm",
               target: "_blank", rel: "noopener" %>
         <%= link_to t(".first_request.internal"), new_case_path, class: "btn btn-sm" %>
-      <% elsif @setup.crm? %>
+      <% elsif @setup.crm? && !@setup.first_value? %>
         <%= link_to t(".first_request.lead"), new_lead_path, class: "btn btn-primary btn-sm" %>
-      <% elsif @setup.work? %>
+      <% elsif @setup.work? && !@setup.first_value? %>
         <%= link_to t(".first_request.project"), new_project_path, class: "btn btn-primary btn-sm" %>
       <% end %>
     </div>
@@ -121,3 +133,12 @@
     </div>
   </li>
 </ol>
+
+<% if @setup.complete? %>
+  <section class="panel setup-complete" aria-labelledby="setup-complete-title">
+    <h2 id="setup-complete-title"><%= t(".complete.title") %></h2>
+    <p><%= t(".complete.body") %></p>
+    <%= button_to t(".complete.action"), setup_path, method: :patch,
+          params: { step: "finish" }, class: "btn btn-primary" %>
+  </section>
+<% end %>

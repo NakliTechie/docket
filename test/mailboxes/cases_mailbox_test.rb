@@ -1,6 +1,20 @@
 require "test_helper"
 
 class CasesMailboxTest < ActionMailbox::TestCase
+  test "attributes the retained raw email to the resolved tenant" do
+    inbound = create_inbound_email_from_source(<<~MAIL)
+      From: sender@example.test
+      To: support@docket.local
+      Subject: Tenant attribution
+
+      Hello
+    MAIL
+
+    inbound.route
+
+    assert_equal tenants(:primary).id, inbound.reload.tenant_id
+  end
+
   test "fresh email opens a case with contact and initial message" do
     assert_difference [ "Case.count", "Contact.count" ], 1 do
       receive_inbound_email_from_mail(
@@ -22,8 +36,7 @@ class CasesMailboxTest < ActionMailbox::TestCase
   test "intake resolves the tenant itself with no ambient context (production isolated path)" do
     # Inbound mail runs outside any request/job, so no tenant is set — the
     # mailbox must resolve it (the singleton in isolated mode), or scoped
-    # creates would fail. test_tenant masks this, so clear it here.
-    ActsAsTenant.test_tenant = nil
+    # creates would fail. Clear the ordinary test ambient tenant to exercise it.
     ActsAsTenant.current_tenant = nil
     assert_difference "Case.count", 1 do
       receive_inbound_email_from_mail(
@@ -33,14 +46,13 @@ class CasesMailboxTest < ActionMailbox::TestCase
     end
     assert_equal tenants(:primary), Case.order(:id).last.tenant
   ensure
-    ActsAsTenant.test_tenant = tenants(:primary)
+    ActsAsTenant.current_tenant = tenants(:primary)
   end
 
   test "in shared mode the tenant is resolved from the recipient subdomain" do
     orig = Rails.application.config.x.tenancy_mode
     Rails.application.config.x.tenancy_mode = "shared"
     acme = tenants(:acme)
-    ActsAsTenant.test_tenant = nil
     ActsAsTenant.current_tenant = nil
 
     receive_inbound_email_from_mail(
@@ -52,7 +64,7 @@ class CasesMailboxTest < ActionMailbox::TestCase
     assert_equal acme.id, kase.tenant_id
   ensure
     Rails.application.config.x.tenancy_mode = orig
-    ActsAsTenant.test_tenant = tenants(:primary)
+    ActsAsTenant.current_tenant = tenants(:primary)
   end
 
   test "email from a known contact reuses the contact" do

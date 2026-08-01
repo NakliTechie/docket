@@ -1,0 +1,12 @@
+<%= form_with model: product, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: product %>
+  <div class="form-grid">
+    <div class="form-row"><%= f.label :name, t("products.fields.name") %><%= f.text_field :name, required: true %></div>
+    <div class="form-row"><%= f.label :sku, t("products.fields.sku") %><%= f.text_field :sku, required: true %></div>
+    <div class="form-row"><%= f.label :default_unit_price, t("products.fields.price") %><%= f.number_field :default_unit_price, min: 0, step: 0.01 %></div>
+    <div class="form-row"><%= f.label :currency, t("products.fields.currency") %><%= f.text_field :currency, required: true, maxlength: 3 %></div>
+  </div>
+  <div class="form-row"><%= f.label :description, t("products.fields.description") %><%= f.text_area :description %></div>
+  <label class="checkbox-row"><%= f.check_box :active %><%= t("products.fields.active") %></label>
+  <div class="form-actions"><%= f.submit class: "btn btn-primary" %><%= link_to t("actions.cancel"), products_path, class: "btn" %></div>
+<% end %>

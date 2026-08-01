@@ -42,6 +42,22 @@ class SequenceTest < ActiveSupport::TestCase
     assert_not_equal s2, enr.due_step
   end
 
+  test "enrollment is idempotent while active and can restart after cancellation" do
+    sequence = build_sequence
+    sequence.save!
+    lead = Lead.create!(name: "One active enrollment", email: "one-active@example.com",
+                        email_consent: true)
+
+    first = sequence.enroll!(lead)
+    assert_equal first, sequence.enroll!(lead)
+    assert_equal 1, sequence.sequence_enrollments.status_active.where(enrollable: lead).count
+
+    first.cancel!
+    restarted = sequence.enroll!(lead)
+    assert_not_equal first.id, restarted.id
+    assert restarted.status_active?
+  end
+
   test "step interpolation fills {{vars}} and leaves unknown tokens" do
     step = SequenceStep.new(subject: "Hi {{contact_name}}", body: "From {{company_name}} — {{unknown}}")
     vars = { "contact_name" => "Asha", "company_name" => "Acme" }

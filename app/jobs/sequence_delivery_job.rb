@@ -21,6 +21,11 @@ class SequenceDeliveryJob < ApplicationJob
   private
 
   def deliver_email(delivery)
+    unless OutboundMail.available?
+      delivery.mark_skipped!("outbound email is not configured")
+      return
+    end
+
     CrmMailer.sequence_delivery(delivery).deliver_now
     delivery.mark_delivered!
   end

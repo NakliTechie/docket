@@ -36,7 +36,7 @@ class CaseAgent
     # A declarative routing rule already classified this case — keep its routing,
     # skip the LLM classification, just complete triage.
     if kase.routed_by_rule_id.present?
-      kase.transition_to!(:triaged) if kase.status_new?
+      kase.guarded_transition_to(:triaged) if kase.status_new?
       return { "routed_by" => "rule", "rule_id" => kase.routed_by_rule_id }
     end
 
@@ -62,7 +62,7 @@ class CaseAgent
     # lingering in `new` with an unseen AI draft (L1). route is the single
     # triage-completion point.
     apply_routing(result) if result["confidence"].to_f >= threshold("ai_route_confidence", ROUTE_CONFIDENCE_DEFAULT)
-    kase.transition_to!(:triaged) if kase.status_new?
+    kase.guarded_transition_to(:triaged) if kase.status_new?
     log_turn("route", prompt, result)
     result
   end
@@ -116,17 +116,40 @@ class CaseAgent
     # creating the public reply means we never email the customer and then
     # raise InvalidTransition, leaving the case stuck (M19).
     kase.reload
-    kase.transition_to!(:triaged) if kase.status_new?
+    return unless kase.guarded_transition_to(:triaged) if kase.status_new?
+
+    if ApprovalGate.guarded_transition?(kase, :resolved) &&
+       !ApprovalGate.transition_cleared?(kase, :resolved)
+      request = ApprovalGate.submit_transition!(kase, :resolved, requested_by: nil)
+      record_resolution_proposal(request, draft_result)
+      return
+    end
+
+    return unless kase.reload.guarded_transition_to(:resolved)
+
+    publish_resolution(draft_result)
+  end
+
+  def record_resolution_proposal(request, draft_result)
+    return if kase.messages.where(kind: :internal_note)
+                  .any? { |message| message.metadata&.dig("approval_request_id") == request.id }
 
     kase.messages.create!(
-      kind: :agent_turn,
-      direction: :outbound,
-      author: nil,
+      kind: :internal_note, direction: :outbound, author: nil,
+      body: draft_result["reply"],
+      metadata: { "ai" => "resolve_proposal", "approval_request_id" => request.id,
+                  "confidence" => draft_result["confidence"],
+                  "rationale" => draft_result["rationale"] }
+    )
+  end
+
+  def publish_resolution(draft_result)
+    kase.messages.create!(
+      kind: :agent_turn, direction: :outbound, author: nil,
       body: "#{draft_result["reply"]}\n\n#{I18n.t("cases.agent.human_handoff_footer")}",
       metadata: { "ai" => "resolve", "confidence" => draft_result["confidence"],
                   "rationale" => draft_result["rationale"] }
     )
-    kase.reload.transition_to!(:resolved)
   end
 
   # Route/draft working turns are internal notes (staff-only); only

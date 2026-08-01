@@ -67,4 +67,15 @@ class CaseRoutingTest < ActiveSupport::TestCase
     assert_equal "rule", result["routed_by"]
     assert kase.reload.status_triaged?
   end
+
+  test "elapsed-time rules never run on case creation" do
+    RoutingRule.create!(
+      name: "Not at intake", trigger_type: :elapsed_time, if_status: :new,
+      after_minutes: 1, use_business_hours: false, then_priority: :urgent
+    )
+
+    kase = make_case.reload
+    assert_equal "high", kase.priority
+    assert_nil kase.routed_by_rule_id
+  end
 end

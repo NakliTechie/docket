@@ -66,4 +66,31 @@ class ImportSideEffectsTest < ActiveSupport::TestCase
     assert inbound.direction_inbound?, "the customer's own words must not become a staff reply"
     assert outbound.direction_outbound?
   end
+
+  test "Jira history does not publish work webhooks" do
+    WebhookEndpoint.create!(name: "work hook", url: "https://example.test/work",
+                            events: %w[work_item.created work_item.commented], active: true)
+    payload = { "issues" => [ {
+      "key" => "PEP-700", "fields" => {
+        "summary" => "Historic work", "status" => { "name" => "Backlog" },
+        "comment" => { "comments" => [ { "id" => "C-1", "body" => "Old note" } ] }
+      }
+    } ] }
+
+    assert_no_difference "WebhookDelivery.count" do
+      Imports::Jira.call(payload: payload, project: projects(:pep), actor: users(:admin))
+    end
+  end
+
+  test "an imported customer reply does not reopen a closed case" do
+    historic = payload([
+      { "id" => 22, "body_text" => "historic customer follow-up", "private" => false,
+        "incoming" => true, "created_at" => "2024-03-03T09:00:00Z" }
+    ])
+    historic["tickets"][0].merge!("status" => 5, "closed_at" => "2024-03-02T09:00:00Z")
+
+    Imports::Freshdesk.call(payload: historic)
+
+    assert Case.find_by(external_id: "freshdesk:900").status_closed?
+  end
 end

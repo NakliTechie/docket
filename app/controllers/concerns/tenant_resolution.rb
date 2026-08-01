@@ -16,10 +16,21 @@ module TenantResolution
   private
 
   def resolve_tenant
-    tenant = Tenant.resolve_by_subdomain(request.subdomain)
+    tenant = Tenant.resolve_by_host(request.host)
     return head(:not_found) if tenant.nil? && Tenant.shared_deployment? # unknown subdomain → no app here
 
     Current.tenant = tenant
     ActsAsTenant.current_tenant = tenant
+    render_suspended_tenant if tenant&.suspended?
+  end
+
+  def render_suspended_tenant
+    brand = Setting.get("brand_name").presence || Current.tenant.name
+    if request.path.start_with?("/api/") || request.format.json?
+      render json: { error: "tenant_suspended", brand: brand }, status: :service_unavailable
+    else
+      @suspended_brand = brand
+      render "errors/tenant_suspended", layout: "suspended", status: :service_unavailable
+    end
   end
 end

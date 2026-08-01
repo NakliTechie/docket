@@ -207,14 +207,14 @@
 <section>
   <div class="wrap">
     <h2>Security &amp; quality</h2>
-    <p class="sub">A whole-app fresh-eyes audit was run and fully resolved — 2 Critical, 4 High, 7 Medium, 12 Low, and the stray-code cleanup, each fixed with tests.</p>
+    <p class="sub">Whole-app forward-pass, walkthrough, and UX reviews are tracked with reproducible findings and verification evidence in the repository plan.</p>
     <div class="grid3">
       <div class="card"><h3><span class="ic"></span>Tenant isolation</h3><p>Audit, activity, security-event and CORS reads are tenant-scoped in shared mode; the global chain stays a super-admin view.</p></div>
       <div class="card"><h3><span class="ic"></span>Privilege boundary</h3><p>Role grants capped at the actor's own rank; over-broad policy scopes gated on read permission.</p></div>
       <div class="card"><h3><span class="ic"></span>Effector safety</h3><p>SSRF allowlist, fail-closed webhook HMAC, idempotency-race handling, encrypted credential vault, per-agent budgets.</p></div>
       <div class="card"><h3><span class="ic"></span>Maker-checker integrity</h3><p>Approvals are consumed once — repeat closures need fresh sign-off; model-driven transitions go through the gate too.</p></div>
       <div class="card"><h3><span class="ic"></span>Decisioning robustness</h3><p>Unique-per-(tenant,rule,subject) decisions; an overturned re-route restores the prior queue.</p></div>
-      <div class="card"><h3><span class="ic"></span>Verified</h3><p>1,277 tests green · RuboCop clean · Brakeman 0 security warnings · EN/HI i18n parity.</p></div>
+      <div class="card"><h3><span class="ic"></span>Verification</h3><p>SQLite/PostgreSQL tests, browser journeys, lint, static security analysis, and EN/HI parity are release-gate checks; current command evidence lives in the review reports.</p></div>
     </div>
   </div>
 </section>

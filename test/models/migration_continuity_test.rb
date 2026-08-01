@@ -31,7 +31,7 @@ class MigrationContinuityTest < ActiveSupport::TestCase
     end
   end
 
-  test "an unmapped Freshdesk status resolves from the ticket's own resolution data" do
+  test "a Freshdesk custom status requires an explicit mapping even when terminal timestamps exist" do
     payload = {
       "contacts" => [ { "id" => 1, "name" => "R", "email" => "r@x.test" } ],
       "tickets" => [
@@ -43,9 +43,14 @@ class MigrationContinuityTest < ActiveSupport::TestCase
     }
     result = Imports::Freshdesk.call(payload: payload)
 
-    assert Case.find_by(external_id: "freshdesk:1").status_closed?,
-           "a closed archive must not import as an open backlog"
+    assert_nil Case.find_by(external_id: "freshdesk:1"),
+               "a terminal timestamp is evidence, not permission to guess a custom workflow state"
+    assert_nil Case.find_by(external_id: "freshdesk:2")
+    assert_includes result.to_h[:unmapped]["status"], "12"
+
+    mapped = Imports::Freshdesk.call(payload: payload, status_map: { 12 => :closed, 13 => :new })
+    assert_empty mapped.errors
+    assert Case.find_by(external_id: "freshdesk:1").status_closed?
     assert Case.find_by(external_id: "freshdesk:2").status_new?
-    assert_includes result.to_h[:unmapped]["status"], "12", "and it still reports what it could not map"
   end
 end

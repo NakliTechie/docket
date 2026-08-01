@@ -19,6 +19,11 @@
   </div>
 
   <div class="form-row">
+    <label><%= f.check_box :email_consent %> <%= t("contacts.fields.email_consent") %></label>
+    <p class="form-hint"><%= t("contacts.form.email_consent_hint") %></p>
+  </div>
+
+  <div class="form-row">
     <label><%= f.check_box :sms_consent %> <%= t("contacts.fields.sms_consent") %></label>
     <p class="form-hint"><%= t("contacts.form.sms_consent_hint") %></p>
   </div>

@@ -14,9 +14,17 @@ class Connectors::JotformProviderTest < ActiveSupport::TestCase
     def request(req) = (@last = req; @r)
   end
   def with_http(code, body = "{}")
+    with_http_seq([ code, body ]) { |requests| yield requests }
+  end
+  def with_http_seq(*responses)
     captured = []
+    index = -1
     original = Net::HTTP.method(:new)
-    Net::HTTP.define_singleton_method(:new) { |*_a| FakeHttp.new(FakeResponse.new(code.to_s, body)).tap { |h| captured << h } }
+    Net::HTTP.define_singleton_method(:new) do |*_a|
+      index += 1
+      code, body = responses[index] || responses.last
+      FakeHttp.new(FakeResponse.new(code.to_s, body)).tap { |h| captured << h }
+    end
     yield captured
   ensure
     Net::HTTP.define_singleton_method(:new, original)
@@ -45,7 +53,7 @@ class Connectors::JotformProviderTest < ActiveSupport::TestCase
       assert_equal "2", records.last["id"]
 
       req = reqs.last.last
-      assert_equal "/form/240010001/submissions", req.path
+      assert_equal "/form/240010001/submissions?limit=1000&offset=0", req.path
       assert_kind_of Net::HTTP::Get, req
       assert_equal "jf-secret", req["APIKEY"]
     end
@@ -100,7 +108,7 @@ class Connectors::JotformProviderTest < ActiveSupport::TestCase
       prov = provider(config: { "base_url" => "https://eu-api.jotform.com" })
       records = prov.fetch
       assert_equal "9", records.first["id"]
-      assert_equal "/form/240010001/submissions", reqs.last.last.path
+      assert_equal "/form/240010001/submissions?limit=1000&offset=0", reqs.last.last.path
     end
   end
 
@@ -117,5 +125,16 @@ class Connectors::JotformProviderTest < ActiveSupport::TestCase
 
   test "jotform exposes no agent-callable actions" do
     assert_equal [], Connectors::JotformProvider.actions
+  end
+
+
+  test "fetch advances the offset after a full submissions page" do
+    first = { "content" => 1_000.times.map { |index| { "id" => index.to_s } } }.to_json
+    second = { "content" => [ { "id" => "1000" } ] }.to_json
+
+    with_http_seq([ 200, first ], [ 200, second ]) do |requests|
+      assert_equal 1_001, provider.fetch.size
+      assert_includes requests.last.last.path, "offset=1000"
+    end
   end
 end

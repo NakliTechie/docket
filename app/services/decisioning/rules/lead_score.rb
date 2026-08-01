@@ -9,6 +9,7 @@ module Decisioning
       WARM_SOURCES = %w[referral web_form].freeze
 
       def self.decision_class = :autonomous
+      def self.owner_feature = "crm"
 
       def evaluate
         Lead.where(status: %w[new working]).find_each.filter_map do |lead|

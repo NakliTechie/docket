@@ -5,14 +5,15 @@ class SlaBreachSweepJobTest < ActiveJob::TestCase
     kase = cases(:pension_case)
     kase.update_columns(first_response_due_at: 2.hours.ago, resolution_due_at: 1.hour.ago)
 
-    assert_difference "AuditEntry.count", 2 do
+    assert_difference -> { AuditEntry.where(auditable: kase).count }, 2 do
       SlaBreachSweepJob.perform_now
     end
     kase.reload
     assert kase.first_response_breached
     assert kase.resolution_breached
+    assert_equal 2, kase.sla_clock_events.event_kind_breached.count
 
-    assert_no_difference "AuditEntry.count" do
+    assert_no_difference -> { AuditEntry.where(auditable: kase).count } do
       SlaBreachSweepJob.perform_now
     end
   end
@@ -34,9 +35,27 @@ class SlaBreachSweepJobTest < ActiveJob::TestCase
   test "flags a case that went overdue before it was resolved, even though it is now resolved (M18)" do
     kase = cases(:resolved_case) # resolved_at 2.days.ago
     kase.update_columns(resolution_due_at: 3.days.ago, resolution_breached: false) # resolved late
-    assert_difference "AuditEntry.count", 1 do
+    assert_difference -> { AuditEntry.where(auditable: kase).count }, 1 do
       SlaBreachSweepJob.perform_now
     end
     assert kase.reload.resolution_breached
+  end
+
+  test "rolls the flag and durable consequences back together on failure" do
+    kase = cases(:assigned_case)
+    kase.update_columns(first_response_due_at: 2.hours.ago, first_response_breached: false,
+                        first_responded_at: nil, resolution_due_at: 1.day.from_now)
+    clocks = kase.sla_clock_events.count
+    notifications = Notification.count
+    original = Webhooks.method(:publish)
+    Webhooks.define_singleton_method(:publish) { |*| raise "outbox write failed" }
+
+    assert_raises(RuntimeError) { SlaBreachSweepJob.perform_now }
+
+    refute kase.reload.first_response_breached
+    assert_equal clocks, kase.sla_clock_events.count
+    assert_equal notifications, Notification.count
+  ensure
+    Webhooks.define_singleton_method(:publish, original)
   end
 end

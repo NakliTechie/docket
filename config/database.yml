@@ -1,6 +1,12 @@
 # SQLite for development/test/demo (zero dependencies); Postgres in
 # production (compose: app + Postgres). Solid Queue/Cache/Cable get
 # their own databases in both worlds.
+<%
+  sibling_database_url = lambda do |url, suffix|
+    base, query = url.to_s.split("?", 2)
+    "#{base}#{suffix}#{query ? "?#{query}" : ""}"
+  end
+%>
 default: &default
   adapter: sqlite3
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
@@ -33,16 +39,22 @@ production:
     adapter: postgresql
     encoding: unicode
     pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    checkout_timeout: <%= ENV.fetch("DOCKET_DB_CHECKOUT_TIMEOUT_SECONDS", 5) %>
+    connect_timeout: <%= ENV.fetch("DOCKET_DB_CONNECT_TIMEOUT_SECONDS", 5) %>
+    variables:
+      statement_timeout: <%= ENV.fetch("DOCKET_DB_STATEMENT_TIMEOUT", "30s") %>
+      lock_timeout: <%= ENV.fetch("DOCKET_DB_LOCK_TIMEOUT", "5s") %>
+      idle_in_transaction_session_timeout: <%= ENV.fetch("DOCKET_DB_IDLE_TRANSACTION_TIMEOUT", "60s") %>
     url: <%= ENV["DATABASE_URL"] %>
   cache:
     <<: *production_primary
-    url: <%= ENV.fetch("CACHE_DATABASE_URL") { "#{ENV["DATABASE_URL"]}_cache" } %>
+    url: <%= ENV.fetch("CACHE_DATABASE_URL") { sibling_database_url.call(ENV["DATABASE_URL"], "_cache") } %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *production_primary
-    url: <%= ENV.fetch("QUEUE_DATABASE_URL") { "#{ENV["DATABASE_URL"]}_queue" } %>
+    url: <%= ENV.fetch("QUEUE_DATABASE_URL") { sibling_database_url.call(ENV["DATABASE_URL"], "_queue") } %>
     migrations_paths: db/queue_migrate
   cable:
     <<: *production_primary
-    url: <%= ENV.fetch("CABLE_DATABASE_URL") { "#{ENV["DATABASE_URL"]}_cable" } %>
+    url: <%= ENV.fetch("CABLE_DATABASE_URL") { sibling_database_url.call(ENV["DATABASE_URL"], "_cable") } %>
     migrations_paths: db/cable_migrate

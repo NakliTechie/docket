@@ -57,7 +57,7 @@ module Portal
       # oracle to recover a customer's email/phone character by character.
       matches = (email && contact.email.present? && secure_match?(contact.email, email)) ||
                 (phone && contact.phone.present? && secure_match?(contact.phone, phone))
-      matches ? kase : nil
+      matches ? kase.canonical_record : nil
     end
 
     def secure_match?(a, b)

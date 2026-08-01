@@ -35,8 +35,10 @@ en:
       queues: "Queues"
       categories: "Categories"
       sla_policies: "SLA policies"
+      business_calendars: "Business calendars"
       macros: "Macros"
       routing_rules: "Routing rules"
+      custom_fields: "Custom fields"
       approval_processes: "Approval rules"
       approval_requests: "Approvals"
       leads: "Leads"
@@ -44,6 +46,8 @@ en:
       sales_report: "Sales report"
       pipelines: "Pipelines"
       sequences: "Sequences"
+      products: "Products"
+      competitors: "Competitors"
       users: "Users"
       roles: "Roles"
       tenants: "Tenants"
@@ -57,10 +61,14 @@ en:
       webhooks: "Webhooks"
       agent_actions: "Agent actions"
       decision_appeals: "Appeals"
+      notifications: "Notifications"
+      customer_portal: "Customer portal"
+      explore: "Explore Docket"
 
   setups:
     update:
       updated: "Setup progress saved."
+      finished: "Setup complete. Your workspace is ready."
     show:
       title: "Get Docket ready"
       meta_description: "Set up %{brand}, open the customer portal, and complete your first request."
@@ -72,10 +80,12 @@ en:
         ready: "Ready"
         connected: "Connected"
         deferred: "Later"
+        in_progress: "In progress"
         to_do: "To do"
       brand:
         title: "Name your workspace"
         body: "Choose the name customers and staff will see."
+        field: "Workspace name"
         action: "Set workspace name"
       modules:
         title: "Choose the work you do"
@@ -102,7 +112,12 @@ en:
         skip: "Do this later"
       first_request:
         title: "File one test request"
-        body: "Create a request, then assign, reply, and resolve it to verify the core loop."
+        body:
+          service_desk: "Create a request, then assign, reply, and resolve it to verify the core loop."
+          crm: "Create a lead and convert it into a customer and deal to verify the sales loop."
+          work: "Create a project, add a work item, and move it to Done to verify the delivery loop."
+          none: "Complete one real workflow to verify this workspace."
+        continue: "Continue the test workflow"
         portal: "File through portal"
         internal: "Create internally"
         lead: "Create first lead"
@@ -112,11 +127,15 @@ en:
         body: "Add staff now, or keep this as a one-person workspace while you evaluate."
         invite: "Invite a user"
         skip: "Just me for now"
+      complete:
+        title: "Your workspace is ready"
+        body: "You verified the core workflow and made every required setup decision."
+        action: "Finish setup"
 
   features:
     service_desk: "Service desk"
     service_desk.kb: "Knowledge base"
-    service_desk.approvals: "Approval chains"
+    approvals: "Approval chains"
     service_desk.portal: "Public portal"
     crm: "CRM"
     crm.sequences: "Sequences"
@@ -129,6 +148,33 @@ en:
   locales:
     en: "English"
     hi: "Hindi"
+
+  customer_360:
+    title: "Customer 360"
+    cases: "Cases (%{count})"
+    deals: "Deals (%{count})"
+    work_items: "Linked work (%{count})"
+    no_cases: "No linked cases."
+    no_deals: "No linked deals."
+    no_work_items: "No linked work."
+
+  search:
+    index:
+      title: "Search"
+      label: "Search Docket"
+      placeholder: "Search cases, customers, sales, and work…"
+      short_placeholder: "Search…"
+      action: "Search"
+      for_query: "Results for “%{query}”"
+      no_results: "No results"
+      no_results_hint: "Try a customer name, email, case ID, deal, or work reference."
+      none_in_group: "No matches in this area."
+    groups:
+      cases: "Cases"
+      contacts: "Contacts"
+      leads: "Leads"
+      deals: "Deals"
+      work_items: "Work items"
 
   actions:
     edit: "Edit"
@@ -145,6 +191,10 @@ en:
     select_prompt: "Select…"
     none: "None"
     default: "Default"
+    yes: "Yes"
+    no: "No"
+    active: "Active"
+    inactive: "Inactive"
 
   filters:
     search: "Search"
@@ -177,6 +227,9 @@ en:
     internal:
       title: "Something went wrong"
       body: "An unexpected error occurred. Please try again, and quote the reference below if you contact support."
+    tenant_suspended:
+      title: "Workspace temporarily unavailable"
+      body: "%{brand} is currently suspended. Contact your workspace administrator for access."
     reference: "Reference: %{id}"
     back_home: "Back to home"
 
@@ -187,6 +240,8 @@ en:
     new:
       title: "Sign in"
       meta_description: "Sign in to %{brand} to manage customer requests and work."
+      intro: "Manage customer requests, sales, and delivery work from one staff console."
+      first_admin_hint: "First administrator? Use the credential printed during installation."
       email: "Email address"
       password: "Password"
       sign_in: "Sign in"
@@ -214,6 +269,30 @@ en:
     update:
       reset: "Password has been reset."
       mismatch: "Passwords did not match."
+
+  saved_views:
+    choose: "Saved views"
+    apply: "Open view"
+    name: "View name"
+    save: "Save current view"
+    delete: "Delete view"
+    confirm_delete: "Delete this saved view?"
+    create:
+      created: "View saved."
+    destroy:
+      deleted: "Saved view deleted."
+
+  bulk_actions:
+    selected: "Selected records"
+    action: "Bulk action"
+    assign: "Assign"
+    transition: "Change status"
+    priority: "Change priority"
+    unassign: "Unassigned"
+    apply: "Apply"
+    limit: "Up to 100 records"
+    select: "Select"
+    select_record: "Select %{name}"
 
   cases:
     stale_conflict: "Someone else updated this case while you were editing. Please reload and try again."
@@ -271,6 +350,7 @@ en:
     index:
       title: "Cases"
       new_case: "New case"
+      my_tickets: "My tickets"
       columns:
         tracking_id: "Tracking ID"
         subject: "Subject"
@@ -308,6 +388,8 @@ en:
       reply: "Reply"
       message_body: "Message body"
       composer_placeholder: "Write a public reply or an internal note…"
+      formatting: "Reply formatting"
+      add_link: "Link"
       message_kind: "Message type"
       attachments: "Attachments"
       send: "Send"
@@ -331,6 +413,14 @@ en:
       external_id: "Customer ID"
       organisation: "Organisation"
       other_cases: "Other cases"
+      collision_warning: "%{agents} is also viewing this case. Coordinate before editing."
+      case_tools: "Case tools"
+      merge_source: "Merge another case into this case"
+      merge_action: "Merge case"
+      merge_confirm: "Merge the selected case into this one? Its messages and linked work will move here, and the source case will close."
+      split_action: "Split into a new case"
+      split_subject: "New case subject"
+      split_messages: "Messages to move"
     new:
       title: "New case"
     edit:
@@ -339,6 +429,8 @@ en:
       created: "Case %{tracking_id} created."
     update:
       updated: "Case updated."
+    bulk_update:
+      updated: "%{count} cases updated; %{submitted} submitted for approval."
     destroy:
       deleted: "Case deleted."
     transition:
@@ -350,9 +442,21 @@ en:
       assigned: "Case assigned to %{name}."
       unassigned: "Case unassigned."
       invalid_assignee: "That user can't be assigned (unknown or inactive)."
+    merge:
+      merged: "Case %{tracking_id} was merged into this case."
+    split:
+      split: "Created case %{tracking_id} from the selected messages."
     run_agent:
       queued: "AI agent “%{name}” started on this case — refresh in a moment to see its steps."
       unavailable: "No AI effector agent is configured. Set one under Settings → AI."
+
+  case_merge:
+    note: "Merged case %{source} into this case."
+
+  case_split:
+    description: "Split from case %{source}."
+    source_note: "Moved selected messages to split case %{target}."
+    target_note: "Split selected messages from case %{source}."
 
   messages:
     enum:
@@ -401,9 +505,11 @@ en:
       organisation: "Organisation"
       preferred_language: "Preferred language"
       notes: "Notes"
+      email_consent: "Marketing email opt-in"
       sms_consent: "SMS opt-in"
     form:
       external_id_hint: "The operator's own customer identifier (e.g. a bank CIF). Used to link cases filed by integrated systems."
+      email_consent_hint: "Only opted-in contacts receive marketing sequence emails. Unsubscribing turns this off."
       sms_consent_hint: "Only opted-in contacts receive SMS sequence steps (DPDP / TRAI-DLT consent)."
     index:
       title: "Contacts"
@@ -446,10 +552,13 @@ en:
       contact: "Contact"
       notes: "Notes"
       status: "Status"
+      email_consent: "Marketing email opt-in"
       sms_consent: "SMS opt-in"
     form:
       value_hint: "Estimated deal value in rupees."
+      email_consent_hint: "Only opted-in leads receive marketing sequence emails. Unsubscribing turns this off."
       sms_consent_hint: "Only opted-in leads receive SMS sequence steps (DPDP / TRAI-DLT consent)."
+
     enum:
       status:
         new: "New"
@@ -484,6 +593,10 @@ en:
       confirm_convert: "Convert this lead to a contact?"
       mark_unqualified: "Mark unqualified"
       confirm_delete: "Delete this lead?"
+      duplicates: "Possible duplicates"
+      duplicates_hint: "Exact email or normalized-phone matches only. Review before merging; Docket never merges leads automatically."
+      merge_into_this: "Merge into this lead"
+      merge_confirm: "Merge %{name} into this lead? The source remains in the audit trail."
     new:
       title: "New lead"
     edit:
@@ -494,17 +607,66 @@ en:
       updated: "Lead updated."
     destroy:
       deleted: "Lead deleted."
+    merge:
+      merged: "%{name} was merged into this lead."
     convert:
       converted: "Lead converted to a contact."
     mark_unqualified:
       unqualified: "Lead marked unqualified."
+
+  lead_capture_forms:
+    fields:
+      name: "Form name"
+      slug: "Public URL slug"
+      mapping: "Incoming field mapping"
+      consent_disclosure: "Consent disclosure"
+      active: "Accept submissions"
+      is_default: "Use for /inquiry"
+      status: "Status"
+    targets:
+      name: "Lead name (required)"
+      email: "Email source field"
+      phone: "Phone source field"
+      company_name: "Company source field"
+      notes: "Message / notes source field"
+    form:
+      mapping_hint: "Enter the public input name for each lead field. Keep at least email or phone; blank optional mappings are omitted."
+    index:
+      title: "Web-to-lead forms"
+      subtitle: "Map public field names into Docket and retain form and consent provenance on the lead."
+      new: "New capture form"
+      empty: "No configured capture forms. The built-in inquiry form remains available."
+    new:
+      title: "New web-to-lead form"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Web-to-lead form created."
+    update:
+      updated: "Web-to-lead form updated."
+    destroy:
+      deleted: "Web-to-lead form deleted."
+
+  crm_mailer:
+    sequence_step:
+      unsubscribe: "Unsubscribe from marketing emails"
+
+  sequence_unsubscribes:
+    show:
+      title: "Unsubscribe"
+      explanation: "Stop marketing sequence emails from this organisation. Service and case messages are unaffected."
+      confirm: "Unsubscribe me"
+    success:
+      title: "You are unsubscribed"
+      explanation: "Marketing sequence emails have stopped. You can still receive messages about active service requests."
 
   deals:
     fields:
       name: "Name"
       pipeline: "Pipeline"
       stage: "Stage"
-      value: "Value (₹)"
+      value: "Value"
+      currency: "Currency (ISO code)"
       owner: "Owner"
       contact: "Contact"
       organisation: "Organisation"
@@ -536,6 +698,22 @@ en:
     show:
       details: "Details"
       confirm_delete: "Delete this deal?"
+      onboarding: "Customer onboarding"
+      onboarding_template: "Project template"
+      start_onboarding: "Start onboarding"
+      no_onboarding_templates: "Create an onboarding template before starting delivery."
+      create_template: "Create template"
+      products: "Products and pricing"
+      line_item: "Product"
+      quantity: "Quantity"
+      unit_price: "Unit price"
+      total: "Total"
+      catalog_price: "Catalog price"
+      add_product: "Add product"
+      no_products: "No products on this deal."
+      competitors: "Competitors"
+      add_competitor: "Add competitor"
+      no_competitors: "No competitors linked."
     new:
       title: "New deal"
     edit:
@@ -548,6 +726,28 @@ en:
       deleted: "Deal deleted."
     move:
       moved: "Deal moved."
+    onboard:
+      created: "Onboarding project %{project} created."
+
+  deal_line_items:
+    create:
+      created: "Product added to the deal."
+    update:
+      updated: "Deal product updated."
+    destroy:
+      deleted: "Product removed from the deal."
+
+  deal_competitors:
+    dispositions:
+      active: "In competition"
+      lost_to: "Lost to"
+      won_against: "Won against"
+    create:
+      created: "Competitor linked to the deal."
+    update:
+      updated: "Competitor outcome updated."
+    destroy:
+      deleted: "Competitor removed from the deal."
   decisions:
     run:
       ran: "Decisioning run — autonomous signals applied; confirm/of-record proposals are awaiting you."
@@ -574,6 +774,7 @@ en:
       reply_share: "AI / human replies"
       reply_share_value: "%{ai} AI · %{human} human"
       view_cases: "View cases"
+      view_csat: "View CSAT"
       open_by_status: "Open by status"
       no_open_cases: "No open cases."
       created_trend: "Cases created (window)"
@@ -681,6 +882,8 @@ en:
       unassigned: "(unassigned)"
       no_open_deals: "No open deals."
       no_losses: "No lost deals with a recorded reason in this period."
+      competitor_losses: "Lost to competitors"
+      no_competitor_losses: "No competitor-attributed losses in this period."
       columns:
         stage: "Stage"
         deals: "Deals"
@@ -690,10 +893,58 @@ en:
         won: "Won"
         reason: "Reason"
         avg_days: "Avg days in stage"
+        competitor: "Competitor"
+  products:
+    fields:
+      name: "Product"
+      sku: "SKU"
+      description: "Description"
+      price: "Default unit price"
+      currency: "Currency"
+      active: "Available on deals"
+    index:
+      title: "Products"
+      new: "New product"
+      empty: "No products yet."
+    new:
+      title: "New product"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Product created."
+    update:
+      updated: "Product updated."
+    destroy:
+      deleted: "Product deleted."
+
+  competitors:
+    fields:
+      name: "Competitor"
+      website: "Website"
+      notes: "Notes"
+    index:
+      title: "Competitors"
+      new: "New competitor"
+      empty: "No competitors yet."
+    new:
+      title: "New competitor"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Competitor created."
+    update:
+      updated: "Competitor updated."
+    destroy:
+      deleted: "Competitor deleted."
+
   pipelines:
     fields:
       name: "Name"
       active: "Active"
+      trigger_type: "Run rule"
+      if_status: "Case has remained in status"
+      after_minutes: "For at least (minutes)"
+      use_business_hours: "Count business hours only"
       stages: "Stages"
       stage_name: "Stage name"
       position: "Order"
@@ -804,6 +1055,9 @@ en:
       message: "How can we help?"
       reach_hint: "Provide an email or phone so we can reach you."
       leave_blank: "Leave this field blank"
+      email_consent: "I agree to receive marketing email"
+      sms_consent: "I agree to receive marketing SMS"
+      consent_hint: "Optional. Service messages are separate; you can withdraw marketing consent at any time."
     new:
       title: "Request information"
       intro: "Tell us a little about yourself and our team will be in touch."
@@ -922,11 +1176,13 @@ en:
     fields:
       name: "Name"
       description: "Description"
+      business_calendar: "Business calendar"
       targets: "Targets per priority"
       first_response_minutes: "First response (minutes)"
       resolution_minutes: "Resolution (minutes)"
     form:
       targets_hint: "Leave a priority blank to set no target for it."
+      default_calendar: "Use the tenant default"
     index:
       title: "SLA policies"
       new_policy: "New SLA policy"
@@ -950,6 +1206,82 @@ en:
     destroy:
       deleted: "SLA policy deleted."
 
+  business_calendars:
+    fields:
+      name: "Name"
+      time_zone: "Time zone"
+      is_default: "Use as the default calendar"
+      weekly_windows: "Weekly working hours"
+      exceptions: "Holidays and exceptions"
+      closed: "Closed"
+    form:
+      windows_hint: "Add one row for each working period. Split shifts can use multiple rows on the same day."
+      exceptions_hint: "Closed days need no hours. Clear Closed to set special working hours for that date."
+      exception_name: "Holiday or exception name"
+    index:
+      title: "Business calendars"
+      subtitle: "Set time zones, working hours, holidays, and SLA exception days."
+      new: "New business calendar"
+      default: "Default"
+      windows:
+        one: "1 working window"
+        other: "%{count} working windows"
+      exceptions:
+        one: "1 exception"
+        other: "%{count} exceptions"
+      confirm_delete: "Delete this business calendar?"
+    new:
+      title: "New business calendar"
+    edit:
+      title: "Edit business calendar %{name}"
+    create:
+      created: "Business calendar created."
+    update:
+      updated: "Business calendar updated."
+    destroy:
+      deleted: "Business calendar deleted."
+
+  notifications:
+    unread_count:
+      one: "1 unread notification"
+      other: "%{count} unread notifications"
+    mention_hint: "Mention a staff member with @[email@example.com]."
+    index:
+      title: "Notifications"
+      subtitle: "Assignments, SLA alerts, mentions, and watched-work changes."
+      filters_label: "Notification filters"
+      all: "All"
+      unread: "Unread"
+      mark_all_read: "Mark all as read"
+      occurrences:
+        one: "1 occurrence"
+        other: "%{count} occurrences"
+      empty:
+        title: "Nothing needs your attention"
+        hint: "New assignments, SLA alerts, mentions, and watched work will appear here."
+    read_all:
+      updated: "All notifications marked as read."
+    events:
+      assignment:
+        title: "Assigned to you"
+        body: "%{reference}: %{subject}"
+      sla_risk:
+        title: "SLA at risk"
+        body: "%{reference} %{clock} SLA is at risk"
+      sla_breach:
+        title: "SLA breached"
+        body: "%{reference} %{clock} SLA breached"
+      mention:
+        title: "You were mentioned"
+        body: "%{actor} mentioned you on %{reference}"
+      watched_work:
+        title: "Watched work changed"
+        body: "%{reference}: %{subject} changed"
+
+  notification_mailer:
+    greeting: "Hello %{name},"
+    open_inbox: "Open notifications"
+
   users:
     enum:
       role:
@@ -965,8 +1297,17 @@ en:
     fields:
       name: "Name"
       body: "Body"
+      message_kind: "Message type"
+      set_status: "Set status"
+      set_priority: "Set priority"
+      set_queue: "Set queue"
+      set_assignee: "Set assignee"
     form:
       variables_hint: "Available variables: %{variables}"
+      actions: "Actions"
+      actions_hint: "Actions run with the sending agent's permissions and retain normal transition approvals."
+    values:
+      keep: "Keep current"
     index:
       title: "Macros"
       new_macro: "New macro"
@@ -1002,6 +1343,9 @@ en:
       then_assignment: "Assign to"
       then_assignee: "Specific agent"
     enum:
+      trigger_type:
+        case_created: "When a case is created"
+        elapsed_time: "After time elapses in a status"
       then_assignment:
         keep: "Leave unassigned"
         round_robin: "Round-robin across queue members"
@@ -1012,6 +1356,11 @@ en:
       keep: "Keep / unchanged"
       unassigned: "Unassigned"
       active_hint: "Inactive rules are kept but skipped during routing."
+      trigger_legend: "When should this rule run?"
+      trigger_hint: "Creation rules use first-match order. Time rules run once per case status episode."
+      choose_status: "Choose a status"
+      after_minutes_hint: "For example, 240 means four working hours when business-hours counting is on."
+      business_hours_hint: "Uses the workspace's default calendar, timezone, holidays, and exceptions."
       conditions_legend: "When a case matches…"
       conditions_hint: "A rule matches when ALL the conditions you set hold. Leave a condition blank to mean “any”."
       actions_hint: "Set what the matched case should become. Leave a field blank to keep the case's value."
@@ -1021,7 +1370,7 @@ en:
     index:
       title: "Routing rules"
       new_rule: "New rule"
-      intro: "Deterministic, ordered rules that classify and assign cases on intake — evaluated top to bottom; the first matching active rule wins, and the AI triage handles anything left unmatched."
+      intro: "Deterministic rules that classify and assign cases on intake or after time in a status. Creation rules use first-match order; time rules run once per status episode."
       any: "Any case"
       active: "Active"
       inactive: "Inactive"
@@ -1031,6 +1380,7 @@ en:
       columns:
         order: "#"
         name: "Name"
+        trigger: "Trigger"
         conditions: "When"
         actions: "Then"
         status: "Status"
@@ -1047,6 +1397,10 @@ en:
       updated: "Routing rule updated."
     destroy:
       deleted: "Routing rule deleted."
+    summary:
+      elapsed: "After %{count} %{clock} in %{status}"
+      business_minutes: "business minutes"
+      minutes: "minutes"
 
   approval_processes:
     fields:
@@ -1058,9 +1412,10 @@ en:
       trigger_type:
         case_transition: "Case transition"
         effector_action: "Connector action"
+        work_item_transition: "Work-item transition"
     form:
       trigger_type_hint: "What kind of action requires a second person's sign-off."
-      trigger_key_hint: "For a case transition, the target status (one of: %{statuses}). For a connector action, the action key (e.g. post_message)."
+      trigger_key_hint: "Case: target status (%{statuses}). Work: PROJECT_KEY:State name (for example PEP:Done). Connector: action key (for example post_message)."
     index:
       title: "Approval rules"
       new_process: "New approval rule"
@@ -1510,6 +1865,8 @@ en:
         password: "Password"
         role: "Role"
         locale: "Language"
+        email_signature: "Reply signature"
+        email_signature_hint: "Added to this agent's public email and messaging replies."
         queues: "Queue memberships"
       form:
         password_hint: "Leave blank to keep the current password."
@@ -1720,6 +2077,10 @@ en:
           default_queue_hint: "Portal and email cases land here unless the AI routes them."
           default_sla_policy: "Default SLA policy"
           outbound_email_from: "Outbound email From address"
+          notification_email_enabled: "Email staff about new and escalated notifications"
+          csat_enabled: "Email a satisfaction survey when a case is resolved"
+          sla_risk_minutes: "SLA risk window (business minutes)"
+          sla_risk_minutes_hint: "Notify the assignee when a response or resolution clock has this much working time left."
           cors_allowed_origins: "CORS allowed origins"
           cors_hint: "Comma-separated origins permitted to call the API from a browser. Leave blank to disable cross-origin browser access."
           app_base_url: "Public base URL"
@@ -1727,6 +2088,8 @@ en:
           oidc_issuer: "OIDC issuer URL"
           oidc_client_id: "OIDC client ID"
           oidc_client_secret: "OIDC client secret"
+          jit_domains: "Staff JIT email domains"
+          jit_domains_hint: "Comma-separated domains allowed to create new staff accounts through SSO. Leave blank to disable JIT provisioning."
           role_claim: "Role claim (optional)"
           role_mapping: "Role mapping (JSON, optional)"
           role_mapping_hint: "Maps IdP claim values to Docket functional roles, e.g. {\"docket-admins\": \"client_admin\"}."
@@ -1928,6 +2291,10 @@ en:
         cli_hint: "CLI: bin/rails audit:verify"
 
   projects:
+    enum:
+      visibility:
+        tenant_wide: "Everyone"
+        restricted: "Members only"
     fields:
       columns: "Board columns"
       columns_hint: "Rename a column or set a soft work-in-progress limit. Over-limit columns are flagged, never blocked."
@@ -1938,6 +2305,13 @@ en:
       name: "Project name"
       description: "Description"
       lead: "Project lead"
+      visibility: "Visibility"
+      visibility_hint: "Everyone makes the project available to all staff with Work access. Members only restricts it to selected members and project administrators."
+      members: "Project members"
+      members_hint: "Members can open a restricted project. Membership does not grant permissions their role does not already hold."
+      assignment_rules: "Default assignment"
+      assignment_rules_hint: "Assign new work automatically by type when no assignee was chosen."
+      remove_rule: "Remove"
     index:
       title: "Projects"
       new_project: "New project"
@@ -1950,6 +2324,7 @@ en:
         key: "Key"
         name: "Name"
         lead: "Lead"
+        visibility: "Visibility"
         open_items: "Open items"
       empty:
         title: "No projects yet"
@@ -2044,6 +2419,33 @@ en:
     destroy:
       deleted: "Sprint deleted."
 
+  project_templates:
+    fields:
+      name: "Name"
+      key_prefix: "Project key prefix"
+      description: "Project description"
+      active: "Available for onboarding"
+      items: "Template work items"
+      item_title: "Work item title"
+      due_offset_days: "Due after (days)"
+    form:
+      items_hint: "Save, then edit the template to add another work item row. Blank rows are ignored."
+    index:
+      title: "Project templates"
+      subtitle: "Turn a won deal into a repeatable onboarding project without recreating the checklist."
+      new: "New template"
+      empty: "No project templates yet."
+    new:
+      title: "New project template"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Project template created."
+    update:
+      updated: "Project template updated."
+    destroy:
+      deleted: "Project template deleted."
+
   work_items:
     unassigned: "Unassigned"
     enum:
@@ -2073,6 +2475,7 @@ en:
       title: "%{key} backlog"
       board: "Board"
       new_item: "New item"
+      my_work: "My work"
       open_only: "Open only"
       columns:
         reference: "Ref"
@@ -2106,18 +2509,44 @@ en:
       post_comment: "Comment"
       status: "Status"
       details: "Details"
+      relations: "Dependencies and duplicates"
+      no_relations: "No related work items."
+      add_relation: "Add relation"
     create:
       created: "%{reference} created."
     update:
       updated: "Work item updated."
+    bulk_update:
+      updated: "%{count} work items updated."
     transition:
       moved: "Moved to %{state}."
+      submitted_for_approval: "Submitted the move to %{state} for approval."
     destroy:
       deleted: "Work item deleted."
 
   work_comments:
     create:
       created: "Comment added."
+    update:
+      updated: "Comment updated."
+    destroy:
+      deleted: "Comment deleted."
+
+  work_item_relations:
+    types:
+      blocks: "Blocks"
+      duplicates: "Duplicates"
+    direction:
+      blocks:
+        outgoing: "Blocks"
+        incoming: "Blocked by"
+      duplicates:
+        outgoing: "Duplicates"
+        incoming: "Duplicates"
+    create:
+      created: "Work relation added."
+    destroy:
+      deleted: "Work relation removed."
 
   work:
     escalation:
@@ -2130,11 +2559,121 @@ en:
       no_projects: "No active projects to escalate into."
       linked_none: "No linked work."
 
+  custom_fields:
+    section: "Additional details"
+    fields:
+      label: "Label"
+      key: "API key"
+      field_type: "Type"
+      options: "Options"
+      position: "Position"
+      required: "Required"
+      active: "Active"
+      reportable: "Include in reports"
+    enum:
+      field_type:
+        short_text: "Short text"
+        long_text: "Long text"
+        integer: "Whole number"
+        decimal: "Decimal number"
+        boolean: "Yes or no"
+        date: "Date"
+        single_select: "Single select"
+        multi_select: "Multi select"
+    form:
+      key_hint: "Stable snake_case key used by APIs and imports. It cannot change after creation."
+      options_hint: "For select fields, enter one allowed option per line."
+    values:
+      "yes": "Yes"
+      "no": "No"
+      active: "Active"
+      inactive: "Inactive"
+    index:
+      title: "Custom fields"
+      intro: "Add typed, governed fields to cases and work items. Deactivate fields to preserve historical values."
+      cases: "Cases"
+      work_items: "Work items"
+      new_field: "New field"
+      report: "View report"
+      columns:
+        label: "Label"
+        key: "API key"
+        type: "Type"
+        required: "Required"
+        status: "Status"
+      empty:
+        title: "No custom fields"
+        hint: "Add the first governed field for this resource."
+    new:
+      title: "New custom field"
+    edit:
+      title: "Edit custom field"
+    create:
+      created: "Custom field created."
+    update:
+      updated: "Custom field updated."
+    report:
+      not_set: "Not set"
+
+  custom_field_reports:
+    index:
+      title: "Custom-field report"
+      intro: "See the distribution of values for fields marked for reporting."
+      export_csv: "Export CSV"
+      resource: "Resource"
+      field: "Field"
+      total: "%{count} records in scope"
+      value: "Value"
+      count: "Records"
+      empty:
+        title: "No reportable custom fields"
+        hint: "Mark a custom field as reportable to see its distribution here."
+
+  csat_surveys:
+    show:
+      title: "How did we do?"
+      intro: "Rate the help you received for case %{tracking_id}."
+      score: "Satisfaction score (1 is poor, 5 is excellent)"
+      comment: "Anything else you would like us to know?"
+      submit: "Send feedback"
+      already_answered: "Thank you — feedback for this case has already been recorded."
+    thanks:
+      title: "Thank you"
+      body: "Your feedback has been recorded."
+
+  csat_reports:
+    index:
+      title: "Customer satisfaction"
+      export_csv: "Export comments"
+      from: "From"
+      to: "To"
+      invitations: "Surveys invited"
+      responses: "Responses"
+      response_rate: "Response rate"
+      average_score: "Average score"
+      distribution: "Score distribution"
+      score: "Score"
+      comments: "Recent comments"
+      no_comments: "No written feedback in this window."
+
+  csat_mailer:
+    invitation:
+      subject: "How was your support experience for %{tracking_id}?"
+      greeting: "Hello %{name},"
+      body: "Your case %{tracking_id} was resolved. A short rating helps us improve."
+      action: "Rate your experience"
+
   activerecord:
     errors:
+      messages:
+        cross_tenant: "belongs to another organisation"
       models:
         work_item:
           attributes:
+            custom_fields:
+              unknown: "contain unknown keys: %{keys}"
+              required: "must include %{label}"
+              invalid: "%{label} %{reason}"
             parent:
               cannot_be_self: "cannot be the item itself"
               cycle: "would create a loop of parent items"
@@ -2174,10 +2713,22 @@ en:
               non_boolean_values: "must be true or false for: %{keys}"
         case:
           attributes:
+            custom_fields:
+              unknown: "contain unknown keys: %{keys}"
+              required: "must include %{label}"
+              invalid: "%{label} %{reason}"
             status:
               must_use_state_machine: "transitions must go through the case state machine"
             assignee:
               inactive: "must be an active user"
+        custom_field_definition:
+          attributes:
+            key:
+              immutable: "cannot change after the field is created"
+            options:
+              too_many: "can contain at most 100 values"
+              too_long: "can contain values up to 100 characters"
+              not_allowed: "are allowed only for select fields"
         user:
           attributes:
             role:
@@ -2185,8 +2736,9 @@ en:
         routing_rule:
           attributes:
             base:
-              needs_condition: "needs at least one condition (channel, priority, category, or subject keyword)"
+              needs_condition: "needs at least one condition (status, channel, priority, category, or subject keyword)"
               needs_action: "needs at least one action (set a queue, category, priority, or assignment)"
+              intake_has_schedule: "cannot include elapsed-time status or duration settings when it runs on creation"
         approval_process:
           attributes:
             trigger_key:

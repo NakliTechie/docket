@@ -40,7 +40,17 @@ if [ -z "${SMOKE_BASE_URL:-}" ]; then
   # so the seed, the server boot, and the step-4 token mint all read the same DB.
   export DATABASE_PATH=storage/smoke.sqlite3
   rm -f storage/smoke.sqlite3*
-  bin/rails db:prepare db:seed demo:seed > /dev/null 2>&1
+  # Keep the database tasks in separate Ruby processes. On macOS, combining
+  # them can deadlock sqlite3's connection finalizer after the tasks finish,
+  # leaving the smoke harness stuck before the server ever boots.
+  SEED_LOG=tmp/smoke-seed.log
+  if ! bin/rails db:prepare > "$SEED_LOG" 2>&1 ||
+     ! bin/rails db:seed >> "$SEED_LOG" 2>&1 ||
+     ! bin/rails demo:seed >> "$SEED_LOG" 2>&1; then
+    echo "Smoke database preparation failed:" >&2
+    cat "$SEED_LOG" >&2
+    exit 1
+  fi
   bin/rails server -p "$PORT" -P tmp/pids/smoke.pid -d > /dev/null 2>&1
   BOOTED=1
   for _ in $(seq 1 30); do

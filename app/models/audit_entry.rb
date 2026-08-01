@@ -2,6 +2,10 @@
 # sha256(previous_sha + canonical_entry_json); the chain is verified
 # end-to-end by `bin/rails audit:verify`.
 class AuditEntry < ApplicationRecord
+  # A platform super-admin provisioning or maintaining another tenant remains
+  # the truthful actor on that tenant's audit entry. Attribution can cross the
+  # ownership boundary; the auditable business record cannot.
+  allows_cross_tenant_association :actor
   GENESIS_SHA = ("0" * 64).freeze
   CHAIN_LOCK_KEY = 0x0D0C4E7 # arbitrary, stable advisory-lock key
 
@@ -24,8 +28,11 @@ class AuditEntry < ApplicationRecord
   # is NEVER part of canonical_json — adding it would re-hash every entry and
   # break verify_chain. Nullable (pre-tenancy + global-auditable entries).
   belongs_to :tenant, optional: true
+  belongs_to :redaction_event, class_name: "AuditEntry", optional: true
 
   validates :action, :previous_sha, :sha, presence: true
+
+  after_commit :persist_external_checkpoint, on: :create, if: -> { AuditCheckpoint.enabled? }
 
   # The hash-chain is global, but the per-tenant audit/activity READ surfaces
   # must not cross tenants in shared mode (C1). super_admin — the cross-tenant
@@ -112,35 +119,67 @@ class AuditEntry < ApplicationRecord
   # tampering is still detected, within at most one TTL of latency. Pass
   # cache: false (the CLI does) for a guaranteed-fresh full check, which
   # also refreshes the cache the web surfaces read.
-  def self.verify_chain(cache: true)
-    return refresh_verification_cache unless cache
-    Rails.cache.fetch(VERIFICATION_CACHE_KEY, expires_in: VERIFICATION_CACHE_TTL) do
-      compute_chain_verification
+  def self.verify_chain(cache: true, checkpoint: AuditCheckpoint.enabled?)
+    return refresh_verification_cache(checkpoint: checkpoint) unless cache
+    Rails.cache.fetch("#{VERIFICATION_CACHE_KEY}:#{checkpoint}", expires_in: VERIFICATION_CACHE_TTL) do
+      verify_checkpoint(compute_chain_verification, checkpoint: checkpoint)
     end
   end
 
-  def self.refresh_verification_cache
-    compute_chain_verification.tap do |result|
-      Rails.cache.write(VERIFICATION_CACHE_KEY, result, expires_in: VERIFICATION_CACHE_TTL)
+  def self.refresh_verification_cache(checkpoint: AuditCheckpoint.enabled?)
+    verify_checkpoint(compute_chain_verification, checkpoint: checkpoint).tap do |result|
+      Rails.cache.write("#{VERIFICATION_CACHE_KEY}:#{checkpoint}", result,
+                        expires_in: VERIFICATION_CACHE_TTL)
     end
+  end
+
+  def self.verify_checkpoint(result, checkpoint:)
+    checkpoint && result[:ok] ? AuditCheckpoint.compare(result) : result.except(:head_id, :head_sha)
   end
 
   def self.compute_chain_verification
+    redaction_proofs = redaction_proofs_by_entry_id
     previous = GENESIS_SHA
     count = 0
-    order(:id).find_each do |entry|
+    find_each(cursor: :id, order: :asc) do |entry|
       if entry.previous_sha != previous
         return { ok: false, entry_id: entry.id, reason: "previous_sha mismatch",
                  expected_sha: previous, stored_sha: entry.previous_sha }
       end
-      recomputed = entry.compute_sha
-      if recomputed != entry.sha
+      if entry.redacted_at?
+        proof = redaction_proofs[entry.id]
+        unless proof && proof[:sha] == entry.sha && proof[:event_id] == entry.redaction_event_id &&
+               proof[:event_id] > entry.id
+          return { ok: false, entry_id: entry.id, reason: "invalid redaction proof",
+                   expected_sha: entry.sha, stored_sha: proof&.dig(:sha) }
+        end
+      elsif entry.compute_sha != entry.sha
         return { ok: false, entry_id: entry.id, reason: "entry hash mismatch",
-                 expected_sha: recomputed, stored_sha: entry.sha }
+                 expected_sha: entry.compute_sha, stored_sha: entry.sha }
       end
       previous = entry.sha
       count += 1
     end
-    { ok: true, count: count }
+    head = order(id: :desc).limit(1).pick(:id, :sha)
+    { ok: true, count: count, head_id: head&.first, head_sha: head&.last || GENESIS_SHA }
+  end
+
+  def self.redaction_proofs_by_entry_id
+    ids = where.not(redaction_event_id: nil).distinct.pluck(:redaction_event_id)
+    where(id: ids, action: "privacy.audit_redacted").each_with_object({}) do |event, proofs|
+      Array(event.metadata&.dig("entries")).each do |proof|
+        proofs[proof.fetch("id").to_i] = { sha: proof.fetch("sha"), event_id: event.id }
+      end
+    end
+  end
+  private_class_method :redaction_proofs_by_entry_id
+
+
+  private
+
+  def persist_external_checkpoint
+    AuditCheckpoint.persist_current!
+  rescue AuditCheckpoint::Error, SystemCallError => e
+    Rails.logger.error("Audit checkpoint could not advance: #{e.class}: #{e.message}")
   end
 end

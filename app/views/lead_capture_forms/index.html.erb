@@ -1,0 +1,14 @@
+<% page_title t("lead_capture_forms.index.title") %>
+<div class="page-header"><div><h1><%= t("lead_capture_forms.index.title") %></h1>
+  <p class="page-subtitle"><%= t("lead_capture_forms.index.subtitle") %></p></div>
+  <%= link_to t("lead_capture_forms.index.new"), new_lead_capture_form_path, class: "btn btn-primary" %>
+</div>
+<% if @forms.any? %><div class="table-wrap"><table>
+  <thead><tr><th><%= t("lead_capture_forms.fields.name") %></th><th><%= t("lead_capture_forms.fields.slug") %></th>
+    <th><%= t("lead_capture_forms.fields.status") %></th><th><%= t("tables.actions") %></th></tr></thead>
+  <tbody><% @forms.each do |form| %><tr>
+    <td><%= form.name %></td><td><%= link_to lead_capture_url(form.slug), lead_capture_path(form.slug), class: "mono" %></td>
+    <td><%= form.active? ? t("forms.active") : t("forms.inactive") %><%= " · #{t('forms.default')}" if form.is_default? %></td>
+    <td><%= link_to t("actions.edit"), edit_lead_capture_form_path(form), class: "btn btn-sm" %></td>
+  </tr><% end %></tbody>
+</table></div><% else %><%= render "shared/empty_state", title: t("lead_capture_forms.index.empty") %><% end %>

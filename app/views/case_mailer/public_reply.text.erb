@@ -8,4 +8,4 @@
 
 <%= t("case_mailer.public_reply.instructions") %>
 
-<%= t("case_mailer.signature") %>
+<%= @message.signature || t("case_mailer.signature") %>

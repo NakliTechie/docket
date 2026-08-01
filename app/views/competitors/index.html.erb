@@ -1,0 +1,9 @@
+<% page_title t("competitors.index.title") %>
+<div class="page-header"><h1><%= t("competitors.index.title") %></h1>
+  <%= link_to t("competitors.index.new"), new_competitor_path, class: "btn btn-primary" %></div>
+<% if @competitors.any? %><div class="table-wrap"><table>
+  <thead><tr><th><%= t("competitors.fields.name") %></th><th><%= t("competitors.fields.website") %></th><th><%= t("tables.actions") %></th></tr></thead>
+  <tbody><% @competitors.each do |competitor| %><tr><td><%= competitor.name %></td>
+    <td><%= link_to competitor.website, competitor.website if competitor.website.present? %></td>
+    <td><%= link_to t("actions.edit"), edit_competitor_path(competitor), class: "btn btn-sm" %></td></tr><% end %></tbody>
+</table></div><% else %><%= render "shared/empty_state", title: t("competitors.index.empty") %><% end %>

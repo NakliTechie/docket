@@ -1,0 +1,6 @@
+<%= t("notification_mailer.greeting", name: @user.name) %>
+
+<%= @notification.localized_title %>
+<%= @notification.localized_body %>
+
+<%= t("notification_mailer.open_inbox") %>: <%= notifications_url %>

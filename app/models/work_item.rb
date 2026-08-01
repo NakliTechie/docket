@@ -10,6 +10,9 @@ class WorkItem < ApplicationRecord
   include Labelable
   include HumanEnums
   include TenantReferentialIntegrity
+  include HasCustomFields
+
+  has_custom_fields_for :work_items
 
   humanizes_enums :kind, :priority
 
@@ -40,6 +43,12 @@ class WorkItem < ApplicationRecord
   has_many :watchers, through: :work_watches, source: :user
   has_many :audit_entries, as: :auditable, dependent: nil
   has_many :approval_requests, as: :subject, dependent: :destroy
+  has_many :outgoing_relations, class_name: "WorkItemRelation", foreign_key: :source_id,
+                                dependent: nil, inverse_of: :source
+  has_many :incoming_relations, class_name: "WorkItemRelation", foreign_key: :target_id,
+                                dependent: nil, inverse_of: :target
+  has_many_attached :files
+  include AttachableValidation
 
   validates :title, presence: true
   validates :estimate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
@@ -50,14 +59,21 @@ class WorkItem < ApplicationRecord
   validate :sprint_belongs_to_project
 
   before_validation :assign_number, on: :create
+  before_validation :apply_default_assignment, on: :create
   before_save :stamp_closed_at, if: :workflow_state_id_changed?
   after_update_commit :echo_state_to_linked_cases, if: :saved_change_to_workflow_state_id?
   after_create_commit :publish_created
+  after_create_commit :notify_assignment, if: :assignee_id?
   after_update_commit :publish_transitioned, if: :saved_change_to_workflow_state_id?
+  after_update_commit :notify_assignment, if: :saved_change_to_assignee_id?
+  after_update_commit :notify_watchers, if: :saved_change_to_workflow_state_id?
 
   scope :open, -> { joins(:workflow_state).where.not(workflow_states: { category: :done }) }
   scope :closed, -> { joins(:workflow_state).where(workflow_states: { category: :done }) }
   scope :assigned_to, ->(user) { where(assignee: user) }
+  scope :visible_to, ->(user, manage: false) {
+    joins(:project).merge(Project.visible_to(user, manage: manage))
+  }
   # A tracker you cannot search is not usable for a day. source_key is included
   # so a migrated Jira key (PROJ-123) still finds its item.
   scope :search, ->(q) {
@@ -74,10 +90,26 @@ class WorkItem < ApplicationRecord
 
   def done? = workflow_state&.category_done?
 
+  def open_blockers
+    incoming_relations.where(relation_type: "blocks").includes(:source)
+                      .map(&:source).reject(&:done?)
+  end
+
   # The single transition point, so every move is audited and closed_at stays
   # honest — mirrors Case#transition_to! rather than inventing a second idiom.
   def transition_to!(state)
     update!(workflow_state: state)
+  end
+
+  def guarded_transition_to(state, requested_by: nil)
+    if ApprovalGate.guarded_work_transition?(self, state) &&
+       !ApprovalGate.work_transition_cleared?(self, state)
+      ApprovalGate.submit_work_transition!(self, state, requested_by: requested_by)
+      return false
+    end
+
+    transition_to!(state)
+    true
   end
 
   private
@@ -87,7 +119,15 @@ class WorkItem < ApplicationRecord
     self.workflow_state ||= project&.default_state
   end
 
+  def apply_default_assignment
+    return if assignee_id? || project.nil? || Imports::Mode.running?
+
+    self.assignee = project.work_assignment_rules.find_by(work_kind: kind)&.assignee
+  end
+
   def stamp_closed_at
+    return if Imports::Mode.running?
+
     self.closed_at = done? ? Time.current : nil
   end
 
@@ -95,14 +135,28 @@ class WorkItem < ApplicationRecord
   # engineering work finished. Internal note only — the customer never asked
   # for a work item and should not be told about one.
   def publish_created
+    return if Imports::Mode.running?
+
     Webhooks.publish("work_item.created", Webhooks.work_item_payload(self))
   end
 
   def publish_transitioned
+    return if Imports::Mode.running?
+
     Webhooks.publish("work_item.transitioned", Webhooks.work_item_payload(self))
   end
 
+  def notify_assignment
+    Notifications::Events.work_assigned(self)
+  end
+
+  def notify_watchers
+    Notifications::Events.watched_work(self, event: :transitioned)
+  end
+
   def echo_state_to_linked_cases
+    return if Imports::Mode.running?
+
     work_links.where(linkable_type: "Case").includes(:linkable).find_each do |link|
       kase = link.linkable
       next if kase.nil?

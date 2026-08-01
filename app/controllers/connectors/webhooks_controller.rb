@@ -30,21 +30,22 @@ module Connectors
 
       if connector.ingests?
         return head :unauthorized unless connector.provider_instance.inbound_authentic?(request)
-        Connectors::Inbound.process(connector, inbound_payload)
+        Connectors::Inbound.process(connector, parsed_payload)
         head :ok
       else
         return head :unauthorized unless valid_signature?(connector)
+        parsed_payload
         ConnectorSyncJob.perform_later(connector.id, trigger: "webhook")
         head :accepted
       end
+    rescue JSON::ParserError
+      render json: { error: "request body must be valid JSON" }, status: :bad_request
     end
 
     private
 
-    def inbound_payload
+    def parsed_payload
       JSON.parse(request.raw_post.presence || "{}")
-    rescue JSON::ParserError
-      {}
     end
 
     def skip_pundit?

@@ -1,0 +1,36 @@
+<% page_title t("search.index.title") %>
+<div class="page-header"><div>
+  <h1><%= t("search.index.title") %></h1>
+  <% if @query.present? %><p class="page-subtitle"><%= t("search.index.for_query", query: @query) %></p><% end %>
+</div></div>
+
+<%= form_with url: search_path, method: :get, class: "filter-bar", role: "search" do |f| %>
+  <%= f.label :q, t("search.index.label"), class: "visually-hidden" %>
+  <%= f.search_field :q, id: "search-query", value: @query, required: true, autofocus: true,
+        placeholder: t("search.index.placeholder") %>
+  <%= f.submit t("search.index.action"), class: "btn btn-primary" %>
+<% end %>
+
+<% if @query.present? %>
+  <% if @results.values.flatten.any? %>
+    <% @results.each do |kind, records| %>
+      <section class="panel">
+        <h2 class="panel-title"><%= t("search.groups.#{kind}") %></h2>
+        <% if records.any? %><ul class="stack-sm">
+          <% records.each do |record| %>
+            <li>
+              <% if record.is_a?(Case) %><%= link_to record.tracking_id, case_path(record), class: "mono" %> · <%= record.subject %>
+              <% elsif record.is_a?(Contact) %><%= link_to record.name, contact_path(record) %> · <%= record.email || record.phone || record.external_id %>
+              <% elsif record.is_a?(Lead) %><%= link_to record.name, lead_path(record) %> · <%= record.company_name %>
+              <% elsif record.is_a?(Deal) %><%= link_to record.name, deal_path(record) %> · <%= record.human_status %>
+              <% elsif record.is_a?(WorkItem) %><%= link_to record.reference, work_item_path(record), class: "mono" %> · <%= record.title %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul><% else %><p class="muted"><%= t("search.index.none_in_group") %></p><% end %>
+      </section>
+    <% end %>
+  <% else %>
+    <%= render "shared/empty_state", title: t("search.index.no_results"), hint: t("search.index.no_results_hint") %>
+  <% end %>
+<% end %>

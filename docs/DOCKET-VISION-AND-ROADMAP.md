@@ -1,5 +1,9 @@
 # Docket — Vision & Roadmap
 
+> Historical strategy document. For the current implemented product and
+> operational contract, use `README.md`, `OPERATOR-GUIDE.md`, and
+> `DEPLOYMENT-HANDOFF.md`.
+
 **Sovereign case-management and customer/customer-360 platform with an in-deployment agentic resolution layer. The free, public-code answer to Salesforce Service Cloud + Agentforce for the Indian public sector.**
 
 Track: standalone commercial venture (open-core). Sibling product to Parley — shared chassis and support-agent primitive, separate product, separate datastore, separate deployment story.
@@ -21,7 +25,7 @@ Docket contests exactly that deal shape with three arguments procurement cannot 
 One product, three capabilities:
 
 - **Case management** — intake, triage, lifecycle, SLA, escalation, closure, full audit trail. Grievances, service requests, support tickets: same object, different vocabulary per deployment.
-- **Customer/customer 360** — every contact's full interaction history in one timeline: cases, communications, resolutions. The "single view" Salesforce sells as Customer 360.
+- **Customer/customer 360** — one contact workspace with recent case, CRM, and work summaries; a unified chronological communications timeline remains roadmap work.
 - **Agentic resolution** — tier-1 cases resolved conversationally by an agent running on models inside the deployment (Ollama/vLLM endpoint), with confidence gating: resolve / draft-for-human-review / route-to-queue. BYOK frontier escape hatch available but off by default in sovereign deployments. Resolve-don't-deflect — Parley's locked principle, inherited.
 
 What Docket is **not** (not contested): forecasting, CPQ, territory management, AppExchange-style marketplace, marketing automation, Salesforce's integration sprawl. Sales-CRM objects arrive in v1.2 as a module, not the anchor.
@@ -37,7 +41,7 @@ What Docket is **not** (not contested): forecasting, CPQ, territory management, 
 - **Chassis**: Ruby on Rails 8 + Hotwire. Same chassis family as the commerce platform and Parley. Postgres primary; SQLite for dev/demo. Solid Queue + Solid Cache — no Redis, no external dependencies that complicate self-hosting.
 - **Two deployment topologies, one codebase** (decision 2026-06-13). *Isolated* — the default and the sovereign procurement asset: one deployment = one organisation = one database, with nothing of another client in it. *Shared* — multiple tenants on shared infrastructure, scoped by `tenant_id` and resolved by subdomain (`acme.docket.app`), for SMBs who can't fund a dedicated instance. The core now carries a `tenant_id` and runs tenant-scoped (`acts_as_tenant`), but an **isolated deploy is the degenerate single-tenant case** — one tenant row, scoping a constant predicate — so "your data, your database, no other client's rows" stays literally true. The mode is set per deploy by `DOCKET_DEPLOYMENT_MODE` (`isolated`|`shared`, default `isolated`); scoping fails closed in shared mode. "Isolation is the product" remains true for the isolated SKU — it is simply no longer the *only* model.
 - **Shared primitive**: the support-agent primitive (operator-owned small models, confidence gating, BYOK escape hatch) is shared with Parley at the pattern level. Code reuse where clean; no shared runtime, no shared DB.
-- **Agent face is non-negotiable**: every UI action is a REST API call. OpenAPI spec generated. Docket's own AI agent and any external agent consume the same API. NakliPoster collection ships with v1.0.
+- **Agent face is non-negotiable**: core operational actions have REST and OpenAPI surfaces used by external agents. A few administration and decision-review actions remain server-rendered while API parity is completed.
 - **Audit**: append-only, hash-chained audit log on every case mutation (tamper-evident pattern proven in Sunshine). For a government buyer this is a headline feature, not plumbing.
 - **i18n**: English + Hindi at v1.0; rails-i18n structure for the rest of the Eighth Schedule over time.
 - **a11y**: WCAG 2.1 AA / GIGW-aligned.
@@ -49,14 +53,14 @@ What Docket is **not** (not contested): forecasting, CPQ, territory management, 
 - Core objects: Case, Contact, Organisation/Department, Queue, SLA policy, User/Role.
 - Intake: web portal form (public, no-login grievance submission with tracking ID) + inbound email.
 - Case lifecycle: statuses, assignment, queues, SLA timers, escalation rules, internal notes, public replies.
-- Customer/customer 360 timeline per contact.
+- Customer/customer 360 workspace with recent case, CRM, and linked-work summaries.
 - Agentic resolution layer: in-deployment model endpoint (Ollama/vLLM, OpenAI-compatible API), knowledge grounded on closed-case corpus + uploaded docs, confidence-gated actions, full conversation log on the case.
 - Staff agent console: keyboard-first unified workspace — next-case hotkey, macros/canned responses, case + 360 side-by-side.
 - AI assist for staff: thread summarisation, sentiment flag, suggested reply in the console (same in-deployment model).
 - RBAC (admin / supervisor / agent / read-only), built-in auth.
 - Audit log (hash-chained), basic reporting (volume, SLA compliance, resolution rate, agent-vs-human split).
 - Activity & Usage admin view: per-user actions, login history, volume by queue/staff, exportable — the deployment owner's "who's doing what", served from the audit log. No vendor telemetry of any kind.
-- REST API for all objects + OpenAPI + NakliPoster collection; service accounts (machine-to-machine) and signed webhooks so the bank's own systems can file, read, and react to cases headlessly.
+- REST API for core operational objects + OpenAPI + NakliPoster collection; service accounts (machine-to-machine) and signed webhooks so the bank's own systems can file, read, and react to cases headlessly. Administration and decision-review parity is tracked separately.
 - Dual SSO: staff SSO against the bank's internal IdP (OIDC + SAML); customer SSO on the public portal against the bank's customer identity (OIDC) with anonymous tracking-ID flow retained.
 - en + hi.
 - Deployment: Docker Compose self-host package, seed/demo data, smoke-test script.
@@ -85,7 +89,11 @@ Docket becomes one platform for the whole customer-facing business, not a servic
   - The seam that makes this ONE product: `WorkLink` + `Work::Escalation`. A case hands work to engineering without transitioning — escalating is not a status change — carrying priority across, noting it **internally** (the customer never asked for a work item), and echoing the item's state back onto the case timeline.
 - **Entitlements**: modules and features are per-tenant switches over a static `Features` registry — `service_desk` / `crm` / `work`, plus `decisioning`, `connectors`, `mcp` and sub-features. A module that is off is *absent*, not merely hidden: pages 404, the API answers `403 feature_disabled`, no role holds its permissions, recurring sweeps skip the tenant, and agent tools are not advertised. Everything defaults ON, so an existing isolated deploy is unchanged.
   - This is what makes the two SKUs one codebase rather than two: **shared SaaS** sets entitlements per tenant at provisioning; a **dedicated server** uses the same screen as the operator's own switchboard.
-- **Migration in**: file-based importers from Freshdesk (→ cases), Jira (→ work items, keeping the issue number so existing links survive) and KanZen (→ a project). Export-file based so they need no vendor credentials, **dry-run by default**, idempotent, and an unrecognised status or priority is *reported, never guessed*.
+- **Migration in**: dry-run-first, resumable imports from Freshdesk, Jira,
+  Salesforce, generic CSV, and KanZen. Freshdesk/Jira accept streaming exports
+  or paginated APIs; source identities, explicit mappings, conflicts, deltas,
+  attachments, and reconciliation support parallel cutover. Unknown values are
+  reported, never guessed.
 - Out of scope, still: forecasting, field service, CPQ/territory, marketing automation (§2 holds).
 
 ### v1.x candidates (unscheduled)

@@ -3,7 +3,7 @@ class DealsController < ApplicationController
 
   # A pipeline is a working surface, not a report. See the deal list for all.
   STAGE_LIMIT = 50
-  before_action :set_deal, only: %i[show edit update destroy move]
+  before_action :set_deal, only: %i[show edit update destroy move onboard]
 
   # Kanban board: open deals grouped by stage for the selected pipeline.
   def index
@@ -30,6 +30,12 @@ class DealsController < ApplicationController
 
   def show
     authorize @deal
+    @project_templates = policy_scope(ProjectTemplate).active.order(:name) if feature?("work")
+    @line_item = DealLineItem.new(deal: @deal)
+    @available_products = policy_scope(Product).active.where(currency: @deal.currency)
+                                .where.not(id: @deal.product_ids).order(:name)
+    @deal_competitor = DealCompetitor.new(deal: @deal)
+    @available_competitors = policy_scope(Competitor).where.not(id: @deal.competitor_ids).order(:name)
   end
 
   def new
@@ -76,6 +82,17 @@ class DealsController < ApplicationController
       format.json { render json: { id: @deal.id, stage_id: stage.id, status: @deal.status } }
       format.html { redirect_to deals_path, notice: t(".moved") }
     end
+  end
+
+  def onboard
+    authorize @deal
+    raise Pundit::NotAuthorizedError unless feature?("work")
+
+    template = policy_scope(ProjectTemplate).active.find(params.require(:project_template_id))
+    project = DealOnboarding.call(deal: @deal, template: template, actor: Current.user)
+    redirect_to project_path(project), notice: t(".created", project: project.display_label)
+  rescue DealOnboarding::Error => error
+    redirect_to deal_path(@deal), alert: error.message, status: :see_other
   end
 
   private

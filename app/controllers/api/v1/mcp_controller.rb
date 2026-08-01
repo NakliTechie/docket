@@ -54,7 +54,7 @@ module Api
         {
           "protocolVersion" => PROTOCOL_VERSION,
           "capabilities" => { "tools" => { "listChanged" => false } },
-          "serverInfo" => { "name" => "docket", "version" => "v1" }
+          "serverInfo" => { "name" => "docket", "version" => Docket::VERSION }
         }
       end
 

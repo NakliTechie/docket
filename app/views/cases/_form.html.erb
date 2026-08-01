@@ -68,7 +68,7 @@
 
   <div class="form-row">
     <%= f.label :assignee_id, t("cases.fields.assignee") %>
-    <%= f.collection_select :assignee_id, User.active.order(:name), :id, :name,
+    <%= f.collection_select :assignee_id, User.case_assignees.order(:name), :id, :name,
           include_blank: t("cases.unassigned") %>
   </div>
 
@@ -77,6 +77,8 @@
     <%= f.collection_select :sla_policy_id, SlaPolicy.order(:name), :id, :name,
           include_blank: t("cases.form.default_sla") %>
   </div>
+
+  <%= render "shared/custom_fields", record: kase, resource_type: "cases" %>
 
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>

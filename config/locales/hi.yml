@@ -35,8 +35,10 @@ hi:
       queues: "कतारें"
       categories: "श्रेणियाँ"
       sla_policies: "एसएलए नीतियाँ"
+      business_calendars: "कार्य कैलेंडर"
       macros: "मैक्रो"
       routing_rules: "रूटिंग नियम"
+      custom_fields: "कस्टम फ़ील्ड"
       approval_processes: "अनुमोदन नियम"
       approval_requests: "अनुमोदन"
       leads: "लीड्स"
@@ -44,6 +46,8 @@ hi:
       sales_report: "बिक्री रिपोर्ट"
       pipelines: "पाइपलाइनें"
       sequences: "अनुक्रम"
+      products: "उत्पाद"
+      competitors: "प्रतिस्पर्धी"
       users: "उपयोगकर्ता"
       roles: "भूमिकाएँ"
       tenants: "टेनेंट"
@@ -57,10 +61,14 @@ hi:
       webhooks: "वेबहुक"
       agent_actions: "एजेंट कार्रवाइयाँ"
       decision_appeals: "अपीलें"
+      notifications: "सूचनाएँ"
+      customer_portal: "ग्राहक पोर्टल"
+      explore: "डॉकेट देखें"
 
   setups:
     update:
       updated: "सेटअप प्रगति सहेजी गई।"
+      finished: "सेटअप पूरा हुआ। आपका कार्यक्षेत्र तैयार है।"
     show:
       title: "डॉकेट तैयार करें"
       meta_description: "%{brand} सेट करें, ग्राहक पोर्टल खोलें और अपना पहला अनुरोध पूरा करें।"
@@ -72,10 +80,12 @@ hi:
         ready: "तैयार"
         connected: "जुड़ा हुआ"
         deferred: "बाद में"
+        in_progress: "प्रगति में"
         to_do: "करना है"
       brand:
         title: "अपने कार्यक्षेत्र का नाम रखें"
         body: "वह नाम चुनें जो ग्राहकों और स्टाफ़ को दिखाई देगा।"
+        field: "कार्यस्थल का नाम"
         action: "कार्यस्थल का नाम सेट करें"
       modules:
         title: "अपना काम चुनें"
@@ -102,7 +112,12 @@ hi:
         skip: "यह बाद में करें"
       first_request:
         title: "एक परीक्षण अनुरोध दर्ज करें"
-        body: "मुख्य प्रक्रिया जाँचने के लिए अनुरोध बनाएँ, फिर उसे सौंपें, उत्तर दें और हल करें।"
+        body:
+          service_desk: "मुख्य प्रक्रिया जाँचने के लिए अनुरोध बनाएँ, फिर उसे सौंपें, उत्तर दें और हल करें।"
+          crm: "बिक्री प्रक्रिया जाँचने के लिए लीड बनाएँ और उसे ग्राहक व सौदे में बदलें।"
+          work: "डिलीवरी प्रक्रिया जाँचने के लिए प्रोजेक्ट बनाएँ, कार्य जोड़ें और उसे पूर्ण करें।"
+          none: "इस कार्यस्थल की जाँच के लिए एक वास्तविक प्रक्रिया पूरी करें।"
+        continue: "परीक्षण प्रक्रिया जारी रखें"
         portal: "पोर्टल से दर्ज करें"
         internal: "आंतरिक रूप से बनाएँ"
         lead: "पहली लीड बनाएँ"
@@ -112,11 +127,15 @@ hi:
         body: "अभी स्टाफ़ जोड़ें, या मूल्यांकन के दौरान इसे एक व्यक्ति का कार्यस्थल रखें।"
         invite: "उपयोगकर्ता आमंत्रित करें"
         skip: "अभी केवल मैं"
+      complete:
+        title: "आपका कार्यस्थल तैयार है"
+        body: "आपने मुख्य प्रक्रिया जाँची और सभी आवश्यक सेटअप निर्णय पूरे किए।"
+        action: "सेटअप पूरा करें"
 
   features:
     service_desk: "सेवा डेस्क"
     service_desk.kb: "ज्ञान कोश"
-    service_desk.approvals: "अनुमोदन शृंखलाएँ"
+    approvals: "अनुमोदन शृंखलाएँ"
     service_desk.portal: "सार्वजनिक पोर्टल"
     crm: "CRM"
     crm.sequences: "अनुक्रम"
@@ -129,6 +148,33 @@ hi:
   locales:
     en: "English"
     hi: "हिन्दी"
+
+  customer_360:
+    title: "ग्राहक 360"
+    cases: "मामले (%{count})"
+    deals: "सौदे (%{count})"
+    work_items: "जुड़ा कार्य (%{count})"
+    no_cases: "कोई जुड़ा मामला नहीं।"
+    no_deals: "कोई जुड़ा सौदा नहीं।"
+    no_work_items: "कोई जुड़ा कार्य नहीं।"
+
+  search:
+    index:
+      title: "खोज"
+      label: "Docket में खोजें"
+      placeholder: "मामले, ग्राहक, बिक्री और कार्य खोजें…"
+      short_placeholder: "खोजें…"
+      action: "खोजें"
+      for_query: "“%{query}” के परिणाम"
+      no_results: "कोई परिणाम नहीं"
+      no_results_hint: "ग्राहक नाम, ईमेल, मामला ID, सौदा या कार्य संदर्भ आज़माएँ।"
+      none_in_group: "इस क्षेत्र में कोई मिलान नहीं।"
+    groups:
+      cases: "मामले"
+      contacts: "संपर्क"
+      leads: "लीड"
+      deals: "सौदे"
+      work_items: "कार्य आइटम"
 
   actions:
     edit: "संपादित करें"
@@ -145,6 +191,10 @@ hi:
     select_prompt: "चुनें…"
     none: "कोई नहीं"
     default: "डिफ़ॉल्ट"
+    yes: "हाँ"
+    no: "नहीं"
+    active: "सक्रिय"
+    inactive: "निष्क्रिय"
 
   filters:
     search: "खोजें"
@@ -177,6 +227,9 @@ hi:
     internal:
       title: "कुछ गलत हो गया"
       body: "एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें, और सहायता से संपर्क करते समय नीचे दिया गया संदर्भ बताएँ।"
+    tenant_suspended:
+      title: "वर्कस्पेस अस्थायी रूप से अनुपलब्ध है"
+      body: "%{brand} अभी निलंबित है। पहुँच के लिए अपने वर्कस्पेस प्रशासक से संपर्क करें।"
     reference: "संदर्भ: %{id}"
     back_home: "मुख पृष्ठ पर लौटें"
 
@@ -187,6 +240,8 @@ hi:
     new:
       title: "साइन इन करें"
       meta_description: "ग्राहक अनुरोध और कार्य प्रबंधित करने के लिए %{brand} में साइन इन करें।"
+      intro: "एक स्टाफ़ कंसोल से ग्राहक अनुरोध, बिक्री और डिलीवरी कार्य संभालें।"
+      first_admin_hint: "पहले प्रशासक हैं? स्थापना के दौरान प्रिंट किए गए क्रेडेंशियल का उपयोग करें।"
       email: "ईमेल पता"
       password: "पासवर्ड"
       sign_in: "साइन इन"
@@ -214,6 +269,30 @@ hi:
     update:
       reset: "पासवर्ड रीसेट कर दिया गया है।"
       mismatch: "पासवर्ड मेल नहीं खाते।"
+
+  saved_views:
+    choose: "सहेजे गए दृश्य"
+    apply: "दृश्य खोलें"
+    name: "दृश्य का नाम"
+    save: "वर्तमान दृश्य सहेजें"
+    delete: "दृश्य हटाएँ"
+    confirm_delete: "यह सहेजा गया दृश्य हटाएँ?"
+    create:
+      created: "दृश्य सहेजा गया।"
+    destroy:
+      deleted: "सहेजा गया दृश्य हटाया गया।"
+
+  bulk_actions:
+    selected: "चुने हुए रिकॉर्ड"
+    action: "सामूहिक कार्रवाई"
+    assign: "सौंपें"
+    transition: "स्थिति बदलें"
+    priority: "प्राथमिकता बदलें"
+    unassign: "अनियुक्त"
+    apply: "लागू करें"
+    limit: "अधिकतम 100 रिकॉर्ड"
+    select: "चुनें"
+    select_record: "%{name} चुनें"
 
   cases:
     stale_conflict: "आपके संपादन के दौरान किसी और ने इस मामले को अद्यतन कर दिया। कृपया पुनः लोड करके फिर से प्रयास करें।"
@@ -271,6 +350,7 @@ hi:
     index:
       title: "मामले"
       new_case: "नया मामला"
+      my_tickets: "मेरे मामले"
       columns:
         tracking_id: "ट्रैकिंग आईडी"
         subject: "विषय"
@@ -308,6 +388,8 @@ hi:
       reply: "उत्तर दें"
       message_body: "संदेश"
       composer_placeholder: "सार्वजनिक उत्तर या आंतरिक टिप्पणी लिखें…"
+      formatting: "उत्तर फ़ॉर्मेटिंग"
+      add_link: "लिंक"
       message_kind: "संदेश प्रकार"
       attachments: "संलग्नक"
       send: "भेजें"
@@ -331,6 +413,14 @@ hi:
       external_id: "ग्राहक आईडी"
       organisation: "संगठन"
       other_cases: "अन्य मामले"
+      collision_warning: "%{agents} भी यह मामला देख रहे हैं। संपादन से पहले समन्वय करें।"
+      case_tools: "मामला उपकरण"
+      merge_source: "दूसरे मामले को इसमें मिलाएँ"
+      merge_action: "मामला मिलाएँ"
+      merge_confirm: "चुने गए मामले को इसमें मिलाएँ? उसके संदेश और जुड़ा कार्य यहाँ आ जाएगा तथा स्रोत मामला बंद हो जाएगा।"
+      split_action: "नए मामले में बाँटें"
+      split_subject: "नए मामले का विषय"
+      split_messages: "स्थानांतरित करने वाले संदेश"
     new:
       title: "नया मामला"
     edit:
@@ -339,6 +429,8 @@ hi:
       created: "मामला %{tracking_id} बनाया गया।"
     update:
       updated: "मामला अद्यतन किया गया।"
+    bulk_update:
+      updated: "%{count} मामले अद्यतन; %{submitted} स्वीकृति के लिए भेजे गए।"
     destroy:
       deleted: "मामला हटाया गया।"
     transition:
@@ -350,9 +442,21 @@ hi:
       assigned: "मामला %{name} को सौंपा गया।"
       unassigned: "मामले से नियुक्ति हटाई गई।"
       invalid_assignee: "वह उपयोगकर्ता नियुक्त नहीं किया जा सकता (अज्ञात या निष्क्रिय)।"
+    merge:
+      merged: "मामला %{tracking_id} इसमें मिला दिया गया।"
+    split:
+      split: "चुने गए संदेशों से मामला %{tracking_id} बनाया गया।"
     run_agent:
       queued: "एआई एजेंट “%{name}” ने इस मामले पर काम शुरू किया — चरण देखने के लिए थोड़ी देर में रिफ़्रेश करें।"
       unavailable: "कोई एआई एफेक्टर एजेंट कॉन्फ़िगर नहीं है। सेटिंग्स → एआई में एक सेट करें।"
+
+  case_merge:
+    note: "मामला %{source} इसमें मिला दिया गया।"
+
+  case_split:
+    description: "मामला %{source} से विभाजित।"
+    source_note: "चुने गए संदेश विभाजित मामला %{target} में भेजे गए।"
+    target_note: "चुने गए संदेश मामला %{source} से विभाजित किए गए।"
 
   messages:
     enum:
@@ -401,9 +505,11 @@ hi:
       organisation: "संगठन"
       preferred_language: "पसंदीदा भाषा"
       notes: "टिप्पणियाँ"
+      email_consent: "मार्केटिंग ईमेल सहमति"
       sms_consent: "SMS सहमति"
     form:
       external_id_hint: "संचालक का अपना ग्राहक पहचानकर्ता (जैसे बैंक CIF)। एकीकृत प्रणालियों द्वारा दर्ज मामलों को जोड़ने के लिए प्रयुक्त।"
+      email_consent_hint: "केवल सहमति देने वाले संपर्कों को मार्केटिंग अनुक्रम ईमेल मिलते हैं। सदस्यता समाप्त करने पर यह बंद हो जाता है।"
       sms_consent_hint: "केवल सहमति देने वाले संपर्कों को SMS अनुक्रम चरण मिलते हैं (DPDP / TRAI-DLT सहमति)।"
     index:
       title: "संपर्क"
@@ -446,10 +552,13 @@ hi:
       contact: "संपर्क"
       notes: "टिप्पणियाँ"
       status: "स्थिति"
+      email_consent: "मार्केटिंग ईमेल सहमति"
       sms_consent: "SMS सहमति"
     form:
       value_hint: "अनुमानित सौदा मूल्य रुपयों में।"
+      email_consent_hint: "केवल सहमति देने वाली लीड्स को मार्केटिंग अनुक्रम ईमेल मिलते हैं। सदस्यता समाप्त करने पर यह बंद हो जाता है।"
       sms_consent_hint: "केवल सहमति देने वाली लीड्स को SMS अनुक्रम चरण मिलते हैं (DPDP / TRAI-DLT सहमति)।"
+
     enum:
       status:
         new: "नया"
@@ -484,6 +593,10 @@ hi:
       confirm_convert: "इस लीड को संपर्क में बदलें?"
       mark_unqualified: "अयोग्य चिह्नित करें"
       confirm_delete: "इस लीड को हटाएं?"
+      duplicates: "संभावित डुप्लिकेट"
+      duplicates_hint: "केवल सटीक ईमेल या सामान्यीकृत फ़ोन मिलान। मिलाने से पहले समीक्षा करें; Docket लीड्स को स्वतः नहीं मिलाता।"
+      merge_into_this: "इस लीड में मिलाएँ"
+      merge_confirm: "%{name} को इस लीड में मिलाएँ? स्रोत ऑडिट इतिहास में रहेगा।"
     new:
       title: "नई लीड"
     edit:
@@ -494,17 +607,66 @@ hi:
       updated: "लीड अपडेट की गई।"
     destroy:
       deleted: "लीड हटाई गई।"
+    merge:
+      merged: "%{name} इस लीड में मिला दी गई।"
     convert:
       converted: "लीड को संपर्क में बदला गया।"
     mark_unqualified:
       unqualified: "लीड अयोग्य चिह्नित की गई।"
+
+  lead_capture_forms:
+    fields:
+      name: "फ़ॉर्म नाम"
+      slug: "सार्वजनिक URL स्लग"
+      mapping: "आने वाले फ़ील्ड का मानचित्रण"
+      consent_disclosure: "सहमति विवरण"
+      active: "सबमिशन स्वीकार करें"
+      is_default: "/inquiry के लिए उपयोग करें"
+      status: "स्थिति"
+    targets:
+      name: "लीड नाम (आवश्यक)"
+      email: "ईमेल स्रोत फ़ील्ड"
+      phone: "फ़ोन स्रोत फ़ील्ड"
+      company_name: "कंपनी स्रोत फ़ील्ड"
+      notes: "संदेश / टिप्पणी स्रोत फ़ील्ड"
+    form:
+      mapping_hint: "हर लीड फ़ील्ड के लिए सार्वजनिक इनपुट नाम दें। कम से कम ईमेल या फ़ोन रखें; खाली वैकल्पिक मानचित्रण छोड़ दिए जाते हैं।"
+    index:
+      title: "वेब-टू-लीड फ़ॉर्म"
+      subtitle: "सार्वजनिक फ़ील्ड नाम Docket में मैप करें और फ़ॉर्म व सहमति का स्रोत लीड पर सुरक्षित रखें।"
+      new: "नया कैप्चर फ़ॉर्म"
+      empty: "कोई कॉन्फ़िगर किया कैप्चर फ़ॉर्म नहीं। अंतर्निर्मित पूछताछ फ़ॉर्म उपलब्ध है।"
+    new:
+      title: "नया वेब-टू-लीड फ़ॉर्म"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "वेब-टू-लीड फ़ॉर्म बनाया गया।"
+    update:
+      updated: "वेब-टू-लीड फ़ॉर्म अद्यतन हुआ।"
+    destroy:
+      deleted: "वेब-टू-लीड फ़ॉर्म हटाया गया।"
+
+  crm_mailer:
+    sequence_step:
+      unsubscribe: "मार्केटिंग ईमेल से सदस्यता समाप्त करें"
+
+  sequence_unsubscribes:
+    show:
+      title: "सदस्यता समाप्त करें"
+      explanation: "इस संगठन से मार्केटिंग अनुक्रम ईमेल रोकें। सेवा और मामले के संदेश प्रभावित नहीं होंगे।"
+      confirm: "मेरी सदस्यता समाप्त करें"
+    success:
+      title: "आपकी सदस्यता समाप्त हो गई है"
+      explanation: "मार्केटिंग अनुक्रम ईमेल रोक दिए गए हैं। सक्रिय सेवा अनुरोधों के संदेश अभी भी मिल सकते हैं।"
 
   deals:
     fields:
       name: "नाम"
       pipeline: "पाइपलाइन"
       stage: "चरण"
-      value: "मूल्य (₹)"
+      value: "मूल्य"
+      currency: "मुद्रा (ISO कोड)"
       owner: "स्वामी"
       contact: "संपर्क"
       organisation: "संगठन"
@@ -536,6 +698,22 @@ hi:
     show:
       details: "विवरण"
       confirm_delete: "इस सौदे को हटाएं?"
+      onboarding: "ग्राहक ऑनबोर्डिंग"
+      onboarding_template: "प्रोजेक्ट टेम्पलेट"
+      start_onboarding: "ऑनबोर्डिंग शुरू करें"
+      no_onboarding_templates: "डिलीवरी शुरू करने से पहले ऑनबोर्डिंग टेम्पलेट बनाएँ।"
+      create_template: "टेम्पलेट बनाएँ"
+      products: "उत्पाद और मूल्य"
+      line_item: "उत्पाद"
+      quantity: "मात्रा"
+      unit_price: "इकाई मूल्य"
+      total: "कुल"
+      catalog_price: "कैटलॉग मूल्य"
+      add_product: "उत्पाद जोड़ें"
+      no_products: "इस सौदे पर कोई उत्पाद नहीं।"
+      competitors: "प्रतिस्पर्धी"
+      add_competitor: "प्रतिस्पर्धी जोड़ें"
+      no_competitors: "कोई प्रतिस्पर्धी जुड़ा नहीं।"
     new:
       title: "नया सौदा"
     edit:
@@ -548,6 +726,28 @@ hi:
       deleted: "सौदा हटाया गया।"
     move:
       moved: "सौदा स्थानांतरित किया गया।"
+    onboard:
+      created: "ऑनबोर्डिंग प्रोजेक्ट %{project} बनाया गया।"
+
+  deal_line_items:
+    create:
+      created: "उत्पाद सौदे में जोड़ा गया।"
+    update:
+      updated: "सौदे का उत्पाद अद्यतन हुआ।"
+    destroy:
+      deleted: "उत्पाद सौदे से हटाया गया।"
+
+  deal_competitors:
+    dispositions:
+      active: "प्रतिस्पर्धा में"
+      lost_to: "इनसे हारे"
+      won_against: "इनके विरुद्ध जीते"
+    create:
+      created: "प्रतिस्पर्धी सौदे से जोड़ा गया।"
+    update:
+      updated: "प्रतिस्पर्धी परिणाम अद्यतन हुआ।"
+    destroy:
+      deleted: "प्रतिस्पर्धी सौदे से हटाया गया।"
   decisions:
     run:
       ran: "निर्णयन चला — स्वायत्त संकेत लागू; पुष्टि/अभिलेख प्रस्ताव आपकी प्रतीक्षा में।"
@@ -574,6 +774,7 @@ hi:
       reply_share: "AI / मानव उत्तर"
       reply_share_value: "%{ai} AI · %{human} मानव"
       view_cases: "मामले देखें"
+      view_csat: "CSAT देखें"
       open_by_status: "स्थिति अनुसार खुले"
       no_open_cases: "कोई खुला मामला नहीं।"
       created_trend: "बनाए गए मामले (अवधि)"
@@ -681,6 +882,8 @@ hi:
       unassigned: "(अनिर्दिष्ट)"
       no_open_deals: "कोई खुला सौदा नहीं।"
       no_losses: "इस अवधि में दर्ज कारण वाला कोई हारा सौदा नहीं।"
+      competitor_losses: "प्रतिस्पर्धियों से हारे"
+      no_competitor_losses: "इस अवधि में प्रतिस्पर्धी से जुड़ी कोई हार नहीं।"
       columns:
         stage: "चरण"
         deals: "सौदे"
@@ -690,10 +893,58 @@ hi:
         won: "जीते"
         reason: "कारण"
         avg_days: "चरण में औसत दिन"
+        competitor: "प्रतिस्पर्धी"
+  products:
+    fields:
+      name: "उत्पाद"
+      sku: "SKU"
+      description: "विवरण"
+      price: "डिफ़ॉल्ट इकाई मूल्य"
+      currency: "मुद्रा"
+      active: "सौदों पर उपलब्ध"
+    index:
+      title: "उत्पाद"
+      new: "नया उत्पाद"
+      empty: "अभी कोई उत्पाद नहीं।"
+    new:
+      title: "नया उत्पाद"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "उत्पाद बनाया गया।"
+    update:
+      updated: "उत्पाद अद्यतन हुआ।"
+    destroy:
+      deleted: "उत्पाद हटाया गया।"
+
+  competitors:
+    fields:
+      name: "प्रतिस्पर्धी"
+      website: "वेबसाइट"
+      notes: "टिप्पणियाँ"
+    index:
+      title: "प्रतिस्पर्धी"
+      new: "नया प्रतिस्पर्धी"
+      empty: "अभी कोई प्रतिस्पर्धी नहीं।"
+    new:
+      title: "नया प्रतिस्पर्धी"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "प्रतिस्पर्धी बनाया गया।"
+    update:
+      updated: "प्रतिस्पर्धी अद्यतन हुआ।"
+    destroy:
+      deleted: "प्रतिस्पर्धी हटाया गया।"
+
   pipelines:
     fields:
       name: "नाम"
       active: "सक्रिय"
+      trigger_type: "नियम चलाएँ"
+      if_status: "मामला इस स्थिति में रहा हो"
+      after_minutes: "कम से कम (मिनट)"
+      use_business_hours: "केवल कार्य-समय गिनें"
       stages: "चरण"
       stage_name: "चरण नाम"
       position: "क्रम"
@@ -804,6 +1055,9 @@ hi:
       message: "हम कैसे मदद कर सकते हैं?"
       reach_hint: "ताकि हम आपसे संपर्क कर सकें, ईमेल या फ़ोन दें।"
       leave_blank: "इस फ़ील्ड को खाली छोड़ें"
+      email_consent: "मैं मार्केटिंग ईमेल प्राप्त करने के लिए सहमत हूँ"
+      sms_consent: "मैं मार्केटिंग SMS प्राप्त करने के लिए सहमत हूँ"
+      consent_hint: "वैकल्पिक। सेवा संदेश अलग हैं; आप मार्केटिंग सहमति कभी भी वापस ले सकते हैं।"
     new:
       title: "जानकारी का अनुरोध करें"
       intro: "अपने बारे में थोड़ा बताएं और हमारी टीम संपर्क करेगी।"
@@ -922,11 +1176,13 @@ hi:
     fields:
       name: "नाम"
       description: "विवरण"
+      business_calendar: "कार्य कैलेंडर"
       targets: "प्राथमिकता-वार लक्ष्य"
       first_response_minutes: "प्रथम उत्तर (मिनट)"
       resolution_minutes: "समाधान (मिनट)"
     form:
       targets_hint: "किसी प्राथमिकता का लक्ष्य न रखने के लिए उसे खाली छोड़ें।"
+      default_calendar: "टेनेंट डिफ़ॉल्ट का उपयोग करें"
     index:
       title: "एसएलए नीतियाँ"
       new_policy: "नई एसएलए नीति"
@@ -950,6 +1206,82 @@ hi:
     destroy:
       deleted: "एसएलए नीति हटाई गई।"
 
+  business_calendars:
+    fields:
+      name: "नाम"
+      time_zone: "समय क्षेत्र"
+      is_default: "डिफ़ॉल्ट कैलेंडर के रूप में उपयोग करें"
+      weekly_windows: "साप्ताहिक कार्य समय"
+      exceptions: "छुट्टियाँ और अपवाद"
+      closed: "बंद"
+    form:
+      windows_hint: "हर कार्य अवधि के लिए एक पंक्ति जोड़ें। विभाजित पाली के लिए उसी दिन कई पंक्तियाँ जोड़ें।"
+      exceptions_hint: "बंद दिनों में समय आवश्यक नहीं है। विशेष कार्य समय देने के लिए बंद विकल्प हटाएँ।"
+      exception_name: "छुट्टी या अपवाद का नाम"
+    index:
+      title: "कार्य कैलेंडर"
+      subtitle: "एसएलए के लिए समय क्षेत्र, कार्य समय, छुट्टियाँ और अपवाद दिन निर्धारित करें।"
+      new: "नया कार्य कैलेंडर"
+      default: "डिफ़ॉल्ट"
+      windows:
+        one: "1 कार्य अवधि"
+        other: "%{count} कार्य अवधियाँ"
+      exceptions:
+        one: "1 अपवाद"
+        other: "%{count} अपवाद"
+      confirm_delete: "यह कार्य कैलेंडर हटाएँ?"
+    new:
+      title: "नया कार्य कैलेंडर"
+    edit:
+      title: "%{name} कार्य कैलेंडर संपादित करें"
+    create:
+      created: "कार्य कैलेंडर बनाया गया।"
+    update:
+      updated: "कार्य कैलेंडर अद्यतन किया गया।"
+    destroy:
+      deleted: "कार्य कैलेंडर हटाया गया।"
+
+  notifications:
+    unread_count:
+      one: "1 अपठित सूचना"
+      other: "%{count} अपठित सूचनाएँ"
+    mention_hint: "किसी स्टाफ़ सदस्य का उल्लेख @[email@example.com] से करें।"
+    index:
+      title: "सूचनाएँ"
+      subtitle: "असाइनमेंट, एसएलए चेतावनी, उल्लेख और देखे जा रहे कार्य में बदलाव।"
+      filters_label: "सूचना फ़िल्टर"
+      all: "सभी"
+      unread: "अपठित"
+      mark_all_read: "सभी को पढ़ा हुआ करें"
+      occurrences:
+        one: "1 घटना"
+        other: "%{count} घटनाएँ"
+      empty:
+        title: "अभी ध्यान देने योग्य कुछ नहीं"
+        hint: "नए असाइनमेंट, एसएलए चेतावनियाँ, उल्लेख और देखे जा रहे कार्य यहाँ दिखाई देंगे।"
+    read_all:
+      updated: "सभी सूचनाएँ पढ़ी हुई चिह्नित की गईं।"
+    events:
+      assignment:
+        title: "आपको सौंपा गया"
+        body: "%{reference}: %{subject}"
+      sla_risk:
+        title: "एसएलए जोखिम में"
+        body: "%{reference} %{clock} एसएलए जोखिम में है"
+      sla_breach:
+        title: "एसएलए उल्लंघन"
+        body: "%{reference} %{clock} एसएलए का उल्लंघन हुआ"
+      mention:
+        title: "आपका उल्लेख किया गया"
+        body: "%{actor} ने %{reference} पर आपका उल्लेख किया"
+      watched_work:
+        title: "देखे जा रहे कार्य में बदलाव"
+        body: "%{reference}: %{subject} बदला"
+
+  notification_mailer:
+    greeting: "नमस्ते %{name},"
+    open_inbox: "सूचनाएँ खोलें"
+
   users:
     enum:
       role:
@@ -965,8 +1297,17 @@ hi:
     fields:
       name: "नाम"
       body: "पाठ"
+      message_kind: "संदेश प्रकार"
+      set_status: "स्थिति सेट करें"
+      set_priority: "प्राथमिकता सेट करें"
+      set_queue: "कतार सेट करें"
+      set_assignee: "असाइनी सेट करें"
     form:
       variables_hint: "उपलब्ध चर: %{variables}"
+      actions: "कार्रवाइयाँ"
+      actions_hint: "कार्रवाइयाँ भेजने वाले एजेंट की अनुमतियों से चलती हैं और सामान्य परिवर्तन अनुमोदन बनाए रखती हैं।"
+    values:
+      keep: "वर्तमान रखें"
     index:
       title: "मैक्रो"
       new_macro: "नया मैक्रो"
@@ -1002,6 +1343,9 @@ hi:
       then_assignment: "इन्हें सौंपें"
       then_assignee: "विशिष्ट एजेंट"
     enum:
+      trigger_type:
+        case_created: "मामला बनने पर"
+        elapsed_time: "किसी स्थिति में समय बीतने पर"
       then_assignment:
         keep: "अनासौंपा छोड़ें"
         round_robin: "कतार सदस्यों में बारी-बारी से"
@@ -1012,6 +1356,11 @@ hi:
       keep: "यथावत रखें"
       unassigned: "अनासौंपा"
       active_hint: "निष्क्रिय नियम रखे जाते हैं पर रूटिंग के दौरान छोड़ दिए जाते हैं।"
+      trigger_legend: "यह नियम कब चले?"
+      trigger_hint: "निर्माण नियम पहले मेल के क्रम में चलते हैं। समय नियम हर स्थिति-अवधि में केवल एक बार चलता है।"
+      choose_status: "स्थिति चुनें"
+      after_minutes_hint: "उदाहरण: कार्य-समय चालू होने पर 240 का अर्थ चार कार्य घंटे है।"
+      business_hours_hint: "वर्कस्पेस के डिफ़ॉल्ट कैलेंडर, समय क्षेत्र, छुट्टियों और अपवादों का उपयोग करता है।"
       conditions_legend: "जब कोई मामला मेल खाए…"
       conditions_hint: "नियम तभी मेल खाता है जब आपकी सेट की गई सभी शर्तें पूरी हों। किसी शर्त को खाली छोड़ने का अर्थ है “कोई भी”।"
       actions_hint: "तय करें कि मेल खाने वाला मामला क्या बने। किसी फ़ील्ड को खाली छोड़ने पर मामले का मौजूदा मान बना रहता है।"
@@ -1021,7 +1370,7 @@ hi:
     index:
       title: "रूटिंग नियम"
       new_rule: "नया नियम"
-      intro: "इनटेक पर मामलों को वर्गीकृत और सौंपने वाले निर्धारक, क्रमबद्ध नियम — ऊपर से नीचे मूल्यांकित; पहला मेल खाता सक्रिय नियम जीतता है, और शेष बचे मामलों को AI ट्राइएज संभालता है।"
+      intro: "निर्धारक नियम मामलों को इनटेक पर या किसी स्थिति में समय बीतने के बाद वर्गीकृत और सौंपते हैं। निर्माण नियम पहले मेल के क्रम में और समय नियम हर स्थिति-अवधि में एक बार चलते हैं।"
       any: "कोई भी मामला"
       active: "सक्रिय"
       inactive: "निष्क्रिय"
@@ -1031,6 +1380,7 @@ hi:
       columns:
         order: "#"
         name: "नाम"
+        trigger: "ट्रिगर"
         conditions: "जब"
         actions: "तो"
         status: "स्थिति"
@@ -1047,6 +1397,10 @@ hi:
       updated: "रूटिंग नियम अद्यतन किया गया।"
     destroy:
       deleted: "रूटिंग नियम हटाया गया।"
+    summary:
+      elapsed: "%{status} में %{count} %{clock} बाद"
+      business_minutes: "कार्य मिनट"
+      minutes: "मिनट"
 
   approval_processes:
     fields:
@@ -1058,9 +1412,10 @@ hi:
       trigger_type:
         case_transition: "मामला परिवर्तन"
         effector_action: "कनेक्टर क्रिया"
+        work_item_transition: "कार्य-आइटम परिवर्तन"
     form:
       trigger_type_hint: "किस प्रकार की क्रिया के लिए दूसरे व्यक्ति की मंज़ूरी आवश्यक है।"
-      trigger_key_hint: "मामला परिवर्तन हेतु, लक्ष्य स्थिति (इनमें से एक: %{statuses})। कनेक्टर क्रिया हेतु, क्रिया कुंजी (जैसे post_message)।"
+      trigger_key_hint: "मामला: लक्ष्य स्थिति (%{statuses})। कार्य: PROJECT_KEY:State name (जैसे PEP:Done)। कनेक्टर: क्रिया कुंजी (जैसे post_message)।"
     index:
       title: "अनुमोदन नियम"
       new_process: "नया अनुमोदन नियम"
@@ -1510,6 +1865,8 @@ hi:
         password: "पासवर्ड"
         role: "भूमिका"
         locale: "भाषा"
+        email_signature: "उत्तर हस्ताक्षर"
+        email_signature_hint: "इस एजेंट के सार्वजनिक ईमेल और मैसेजिंग उत्तरों में जोड़ा जाता है।"
         queues: "कतार सदस्यताएँ"
       form:
         password_hint: "वर्तमान पासवर्ड रखने के लिए खाली छोड़ें।"
@@ -1720,6 +2077,10 @@ hi:
           default_queue_hint: "पोर्टल और ईमेल के मामले यहीं आते हैं जब तक एआई उन्हें रूट न करे।"
           default_sla_policy: "डिफ़ॉल्ट एसएलए नीति"
           outbound_email_from: "आउटबाउंड ईमेल का From पता"
+          notification_email_enabled: "नई और बढ़ी हुई सूचनाओं के बारे में स्टाफ़ को ईमेल करें"
+          csat_enabled: "मामला हल होने पर संतुष्टि सर्वे ईमेल करें"
+          sla_risk_minutes: "एसएलए जोखिम अवधि (कार्य मिनट)"
+          sla_risk_minutes_hint: "प्रतिक्रिया या समाधान समय में इतने कार्य मिनट बचने पर असाइनी को सूचित करें।"
           cors_allowed_origins: "CORS अनुमत ऑरिजिन"
           cors_hint: "ब्राउज़र से एपीआई कॉल हेतु अनुमत ऑरिजिन, अल्पविराम से अलग। क्रॉस-ऑरिजिन ब्राउज़र पहुँच बंद रखने के लिए खाली छोड़ें।"
           app_base_url: "सार्वजनिक आधार URL"
@@ -1727,6 +2088,8 @@ hi:
           oidc_issuer: "OIDC जारीकर्ता URL"
           oidc_client_id: "OIDC क्लाइंट आईडी"
           oidc_client_secret: "OIDC क्लाइंट सीक्रेट"
+          jit_domains: "स्टाफ़ JIT ईमेल डोमेन"
+          jit_domains_hint: "SSO से नए स्टाफ़ खाते बनाने हेतु अनुमत डोमेन, अल्पविराम से अलग। JIT प्रोविज़निंग बंद रखने के लिए खाली छोड़ें।"
           role_claim: "रोल क्लेम (वैकल्पिक)"
           role_mapping: "रोल मैपिंग (JSON, वैकल्पिक)"
           role_mapping_hint: "IdP क्लेम मानों को डॉकेट की कार्यात्मक भूमिकाओं से जोड़ता है, जैसे {\"docket-admins\": \"client_admin\"}।"
@@ -1928,6 +2291,10 @@ hi:
         cli_hint: "सीएलआई: bin/rails audit:verify"
 
   projects:
+    enum:
+      visibility:
+        tenant_wide: "सभी"
+        restricted: "केवल सदस्य"
     fields:
       columns: "बोर्ड कॉलम"
       columns_hint: "कॉलम का नाम बदलें या सुझावित कार्य-प्रगति सीमा तय करें। सीमा पार करने पर चेतावनी मिलती है, रोक नहीं।"
@@ -1938,6 +2305,13 @@ hi:
       name: "परियोजना नाम"
       description: "विवरण"
       lead: "परियोजना प्रमुख"
+      visibility: "दृश्यता"
+      visibility_hint: "सभी चुनने पर Work पहुँच वाले सभी कर्मचारी परियोजना देख सकते हैं। केवल सदस्य चुनने पर चयनित सदस्य और परियोजना प्रशासक ही देख सकते हैं।"
+      members: "परियोजना सदस्य"
+      members_hint: "सदस्य प्रतिबंधित परियोजना खोल सकते हैं। सदस्यता उनकी भूमिका से अतिरिक्त अनुमति नहीं देती।"
+      assignment_rules: "डिफ़ॉल्ट असाइनमेंट"
+      assignment_rules_hint: "असाइनी न चुना हो तो प्रकार के अनुसार नया कार्य स्वतः सौंपें।"
+      remove_rule: "हटाएँ"
     index:
       title: "परियोजनाएँ"
       new_project: "नई परियोजना"
@@ -1950,6 +2324,7 @@ hi:
         key: "कुंजी"
         name: "नाम"
         lead: "प्रमुख"
+        visibility: "दृश्यता"
         open_items: "खुले आइटम"
       empty:
         title: "अभी कोई परियोजना नहीं"
@@ -2044,6 +2419,33 @@ hi:
     destroy:
       deleted: "स्प्रिंट हटाया गया।"
 
+  project_templates:
+    fields:
+      name: "नाम"
+      key_prefix: "प्रोजेक्ट कुंजी उपसर्ग"
+      description: "प्रोजेक्ट विवरण"
+      active: "ऑनबोर्डिंग के लिए उपलब्ध"
+      items: "टेम्पलेट कार्य आइटम"
+      item_title: "कार्य आइटम शीर्षक"
+      due_offset_days: "नियत समय (दिन बाद)"
+    form:
+      items_hint: "एक और कार्य आइटम पंक्ति जोड़ने के लिए सहेजें, फिर टेम्पलेट संपादित करें। खाली पंक्तियाँ अनदेखी होती हैं।"
+    index:
+      title: "प्रोजेक्ट टेम्पलेट"
+      subtitle: "चेकलिस्ट दोबारा बनाए बिना जीते सौदे को दोहराने योग्य ऑनबोर्डिंग प्रोजेक्ट में बदलें।"
+      new: "नया टेम्पलेट"
+      empty: "अभी कोई प्रोजेक्ट टेम्पलेट नहीं।"
+    new:
+      title: "नया प्रोजेक्ट टेम्पलेट"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "प्रोजेक्ट टेम्पलेट बनाया गया।"
+    update:
+      updated: "प्रोजेक्ट टेम्पलेट अद्यतन हुआ।"
+    destroy:
+      deleted: "प्रोजेक्ट टेम्पलेट हटाया गया।"
+
   work_items:
     unassigned: "अनासाइन"
     enum:
@@ -2073,6 +2475,7 @@ hi:
       title: "%{key} बैकलॉग"
       board: "बोर्ड"
       new_item: "नया आइटम"
+      my_work: "मेरा कार्य"
       open_only: "केवल खुले"
       columns:
         reference: "संदर्भ"
@@ -2106,18 +2509,44 @@ hi:
       post_comment: "टिप्पणी करें"
       status: "स्थिति"
       details: "विवरण"
+      relations: "निर्भरताएँ और डुप्लिकेट"
+      no_relations: "कोई संबंधित कार्य आइटम नहीं।"
+      add_relation: "संबंध जोड़ें"
     create:
       created: "%{reference} बनाया गया।"
     update:
       updated: "कार्य आइटम अद्यतन हुआ।"
+    bulk_update:
+      updated: "%{count} कार्य आइटम अद्यतन हुए।"
     transition:
       moved: "%{state} में ले जाया गया।"
+      submitted_for_approval: "%{state} में ले जाने हेतु अनुमोदन अनुरोध भेजा गया।"
     destroy:
       deleted: "कार्य आइटम हटाया गया।"
 
   work_comments:
     create:
       created: "टिप्पणी जोड़ी गई।"
+    update:
+      updated: "टिप्पणी अद्यतन हुई।"
+    destroy:
+      deleted: "टिप्पणी हटाई गई।"
+
+  work_item_relations:
+    types:
+      blocks: "अवरुद्ध करता है"
+      duplicates: "डुप्लिकेट है"
+    direction:
+      blocks:
+        outgoing: "अवरुद्ध करता है"
+        incoming: "इससे अवरुद्ध"
+      duplicates:
+        outgoing: "डुप्लिकेट है"
+        incoming: "डुप्लिकेट है"
+    create:
+      created: "कार्य संबंध जोड़ा गया।"
+    destroy:
+      deleted: "कार्य संबंध हटाया गया।"
 
   work:
     escalation:
@@ -2130,11 +2559,121 @@ hi:
       no_projects: "भेजने के लिए कोई सक्रिय परियोजना नहीं।"
       linked_none: "कोई संबंधित कार्य नहीं।"
 
+  custom_fields:
+    section: "अतिरिक्त विवरण"
+    fields:
+      label: "लेबल"
+      key: "API कुंजी"
+      field_type: "प्रकार"
+      options: "विकल्प"
+      position: "स्थान"
+      required: "आवश्यक"
+      active: "सक्रिय"
+      reportable: "रिपोर्ट में शामिल करें"
+    enum:
+      field_type:
+        short_text: "संक्षिप्त टेक्स्ट"
+        long_text: "लंबा टेक्स्ट"
+        integer: "पूर्ण संख्या"
+        decimal: "दशमलव संख्या"
+        boolean: "हाँ या नहीं"
+        date: "तिथि"
+        single_select: "एक विकल्प"
+        multi_select: "कई विकल्प"
+    form:
+      key_hint: "API और आयात के लिए स्थिर snake_case कुंजी। बनाने के बाद इसे बदला नहीं जा सकता।"
+      options_hint: "चयन फ़ील्ड के लिए हर पंक्ति में एक अनुमत विकल्प लिखें।"
+    values:
+      "yes": "हाँ"
+      "no": "नहीं"
+      active: "सक्रिय"
+      inactive: "निष्क्रिय"
+    index:
+      title: "कस्टम फ़ील्ड"
+      intro: "मामलों और कार्य आइटमों में प्रकार-आधारित, नियंत्रित फ़ील्ड जोड़ें। पुराने मान सुरक्षित रखने के लिए फ़ील्ड निष्क्रिय करें।"
+      cases: "मामले"
+      work_items: "कार्य आइटम"
+      new_field: "नया फ़ील्ड"
+      report: "रिपोर्ट देखें"
+      columns:
+        label: "लेबल"
+        key: "API कुंजी"
+        type: "प्रकार"
+        required: "आवश्यक"
+        status: "स्थिति"
+      empty:
+        title: "कोई कस्टम फ़ील्ड नहीं"
+        hint: "इस संसाधन के लिए पहला नियंत्रित फ़ील्ड जोड़ें।"
+    new:
+      title: "नया कस्टम फ़ील्ड"
+    edit:
+      title: "कस्टम फ़ील्ड संपादित करें"
+    create:
+      created: "कस्टम फ़ील्ड बनाया गया।"
+    update:
+      updated: "कस्टम फ़ील्ड अद्यतन हुआ।"
+    report:
+      not_set: "सेट नहीं"
+
+  custom_field_reports:
+    index:
+      title: "कस्टम-फ़ील्ड रिपोर्ट"
+      intro: "रिपोर्टिंग के लिए चिह्नित फ़ील्ड के मानों का वितरण देखें।"
+      export_csv: "CSV निर्यात करें"
+      resource: "संसाधन"
+      field: "फ़ील्ड"
+      total: "%{count} रिकॉर्ड दायरे में"
+      value: "मान"
+      count: "रिकॉर्ड"
+      empty:
+        title: "कोई रिपोर्ट योग्य कस्टम फ़ील्ड नहीं"
+        hint: "यहाँ वितरण देखने के लिए किसी कस्टम फ़ील्ड को रिपोर्ट योग्य चिह्नित करें।"
+
+  csat_surveys:
+    show:
+      title: "हमने कैसा किया?"
+      intro: "मामला %{tracking_id} के लिए मिली सहायता को अंक दें।"
+      score: "संतुष्टि अंक (1 खराब, 5 उत्कृष्ट)"
+      comment: "क्या आप कुछ और बताना चाहेंगे?"
+      submit: "प्रतिक्रिया भेजें"
+      already_answered: "धन्यवाद — इस मामले की प्रतिक्रिया पहले ही दर्ज हो चुकी है।"
+    thanks:
+      title: "धन्यवाद"
+      body: "आपकी प्रतिक्रिया दर्ज हो गई है।"
+
+  csat_reports:
+    index:
+      title: "ग्राहक संतुष्टि"
+      export_csv: "टिप्पणियाँ निर्यात करें"
+      from: "से"
+      to: "तक"
+      invitations: "भेजे गए सर्वे"
+      responses: "प्रतिक्रियाएँ"
+      response_rate: "प्रतिक्रिया दर"
+      average_score: "औसत अंक"
+      distribution: "अंक वितरण"
+      score: "अंक"
+      comments: "हाल की टिप्पणियाँ"
+      no_comments: "इस अवधि में कोई लिखित प्रतिक्रिया नहीं।"
+
+  csat_mailer:
+    invitation:
+      subject: "%{tracking_id} के लिए आपका सहायता अनुभव कैसा था?"
+      greeting: "नमस्ते %{name},"
+      body: "आपका मामला %{tracking_id} हल हो गया है। एक छोटा अंक हमें सुधारने में मदद करता है।"
+      action: "अपना अनुभव अंकित करें"
+
   activerecord:
     errors:
+      messages:
+        cross_tenant: "किसी अन्य संगठन का है"
       models:
         work_item:
           attributes:
+            custom_fields:
+              unknown: "में अज्ञात कुंजियाँ हैं: %{keys}"
+              required: "में %{label} होना आवश्यक है"
+              invalid: "%{label} %{reason}"
             parent:
               cannot_be_self: "स्वयं वही आइटम नहीं हो सकता"
               cycle: "मूल आइटम का चक्र बन जाएगा"
@@ -2174,10 +2713,22 @@ hi:
               non_boolean_values: "इनके लिए true या false होना चाहिए: %{keys}"
         case:
           attributes:
+            custom_fields:
+              unknown: "में अज्ञात कुंजियाँ हैं: %{keys}"
+              required: "में %{label} होना आवश्यक है"
+              invalid: "%{label} %{reason}"
             status:
               must_use_state_machine: "परिवर्तन केवल मामला स्थिति-तंत्र के माध्यम से ही हो सकते हैं"
             assignee:
               inactive: "सक्रिय उपयोगकर्ता होना चाहिए"
+        custom_field_definition:
+          attributes:
+            key:
+              immutable: "फ़ील्ड बनने के बाद बदली नहीं जा सकती"
+            options:
+              too_many: "में अधिकतम 100 मान हो सकते हैं"
+              too_long: "में अधिकतम 100 अक्षर के मान हो सकते हैं"
+              not_allowed: "केवल चयन फ़ील्ड के लिए अनुमत हैं"
         user:
           attributes:
             role:
@@ -2185,8 +2736,9 @@ hi:
         routing_rule:
           attributes:
             base:
-              needs_condition: "कम से कम एक शर्त आवश्यक है (चैनल, प्राथमिकता, श्रेणी, या विषय कीवर्ड)"
+              needs_condition: "कम से कम एक शर्त आवश्यक है (स्थिति, चैनल, प्राथमिकता, श्रेणी, या विषय कीवर्ड)"
               needs_action: "कम से कम एक क्रिया आवश्यक है (कतार, श्रेणी, प्राथमिकता, या असाइनमेंट सेट करें)"
+              intake_has_schedule: "निर्माण पर चलने वाले नियम में बीते-समय की स्थिति या अवधि सेटिंग नहीं हो सकती"
         approval_process:
           attributes:
             trigger_key:

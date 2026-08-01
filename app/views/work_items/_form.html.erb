@@ -42,6 +42,23 @@
     <%= f.date_field :due_on %>
   </div>
 
+  <div class="form-row">
+    <%= f.label :parent_id, t("work_items.fields.parent") %>
+    <%= f.collection_select :parent_id,
+          project.work_items.where.not(id: item.id).order(:number), :id, :display_label,
+          { include_blank: t("forms.none") } %>
+  </div>
+
+  <% if feature?("work.sprints") %>
+    <div class="form-row">
+      <%= f.label :sprint_id, t("work_items.fields.sprint") %>
+      <%= f.collection_select :sprint_id, project.sprints.where(status: %i[planned active]).order(:starts_on),
+            :id, :name, { include_blank: t("forms.none") } %>
+    </div>
+  <% end %>
+
+  <%= render "shared/custom_fields", record: item, resource_type: "work_items" %>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), project_board_path(project), class: "btn" %>
