@@ -44,6 +44,23 @@ class DeliverableTest < ActiveSupport::TestCase
     assert_match(/frozen/, d.errors[:base].join)
   end
 
+  test "issued is terminal — cannot un-issue to edit frozen content (no backdoor)" do
+    d = build_deliverable
+    d.save!
+    d.update_columns(status: Deliverable.statuses[:issued], issued_at: Time.current)
+
+    d.reload
+    d.status = :approved
+    refute d.valid?, "an issued deliverable cannot leave the issued state"
+    assert_match(/frozen/, d.errors[:base].join)
+  end
+
+  test "scope rejects price/tax/HSN keys at rest, not just on read" do
+    d = build_deliverable(scope_items: [ { "description" => "X", "price" => 999, "tax" => 18 } ])
+    refute d.valid?
+    assert_match(/engineering-only/, d.errors[:scope_items].join)
+  end
+
   test "an issued deliverable may still be soft-deleted" do
     d = build_deliverable
     d.save!

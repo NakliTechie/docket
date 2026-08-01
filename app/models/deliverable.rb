@@ -61,14 +61,22 @@ class Deliverable < ApplicationRecord
     end
     scope_items.each_with_index do |item, index|
       errors.add(:scope_items, "entry #{index + 1} needs a description") if item["description"].to_s.strip.blank?
+      # "Reports inform, never bill" enforced at rest, not just on read: an entry
+      # may not smuggle price/tax/HSN in through an unknown key.
+      unknown = item.keys.map(&:to_s) - SCOPE_ITEM_KEYS
+      if unknown.any?
+        errors.add(:scope_items, "entry #{index + 1} may not carry #{unknown.join(', ')} — scope is engineering-only")
+      end
     end
   end
 
-  # Once issued the deliverable is the quote's frozen basis — its content may
-  # not change. Status and lifecycle stamps (deleted_at) may still move.
+  # Once issued the deliverable is the quote's frozen basis: its content may not
+  # change AND it may not leave the issued state — otherwise un-issuing would be
+  # a backdoor to editing frozen content. Soft-delete uses update_columns (skips
+  # validation) so tombstoning is unaffected.
   def issued_content_is_frozen
     return unless status_was == "issued"
-    return if (changed & FROZEN_WHEN_ISSUED).empty?
+    return unless (status_changed? && status != "issued") || (changed & FROZEN_WHEN_ISSUED).any?
     errors.add(:base, "an issued deliverable is frozen and cannot be edited")
   end
 end
