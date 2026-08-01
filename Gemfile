@@ -44,6 +44,11 @@ gem "csv"
 # PDF text extraction for AI grounding reference docs (pure ruby)
 gem "pdf-reader", "~> 2.12"
 
+# PDF generation for quote documents (pure ruby, no native/network deps —
+# sovereignty-safe; chosen over a headless-browser renderer for that reason).
+gem "prawn", "~> 2.5"
+gem "prawn-table", "~> 0.2.2"
+
 # Dual SSO (handoff §5A): staff OIDC + SAML, customer OIDC
 gem "omniauth", "~> 2.1"
 gem "omniauth-rails_csrf_protection", "~> 2.0"

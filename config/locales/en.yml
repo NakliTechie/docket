@@ -757,6 +757,21 @@ en:
       deal: "Deal"
       project: "Engagement"
 
+  quotes:
+    enum:
+      status:
+        draft: "Draft"
+        sent: "Sent"
+        accepted: "Accepted"
+        rejected: "Rejected"
+        expired: "Expired"
+    fields:
+      number: "Quote number"
+      version: "Version"
+      currency: "Currency (ISO code)"
+      valid_until: "Valid until"
+      status: "Status"
+
   deal_line_items:
     create:
       created: "Product added to the deal."
