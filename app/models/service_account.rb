@@ -29,8 +29,8 @@ class ServiceAccount < ApplicationRecord
     "contacts:write" => %w[contact:write],
     "organisations:read" => %w[contact:read],
     "organisations:write" => %w[contact:write],
-    "crm:read" => %w[lead:read deal:read pipeline:read],
-    "crm:write" => %w[lead:write deal:write],
+    "crm:read" => %w[lead:read deal:read pipeline:read activity:read],
+    "crm:write" => %w[lead:write deal:write activity:write],
     "work:read" => %w[work:read],
     "work:write" => %w[work:write],
     # Configuring a workspace is a tier above doing the work in it, exactly as

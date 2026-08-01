@@ -44,6 +44,7 @@ en:
       approval_requests: "Approvals"
       leads: "Leads"
       deals: "Deals"
+      activities: "Activities"
       sales_report: "Sales report"
       pipelines: "Pipelines"
       lead_routing_rules: "Lead routing"
@@ -171,6 +172,7 @@ en:
       deal_lost: "Deal lost"
       work_opened: "Work opened"
       work_closed: "Work closed"
+      activity: "Activity"
 
   search:
     index:
@@ -759,6 +761,63 @@ en:
       status: "Status"
       deal: "Deal"
       project: "Engagement"
+
+  activities:
+    enum:
+      kind:
+        call: "Call"
+        email: "Email"
+        meeting: "Meeting"
+        note: "Note"
+        task: "Task"
+      status:
+        open: "Open"
+        done: "Done"
+        canceled: "Canceled"
+    fields:
+      kind: "Type"
+      title: "Title"
+      body: "Notes"
+      due_at: "Due"
+      owner: "Owner"
+      status: "Status"
+    form:
+      on_subject: "On %{subject}"
+      unassigned: "Unassigned"
+    index:
+      title: "Activities"
+      intro: "Your calls, tasks, meetings and logged interactions across contacts, leads, deals and cases."
+      done: "Done"
+      confirm_delete: "Delete this activity?"
+      owner_filter:
+        mine: "My activities"
+        all: "Everyone's"
+      status_filter:
+        open: "Open"
+        done: "Done"
+        all: "All"
+      columns:
+        kind: "Type"
+        title: "Title"
+        subject: "On"
+        due: "Due"
+        owner: "Owner"
+        status: "Status"
+      empty:
+        title: "No activities"
+        hint: "Log a call, email, meeting, note or task from a contact, lead, deal or case."
+    new:
+      title: "New activity"
+    edit:
+      title: "Edit activity"
+    create:
+      created: "Activity logged."
+    update:
+      updated: "Activity updated."
+    destroy:
+      deleted: "Activity deleted."
+    complete:
+      completed: "Activity marked done."
 
   quotes:
     enum:

@@ -54,4 +54,30 @@ class Customer360Test < ActiveSupport::TestCase
                           author: users(:agent_a))
     assert_equal 1, isolated.call.timeline.count { |event| event.kind == :message }
   end
+
+  # --- PG2: activities feed the timeline ---
+
+  def with_activities
+    Customer360.new(subject: @contact, case_scope: Case.all, deal_scope: Deal.all,
+                    work_scope: WorkItem.all, activity_scope: Activity.all).call
+  end
+
+  test "activities on the contact appear in the timeline" do
+    Activity.create!(title: "Called Asha", subject: @contact, kind: :call)
+    events = with_activities.timeline.select { |event| event.kind == :activity }
+    assert_equal 1, events.size
+    assert_equal "Called Asha", events.first.title
+  end
+
+  test "activities on the contact's deals also surface in the contact timeline" do
+    deal = Deal.create!(name: "Renewal", pipeline: pipelines(:sales), contact: @contact)
+    Activity.create!(title: "Demo scheduled", subject: deal, kind: :meeting)
+    assert_includes with_activities.timeline.map(&:title), "Demo scheduled"
+  end
+
+  test "activity_scope none contributes no activity events" do
+    Activity.create!(title: "hidden", subject: @contact)
+    result = Customer360.new(subject: @contact, activity_scope: Activity.none).call
+    assert_empty result.timeline.select { |event| event.kind == :activity }
+  end
 end

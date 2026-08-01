@@ -83,6 +83,10 @@ module Docket
           Product: object_schema(id: :integer, name: :string, sku: :string, description: :string,
                                  default_unit_price_cents: :integer, currency: :string,
                                  active: :boolean, created_at: :datetime, updated_at: :datetime),
+          Activity: object_schema(id: :integer, kind: enum(Activity.kinds.keys), title: :string, body: :string,
+                                  subject_type: enum(Activity::SUBJECT_TYPES), subject_id: :integer,
+                                  owner_id: :integer, due_at: :datetime, status: enum(Activity.statuses.keys),
+                                  completed_at: :datetime, created_at: :datetime, updated_at: :datetime),
           DealLineItem: object_schema(id: :integer, deal_id: :integer, product_id: :integer,
                                       description: :string, quantity: :number,
                                       unit_price_cents: :integer, total_cents: :integer,
@@ -256,6 +260,9 @@ module Docket
         responses: { "201" => "Created", "422" => "Deal is not open or template is invalid" }) }
       crud(result, "products", "Product")
       crud(result, "competitors", "Competitor")
+      crud(result, "activities", "Activity", extra_params: %w[subject_type subject_id status owner_id],
+           create_note: "activity[subject_type] is Contact/Lead/Deal/Case; activity[subject_id] the record it hangs off.")
+      result["/activities/{id}/complete"] = { post: op("Mark an activity done", params: [ id_param ], schema: "Activity") }
       result["/deals/{deal_id}/line_items"] = { post: op(
         "Add a catalog product to a deal; all line-item currency must match the deal",
         params: [ path_param("deal_id") ], request: { deal_line_item: :object }, schema: "DealLineItem") }

@@ -61,6 +61,11 @@ Rails.application.routes.draw do
       patch :move
     end
   end
+  resources :activities, except: :show do
+    member do
+      patch :complete
+    end
+  end
   resources :custom_fields, controller: "custom_field_definitions", except: %i[show destroy]
   # Work module (WM). Items are reachable by their own id at /work_items/:id so
   # a KEY-123 link survives a project rename; creation and listing stay nested.
@@ -276,6 +281,9 @@ Rails.application.routes.draw do
       resources :deal_competitors, only: %i[update destroy]
       resources :products, only: %i[index show create update destroy]
       resources :competitors, only: %i[index show create update destroy]
+      resources :activities, only: %i[index show create update destroy] do
+        member { post :complete }
+      end
       resources :sequences, only: %i[index show create update destroy]
       resources :sequence_enrollments, only: %i[index show create] do
         member { post :cancel }

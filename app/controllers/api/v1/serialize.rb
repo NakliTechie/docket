@@ -191,6 +191,13 @@ module Api
         }
       end
 
+      def activity(a)
+        { id: a.id, kind: a.kind, title: a.title, body: a.body,
+          subject_type: a.subject_type, subject_id: a.subject_id,
+          owner_id: a.owner_id, due_at: a.due_at, status: a.status,
+          completed_at: a.completed_at, created_at: a.created_at, updated_at: a.updated_at }
+      end
+
       def product(product)
         { id: product.id, name: product.name, sku: product.sku, description: product.description,
           default_unit_price_cents: product.default_unit_price_cents, currency: product.currency,

@@ -14,23 +14,26 @@ class Customer360
   # names the event so the view picks its icon/label without re-deriving it.
   Event = Data.define(:at, :kind, :record, :title)
 
-  def initialize(subject:, case_scope: Case.none, deal_scope: Deal.none, work_scope: WorkItem.none)
+  def initialize(subject:, case_scope: Case.none, deal_scope: Deal.none, work_scope: WorkItem.none,
+                 activity_scope: Activity.none)
     @subject = subject
     @case_scope = case_scope
     @deal_scope = deal_scope
     @work_scope = work_scope
+    @activity_scope = activity_scope
   end
 
   def call
     cases = case_relation
     deals = deal_relation
     work_items = work_relation(deals)
+    activities = activity_relation(cases, deals)
     Result.new(
       cases: cases.order(created_at: :desc).limit(LIMIT).to_a, case_count: cases.count,
       deals: deals.order(updated_at: :desc).limit(LIMIT).to_a, deal_count: deals.count,
       work_items: work_items.order(updated_at: :desc).limit(LIMIT).to_a,
       work_item_count: work_items.count,
-      timeline: timeline(cases, deals, work_items)
+      timeline: timeline(cases, deals, work_items, activities)
     )
   end
 
@@ -40,9 +43,24 @@ class Customer360
   # interleaved newest-first. An off/absent module contributes a `.none` scope,
   # so its events simply don't appear — the timeline inherits the same
   # entitlement gating as the summary panels.
-  def timeline(cases, deals, work_items)
-    events = case_events(cases) + message_events(cases) + deal_events(deals) + work_events(work_items)
+  def timeline(cases, deals, work_items, activities)
+    events = case_events(cases) + message_events(cases) + deal_events(deals) +
+             work_events(work_items) + activity_events(activities)
     events.select(&:at).sort_by(&:at).reverse.first(TIMELINE_LIMIT)
+  end
+
+  # Activities directly on the subject (a Contact), plus those on its deals and
+  # cases, interleaved into the stream. An off CRM module passes Activity.none.
+  def activity_relation(cases, deals)
+    @activity_scope.where(subject: @subject)
+                   .or(@activity_scope.where(subject_type: "Deal", subject_id: deals.select(:id)))
+                   .or(@activity_scope.where(subject_type: "Case", subject_id: cases.select(:id)))
+  end
+
+  def activity_events(activities)
+    activities.order(created_at: :desc).limit(TIMELINE_LIMIT).map do |activity|
+      Event.new(at: activity.created_at, kind: :activity, record: activity, title: activity.title)
+    end
   end
 
   def case_events(cases)

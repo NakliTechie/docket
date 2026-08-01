@@ -22,6 +22,7 @@ module Authz
     contact:read contact:write contact:delete
     lead:read lead:write lead:delete
     deal:read deal:write deal:delete
+    activity:read activity:write
     pipeline:read pipeline:manage sequence:enroll
     work:read work:write project:manage
     report:operational report:sales finance:read finance:write
@@ -47,6 +48,7 @@ module Authz
       case:read case:write case:delete case_config:manage
       contact:read contact:write contact:delete
       lead:read lead:write lead:delete deal:read deal:write deal:delete
+      activity:read activity:write
       pipeline:read pipeline:manage sequence:enroll
       work:read work:write project:manage
       report:operational report:sales finance:read finance:write
@@ -54,26 +56,27 @@ module Authz
       user:manage audit:read
     ].freeze,
     "finance" => %w[
-      case:read contact:read lead:read deal:read pipeline:read work:read
+      case:read contact:read lead:read deal:read pipeline:read work:read activity:read
       report:operational report:sales finance:read finance:write
     ].freeze,
     "sales" => %w[
       case:read contact:read contact:write
       lead:read lead:write deal:read deal:write pipeline:read
+      activity:read activity:write
       sequence:enroll report:sales work:read
     ].freeze,
     "customer_service" => %w[
       case:read case:write contact:read contact:write
-      work:read work:write
+      work:read work:write activity:read activity:write
       report:operational connector:invoke
     ].freeze,
     "technical" => %w[
       case:read contact:read report:operational
-      work:read work:write
+      work:read work:write activity:read activity:write
       connector:read connector:operate reference_doc:manage webhook:manage
     ].freeze,
     "readonly" => %w[
-      case:read contact:read lead:read deal:read pipeline:read work:read report:sales
+      case:read contact:read lead:read deal:read pipeline:read work:read report:sales activity:read
     ].freeze
   }.freeze
 

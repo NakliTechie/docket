@@ -12,7 +12,8 @@ class OrganisationsController < ApplicationController
       subject: @organisation,
       case_scope: feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none,
       deal_scope: feature?("crm") && policy(Deal).index? ? policy_scope(Deal) : Deal.none,
-      work_scope: feature?("work") && policy(WorkItem).index? ? policy_scope(WorkItem) : WorkItem.none
+      work_scope: feature?("work") && policy(WorkItem).index? ? policy_scope(WorkItem) : WorkItem.none,
+      activity_scope: feature?("crm") && policy(Activity).index? ? policy_scope(Activity) : Activity.none
     ).call
     @cases = result.cases
     @case_count = result.case_count
