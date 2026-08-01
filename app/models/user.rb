@@ -89,7 +89,7 @@ class User < ApplicationRecord
   end
 
   def case_assignee?
-    active? && can?("case:write")
+    active? && !deleted? && can?("case:write")
   end
 
   def deactivate!

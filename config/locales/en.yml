@@ -38,6 +38,7 @@ en:
       business_calendars: "Business calendars"
       macros: "Macros"
       routing_rules: "Routing rules"
+      escalation_rules: "Escalation rules"
       custom_fields: "Custom fields"
       approval_processes: "Approval rules"
       approval_requests: "Approvals"
@@ -1445,6 +1446,72 @@ en:
       elapsed: "After %{count} %{clock} in %{status}"
       business_minutes: "business minutes"
       minutes: "minutes"
+
+  escalation_rules:
+    fields:
+      name: "Name"
+      active: "Active"
+      trigger_type: "Escalate when"
+      breach_clock: "SLA clock"
+      if_status: "Case status"
+      if_priority: "Priority"
+      after_minutes: "After (minutes)"
+      then_assignee: "Reassign to"
+      notify_user: "Notify"
+    enum:
+      trigger_type:
+        sla_breach: "An SLA is breached"
+        elapsed_time: "A case sits in a status too long"
+      breach_clock:
+        resolution: "Resolution SLA"
+        first_response: "First-response SLA"
+    form:
+      any: "Any"
+      any_status: "Any open status"
+      keep: "Keep current assignee"
+      no_one: "No one"
+      remove_tier: "Remove this tier"
+      active_hint: "Inactive rules are kept but skipped during the escalation sweep."
+      when_legend: "When should this escalate?"
+      trigger_hint: "Breach rules start the clock at the SLA due time; status rules at the moment the case entered the status."
+      breach_clock_hint: "Only used when escalating on an SLA breach."
+      if_status_hint: "Required when escalating on time-in-status."
+      tiers_legend: "Escalation tiers"
+      tiers_hint: "Each tier fires once, in delay order: after its minutes from the reference time, it reassigns the case and/or alerts someone. Leave a tier's minutes blank to ignore it."
+    index:
+      title: "Escalation rules"
+      new_rule: "New rule"
+      intro: "Ordered tiers that reassign and alert as a case breaches its SLA or ages in a status. Evaluated in order; each tier fires once per case."
+      active: "Active"
+      inactive: "Inactive"
+      move_up: "Move up"
+      move_down: "Move down"
+      confirm_delete: "Delete this escalation rule? Cases already escalated keep their assignee."
+      tier_count:
+        one: "1 tier"
+        other: "%{count} tiers"
+      columns:
+        order: "#"
+        name: "Name"
+        when: "When"
+        tiers: "Tiers"
+        status: "Status"
+      empty:
+        title: "No escalation rules yet"
+        hint: "Add a rule to escalate breached or aging cases — for example, after a resolution SLA breach, reassign to a supervisor and notify the desk lead 30 minutes later."
+    new:
+      title: "New escalation rule"
+    edit:
+      title: "Edit escalation rule %{name}"
+    create:
+      created: "Escalation rule created."
+    update:
+      updated: "Escalation rule updated."
+    destroy:
+      deleted: "Escalation rule deleted."
+    summary:
+      on_breach: "On %{clock} SLA breach"
+      in_status: "Sitting in %{status}"
 
   lead_routing_rules:
     fields:

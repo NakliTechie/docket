@@ -92,7 +92,7 @@
             <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? ||
                   policy(ConnectorInvocation).index? %>
               <%= nav_group t("layout.nav.knowledge_automation"),
-                    active: %w[case_queues categories sla_policies business_calendars macros routing_rules custom_field_definitions approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
+                    active: %w[case_queues categories sla_policies business_calendars macros routing_rules escalation_rules custom_field_definitions approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
                 <% if policy(CaseQueue).create? %>
                   <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                   <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
@@ -102,6 +102,9 @@
                 <% end %>
                 <% if policy(RoutingRule).index? %>
                   <%= nav_link t("layout.nav.routing_rules"), routing_rules_path, active: controller_name == "routing_rules" %>
+                <% end %>
+                <% if policy(EscalationRule).index? %>
+                  <%= nav_link t("layout.nav.escalation_rules"), escalation_rules_path, active: controller_name == "escalation_rules" %>
                 <% end %>
                 <% if policy(CustomFieldDefinition).index? %>
                   <%= nav_link t("layout.nav.custom_fields"), custom_fields_path,

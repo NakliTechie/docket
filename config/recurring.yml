@@ -31,6 +31,10 @@ shared: &shared
     class: RoutingRuleSchedulerJob
     queue: default
     schedule: every 5 minutes
+  escalation_sweep:
+    class: EscalationSweepJob
+    queue: default
+    schedule: every 5 minutes
   storage_deletion_sweep:
     class: StorageDeletionSweepJob
     queue: default

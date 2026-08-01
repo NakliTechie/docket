@@ -3,7 +3,7 @@ class Notification < ApplicationRecord
   include Audited
 
   enum :kind, {
-    assignment: 0, sla_risk: 1, sla_breach: 2, mention: 3, watched_work: 4
+    assignment: 0, sla_risk: 1, sla_breach: 2, mention: 3, watched_work: 4, escalation: 5
   }, prefix: true
   enum :severity, { info: 0, warning: 1, critical: 2 }, prefix: true
   enum :email_status, { pending: 0, attempting: 1, delivered: 2, failed: 3, unavailable: 4 },

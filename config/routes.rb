@@ -56,6 +56,11 @@ Rails.application.routes.draw do
       patch :move
     end
   end
+  resources :escalation_rules, except: :show do
+    member do
+      patch :move
+    end
+  end
   resources :custom_fields, controller: "custom_field_definitions", except: %i[show destroy]
   # Work module (WM). Items are reachable by their own id at /work_items/:id so
   # a KEY-123 link survives a project rename; creation and listing stay nested.
