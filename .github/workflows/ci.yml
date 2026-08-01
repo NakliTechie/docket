@@ -205,8 +205,8 @@ jobs:
           path: ${{ github.workspace }}/tmp/screenshots
           if-no-files-found: ignore
 
-  # Live OIDC (staff + customer planes) against containerised Keycloak
-  # (handoff §5A / G3 artifact).
+  # Live OIDC (staff + customer planes) and SAML (staff plane) against
+  # containerised Keycloak (handoff §5A / G3 artifact, D2).
   keycloak-sso:
     runs-on: ubuntu-latest
 
@@ -230,19 +230,22 @@ jobs:
             -v $PWD/test/keycloak/realm-docket-test.json:/opt/keycloak/data/import/realm.json:ro \
             quay.io/keycloak/keycloak:26.0 start-dev --import-realm
           for i in $(seq 1 90); do
-            curl -fs http://localhost:8080/realms/docket-test/.well-known/openid-configuration >/dev/null && exit 0
+            if curl -fs http://localhost:8080/realms/docket-test/.well-known/openid-configuration >/dev/null \
+               && curl -fs http://localhost:8080/realms/docket-test/protocol/saml/descriptor >/dev/null; then
+              exit 0
+            fi
             sleep 2
           done
           echo "Keycloak did not become ready" && docker logs keycloak && exit 1
 
-      - name: Run live SSO tests
+      - name: Run live SSO tests (OIDC + SAML)
         env:
           RAILS_ENV: test
           KEYCLOAK_URL: http://localhost:8080
           BROWSER_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: |
           bin/rails db:test:prepare
-          bin/rails test test/system/sso_keycloak_live_test.rb
+          bin/rails test test/system/sso_keycloak_live_test.rb test/system/saml_keycloak_live_test.rb
 
       - name: Keep screenshots from failed SSO tests
         uses: actions/upload-artifact@v7

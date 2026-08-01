@@ -82,6 +82,63 @@
         "profile",
         "cif"
       ]
+    },
+    {
+      "clientId": "http://localhost:3001/auth/staff_saml/metadata",
+      "name": "docket-staff-saml",
+      "description": "SAML staff plane — clientId MUST equal the SP entity id Docket sends (Sso.staff_saml_options sp_entity_id, default base_url + /auth/staff_saml/metadata). Keycloak matches the AuthnRequest Issuer and ACS URL against this.",
+      "enabled": true,
+      "protocol": "saml",
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "redirectUris": [
+        "http://localhost:3001/auth/staff_saml/callback"
+      ],
+      "attributes": {
+        "saml.assertion.signature": "true",
+        "saml.server.signature": "true",
+        "saml.client.signature": "false",
+        "saml.authnstatement": "true",
+        "saml.signature.algorithm": "RSA_SHA256",
+        "saml_name_id_format": "email",
+        "saml_assertion_consumer_url_post": "http://localhost:3001/auth/staff_saml/callback",
+        "saml_single_logout_service_url_post": "http://localhost:3001/auth/staff_saml/callback",
+        "saml_force_name_id_format": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "config": {
+            "user.attribute": "email",
+            "attribute.name": "email",
+            "attribute.nameformat": "Basic",
+            "friendly.name": "email"
+          }
+        },
+        {
+          "name": "name",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "config": {
+            "user.attribute": "firstName",
+            "attribute.name": "name",
+            "attribute.nameformat": "Basic"
+          }
+        },
+        {
+          "name": "groups",
+          "protocol": "saml",
+          "protocolMapper": "saml-group-membership-mapper",
+          "config": {
+            "attribute.name": "groups",
+            "attribute.nameformat": "Basic",
+            "single": "true",
+            "full.path": "false"
+          }
+        }
+      ]
     }
   ],
   "clientScopes": [
