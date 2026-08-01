@@ -8,9 +8,13 @@ class Project < ApplicationRecord
   include TenantReferentialIntegrity
   include HumanEnums
 
-  humanizes_enums :visibility
+  humanizes_enums :visibility, :kind
 
   enum :visibility, { tenant_wide: 0, restricted: 1 }, default: :tenant_wide, prefix: true
+  # How the project was started: a manually-created project is standard; a won
+  # deal opens an onboarding project (DealOnboarding); an OPEN deal opens an
+  # engagement project (pre-quote studies) via DealOnboarding mode: :engagement.
+  enum :kind, { standard: 0, onboarding: 1, engagement: 2 }, default: :standard, prefix: true
 
   KEY_FORMAT = /\A[A-Z][A-Z0-9]{1,9}\z/
 

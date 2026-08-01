@@ -250,6 +250,10 @@ module Docket
         "Idempotently create an onboarding project for a won deal from a project template",
         params: [ id_param ], request: { project_template_id: :integer }, schema: "Project",
         responses: { "201" => "Created", "422" => "Deal is not won or template is invalid" }) }
+      result["/deals/{id}/engage"] = { post: op(
+        "Idempotently create an engagement project (pre-quote studies) for an OPEN deal from a project template",
+        params: [ id_param ], request: { project_template_id: :integer }, schema: "Project",
+        responses: { "201" => "Created", "422" => "Deal is not open or template is invalid" }) }
       crud(result, "products", "Product")
       crud(result, "competitors", "Competitor")
       result["/deals/{deal_id}/line_items"] = { post: op(

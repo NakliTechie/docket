@@ -740,6 +740,8 @@ en:
       moved: "Deal moved."
     onboard:
       created: "Onboarding project %{project} created."
+    engage:
+      created: "Engagement project %{project} created."
 
   deal_line_items:
     create:
