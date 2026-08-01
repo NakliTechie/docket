@@ -51,6 +51,7 @@ en:
       lead_scorecard: "Lead scoring"
       sequences: "Sequences"
       products: "Products"
+      price_books: "Price books"
       competitors: "Competitors"
       users: "Users"
       roles: "Roles"
@@ -698,9 +699,12 @@ en:
       source_lead: "Source lead"
       status: "Status"
       lost_reason: "Lost reason"
+      price_book: "Price book"
     form:
       pipeline_hint: "New deals land in this pipeline's first stage."
       lost_reason_hint: "Recorded when the deal is marked lost — feeds the sales report's loss breakdown."
+      default_price_book: "Default (catalog price)"
+      price_book_hint: "Line items resolve their unit price through this book."
     enum:
       status:
         open: "Open"
@@ -879,6 +883,45 @@ en:
       updated: "Contact role updated."
     destroy:
       deleted: "Contact role removed from the deal."
+
+  price_books:
+    fields:
+      name: "Name"
+      active: "Active"
+      product: "Product"
+      currency: "Currency (ISO code)"
+      unit_price: "Unit price"
+    form:
+      entries: "Prices"
+      entries_hint: "A per-product, per-currency price. Products without an entry fall back to their default price."
+      choose_product: "Choose a product"
+      remove: "Remove"
+    index:
+      title: "Price books"
+      new_book: "New price book"
+      intro: "Named price lists a deal can select. Line items resolve their unit price through the deal's book, falling back to the product default."
+      default: "Default"
+      active: "Active"
+      inactive: "Inactive"
+      confirm_delete: "Delete this price book? Deals using it fall back to the default."
+      columns:
+        name: "Name"
+        entries: "Prices"
+        status: "Status"
+      empty:
+        title: "No price books yet"
+        hint: "Add a price book to offer product prices that differ from the catalog default."
+    new:
+      title: "New price book"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Price book created."
+    update:
+      updated: "Price book updated."
+    destroy:
+      deleted: "Price book deleted."
+      default_undeletable: "The default price book can't be deleted."
   decisions:
     run:
       ran: "Decisioning run — autonomous signals applied; confirm/of-record proposals are awaiting you."

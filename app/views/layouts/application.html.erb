@@ -67,7 +67,7 @@
 
             <% if feature?("crm") && policy(Lead).index? %>
               <%= nav_group t("layout.nav.sales"),
-                    active: %w[leads lead_capture_forms deals products competitors pipelines lead_routing_rules activities sequences sales_reports].include?(controller_name) do %>
+                    active: %w[leads lead_capture_forms deals products price_books competitors pipelines lead_routing_rules activities sequences sales_reports].include?(controller_name) do %>
                 <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
                 <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
                 <% if policy(Activity).index? %>
@@ -79,6 +79,7 @@
                   <%= nav_link t("layout.nav.lead_routing_rules"), lead_routing_rules_path, active: controller_name == "lead_routing_rules" %>
                   <%= nav_link t("layout.nav.lead_scorecard"), admin_lead_scorecard_path, active: controller_name == "lead_scorecards" %>
                   <%= nav_link t("layout.nav.products"), products_path, active: controller_name == "products" %>
+                  <%= nav_link t("layout.nav.price_books"), price_books_path, active: controller_name == "price_books" %>
                   <%= nav_link t("layout.nav.competitors"), competitors_path, active: controller_name == "competitors" %>
                   <% if feature?("crm.sequences") %>
                     <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
