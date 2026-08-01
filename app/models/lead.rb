@@ -37,6 +37,11 @@ class Lead < ApplicationRecord
   validate :reachable_somehow
   validate :merge_lineage_is_valid
 
+  # One seam for auto-routing (PG1): console, API, and connector-created leads
+  # all pass through here on create. Skipped for import-sourced leads (they
+  # carry their own ownership) and any lead created with an owner already set.
+  after_create :apply_lead_routing, unless: :skip_auto_routing?
+
   scope :open_leads, -> { where(status: OPEN_STATUSES) }
   scope :canonical, -> { where(merged_into_id: nil) }
   scope :search, ->(q) {
@@ -83,6 +88,14 @@ class Lead < ApplicationRecord
   end
 
   private
+
+  def skip_auto_routing?
+    owner_id.present? || source_import?
+  end
+
+  def apply_lead_routing
+    LeadRouting.apply(self)
+  end
 
   def resolve_contact
     existing = email && Contact.find_by(email: email)

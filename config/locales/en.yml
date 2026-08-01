@@ -45,6 +45,7 @@ en:
       deals: "Deals"
       sales_report: "Sales report"
       pipelines: "Pipelines"
+      lead_routing_rules: "Lead routing"
       sequences: "Sequences"
       products: "Products"
       competitors: "Competitors"
@@ -1444,6 +1445,61 @@ en:
       elapsed: "After %{count} %{clock} in %{status}"
       business_minutes: "business minutes"
       minutes: "minutes"
+
+  lead_routing_rules:
+    fields:
+      name: "Name"
+      active: "Active"
+      if_source: "Lead source"
+      if_company_contains: "Company contains"
+      if_email_domain: "Email domain"
+      then_assignment: "Assign owner by"
+      then_owner: "Specific owner"
+    enum:
+      then_assignment:
+        round_robin: "Round-robin across lead owners"
+        least_loaded: "Least-loaded lead owner"
+        specific_user: "A specific owner"
+    form:
+      any: "Any"
+      active_hint: "Inactive rules are kept but skipped during routing."
+      conditions_legend: "When a new lead matches…"
+      conditions_hint: "A rule matches when ALL the conditions you set hold. Leave a condition blank to mean “any”. A rule with no conditions is a catch-all — place it last."
+      email_domain_hint: "Matches the part after @ in the lead's email, case-insensitive."
+      action_legend: "…then assign an owner"
+      action_hint: "Round-robin and least-loaded pick from active users who can own leads. A specific owner names one directly."
+      assignment_hint: "Round-robin distributes evenly; least-loaded picks whoever has the fewest open leads."
+      choose_owner: "Choose an owner"
+    index:
+      title: "Lead routing rules"
+      new_rule: "New rule"
+      intro: "Deterministic rules that assign an owner to new leads on creation — console, API, and connector leads all route through them. First match in order wins."
+      active: "Active"
+      inactive: "Inactive"
+      move_up: "Move up"
+      move_down: "Move down"
+      confirm_delete: "Delete this lead routing rule? Leads already assigned by it keep their owner."
+      columns:
+        order: "#"
+        name: "Name"
+        conditions: "When"
+        action: "Then"
+        status: "Status"
+      empty:
+        title: "No lead routing rules yet"
+        hint: "Add a rule to auto-assign new leads — for example, round-robin all web-form leads across your sales team."
+    new:
+      title: "New lead routing rule"
+    edit:
+      title: "Edit lead routing rule %{name}"
+    create:
+      created: "Lead routing rule created."
+    update:
+      updated: "Lead routing rule updated."
+    destroy:
+      deleted: "Lead routing rule deleted."
+    summary:
+      any: "Any lead"
 
   approval_processes:
     fields:

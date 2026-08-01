@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_01_162000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_170000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -630,6 +630,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_162000) do
     t.index ["tenant_id", "slug"], name: "index_lead_capture_forms_on_tenant_id_and_slug", unique: true
     t.index ["tenant_id"], name: "index_lead_capture_forms_on_tenant_id"
     t.index ["tenant_id"], name: "index_lead_capture_forms_one_default", unique: true, where: "is_default"
+  end
+
+  create_table "lead_routing_rules", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "if_company_contains"
+    t.string "if_email_domain"
+    t.string "if_source"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.integer "then_assignment", default: 0, null: false
+    t.integer "then_owner_id"
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "position"], name: "index_lead_routing_rules_on_tenant_id_and_position"
+    t.index ["tenant_id"], name: "index_lead_routing_rules_on_tenant_id"
+    t.index ["then_owner_id"], name: "index_lead_routing_rules_on_then_owner_id"
   end
 
   create_table "leads", force: :cascade do |t|
@@ -1572,6 +1589,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_162000) do
   add_foreign_key "import_identities", "tenants"
   add_foreign_key "import_runs", "tenants"
   add_foreign_key "lead_capture_forms", "tenants", on_delete: :cascade
+  add_foreign_key "lead_routing_rules", "tenants", on_delete: :cascade
+  add_foreign_key "lead_routing_rules", "users", column: "then_owner_id", on_delete: :nullify
   add_foreign_key "leads", "contacts"
   add_foreign_key "leads", "deals", column: "converted_deal_id"
   add_foreign_key "leads", "leads", column: "merged_into_id", on_delete: :restrict
