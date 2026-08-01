@@ -351,6 +351,17 @@ module Api
           approval_process_id: r.approval_process_id, requested_by_id: r.requested_by_id,
           created_at: r.created_at }
       end
+
+      def decision(d)
+        { id: d.id, rule: d.rule, version: d.version, signal: d.signal,
+          decision_class: d.decision_class, status: d.status, action: d.action,
+          action_params: d.action_params, effect: d.effect,
+          recommendation: d.recommendation, reasoning: d.reasoning,
+          subject_type: d.subject_type, subject_id: d.subject_id, subject_label: d.subject_label,
+          approved_by_id: d.approved_by_id, decision_reason: d.decision_reason,
+          decided_at: d.decided_at, appealable: d.appealable?,
+          created_at: d.created_at, updated_at: d.updated_at }
+      end
     end
   end
 end

@@ -306,6 +306,13 @@ Rails.application.routes.draw do
           get :deliveries
         end
       end
+      resources :decisions, only: %i[index show] do
+        collection { post :run }
+        member do
+          post :approve
+          post :reject
+        end
+      end
       get "audit/entries", to: "audit#entries"
       get "audit/verification", to: "audit#verification"
       get "reports/activity", to: "reports#activity"

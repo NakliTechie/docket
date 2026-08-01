@@ -176,6 +176,13 @@ module Docket
             cycle_time_days: { type: %w[number null] },
             sprints: { type: "array", items: { type: "object" } }
           ),
+          Decision: object_schema(id: :integer, rule: :string, version: :string, signal: :string,
+                                  decision_class: :string, status: enum(Decision.statuses.keys),
+                                  action: :string, action_params: :object, effect: :string,
+                                  recommendation: :string, reasoning: :string,
+                                  subject_type: :string, subject_id: :integer, subject_label: :string,
+                                  approved_by_id: :integer, decision_reason: :string, decided_at: :datetime,
+                                  appealable: :boolean, created_at: :datetime, updated_at: :datetime),
           Error: object_schema(error: :string, detail: :string)
         }
       }
@@ -354,6 +361,23 @@ module Docket
         delete: op("Delete endpoint", params: [ id_param ])
       }
       result["/webhook_endpoints/{id}/deliveries"] = { get: op("Delivery log for the endpoint", params: [ id_param ]) }
+
+      result["/decisions"] = { get: op(
+        "List decisioning proposals — the contestability history. Filter by status or decision_class. " \
+        "Human token only (invocation:review); the decisioning review surface is not exposed to service accounts.",
+        params: [ query_param("page"), query_param("per_page"), query_param("status"), query_param("decision_class") ],
+        schema: "Decision") }
+      result["/decisions/run"] = { post: op(
+        "Run the decisioning rule engine: persist proposals and auto-apply the autonomous ones",
+        responses: { "200" => "Ran; returns the resulting decisions" }) }
+      result["/decisions/{id}"] = { get: op("Show one decision", params: [ id_param ], schema: "Decision") }
+      result["/decisions/{id}/approve"] = { post: op(
+        "Approve a parked confirm/of_record proposal and apply it (a decision of record requires a reason)",
+        params: [ id_param ], request: { reason: :string },
+        responses: { "200" => "Approved and applied", "422" => "Not awaiting confirmation, or missing reason" }) }
+      result["/decisions/{id}/reject"] = { post: op(
+        "Reject a parked proposal", params: [ id_param ],
+        responses: { "200" => "Rejected", "422" => "Not awaiting confirmation" }) }
 
       result["/audit/entries"] = { get: op("List audit entries (admin or audit:read)", params: [
         query_param("action_name"), query_param("auditable_type"), query_param("auditable_id")
