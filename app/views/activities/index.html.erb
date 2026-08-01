@@ -1,0 +1,63 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+</div>
+
+<p class="page-intro"><%= t(".intro") %></p>
+
+<div class="filter-bar">
+  <%= form_with url: activities_path, method: :get, class: "inline-form" do %>
+    <%= select_tag :owner, options_for_select(
+          %w[mine all].map { |v| [ t("activities.index.owner_filter.#{v}"), v ] }, @owner_filter),
+          onchange: "this.form.requestSubmit()" %>
+    <%= select_tag :status, options_for_select(
+          %w[open done all].map { |v| [ t("activities.index.status_filter.#{v}"), v ] }, @status_filter),
+          onchange: "this.form.requestSubmit()" %>
+  <% end %>
+</div>
+
+<% if @activities.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.kind") %></th>
+          <th><%= t(".columns.title") %></th>
+          <th><%= t(".columns.subject") %></th>
+          <th><%= t(".columns.due") %></th>
+          <th><%= t(".columns.owner") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @activities.each do |activity| %>
+          <tr class="<%= "muted-row" unless activity.status_open? %>">
+            <td><%= t("activities.enum.kind.#{activity.kind}") %></td>
+            <td><%= activity.title %></td>
+            <td><%= activity_subject_link(activity) %></td>
+            <td class="<%= "overdue" if activity.overdue? %>"><%= l(activity.due_at, format: :short) if activity.due_at %></td>
+            <td><%= activity.owner&.name %></td>
+            <td><span class="badge <%= "badge-success" if activity.status_done? %>"><%= t("activities.enum.status.#{activity.status}") %></span></td>
+            <td class="actions">
+              <% if activity.status_open? && policy(activity).complete? %>
+                <%= button_to t("activities.index.done"), complete_activity_path(activity), method: :patch,
+                      class: "btn btn-sm", form: { class: "inline-form" } %>
+              <% end %>
+              <% if policy(activity).update? %>
+                <%= link_to t("actions.edit"), edit_activity_path(activity), class: "btn btn-sm" %>
+              <% end %>
+              <% if policy(activity).destroy? %>
+                <%= button_to t("actions.delete"), activity_path(activity), method: :delete, class: "btn btn-sm btn-danger",
+                      form: { class: "inline-form", data: { turbo_confirm: t(".confirm_delete") } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+<% end %>

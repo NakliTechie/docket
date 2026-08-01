@@ -44,6 +44,7 @@ hi:
       approval_requests: "अनुमोदन"
       leads: "लीड्स"
       deals: "सौदे"
+      activities: "गतिविधियाँ"
       sales_report: "बिक्री रिपोर्ट"
       pipelines: "पाइपलाइनें"
       lead_routing_rules: "लीड रूटिंग"
@@ -171,6 +172,7 @@ hi:
       deal_lost: "सौदा हारा"
       work_opened: "कार्य खोला गया"
       work_closed: "कार्य बंद किया गया"
+      activity: "गतिविधि"
 
   search:
     index:
@@ -759,6 +761,63 @@ hi:
       status: "स्थिति"
       deal: "सौदा"
       project: "एंगेजमेंट"
+
+  activities:
+    enum:
+      kind:
+        call: "कॉल"
+        email: "ईमेल"
+        meeting: "मीटिंग"
+        note: "नोट"
+        task: "कार्य"
+      status:
+        open: "खुला"
+        done: "पूर्ण"
+        canceled: "रद्द"
+    fields:
+      kind: "प्रकार"
+      title: "शीर्षक"
+      body: "टिप्पणियाँ"
+      due_at: "नियत"
+      owner: "स्वामी"
+      status: "स्थिति"
+    form:
+      on_subject: "%{subject} पर"
+      unassigned: "असौंपा"
+    index:
+      title: "गतिविधियाँ"
+      intro: "संपर्कों, लीड, सौदों और केसों में आपके कॉल, कार्य, मीटिंग और दर्ज इंटरैक्शन।"
+      done: "पूर्ण"
+      confirm_delete: "यह गतिविधि हटाएँ?"
+      owner_filter:
+        mine: "मेरी गतिविधियाँ"
+        all: "सबकी"
+      status_filter:
+        open: "खुला"
+        done: "पूर्ण"
+        all: "सभी"
+      columns:
+        kind: "प्रकार"
+        title: "शीर्षक"
+        subject: "किस पर"
+        due: "नियत"
+        owner: "स्वामी"
+        status: "स्थिति"
+      empty:
+        title: "कोई गतिविधि नहीं"
+        hint: "किसी संपर्क, लीड, सौदे या केस से कॉल, ईमेल, मीटिंग, नोट या कार्य दर्ज करें।"
+    new:
+      title: "नई गतिविधि"
+    edit:
+      title: "गतिविधि संपादित करें"
+    create:
+      created: "गतिविधि दर्ज की गई।"
+    update:
+      updated: "गतिविधि अद्यतन की गई।"
+    destroy:
+      deleted: "गतिविधि हटाई गई।"
+    complete:
+      completed: "गतिविधि पूर्ण के रूप में चिह्नित।"
 
   quotes:
     enum:

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_01_171000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -48,6 +48,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_171000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "activities", force: :cascade do |t|
+    t.text "body"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.datetime "due_at"
+    t.integer "kind", default: 0, null: false
+    t.integer "owner_id"
+    t.integer "status", default: 0, null: false
+    t.integer "subject_id", null: false
+    t.string "subject_type", null: false
+    t.integer "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_activities_on_owner_id"
+    t.index ["subject_type", "subject_id"], name: "index_activities_on_subject"
+    t.index ["tenant_id", "owner_id", "status", "due_at"], name: "idx_on_tenant_id_owner_id_status_due_at_de7fa807ae"
+    t.index ["tenant_id", "subject_type", "subject_id"], name: "index_activities_on_tenant_id_and_subject_type_and_subject_id"
+    t.index ["tenant_id"], name: "index_activities_on_tenant_id"
   end
 
   create_table "api_tokens", force: :cascade do |t|
@@ -1566,6 +1587,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_171000) do
   add_foreign_key "action_mailbox_inbound_emails", "tenants"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "activities", "tenants", on_delete: :cascade
+  add_foreign_key "activities", "users", column: "owner_id", on_delete: :nullify
   add_foreign_key "api_tokens", "users"
   add_foreign_key "approval_processes", "tenants"
   add_foreign_key "approval_requests", "approval_processes"

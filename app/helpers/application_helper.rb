@@ -63,6 +63,20 @@ module ApplicationHelper
   # Link one Customer360::Event to the record it happened on. The event kind
   # decides the target; the module that produced the event is already known to
   # be entitled (its scope wasn't Model.none), so no re-gating is needed here.
+  # The record an Activity hangs off, linked where a path exists.
+  def activity_subject_link(activity)
+    subject = activity.subject
+    return "#{activity.subject_type} ##{activity.subject_id}" if subject.nil?
+
+    case subject
+    when Contact then link_to(subject.name, contact_path(subject))
+    when Lead then link_to(subject.name, lead_path(subject))
+    when Deal then link_to(subject.name, deal_path(subject))
+    when Case then link_to(subject.tracking_id, case_path(subject))
+    else subject.to_s
+    end
+  end
+
   def customer_360_event_link(event)
     record = event.record
     case event.kind
@@ -75,6 +89,9 @@ module ApplicationHelper
       link_to record.name, deal_path(record)
     when :work_opened, :work_closed
       link_to "#{record.reference} · #{record.title}", work_item_path(record)
+    when :activity
+      # Logged interactions have no standalone page — plain text (String#truncate).
+      "#{record.human_kind} · #{record.title.to_s.truncate(80)}"
     else # case_opened / case_resolved / case_closed
       link_to "#{record.tracking_id} · #{record.subject}", case_path(record)
     end

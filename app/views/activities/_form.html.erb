@@ -1,0 +1,53 @@
+<%= form_with model: activity, url: activity.persisted? ? activity_path(activity) : activities_path,
+      scope: :activity, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: activity %>
+
+  <%= f.hidden_field :subject_type %>
+  <%= f.hidden_field :subject_id %>
+  <% if activity.subject %>
+    <p class="form-hint">
+      <%= t("activities.form.on_subject",
+            subject: activity.subject.try(:display_label) || activity.subject.try(:name) ||
+                     activity.subject.try(:tracking_id) || "#{activity.subject_type} ##{activity.subject_id}") %>
+    </p>
+  <% end %>
+
+  <div class="form-row">
+    <%= f.label :kind, t("activities.fields.kind") %>
+    <%= f.select :kind, Activity.kinds.keys.map { |k| [ t("activities.enum.kind.#{k}"), k ] } %>
+  </div>
+
+  <div class="form-row <%= "field-error" if activity.errors[:title].any? %>">
+    <%= f.label :title, t("activities.fields.title") %>
+    <%= f.text_field :title, required: true %>
+    <% activity.errors[:title].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :body, t("activities.fields.body") %>
+    <%= f.text_area :body, rows: 3 %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :due_at, t("activities.fields.due_at") %>
+    <%= f.datetime_field :due_at %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :owner_id, t("activities.fields.owner") %>
+    <%= f.collection_select :owner_id, User.where(active: true).order(:name), :id, :name,
+          { include_blank: t("activities.form.unassigned") } %>
+  </div>
+
+  <% if activity.persisted? %>
+    <div class="form-row">
+      <%= f.label :status, t("activities.fields.status") %>
+      <%= f.select :status, Activity.statuses.keys.map { |s| [ t("activities.enum.status.#{s}"), s ] } %>
+    </div>
+  <% end %>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), activities_path, class: "btn" %>
+  </div>
+<% end %>
