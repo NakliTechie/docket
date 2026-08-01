@@ -19,10 +19,13 @@ docker run -d --name "$CONTAINER" \
 
 echo "Waiting for Keycloak…"
 for _ in $(seq 1 60); do
-  if curl -fs "http://localhost:$KEYCLOAK_PORT/realms/docket-test/.well-known/openid-configuration" >/dev/null 2>&1; then
+  if curl -fs "http://localhost:$KEYCLOAK_PORT/realms/docket-test/.well-known/openid-configuration" >/dev/null 2>&1 \
+     && curl -fs "http://localhost:$KEYCLOAK_PORT/realms/docket-test/protocol/saml/descriptor" >/dev/null 2>&1; then
     break
   fi
   sleep 2
 done
 
-KEYCLOAK_URL="http://localhost:$KEYCLOAK_PORT" bin/rails test test/system/sso_keycloak_live_test.rb
+KEYCLOAK_URL="http://localhost:$KEYCLOAK_PORT" bin/rails test \
+  test/system/sso_keycloak_live_test.rb \
+  test/system/saml_keycloak_live_test.rb
