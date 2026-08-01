@@ -1,0 +1,41 @@
+<% page_title t(".title") %>
+<div class="page-header"><h1><%= t(".title") %></h1></div>
+<p class="page-intro"><%= t(".intro") %></p>
+
+<%= form_with model: @scorecard, url: admin_lead_scorecard_path, method: :patch,
+      scope: :lead_scorecard, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: @scorecard %>
+
+  <fieldset>
+    <legend><%= t(".weights") %></legend>
+    <p class="form-hint"><%= t(".weights_hint") %></p>
+    <% LeadScorecard::WEIGHTS.each do |weight| %>
+      <div class="form-row">
+        <%= f.label weight, t("admin.lead_scorecards.fields.#{weight}") %>
+        <%= f.number_field weight, min: 0, max: 100 %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t(".bands") %></legend>
+    <div class="form-row">
+      <%= f.label :warm_threshold, t("admin.lead_scorecards.fields.warm_threshold") %>
+      <%= f.number_field :warm_threshold, min: 1 %>
+    </div>
+    <div class="form-row">
+      <%= f.label :hot_threshold, t("admin.lead_scorecards.fields.hot_threshold") %>
+      <%= f.number_field :hot_threshold, min: 1 %>
+    </div>
+  </fieldset>
+
+  <div class="form-row">
+    <%= f.label :warm_sources, t("admin.lead_scorecards.fields.warm_sources") %>
+    <%= f.text_field :warm_sources %>
+    <p class="form-hint"><%= t(".warm_sources_hint") %></p>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+  </div>
+<% end %>

@@ -77,6 +77,7 @@
                 <% if policy(Pipeline).create? %>
                   <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
                   <%= nav_link t("layout.nav.lead_routing_rules"), lead_routing_rules_path, active: controller_name == "lead_routing_rules" %>
+                  <%= nav_link t("layout.nav.lead_scorecard"), admin_lead_scorecard_path, active: controller_name == "lead_scorecards" %>
                   <%= nav_link t("layout.nav.products"), products_path, active: controller_name == "products" %>
                   <%= nav_link t("layout.nav.competitors"), competitors_path, active: controller_name == "competitors" %>
                   <% if feature?("crm.sequences") %>

@@ -48,6 +48,7 @@ hi:
       sales_report: "बिक्री रिपोर्ट"
       pipelines: "पाइपलाइनें"
       lead_routing_rules: "लीड रूटिंग"
+      lead_scorecard: "लीड स्कोरिंग"
       sequences: "अनुक्रम"
       products: "उत्पाद"
       competitors: "प्रतिस्पर्धी"
@@ -569,6 +570,7 @@ hi:
       contact: "संपर्क"
       notes: "टिप्पणियाँ"
       status: "स्थिति"
+      score: "स्कोर"
       email_consent: "मार्केटिंग ईमेल सहमति"
       sms_consent: "SMS सहमति"
     form:
@@ -589,6 +591,10 @@ hi:
         manual: "मैन्युअल"
         import: "आयात"
         referral: "रेफरल"
+      score_band:
+        cold: "ठंडा"
+        warm: "गर्म"
+        hot: "गरम"
     index:
       title: "लीड्स"
       new_lead: "नई लीड"
@@ -597,6 +603,7 @@ hi:
         company: "कंपनी"
         email: "ईमेल"
         status: "स्थिति"
+        score: "स्कोर"
         owner: "स्वामी"
         created: "बनाया गया"
       empty:
@@ -2255,6 +2262,25 @@ hi:
           when: "कब"
         empty:
           title: "अभी तक कोई डिलीवरी नहीं"
+    lead_scorecards:
+      fields:
+        weight_email: "ईमेल है"
+        weight_phone: "फ़ोन है"
+        weight_company: "कंपनी है"
+        weight_warm_source: "गर्म स्रोत से"
+        weight_owned: "स्वामी है"
+        warm_threshold: "गर्म (स्कोर ≥)"
+        hot_threshold: "गरम (स्कोर ≥)"
+        warm_sources: "गर्म स्रोत"
+      show:
+        title: "लीड स्कोरिंग"
+        intro: "प्रत्येक संकेत पर लीड को मिलने वाले अंक, गर्म/गरम बैंड की सीमाएँ, और कौन-से स्रोत गर्म माने जाएँ। संकेत बदलने पर लीड स्वतः पुनः स्कोर होती है।"
+        weights: "संकेत भार"
+        weights_hint: "संकेत मौजूद होने पर लीड के स्कोर में जोड़े गए अंक।"
+        bands: "बैंड"
+        warm_sources_hint: "अल्पविराम से अलग किए गए लीड स्रोत जो गर्म माने जाएँ (जैसे referral, web_form)।"
+      update:
+        updated: "लीड स्कोरकार्ड सहेजा गया।"
     settings:
       show:
         title: "सेटिंग्स"

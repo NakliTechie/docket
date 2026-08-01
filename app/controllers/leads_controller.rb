@@ -6,7 +6,8 @@ class LeadsController < ApplicationController
     scope = policy_scope(Lead).canonical.includes(:owner, :contact).search(params[:q])
     scope = scope.where(status: params[:status]) if params[:status].present?
     scope = scope.where(owner_id: params[:owner_id]) if params[:owner_id].present?
-    @pagy, @leads = pagy(scope.order(created_at: :desc))
+    scope = params[:sort] == "score" ? scope.by_score : scope.order(created_at: :desc)
+    @pagy, @leads = pagy(scope)
   end
 
   def show

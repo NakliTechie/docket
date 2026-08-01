@@ -48,6 +48,7 @@ en:
       sales_report: "Sales report"
       pipelines: "Pipelines"
       lead_routing_rules: "Lead routing"
+      lead_scorecard: "Lead scoring"
       sequences: "Sequences"
       products: "Products"
       competitors: "Competitors"
@@ -569,6 +570,7 @@ en:
       contact: "Contact"
       notes: "Notes"
       status: "Status"
+      score: "Score"
       email_consent: "Marketing email opt-in"
       sms_consent: "SMS opt-in"
     form:
@@ -589,6 +591,10 @@ en:
         manual: "Manual"
         import: "Import"
         referral: "Referral"
+      score_band:
+        cold: "Cold"
+        warm: "Warm"
+        hot: "Hot"
     index:
       title: "Leads"
       new_lead: "New lead"
@@ -597,6 +603,7 @@ en:
         company: "Company"
         email: "Email"
         status: "Status"
+        score: "Score"
         owner: "Owner"
         created: "Created"
       empty:
@@ -2255,6 +2262,25 @@ en:
           when: "When"
         empty:
           title: "No deliveries yet"
+    lead_scorecards:
+      fields:
+        weight_email: "Has an email"
+        weight_phone: "Has a phone"
+        weight_company: "Has a company"
+        weight_warm_source: "From a warm source"
+        weight_owned: "Has an owner"
+        warm_threshold: "Warm at (score ≥)"
+        hot_threshold: "Hot at (score ≥)"
+        warm_sources: "Warm sources"
+      show:
+        title: "Lead scoring"
+        intro: "Points a lead earns per signal, the thresholds for warm/hot bands, and which sources count as warm. Leads re-score automatically when a signal changes."
+        weights: "Signal weights"
+        weights_hint: "Points added to a lead's score when the signal is present."
+        bands: "Bands"
+        warm_sources_hint: "Comma-separated lead sources treated as warm (e.g. referral, web_form)."
+      update:
+        updated: "Lead scorecard saved."
     settings:
       show:
         title: "Settings"

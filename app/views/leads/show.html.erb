@@ -47,6 +47,8 @@
       <dt><%= t("leads.fields.phone") %></dt><dd><%= @lead.phone %></dd>
     <% end %>
     <dt><%= t("leads.fields.source") %></dt><dd><%= @lead.human_source %></dd>
+    <dt><%= t("leads.fields.score") %></dt>
+    <dd><span class="badge band-<%= @lead.score_band %>"><%= @lead.score %></span> <%= @lead.human_score_band %></dd>
     <dt><%= t("leads.fields.owner") %></dt><dd><%= @lead.owner&.name || t("forms.none") %></dd>
     <% if @lead.value_estimate_cents.present? %>
       <dt><%= t("leads.fields.value_estimate") %></dt><dd><%= number_to_currency(@lead.value_estimate_cents / 100.0, unit: "₹") %></dd>
