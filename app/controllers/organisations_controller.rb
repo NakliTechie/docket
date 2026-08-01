@@ -65,6 +65,6 @@ class OrganisationsController < ApplicationController
   end
 
   def organisation_params
-    params.require(:organisation).permit(:name, :kind, :external_ref, :notes)
+    params.require(:organisation).permit(:name, :kind, :external_ref, :notes, :parent_id)
   end
 end

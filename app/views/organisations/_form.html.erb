@@ -12,6 +12,15 @@
     <%= f.select :kind, Organisation::KINDS.map { |k| [ t("organisations.enum.kind.#{k}"), k ] } %>
   </div>
 
+  <div class="form-row <%= "field-error" if organisation.errors[:parent].any? %>">
+    <%= f.label :parent_id, t("organisations.fields.parent") %>
+    <%= f.collection_select :parent_id,
+          Organisation.where.not(id: organisation.id).order(:name), :id, :name,
+          { include_blank: t("organisations.form.no_parent") } %>
+    <p class="form-hint"><%= t("organisations.form.parent_hint") %></p>
+    <% organisation.errors[:parent].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
   <div class="form-row">
     <%= f.label :external_ref, t("organisations.fields.external_ref") %>
     <%= f.text_field :external_ref %>

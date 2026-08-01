@@ -1189,10 +1189,13 @@ en:
     fields:
       name: "Name"
       kind: "Type"
+      parent: "Parent account"
       external_ref: "External reference"
       notes: "Notes"
     form:
       external_ref_hint: "Your own code for this organisation (e.g. branch code)."
+      no_parent: "None (top-level account)"
+      parent_hint: "Roll this account up under a parent for account-hierarchy reporting."
     index:
       title: "Organisations"
       new_organisation: "New organisation"
@@ -1207,6 +1210,8 @@ en:
       confirm_delete: "Delete this organisation?"
       contacts: "Contacts"
       no_contacts: "No contacts in this organisation yet"
+      parent: "Parent account"
+      sub_accounts: "Sub-accounts"
     new:
       title: "New organisation"
     edit:
