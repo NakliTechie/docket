@@ -34,6 +34,11 @@
           <th><%= t(".columns.company") %></th>
           <th><%= t(".columns.email") %></th>
           <th><%= t(".columns.status") %></th>
+          <th>
+            <%= link_to leads_path(request.query_parameters.merge(sort: "score")) do %>
+              <%= t(".columns.score") %><%= " ↓" if params[:sort] == "score" %>
+            <% end %>
+          </th>
           <th><%= t(".columns.owner") %></th>
           <th><%= t(".columns.created") %></th>
         </tr>
@@ -45,6 +50,7 @@
             <td><%= lead.company_name %></td>
             <td><%= lead.email %></td>
             <td><span class="badge badge-<%= lead.status %>"><%= lead.human_status %></span></td>
+            <td><span class="badge band-<%= lead.score_band %>" title="<%= lead.human_score_band %>"><%= lead.score %></span></td>
             <td><%= lead.owner&.name %></td>
             <td class="table-meta"><%= l lead.created_at, format: :short %></td>
           </tr>

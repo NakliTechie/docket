@@ -166,6 +166,7 @@ Rails.application.routes.draw do
     get "security_events", to: "security_events#index", as: :security_events
     get "settings", to: "settings#show", as: :settings
     patch "settings", to: "settings#update"
+    resource :lead_scorecard, only: %i[show update]
     resources :reference_docs, except: :show do
       member { post :toggle_published }
     end

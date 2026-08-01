@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_110000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -715,6 +715,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
     t.index ["then_owner_id"], name: "index_lead_routing_rules_on_then_owner_id"
   end
 
+  create_table "lead_scorecards", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "hot_threshold", default: 5, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "warm_sources", default: "referral,web_form", null: false
+    t.integer "warm_threshold", default: 3, null: false
+    t.integer "weight_company", default: 1, null: false
+    t.integer "weight_email", default: 1, null: false
+    t.integer "weight_owned", default: 1, null: false
+    t.integer "weight_phone", default: 1, null: false
+    t.integer "weight_warm_source", default: 1, null: false
+    t.index ["tenant_id"], name: "index_lead_scorecards_on_tenant_id", unique: true
+  end
+
   create_table "leads", force: :cascade do |t|
     t.string "company_name"
     t.datetime "consent_captured_at"
@@ -736,6 +751,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
     t.integer "owner_id"
     t.string "phone"
     t.json "provenance", default: {}, null: false
+    t.integer "score", default: 0, null: false
+    t.integer "score_band", default: 0, null: false
     t.boolean "sms_consent", default: false, null: false
     t.integer "source", default: 2, null: false
     t.integer "source_connector_id"
@@ -753,6 +770,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
     t.index ["source_connector_id"], name: "index_leads_on_source_connector_id"
     t.index ["status"], name: "index_leads_on_status"
     t.index ["tenant_id", "merged_into_id"], name: "index_leads_on_tenant_id_and_merged_into_id"
+    t.index ["tenant_id", "score_band"], name: "index_leads_on_tenant_id_and_score_band"
     t.index ["tenant_id"], name: "index_leads_on_tenant_id"
   end
 
@@ -1667,6 +1685,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_100000) do
   add_foreign_key "lead_capture_forms", "tenants", on_delete: :cascade
   add_foreign_key "lead_routing_rules", "tenants", on_delete: :cascade
   add_foreign_key "lead_routing_rules", "users", column: "then_owner_id", on_delete: :nullify
+  add_foreign_key "lead_scorecards", "tenants", on_delete: :cascade
   add_foreign_key "leads", "contacts"
   add_foreign_key "leads", "deals", column: "converted_deal_id"
   add_foreign_key "leads", "leads", column: "merged_into_id", on_delete: :restrict

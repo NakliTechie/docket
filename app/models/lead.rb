@@ -9,12 +9,15 @@ class Lead < ApplicationRecord
   include Labelable
   include HumanEnums
 
-  humanizes_enums :status, :source
+  humanizes_enums :status, :source, :score_band
 
   enum :source, { web_form: 0, api: 1, manual: 2, import: 3, referral: 4 },
        default: :manual, prefix: true
   enum :status, { new: 0, working: 1, qualified: 2, unqualified: 3, converted: 4 },
        default: :new, prefix: true
+  # PG5 — persisted lead-scoring band, recomputed from the scorecard whenever a
+  # scoring signal changes.
+  enum :score_band, { cold: 0, warm: 1, hot: 2 }, default: :cold, prefix: :band
 
   OPEN_STATUSES = %w[new working qualified].freeze
 
@@ -41,8 +44,12 @@ class Lead < ApplicationRecord
   # all pass through here on create. Skipped for import-sourced leads (they
   # carry their own ownership) and any lead created with an owner already set.
   after_create :apply_lead_routing, unless: :skip_auto_routing?
+  # PG5 — recompute the persisted score whenever a scoring signal changes (incl.
+  # on create). Uses update_columns, so it does not re-fire callbacks.
+  after_save :rescore, if: :scoring_signal_changed?
 
   scope :open_leads, -> { where(status: OPEN_STATUSES) }
+  scope :by_score, -> { order(score: :desc, id: :desc) }
   scope :canonical, -> { where(merged_into_id: nil) }
   scope :search, ->(q) {
     next all if q.blank?
@@ -91,6 +98,15 @@ class Lead < ApplicationRecord
 
   def skip_auto_routing?
     owner_id.present? || source_import?
+  end
+
+  def scoring_signal_changed?
+    saved_change_to_email? || saved_change_to_phone? || saved_change_to_company_name? ||
+      saved_change_to_source? || saved_change_to_owner_id?
+  end
+
+  def rescore
+    LeadScoring.apply!(self)
   end
 
   def apply_lead_routing
