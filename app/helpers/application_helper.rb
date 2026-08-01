@@ -67,7 +67,10 @@ module ApplicationHelper
     record = event.record
     case event.kind
     when :message
-      link_to "#{record.case.tracking_id} · #{truncate(record.body.to_s, length: 80)}", case_path(record.case)
+      # String#truncate (plain String), not the truncate() view helper — the
+      # helper HTML-escapes and returns html_safe, which then gets escaped a
+      # second time by link_to, rendering "can&#39;t" instead of "can't".
+      link_to "#{record.case.tracking_id} · #{record.body.to_s.truncate(80)}", case_path(record.case)
     when :deal_opened, :deal_won, :deal_lost
       link_to record.name, deal_path(record)
     when :work_opened, :work_closed

@@ -54,14 +54,14 @@ module DemoScenarios
       [ "Ivan Petrov", "ivan.p@example.com", nil, nil, nil, "en" ]
     ],
     templates: [
-      [ "Login fails with SAML error after %s", "Since the %s change our team can't log in via SSO — it returns an audience-mismatch error. About 40 users are blocked.", "Technical Support", "Login / SSO", :web_portal ],
-      [ "Invoice double-charged in %s", "We were billed twice for the %s cycle. Please reverse the duplicate charge on the card ending 4242.", "Billing", "Billing", :email ],
-      [ "API returning 429s on the %s plan", "Our integration started getting rate-limited around %s even though we're well under the documented limit. Can you check?", "Technical Support", "Integration", :api ],
-      [ "Webhook deliveries stopped after %s", "Webhook events stopped arriving after the %s deploy. Our endpoint is up and returns 200 in tests.", "Technical Support", "Bug report", :api ],
-      [ "Migrate data from our old tool by %s", "We're onboarding and need to import ~12k contacts before %s. What's the recommended path?", "Onboarding", "Other", :web_portal ],
-      [ "Upgrade quote for %s seats", "We're growing and need pricing to move to %s seats on the Enterprise plan before renewal.", "Account Management", "Billing", :web_portal ],
-      [ "Feature request: bulk export for %s", "Could you add a bulk CSV export for %s? Our finance team needs it monthly.", "General", "Feature request", :web_portal ],
-      [ "Dashboard slow in the %s region", "The dashboard takes 8–10s to load from %s. It was fine last week.", "Technical Support", "Bug report", :email ]
+      [ "Login fails with SAML error after %s", "Our team can't log in via SSO — it returns an audience-mismatch error. About 40 users are blocked.", "Technical Support", "Login / SSO", :web_portal ],
+      [ "Invoice double-charged in %s", "We were billed twice this cycle. Please reverse the duplicate charge on the card ending 4242.", "Billing", "Billing", :email ],
+      [ "API returning 429s on the %s plan", "Our integration started getting rate-limited even though we're well under the documented limit. Can you check?", "Technical Support", "Integration", :api ],
+      [ "Webhook deliveries stopped after %s", "Webhook events stopped arriving after the latest deploy. Our endpoint is up and returns 200 in tests.", "Technical Support", "Bug report", :api ],
+      [ "Migrate data from our old tool by %s", "We're onboarding and need to import ~12k contacts before go-live. What's the recommended path?", "Onboarding", "Other", :web_portal ],
+      [ "Upgrade quote for %s seats", "We're growing and need pricing to add seats on the Enterprise plan before renewal.", "Account Management", "Billing", :web_portal ],
+      [ "Feature request: bulk export", "Could you add a bulk CSV export? Our finance team needs it monthly.", "General", "Feature request", :web_portal ],
+      [ "Dashboard slow in the %s region", "The dashboard takes 8–10s to load. It was fine last week.", "Technical Support", "Bug report", :email ]
     ],
     places: [ "the May update", "April", "Pro", "the v3.2", "month-end", "50", "deals", "EU-West", "AP-South", "the weekend" ],
     leads: [
