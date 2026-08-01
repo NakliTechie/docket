@@ -95,6 +95,10 @@ class Lead < ApplicationRecord
 
   def apply_lead_routing
     LeadRouting.apply(self)
+  rescue StandardError => error
+    # Best-effort: a routing bug must never abort lead ingestion (the hook runs
+    # in the create transaction). Leave the lead unowned and log it.
+    Rails.logger.error("[LeadRouting] #{error.class}: #{error.message}")
   end
 
   def resolve_contact

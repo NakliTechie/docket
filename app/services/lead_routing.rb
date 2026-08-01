@@ -39,7 +39,7 @@ module LeadRouting
     end
 
     def eligible?(user)
-      user.present? && user.active? && user.can?("lead:write")
+      user.present? && !user.deleted? && user.active? && user.can?("lead:write")
     end
 
     # Stateless rotation: distribute by the tenant's canonical lead count.

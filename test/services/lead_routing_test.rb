@@ -61,4 +61,26 @@ class LeadRoutingTest < ActiveSupport::TestCase
     LeadRoutingRule.create!(name: "To readonly", then_assignment: :specific_user, then_owner: users(:readonly))
     assert_nil new_lead.owner
   end
+
+  test "specific_user whose owner was soft-deleted leaves the lead unowned" do
+    LeadRoutingRule.create!(name: "To sales", then_assignment: :specific_user, then_owner: users(:sales))
+    users(:sales).destroy # soft-delete after the rule exists (active stays true)
+    assert_nil new_lead(email: "z@acme.example").owner
+  end
+
+  test "a routing error never aborts lead ingestion (best-effort)" do
+    LeadRoutingRule.create!(name: "Catch-all", then_assignment: :round_robin)
+    original = LeadRouting.method(:apply)
+    LeadRouting.define_singleton_method(:apply) { |_lead| raise "boom" }
+    begin
+      lead = nil
+      assert_difference "Lead.count", 1 do
+        lead = Lead.create!(name: "Resilient", email: "r@acme.example", source: :web_form)
+      end
+      assert_nil lead.owner
+    ensure
+      LeadRouting.singleton_class.send(:remove_method, :apply)
+      LeadRouting.define_singleton_method(:apply, original)
+    end
+  end
 end
