@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_162000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -514,6 +514,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
     t.index ["tenant_id"], name: "index_decisions_on_tenant_id"
   end
 
+  create_table "deliverable_studies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "deliverable_id", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "work_item_id", null: false
+    t.index ["deliverable_id", "work_item_id"], name: "index_deliverable_studies_uniqueness", unique: true
+    t.index ["deliverable_id"], name: "index_deliverable_studies_on_deliverable_id"
+    t.index ["tenant_id"], name: "index_deliverable_studies_on_tenant_id"
+    t.index ["work_item_id"], name: "index_deliverable_studies_on_work_item_id"
+  end
+
+  create_table "deliverables", force: :cascade do |t|
+    t.text "approval_reason"
+    t.integer "approved_by_id"
+    t.datetime "created_at", null: false
+    t.integer "deal_id", null: false
+    t.datetime "deleted_at"
+    t.datetime "issued_at"
+    t.integer "project_id"
+    t.json "scope_items", default: [], null: false
+    t.integer "status", default: 0, null: false
+    t.integer "submitted_by_id"
+    t.text "summary"
+    t.integer "tenant_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_deliverables_on_approved_by_id"
+    t.index ["deal_id"], name: "index_deliverables_on_deal_id"
+    t.index ["project_id"], name: "index_deliverables_on_project_id"
+    t.index ["submitted_by_id"], name: "index_deliverables_on_submitted_by_id"
+    t.index ["tenant_id", "deal_id"], name: "index_deliverables_on_tenant_id_and_deal_id"
+    t.index ["tenant_id", "status"], name: "index_deliverables_on_tenant_id_and_status"
+    t.index ["tenant_id"], name: "index_deliverables_on_tenant_id"
+  end
+
   create_table "import_conflicts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "current_value"
@@ -915,6 +951,66 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
     t.index ["tenant_id", "name"], name: "index_queues_on_tenant_id_and_name", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id", "slug"], name: "index_queues_on_tenant_id_and_slug", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_queues_on_tenant_id"
+  end
+
+  create_table "quote_line_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.string "description", null: false
+    t.string "hsn_sac"
+    t.integer "position", default: 0, null: false
+    t.decimal "quantity", precision: 12, scale: 3, default: "1.0", null: false
+    t.integer "quote_id", null: false
+    t.decimal "tax_rate", precision: 6, scale: 3, default: "0.0", null: false
+    t.integer "tenant_id", null: false
+    t.bigint "unit_price_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["quote_id"], name: "index_quote_line_items_on_quote_id"
+    t.index ["tenant_id", "quote_id"], name: "index_quote_line_items_on_tenant_id_and_quote_id"
+    t.index ["tenant_id"], name: "index_quote_line_items_on_tenant_id"
+  end
+
+  create_table "quote_milestones", force: :cascade do |t|
+    t.bigint "amount_cents"
+    t.datetime "created_at", null: false
+    t.date "due_on"
+    t.string "name", null: false
+    t.decimal "percentage", precision: 6, scale: 3
+    t.integer "position", default: 0, null: false
+    t.integer "quote_id", null: false
+    t.integer "tenant_id", null: false
+    t.string "trigger"
+    t.datetime "updated_at", null: false
+    t.index ["quote_id"], name: "index_quote_milestones_on_quote_id"
+    t.index ["tenant_id", "quote_id"], name: "index_quote_milestones_on_tenant_id_and_quote_id"
+    t.index ["tenant_id"], name: "index_quote_milestones_on_tenant_id"
+  end
+
+  create_table "quotes", force: :cascade do |t|
+    t.datetime "accepted_at"
+    t.integer "billing_type", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.integer "deal_id", null: false
+    t.datetime "deleted_at"
+    t.integer "deliverable_id"
+    t.text "notes"
+    t.integer "number", null: false
+    t.datetime "rejected_at"
+    t.text "rejection_reason"
+    t.datetime "sent_at"
+    t.integer "status", default: 0, null: false
+    t.integer "supersedes_id"
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.date "valid_until"
+    t.integer "version", default: 1, null: false
+    t.index ["deal_id"], name: "index_quotes_on_deal_id"
+    t.index ["deliverable_id"], name: "index_quotes_on_deliverable_id"
+    t.index ["supersedes_id"], name: "index_quotes_on_supersedes_id"
+    t.index ["tenant_id", "deal_id"], name: "index_quotes_on_tenant_id_and_deal_id"
+    t.index ["tenant_id", "number", "version"], name: "index_quotes_on_tenant_id_and_number_and_version", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id"], name: "index_quotes_on_tenant_id"
   end
 
   create_table "reference_docs", force: :cascade do |t|
@@ -1461,6 +1557,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
   add_foreign_key "decision_appeals", "tenants"
   add_foreign_key "decision_appeals", "users", column: "reviewed_by_id"
   add_foreign_key "decisions", "tenants"
+  add_foreign_key "deliverable_studies", "deliverables", on_delete: :cascade
+  add_foreign_key "deliverable_studies", "tenants", on_delete: :cascade
+  add_foreign_key "deliverable_studies", "work_items", on_delete: :cascade
+  add_foreign_key "deliverables", "deals", on_delete: :cascade
+  add_foreign_key "deliverables", "projects", on_delete: :nullify
+  add_foreign_key "deliverables", "tenants", on_delete: :cascade
+  add_foreign_key "deliverables", "users", column: "approved_by_id", on_delete: :nullify
+  add_foreign_key "deliverables", "users", column: "submitted_by_id", on_delete: :nullify
   add_foreign_key "import_conflicts", "import_identities"
   add_foreign_key "import_conflicts", "import_runs"
   add_foreign_key "import_conflicts", "tenants"
@@ -1504,6 +1608,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_155040) do
   add_foreign_key "queue_memberships", "queues"
   add_foreign_key "queue_memberships", "users"
   add_foreign_key "queues", "tenants"
+  add_foreign_key "quote_line_items", "quotes", on_delete: :cascade
+  add_foreign_key "quote_line_items", "tenants", on_delete: :cascade
+  add_foreign_key "quote_milestones", "quotes", on_delete: :cascade
+  add_foreign_key "quote_milestones", "tenants", on_delete: :cascade
+  add_foreign_key "quotes", "deals", on_delete: :cascade
+  add_foreign_key "quotes", "deliverables", on_delete: :nullify
+  add_foreign_key "quotes", "quotes", column: "supersedes_id", on_delete: :nullify
+  add_foreign_key "quotes", "tenants", on_delete: :cascade
   add_foreign_key "reference_docs", "categories"
   add_foreign_key "reference_docs", "tenants"
   add_foreign_key "routing_rule_executions", "cases", on_delete: :cascade

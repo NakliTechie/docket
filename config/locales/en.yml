@@ -743,6 +743,35 @@ en:
     engage:
       created: "Engagement project %{project} created."
 
+  deliverables:
+    enum:
+      status:
+        draft: "Draft"
+        in_review: "In review"
+        approved: "Approved"
+        issued: "Issued"
+    fields:
+      title: "Title"
+      summary: "Summary"
+      status: "Status"
+      deal: "Deal"
+      project: "Engagement"
+
+  quotes:
+    enum:
+      status:
+        draft: "Draft"
+        sent: "Sent"
+        accepted: "Accepted"
+        rejected: "Rejected"
+        expired: "Expired"
+    fields:
+      number: "Quote number"
+      version: "Version"
+      currency: "Currency (ISO code)"
+      valid_until: "Valid until"
+      status: "Status"
+
   deal_line_items:
     create:
       created: "Product added to the deal."

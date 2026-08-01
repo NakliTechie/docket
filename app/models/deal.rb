@@ -31,6 +31,8 @@ class Deal < ApplicationRecord
   has_many :linked_work_items, through: :work_links, source: :work_item
   has_many :deal_line_items, dependent: nil
   has_many :products, through: :deal_line_items
+  # Engineering deliverables raised on this deal's engagement (Prithvi e2e).
+  has_many :deliverables, dependent: nil
   has_many :deal_competitors, dependent: nil
   has_many :competitors, through: :deal_competitors
 
