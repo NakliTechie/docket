@@ -15,6 +15,8 @@ class Quote < ApplicationRecord
   humanizes_enums :status
 
   enum :status, { draft: 0, sent: 1, accepted: 2, rejected: 3, expired: 4 }, default: :draft, prefix: :status
+  # How an accepted quote bills downstream: one invoice, or a milestone schedule.
+  enum :billing_type, { fixed: 0, milestone: 1 }, default: :fixed, prefix: :billing_type
 
   belongs_to :deal
   belongs_to :deliverable, optional: true
@@ -23,6 +25,7 @@ class Quote < ApplicationRecord
                           dependent: nil
 
   has_many :quote_line_items, -> { order(:position, :id) }, dependent: :destroy
+  has_many :quote_milestones, -> { order(:position, :id) }, dependent: :destroy
   has_many :audit_entries, as: :auditable, dependent: nil
 
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }
@@ -46,6 +49,40 @@ class Quote < ApplicationRecord
 
   # The freshest version — nothing supersedes it. Acceptance operates only here.
   def latest? = superseded_by.nil?
+
+  # Resolve the milestone schedule to explicit cents. The LAST milestone absorbs
+  # any rounding drift, so a balanced schedule (see #milestones_balanced?) always
+  # reconciles to the exact total. Returns { milestone_id => cents }.
+  def milestone_amounts
+    milestones = quote_milestones.to_a
+    return {} if milestones.empty?
+
+    total = total_cents
+    running = 0
+    result = {}
+    milestones.each_with_index do |milestone, index|
+      amount = index == milestones.length - 1 ? total - running : milestone.resolved_amount_cents(total)
+      running += amount
+      result[milestone.id] = amount
+    end
+    result
+  end
+
+  # A schedule is coherent when it is single-kind and reconciles: all-amount
+  # milestones must sum to the total; all-percentage must sum to 100%.
+  def milestones_balanced?
+    milestones = quote_milestones.to_a
+    return true if milestones.empty?
+
+    kinds = milestones.map { |milestone| milestone.amount_cents.present? ? :amount : :percentage }.uniq
+    return false unless kinds.length == 1
+
+    if kinds.first == :amount
+      milestones.sum { |milestone| milestone.amount_cents.to_i } == total_cents
+    else
+      milestones.sum { |milestone| milestone.percentage.to_d } == 100
+    end
+  end
 
   private
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_01_161000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_162000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -970,8 +970,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_161000) do
     t.index ["tenant_id"], name: "index_quote_line_items_on_tenant_id"
   end
 
+  create_table "quote_milestones", force: :cascade do |t|
+    t.bigint "amount_cents"
+    t.datetime "created_at", null: false
+    t.date "due_on"
+    t.string "name", null: false
+    t.decimal "percentage", precision: 6, scale: 3
+    t.integer "position", default: 0, null: false
+    t.integer "quote_id", null: false
+    t.integer "tenant_id", null: false
+    t.string "trigger"
+    t.datetime "updated_at", null: false
+    t.index ["quote_id"], name: "index_quote_milestones_on_quote_id"
+    t.index ["tenant_id", "quote_id"], name: "index_quote_milestones_on_tenant_id_and_quote_id"
+    t.index ["tenant_id"], name: "index_quote_milestones_on_tenant_id"
+  end
+
   create_table "quotes", force: :cascade do |t|
     t.datetime "accepted_at"
+    t.integer "billing_type", default: 0, null: false
     t.datetime "created_at", null: false
     t.string "currency", null: false
     t.integer "deal_id", null: false
@@ -1593,6 +1610,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_01_161000) do
   add_foreign_key "queues", "tenants"
   add_foreign_key "quote_line_items", "quotes", on_delete: :cascade
   add_foreign_key "quote_line_items", "tenants", on_delete: :cascade
+  add_foreign_key "quote_milestones", "quotes", on_delete: :cascade
+  add_foreign_key "quote_milestones", "tenants", on_delete: :cascade
   add_foreign_key "quotes", "deals", on_delete: :cascade
   add_foreign_key "quotes", "deliverables", on_delete: :nullify
   add_foreign_key "quotes", "quotes", column: "supersedes_id", on_delete: :nullify
