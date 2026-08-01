@@ -32,23 +32,27 @@ class EscalationRule < ApplicationRecord
   scope :ordered, -> { order(:position, :id) }
 
   # Cases this rule currently applies to (tenant-scoped via acts_as_tenant).
+  # if_status/if_priority filter BOTH triggers (required for elapsed_time,
+  # optional for sla_breach) — a status filter is never silently ignored.
   def matching_cases
     scope = Case.open_cases
+    scope = scope.where(status: if_status) if if_status.present?
     scope = scope.where(priority: if_priority) if if_priority.present?
     if trigger_sla_breach?
       scope.where(breach_flag => true)
     else
-      scope.where(status: if_status).where.not(status_changed_at: nil)
+      scope.where.not(status_changed_at: nil)
     end
   end
 
   def matches?(kase)
     return false unless kase.open?
+    return false if if_status.present? && kase.status != if_status
     return false if if_priority.present? && kase.priority != if_priority
     if trigger_sla_breach?
       kase.public_send(breach_flag)
     else
-      kase.status == if_status && kase.status_changed_at.present?
+      kase.status_changed_at.present?
     end
   end
 

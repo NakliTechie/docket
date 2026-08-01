@@ -54,6 +54,30 @@ class CaseEscalationTest < ActiveSupport::TestCase
     assert EscalationExecution.where(case: kase).exists?
   end
 
+  test "sla_breach honors if_status — a breach in another status is not escalated" do
+    kase = cases(:assigned_case) # in_progress
+    kase.update_columns(resolution_due_at: 2.hours.ago, resolution_breached: true)
+    rule = EscalationRule.create!(name: "New-only breach", trigger_type: :sla_breach,
+                                  breach_clock: "resolution", if_status: "new")
+    rule.escalation_levels.create!(after_minutes: 30, notify_user: users(:supervisor))
+    assert_no_difference "EscalationExecution.count" do
+      CaseEscalation.run!
+    end
+  end
+
+  test "a soft-deleted then_assignee is not reassigned, but notify + execution still record" do
+    ghost = users(:agent_a)
+    ghost.update_columns(deleted_at: Time.current) # soft-deleted, active flag untouched
+    rule = EscalationRule.create!(name: "To ghost", trigger_type: :elapsed_time, if_status: "new")
+    rule.escalation_levels.create!(after_minutes: 30, then_assignee: ghost, notify_user: users(:supervisor))
+
+    assert_difference "EscalationExecution.count", 1 do
+      CaseEscalation.run!
+    end
+    assert_nil cases(:pension_case).reload.assignee, "not reassigned to a deleted user"
+    assert users(:supervisor).notifications.kind_escalation.exists?
+  end
+
   test "an inactive rule is skipped" do
     rule = elapsed_rule
     rule.update!(active: false)
