@@ -37,8 +37,14 @@ class DealLineItem < ApplicationRecord
     return unless product
 
     self.description = product.name if description.blank?
-    self.unit_price_cents = product.default_unit_price_cents if unit_price_cents.nil?
     self.currency = deal&.currency || product.currency if currency.blank?
+    # Resolve through the deal's price book (PG11), falling back to the product's
+    # default price. Currency is set first so the book lookup is per-currency.
+    self.unit_price_cents = resolved_unit_price if unit_price_cents.nil?
+  end
+
+  def resolved_unit_price
+    deal&.price_book&.price_for(product, currency) || product.default_unit_price_cents
   end
 
   def currency_matches_deal

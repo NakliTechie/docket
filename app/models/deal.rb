@@ -23,6 +23,8 @@ class Deal < ApplicationRecord
   belongs_to :contact, -> { with_deleted }, optional: true
   belongs_to :organisation, -> { with_deleted }, optional: true
   belongs_to :lead, -> { with_deleted }, optional: true
+  # PG11 — the price book this deal's line items resolve prices through.
+  belongs_to :price_book, -> { with_deleted }, optional: true
   # Which connector ingested this record (nil for portal/manual/API-created).
   belongs_to :source_connector, class_name: "Connector", optional: true
   has_one :onboarding_project, class_name: "Project", foreign_key: :onboarding_deal_id,

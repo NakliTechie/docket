@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_140000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -485,6 +485,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_130000) do
     t.integer "owner_id"
     t.integer "pipeline_id", null: false
     t.integer "pipeline_stage_id", null: false
+    t.integer "price_book_id"
     t.integer "source_connector_id"
     t.integer "status", default: 0, null: false
     t.integer "tenant_id", null: false
@@ -499,6 +500,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_130000) do
     t.index ["pipeline_id", "pipeline_stage_id"], name: "index_deals_on_pipeline_id_and_pipeline_stage_id"
     t.index ["pipeline_id"], name: "index_deals_on_pipeline_id"
     t.index ["pipeline_stage_id"], name: "index_deals_on_pipeline_stage_id"
+    t.index ["price_book_id"], name: "index_deals_on_price_book_id"
     t.index ["source_connector_id"], name: "index_deals_on_source_connector_id"
     t.index ["status"], name: "index_deals_on_status"
     t.index ["tenant_id"], name: "index_deals_on_tenant_id"
@@ -943,6 +945,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_130000) do
     t.index ["deleted_at"], name: "index_pipelines_on_deleted_at"
     t.index ["tenant_id", "slug"], name: "index_pipelines_on_tenant_id_and_slug", unique: true, where: "(deleted_at IS NULL)"
     t.index ["tenant_id"], name: "index_pipelines_on_tenant_id"
+  end
+
+  create_table "price_book_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.integer "price_book_id", null: false
+    t.integer "product_id", null: false
+    t.integer "tenant_id", null: false
+    t.bigint "unit_price_cents", null: false
+    t.datetime "updated_at", null: false
+    t.index ["price_book_id", "product_id", "currency"], name: "index_price_book_entries_uniqueness", unique: true
+    t.index ["price_book_id"], name: "index_price_book_entries_on_price_book_id"
+    t.index ["product_id"], name: "index_price_book_entries_on_product_id"
+    t.index ["tenant_id"], name: "index_price_book_entries_on_tenant_id"
+  end
+
+  create_table "price_books", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.boolean "is_default", default: false, null: false
+    t.string "name", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "name"], name: "index_price_books_on_tenant_id_and_name", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id"], name: "index_price_books_on_tenant_id"
+    t.index ["tenant_id"], name: "index_price_books_one_default", unique: true, where: "is_default AND deleted_at IS NULL"
   end
 
   create_table "privacy_erasure_requests", force: :cascade do |t|
@@ -1671,6 +1700,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_130000) do
   add_foreign_key "deals", "organisations"
   add_foreign_key "deals", "pipeline_stages"
   add_foreign_key "deals", "pipelines"
+  add_foreign_key "deals", "price_books", on_delete: :nullify
   add_foreign_key "deals", "tenants"
   add_foreign_key "deals", "users", column: "owner_id"
   add_foreign_key "decision_appeals", "contacts", column: "appellant_id"
@@ -1725,6 +1755,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_130000) do
   add_foreign_key "organisations", "tenants"
   add_foreign_key "pipeline_stages", "pipelines"
   add_foreign_key "pipelines", "tenants"
+  add_foreign_key "price_book_entries", "price_books", on_delete: :cascade
+  add_foreign_key "price_book_entries", "products", on_delete: :cascade
+  add_foreign_key "price_book_entries", "tenants", on_delete: :cascade
+  add_foreign_key "price_books", "tenants", on_delete: :cascade
   add_foreign_key "privacy_erasure_requests", "tenants"
   add_foreign_key "privacy_erasure_requests", "users", column: "requested_by_id"
   add_foreign_key "products", "tenants", on_delete: :cascade

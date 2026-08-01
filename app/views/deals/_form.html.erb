@@ -57,6 +57,15 @@
     <%= f.date_field :expected_close_on %>
   </div>
 
+  <% if PriceBook.active.any? %>
+    <div class="form-row">
+      <%= f.label :price_book_id, t("deals.fields.price_book") %>
+      <%= f.collection_select :price_book_id, PriceBook.active.order(is_default: :desc, name: :asc), :id, :name,
+            { include_blank: t("deals.form.default_price_book") } %>
+      <p class="form-hint"><%= t("deals.form.price_book_hint") %></p>
+    </div>
+  <% end %>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), deals_path, class: "btn" %>

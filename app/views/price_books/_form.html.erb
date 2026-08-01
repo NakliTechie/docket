@@ -1,0 +1,44 @@
+<%= form_with model: book, url: book.persisted? ? price_book_path(book) : price_books_path,
+      scope: :price_book, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: book %>
+
+  <div class="form-row <%= "field-error" if book.errors[:name].any? %>">
+    <%= f.label :name, t("price_books.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% book.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <label class="checkbox-row"><%= f.check_box :active %> <%= t("price_books.fields.active") %></label>
+  </div>
+
+  <fieldset>
+    <legend><%= t("price_books.form.entries") %></legend>
+    <p class="form-hint"><%= t("price_books.form.entries_hint") %></p>
+    <%= f.fields_for :price_book_entries do |ef| %>
+      <div class="filter-bar">
+        <div class="form-row">
+          <%= ef.label :product_id, t("price_books.fields.product") %>
+          <%= ef.collection_select :product_id, Product.active.order(:name), :id, :name,
+                { include_blank: t("price_books.form.choose_product") } %>
+        </div>
+        <div class="form-row">
+          <%= ef.label :currency, t("price_books.fields.currency") %>
+          <%= ef.text_field :currency, placeholder: "INR", size: 4 %>
+        </div>
+        <div class="form-row">
+          <%= ef.label :unit_price, t("price_books.fields.unit_price") %>
+          <%= ef.number_field :unit_price, step: "0.01", min: 0, value: ef.object.unit_price %>
+        </div>
+        <% if ef.object.persisted? %>
+          <label class="checkbox-row"><%= ef.check_box :_destroy %> <%= t("price_books.form.remove") %></label>
+        <% end %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), price_books_path, class: "btn" %>
+  </div>
+<% end %>

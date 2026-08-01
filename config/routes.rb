@@ -122,6 +122,7 @@ Rails.application.routes.draw do
   resources :deal_competitors, only: %i[update destroy]
   resources :deal_contact_roles, only: %i[update destroy]
   resources :products, except: :show
+  resources :price_books, except: :show
   resources :competitors, except: :show
   resources :sequences
   resources :sequence_enrollments, only: %i[create] do
