@@ -39,7 +39,11 @@ class SsoKeycloakLiveTest < ApplicationSystemTestCase
     fill_in "password", with: "staffpass"
     click_button "Sign In"
 
-    assert_text I18n.t("cases.index.title")
+    # Role-aware landing sends a super_admin to the dashboard, not the case desk
+    # (HomeController#role_landing_path). Assert on the signed-in header's role
+    # badge so this proves login + role mapping without coupling to whichever
+    # surface happens to be the landing page.
+    assert_text I18n.t("users.enum.role.super_admin"), wait: 10
     user = User.find_by(email_address: "staff.sso@example.com")
     assert_equal "super_admin", user.role
   end
