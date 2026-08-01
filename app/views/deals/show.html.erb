@@ -60,6 +60,26 @@
   <% end %>
 </div>
 
+<div class="panel">
+  <h2 class="panel-title"><%= t("deals.show.contact_roles") %></h2>
+  <% if @deal.deal_contact_roles.any? %><ul class="stack-sm">
+    <% @deal.deal_contact_roles.includes(:contact).each do |link| %><li>
+      <%= link.contact.name %> · <%= link.human_role %>
+      <% if policy(link).destroy? %>
+        <%= button_to t("actions.delete"), deal_contact_role_path(link), method: :delete,
+              class: "btn btn-sm", form: { class: "inline-form" } %>
+      <% end %>
+    </li><% end %>
+  </ul><% else %><p class="muted"><%= t("deals.show.no_contact_roles") %></p><% end %>
+  <% if @available_role_contacts.any? && policy(@deal_contact_role).create? %>
+    <%= form_with model: [ @deal, @deal_contact_role ], url: deal_contact_roles_path(@deal), class: "inline-form" do |f| %>
+      <%= f.collection_select :contact_id, @available_role_contacts, :id, :name %>
+      <%= f.select :role, DealContactRole.roles.keys.map { |value| [ t("deal_contact_roles.enum.role.#{value}"), value ] } %>
+      <%= f.submit t("deals.show.add_contact_role"), class: "btn" %>
+    <% end %>
+  <% end %>
+</div>
+
 <% if @deal.status_won? && feature?("work") && policy(@deal).onboard? %>
   <div class="panel">
     <h2 class="panel-title"><%= t("deals.show.onboarding") %></h2>

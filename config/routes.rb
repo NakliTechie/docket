@@ -116,9 +116,11 @@ Rails.application.routes.draw do
     end
     resources :line_items, controller: "deal_line_items", only: :create
     resources :competitor_links, controller: "deal_competitors", only: :create
+    resources :contact_roles, controller: "deal_contact_roles", only: :create
   end
   resources :deal_line_items, only: %i[update destroy]
   resources :deal_competitors, only: %i[update destroy]
+  resources :deal_contact_roles, only: %i[update destroy]
   resources :products, except: :show
   resources :competitors, except: :show
   resources :sequences
@@ -277,9 +279,11 @@ Rails.application.routes.draw do
         end
         resources :line_items, controller: "deal_line_items", only: :create
         resources :competitor_links, controller: "deal_competitors", only: :create
+        resources :contact_roles, controller: "deal_contact_roles", only: :create
       end
       resources :deal_line_items, only: %i[update destroy]
       resources :deal_competitors, only: %i[update destroy]
+      resources :deal_contact_roles, only: %i[update destroy]
       resources :products, only: %i[index show create update destroy]
       resources :competitors, only: %i[index show create update destroy]
       resources :activities, only: %i[index show create update destroy] do

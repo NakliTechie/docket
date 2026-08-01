@@ -36,6 +36,8 @@ class DealsController < ApplicationController
                                 .where.not(id: @deal.product_ids).order(:name)
     @deal_competitor = DealCompetitor.new(deal: @deal)
     @available_competitors = policy_scope(Competitor).where.not(id: @deal.competitor_ids).order(:name)
+    @deal_contact_role = DealContactRole.new(deal: @deal)
+    @available_role_contacts = Contact.where.not(id: @deal.role_contacts.select(:id)).order(:name)
   end
 
   def new

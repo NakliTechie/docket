@@ -738,6 +738,9 @@ hi:
       competitors: "प्रतिस्पर्धी"
       add_competitor: "प्रतिस्पर्धी जोड़ें"
       no_competitors: "कोई प्रतिस्पर्धी जुड़ा नहीं।"
+      contact_roles: "संपर्क भूमिकाएँ"
+      add_contact_role: "भूमिका जोड़ें"
+      no_contact_roles: "इस सौदे पर कोई संपर्क भूमिका नहीं।"
     new:
       title: "नया सौदा"
     edit:
@@ -860,6 +863,22 @@ hi:
       updated: "प्रतिस्पर्धी परिणाम अद्यतन हुआ।"
     destroy:
       deleted: "प्रतिस्पर्धी सौदे से हटाया गया।"
+
+  deal_contact_roles:
+    enum:
+      role:
+        decision_maker: "निर्णयकर्ता"
+        economic_buyer: "आर्थिक क्रेता"
+        champion: "समर्थक"
+        influencer: "प्रभावक"
+        technical: "तकनीकी"
+        other: "अन्य"
+    create:
+      created: "संपर्क भूमिका सौदे में जोड़ी गई।"
+    update:
+      updated: "संपर्क भूमिका अद्यतन हुई।"
+    destroy:
+      deleted: "संपर्क भूमिका सौदे से हटाई गई।"
   decisions:
     run:
       ran: "निर्णयन चला — स्वायत्त संकेत लागू; पुष्टि/अभिलेख प्रस्ताव आपकी प्रतीक्षा में।"
