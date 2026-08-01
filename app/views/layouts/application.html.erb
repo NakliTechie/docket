@@ -67,12 +67,13 @@
 
             <% if feature?("crm") && policy(Lead).index? %>
               <%= nav_group t("layout.nav.sales"),
-                    active: %w[leads lead_capture_forms deals products competitors pipelines sequences sales_reports].include?(controller_name) do %>
+                    active: %w[leads lead_capture_forms deals products competitors pipelines lead_routing_rules sequences sales_reports].include?(controller_name) do %>
                 <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
                 <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
                 <%= nav_link t("layout.nav.sales_report"), sales_report_path, active: controller_name == "sales_reports" %>
                 <% if policy(Pipeline).create? %>
                   <%= nav_link t("layout.nav.pipelines"), pipelines_path, active: controller_name == "pipelines" %>
+                  <%= nav_link t("layout.nav.lead_routing_rules"), lead_routing_rules_path, active: controller_name == "lead_routing_rules" %>
                   <%= nav_link t("layout.nav.products"), products_path, active: controller_name == "products" %>
                   <%= nav_link t("layout.nav.competitors"), competitors_path, active: controller_name == "competitors" %>
                   <% if feature?("crm.sequences") %>

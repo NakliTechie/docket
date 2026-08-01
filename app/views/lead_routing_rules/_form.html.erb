@@ -1,0 +1,64 @@
+<%= form_with model: rule, url: rule.persisted? ? lead_routing_rule_path(rule) : lead_routing_rules_path,
+      scope: :lead_routing_rule, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: rule %>
+
+  <div class="form-row <%= "field-error" if rule.errors[:name].any? %>">
+    <%= f.label :name, t("lead_routing_rules.fields.name") %>
+    <%= f.text_field :name, required: true %>
+    <% rule.errors[:name].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <label class="checkbox-row">
+      <%= f.check_box :active %>
+      <%= t("lead_routing_rules.fields.active") %>
+    </label>
+    <p class="form-hint"><%= t("lead_routing_rules.form.active_hint") %></p>
+  </div>
+
+  <fieldset>
+    <legend><%= t("lead_routing_rules.form.conditions_legend") %></legend>
+    <p class="form-hint"><%= t("lead_routing_rules.form.conditions_hint") %></p>
+
+    <div class="form-row">
+      <%= f.label :if_source, t("lead_routing_rules.fields.if_source") %>
+      <%= f.select :if_source, Lead.sources.keys.map { |s| [ t("leads.enum.source.#{s}"), s ] },
+            { include_blank: t("lead_routing_rules.form.any") } %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :if_company_contains, t("lead_routing_rules.fields.if_company_contains") %>
+      <%= f.text_field :if_company_contains %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :if_email_domain, t("lead_routing_rules.fields.if_email_domain") %>
+      <%= f.text_field :if_email_domain, placeholder: "acme.example" %>
+      <p class="form-hint"><%= t("lead_routing_rules.form.email_domain_hint") %></p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><%= t("lead_routing_rules.form.action_legend") %></legend>
+    <p class="form-hint"><%= t("lead_routing_rules.form.action_hint") %></p>
+
+    <div class="form-row <%= "field-error" if rule.errors[:then_owner_id].any? %>">
+      <%= f.label :then_assignment, t("lead_routing_rules.fields.then_assignment") %>
+      <%= f.select :then_assignment,
+            LeadRoutingRule.then_assignments.keys.map { |a| [ t("lead_routing_rules.enum.then_assignment.#{a}"), a ] } %>
+      <p class="form-hint"><%= t("lead_routing_rules.form.assignment_hint") %></p>
+    </div>
+
+    <div class="form-row <%= "field-error" if rule.errors[:then_owner_id].any? %>">
+      <%= f.label :then_owner_id, t("lead_routing_rules.fields.then_owner") %>
+      <%= f.collection_select :then_owner_id, User.where(active: true).order(:name), :id, :name,
+            { include_blank: t("lead_routing_rules.form.choose_owner") } %>
+      <% rule.errors[:then_owner_id].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+    </div>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), lead_routing_rules_path, class: "btn" %>
+  </div>
+<% end %>
