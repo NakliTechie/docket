@@ -1,8 +1,8 @@
 # PG2 — a logged interaction or a planned task hung off any CRM/desk record.
 # The foundational "activity" object Salesforce/HubSpot centre their rep UX on:
 # it feeds the Customer-360 timeline and the rep task queue. Polymorphic subject
-# (Contact/Lead/Deal/Case); note-kind activities are instantly done, task/call/
-# meeting kinds carry a due date and are worked to done.
+# (Contact/Lead/Deal/Case). All kinds start open; a task/call/meeting typically
+# carries a due date and is worked to done, a note is usually just recorded.
 class Activity < ApplicationRecord
   acts_as_tenant(:tenant)
   include SoftDeletable
