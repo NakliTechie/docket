@@ -151,12 +151,24 @@ hi:
 
   customer_360:
     title: "ग्राहक 360"
+    timeline: "गतिविधि टाइमलाइन"
+    no_activity: "अभी तक कोई गतिविधि दर्ज नहीं।"
     cases: "मामले (%{count})"
     deals: "सौदे (%{count})"
     work_items: "जुड़ा कार्य (%{count})"
     no_cases: "कोई जुड़ा मामला नहीं।"
     no_deals: "कोई जुड़ा सौदा नहीं।"
     no_work_items: "कोई जुड़ा कार्य नहीं।"
+    events:
+      case_opened: "मामला खोला गया"
+      case_resolved: "मामला हल हुआ"
+      case_closed: "मामला बंद किया गया"
+      message: "संदेश"
+      deal_opened: "सौदा खोला गया"
+      deal_won: "सौदा जीता"
+      deal_lost: "सौदा हारा"
+      work_opened: "कार्य खोला गया"
+      work_closed: "कार्य बंद किया गया"
 
   search:
     index:

@@ -845,3 +845,23 @@ kbd {
   height: 8rem;
 }
 .board-column-empty { font-size: var(--text-xs); padding: 0.5rem 0; }
+
+/* Customer 360 unified activity timeline (A1) */
+.c360-timeline { list-style: none; margin: 0; padding: 0; }
+.c360-event {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: var(--space-2);
+  align-items: baseline;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+.c360-event:last-child { border-bottom: 0; }
+.c360-when { color: var(--color-ink-faint); font-size: var(--text-xs); white-space: nowrap; }
+.c360-kind { background: var(--color-paper-shade); color: var(--color-ink-soft); }
+.c360-event-case_resolved .c360-kind,
+.c360-event-deal_won .c360-kind { background: var(--color-success-soft); color: var(--color-success); }
+.c360-event-deal_lost .c360-kind { background: var(--color-warning-soft); color: var(--color-warning); }
+@media (max-width: 40rem) {
+  .c360-event { grid-template-columns: 1fr; gap: 0; }
+}

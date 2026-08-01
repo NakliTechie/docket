@@ -60,6 +60,23 @@ module ApplicationHelper
     time.past? ? t("time.ago", time: time_ago_in_words(time)) : t("time.in", time: time_ago_in_words(time))
   end
 
+  # Link one Customer360::Event to the record it happened on. The event kind
+  # decides the target; the module that produced the event is already known to
+  # be entitled (its scope wasn't Model.none), so no re-gating is needed here.
+  def customer_360_event_link(event)
+    record = event.record
+    case event.kind
+    when :message
+      link_to "#{record.case.tracking_id} · #{truncate(record.body.to_s, length: 80)}", case_path(record.case)
+    when :deal_opened, :deal_won, :deal_lost
+      link_to record.name, deal_path(record)
+    when :work_opened, :work_closed
+      link_to "#{record.reference} · #{record.title}", work_item_path(record)
+    else # case_opened / case_resolved / case_closed
+      link_to "#{record.tracking_id} · #{record.subject}", case_path(record)
+    end
+  end
+
   def page_title(title = nil)
     content_for(:title) { title } if title
     [ content_for(:title), t("layout.product_name") ].compact_blank.join(" · ")

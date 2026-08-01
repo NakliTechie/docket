@@ -22,6 +22,11 @@ class Message < ApplicationRecord
   include AttachableValidation
 
   validates :body, presence: true
+  # DELIBERATELY not scoped to live rows (unlike most SoftDeletable uniqueness
+  # rules): this is the idempotent-inbound dedup key. Connectors::Inbound#find_message
+  # looks it up with_deleted, so an external message that was ingested once must
+  # never be re-ingested even after its Message is soft-deleted. Adding a
+  # deleted_at: nil condition here would reopen exactly that re-ingestion hole.
   validates :external_message_id,
             uniqueness: { scope: %i[tenant_id source_connector_id] },
             allow_nil: true

@@ -218,5 +218,19 @@ namespace :docket do
         report(result, "KanZen import")
       end
     end
+
+    desc "Import a CPGRAMS grievance export. FILE=grievances.json SOURCE_INSTANCE=stable-id [MAPS=maps.json] [APPLY=1]"
+    task cpgrams: :environment do
+      announce
+      tenant_scope do
+        maps = json_contract("MAPS")
+        result = Imports::Cpgrams.call(
+          file: file_path, default_queue: CaseQueue.first,
+          status_map: maps.fetch("statuses", {}), queue_map: maps.fetch("ministries", {}),
+          **common_options
+        )
+        report(result, "CPGRAMS import")
+      end
+    end
   end
 end
