@@ -151,12 +151,24 @@ en:
 
   customer_360:
     title: "Customer 360"
+    timeline: "Activity timeline"
+    no_activity: "No recorded activity yet."
     cases: "Cases (%{count})"
     deals: "Deals (%{count})"
     work_items: "Linked work (%{count})"
     no_cases: "No linked cases."
     no_deals: "No linked deals."
     no_work_items: "No linked work."
+    events:
+      case_opened: "Case opened"
+      case_resolved: "Case resolved"
+      case_closed: "Case closed"
+      message: "Message"
+      deal_opened: "Deal opened"
+      deal_won: "Deal won"
+      deal_lost: "Deal lost"
+      work_opened: "Work opened"
+      work_closed: "Work closed"
 
   search:
     index:

@@ -62,6 +62,7 @@ class ContactsController < ApplicationController
     @deal_count = result.deal_count
     @work_items = result.work_items
     @work_item_count = result.work_item_count
+    @timeline = result.timeline
   end
 
   def set_contact

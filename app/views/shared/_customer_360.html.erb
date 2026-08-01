@@ -1,5 +1,22 @@
 <h2><%= t("customer_360.title") %></h2>
 
+<div class="panel">
+  <h3 class="panel-title"><%= t("customer_360.timeline") %></h3>
+  <% if @timeline.present? %>
+    <ol class="c360-timeline">
+      <% @timeline.each do |event| %>
+        <li class="c360-event c360-event-<%= event.kind %>">
+          <span class="c360-when"><%= l(event.at, format: :short) %></span>
+          <span class="badge c360-kind"><%= t("customer_360.events.#{event.kind}") %></span>
+          <span class="c360-what"><%= customer_360_event_link(event) %></span>
+        </li>
+      <% end %>
+    </ol>
+  <% else %>
+    <p class="muted"><%= t("customer_360.no_activity") %></p>
+  <% end %>
+</div>
+
 <% if feature?("service_desk") && policy(Case).index? %>
   <div class="panel">
     <h3 class="panel-title"><%= t("customer_360.cases", count: @case_count) %></h3>
