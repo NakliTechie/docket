@@ -13,6 +13,7 @@ module Admin
       @scorecard = LeadScorecard.current
       authorize @scorecard
       if @scorecard.update(scorecard_params)
+        LeadScoring.rescore_all!(@scorecard) # keep persisted scores consistent with the new config
         redirect_to admin_lead_scorecard_path, notice: t(".updated")
       else
         render :show, status: :unprocessable_entity

@@ -34,11 +34,20 @@ module LeadScoring
 
   # Persist the score + band without re-running Lead callbacks (derived data,
   # not a decision of record — keep it off the audit chain and out of recompute
-  # recursion).
+  # recursion). Skips the write when nothing changed (band is compared as the
+  # string enum value, not the integer, so the guard actually holds).
   def apply!(lead, scorecard = LeadScorecard.current)
     score = score_for(lead, scorecard)
-    band = Lead.score_bands.fetch(band_for(score, scorecard).to_s)
-    lead.update_columns(score: score, score_band: band) if lead.score != score || lead.score_band != band
+    band = band_for(score, scorecard).to_s
+    if lead.score != score || lead.score_band != band
+      lead.update_columns(score: score, score_band: Lead.score_bands.fetch(band))
+    end
     score
+  end
+
+  # Re-score every lead against the (possibly just-edited) scorecard, so the
+  # persisted scores + the leads index/sort stay consistent with the config.
+  def rescore_all!(scorecard = LeadScorecard.current)
+    Lead.find_each { |lead| apply!(lead, scorecard) }
   end
 end

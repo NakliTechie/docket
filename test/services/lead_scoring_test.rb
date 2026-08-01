@@ -41,6 +41,23 @@ class LeadScoringTest < ActiveSupport::TestCase
     assert l.band_warm?
   end
 
+  test "editing the scorecard re-scores existing leads (no stale persisted scores)" do
+    stale = lead(phone: nil, company_name: nil) # score 1
+    assert_equal 1, stale.score
+    card = LeadScorecard.current
+    card.update!(weight_email: 10, warm_threshold: 5, hot_threshold: 20)
+    LeadScoring.rescore_all!(card)
+    assert_equal 10, stale.reload.score
+    assert stale.band_warm?
+  end
+
+  test "apply! writes nothing when the score is unchanged" do
+    card = LeadScorecard.current
+    l = lead(company_name: "Acme")
+    l.reload
+    assert_queries_count(0) { LeadScoring.apply!(l, card) }
+  end
+
   test "the decisioning rule flags warm+ leads using the shared scoring" do
     lead(phone: "9990001111", company_name: "Acme", status: :new) # score 3 = warm
     lead(phone: nil, company_name: nil, status: :new) # score 1 = cold
