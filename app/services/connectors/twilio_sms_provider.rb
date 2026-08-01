@@ -6,13 +6,53 @@ module Connectors
   # prepares the send and a human confirms before it goes out.
   class TwilioSmsProvider < HttpProvider
     DEFAULT_BASE = "https://api.twilio.com".freeze
+    CHANNEL = "sms".freeze
 
     def self.descriptor
       Descriptor.new(
         key: "twilio_sms", name: "Twilio (SMS)", category: "Communications",
         auth: :none, config_fields: %w[account_sid from base_url],
+        # auth_token both sends (HTTP Basic) AND verifies inbound webhook
+        # signatures (X-Twilio-Signature) — no extra credential for inbound.
         credential_fields: %w[auth_token], syncs: false
       )
+    end
+
+    # Inbound: parse Twilio's incoming-SMS webhooks into cases.
+    def self.ingests? = true
+
+    # Twilio posts inbound SMS as application/x-www-form-urlencoded, not JSON.
+    def inbound_payload(request)
+      request.request_parameters
+    end
+
+    # Twilio signs each webhook with X-Twilio-Signature =
+    # base64(HMAC-SHA1(auth_token, full_url + sorted(param key+value))).
+    # Fail-closed when the token or header is absent (drop unverifiable inbound
+    # rather than ingest a forgery).
+    def inbound_authentic?(request)
+      token = connector.secret("auth_token").to_s
+      provided = request.headers["X-Twilio-Signature"].to_s
+      return false if token.blank? || provided.blank?
+
+      data = request.original_url + request.request_parameters.sort.map { |key, value| "#{key}#{value}" }.join
+      expected = Base64.strict_encode64(OpenSSL::HMAC.digest("SHA1", token, data))
+      ActiveSupport::SecurityUtils.secure_compare(provided, expected)
+    end
+
+    # Twilio inbound form → one normalized message (delivery-status callbacks,
+    # which carry no From/Body, yield nothing).
+    def ingest(payload)
+      from = payload["From"].to_s
+      return [] if from.blank?
+
+      [ {
+        sender: { name: from, phone: from, external_id: from },
+        external_thread_id: from,
+        body: payload["Body"].to_s,
+        channel: CHANNEL,
+        external_message_id: (payload["MessageSid"] || payload["SmsSid"]).to_s.presence
+      } ]
     end
 
     def self.actions
