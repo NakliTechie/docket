@@ -12,7 +12,7 @@ class WorkLink < ApplicationRecord
 
   LINKABLE_TYPES = %w[Case Deal Lead Contact].freeze
 
-  enum :relation, { escalated_from: 0, related_to: 1, onboarding_for: 2 },
+  enum :relation, { escalated_from: 0, related_to: 1, onboarding_for: 2, study_for: 3 },
        default: :related_to, prefix: true
 
   belongs_to :work_item

@@ -3,7 +3,7 @@ class DealsController < ApplicationController
 
   # A pipeline is a working surface, not a report. See the deal list for all.
   STAGE_LIMIT = 50
-  before_action :set_deal, only: %i[show edit update destroy move onboard]
+  before_action :set_deal, only: %i[show edit update destroy move onboard engage]
 
   # Kanban board: open deals grouped by stage for the selected pipeline.
   def index
@@ -90,6 +90,18 @@ class DealsController < ApplicationController
 
     template = policy_scope(ProjectTemplate).active.find(params.require(:project_template_id))
     project = DealOnboarding.call(deal: @deal, template: template, actor: Current.user)
+    redirect_to project_path(project), notice: t(".created", project: project.display_label)
+  rescue DealOnboarding::Error => error
+    redirect_to deal_path(@deal), alert: error.message, status: :see_other
+  end
+
+  # Start an engagement project (pre-quote studies) from an OPEN deal.
+  def engage
+    authorize @deal
+    raise Pundit::NotAuthorizedError unless feature?("work")
+
+    template = policy_scope(ProjectTemplate).active.find(params.require(:project_template_id))
+    project = DealOnboarding.call(deal: @deal, template: template, actor: Current.user, mode: :engagement)
     redirect_to project_path(project), notice: t(".created", project: project.display_label)
   rescue DealOnboarding::Error => error
     redirect_to deal_path(@deal), alert: error.message, status: :see_other

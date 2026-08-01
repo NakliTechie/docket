@@ -740,6 +740,8 @@ hi:
       moved: "सौदा स्थानांतरित किया गया।"
     onboard:
       created: "ऑनबोर्डिंग प्रोजेक्ट %{project} बनाया गया।"
+    engage:
+      created: "एंगेजमेंट प्रोजेक्ट %{project} बनाया गया।"
 
   deal_line_items:
     create:

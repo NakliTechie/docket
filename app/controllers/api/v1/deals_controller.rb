@@ -2,7 +2,7 @@ module Api
   module V1
     class DealsController < BaseController
       require_feature "crm"
-      before_action :set_deal, only: %i[show update destroy move onboard]
+      before_action :set_deal, only: %i[show update destroy move onboard engage]
 
       def index
         scope = api_scope(Deal, scope: "crm:read")
@@ -57,6 +57,17 @@ module Api
         render json: { data: Serialize.project(project) }, status: :created
       rescue DealOnboarding::Error => error
         render_error("invalid_onboarding", detail: error.message, status: :unprocessable_entity)
+      end
+
+      # Start an engagement project (pre-quote studies) from an OPEN deal.
+      def engage
+        authorize_api!(@deal, :engage?, scope: "crm:write")
+        template = api_scope(ProjectTemplate, scope: "work:manage")
+                   .active.find(params.require(:project_template_id))
+        project = DealOnboarding.call(deal: @deal, template: template, actor: Current.actor, mode: :engagement)
+        render json: { data: Serialize.project(project) }, status: :created
+      rescue DealOnboarding::Error => error
+        render_error("invalid_engagement", detail: error.message, status: :unprocessable_entity)
       end
 
       private

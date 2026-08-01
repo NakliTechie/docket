@@ -97,6 +97,7 @@ Rails.application.routes.draw do
     member do
       post :move
       post :onboard
+      post :engage
     end
     resources :line_items, controller: "deal_line_items", only: :create
     resources :competitor_links, controller: "deal_competitors", only: :create
@@ -256,6 +257,7 @@ Rails.application.routes.draw do
         member do
           post :move
           post :onboard
+          post :engage
         end
         resources :line_items, controller: "deal_line_items", only: :create
         resources :competitor_links, controller: "deal_competitors", only: :create
