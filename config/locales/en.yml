@@ -505,6 +505,7 @@ en:
       status:
         draft: "Draft"
         published: "Published"
+        retired: "Retired"
       visibility:
         internal: "Internal"
         public: "Public"
@@ -1948,6 +1949,12 @@ en:
         empty: "No articles have been published yet."
       show:
         back: "← All articles"
+        helpful_question: "Was this article helpful?"
+        helpful_yes: "Yes"
+        helpful_no: "No"
+        rating_summary: "%{helpful} of %{total} readers found this helpful."
+      rate:
+        recorded: "Thank you for your feedback."
     customer:
       sso_failed: "Sign-in failed. Please try again."
       signed_in: "Welcome, %{name}."
@@ -2559,12 +2566,14 @@ en:
         status: "Status"
         visibility: "Visibility"
         category: "Category"
+        locale: "Language"
       form:
         file_hint: "PDF, text, markdown or CSV — the text is extracted into the field below for the AI to ground on."
         body_hint: "This is what the AI retrieves and quotes. Edit freely after upload."
         lifecycle_legend: "Publishing"
         visibility_hint: "Internal articles ground the AI but stay private. Public articles also appear on the customer knowledge base (only when published)."
         no_category: "No category"
+        locale_hint: "Translations share one article identity while keeping independent content and version history."
       errors:
         bad_pdf: "could not be read as a PDF"
         extraction_failed: "could not be read — the text could not be extracted"
@@ -2575,9 +2584,12 @@ en:
         confirm_delete: "Delete this document?"
         publish: "Publish"
         unpublish: "Unpublish"
+        add_translation: "Add translation"
+        manage_categories: "Manage categories"
         columns:
           title: "Title"
           status: "Status"
+          locale_version: "Language / version"
           category: "Category"
           file: "File"
         empty:
@@ -2587,6 +2599,25 @@ en:
         title: "New reference document"
       edit:
         title: "Edit %{title}"
+      show:
+        back: "← Knowledge"
+        summary: "%{language} · version %{version} · %{status}"
+        retire: "Retire"
+        confirm_retire: "Retire this article? It will leave search and the public portal."
+        current_content: "Current content"
+        feedback: "Helpfulness"
+        feedback_summary: "%{helpful} of %{total} readers found this helpful · %{score}%"
+        translations: "Translations"
+        no_translations: "No translations yet."
+        version_history: "Version history"
+        current: "current"
+        system: "System"
+        columns:
+          version: "Version"
+          status: "Status"
+          category: "Category"
+          author: "Author"
+          created_at: "Created"
       create:
         created: "Reference document created."
       update:
@@ -2596,6 +2627,39 @@ en:
       toggle_published:
         published: "“%{title}” published."
         unpublished: "“%{title}” unpublished."
+      retire:
+        retired: "“%{title}” retired."
+    knowledge_categories:
+      fields:
+        name: "Name"
+        description: "Description"
+        parent: "Parent category"
+        position: "Position"
+      form:
+        no_parent: "Top-level category"
+      index:
+        title: "Knowledge categories"
+        intro: "Build a category tree for browsing and reporting across articles."
+        articles: "Articles"
+        new_category: "New category"
+        confirm_delete: "Delete this category? Its articles will become uncategorised."
+        columns:
+          path: "Category path"
+          description: "Description"
+          articles: "Articles"
+        empty:
+          title: "No knowledge categories yet"
+          hint: "Create top-level categories and nest specialised topics beneath them."
+      new:
+        title: "New knowledge category"
+      edit:
+        title: "Edit %{name}"
+      create:
+        created: "Knowledge category created."
+      update:
+        updated: "Knowledge category updated."
+      destroy:
+        deleted: "Knowledge category deleted."
     roles:
       index:
         title: "Roles & permissions"

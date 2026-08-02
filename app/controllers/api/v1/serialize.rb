@@ -356,7 +356,25 @@ module Api
       end
 
       def reference_doc(d)
-        { id: d.id, title: d.title, body: d.body, created_at: d.created_at, updated_at: d.updated_at }
+        { id: d.id, title: d.title, body: d.body, slug: d.slug, status: d.status,
+          visibility: d.visibility, locale: d.locale, translation_key: d.translation_key,
+          knowledge_category_id: d.knowledge_category_id,
+          current_version: d.version_number, helpfulness: d.helpfulness_summary,
+          created_at: d.created_at, updated_at: d.updated_at }
+      end
+
+      def reference_doc_version(version)
+        { id: version.id, number: version.number, title: version.title, body: version.body,
+          locale: version.locale, status: version.status, visibility: version.visibility,
+          knowledge_category_id: version.knowledge_category_id,
+          created_by_id: version.created_by_id, created_at: version.created_at }
+      end
+
+      def knowledge_category(category)
+        { id: category.id, name: category.name, slug: category.slug,
+          description: category.description, parent_id: category.parent_id,
+          path: category.display_path, position: category.position,
+          created_at: category.created_at, updated_at: category.updated_at }
       end
 
       def user(u)

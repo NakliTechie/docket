@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_152000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_153300) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -756,6 +756,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_152000) do
     t.index ["tenant_id"], name: "index_import_runs_on_tenant_id"
   end
 
+  create_table "knowledge_categories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.text "description"
+    t.string "name", null: false
+    t.integer "parent_id"
+    t.integer "position", default: 0, null: false
+    t.string "slug", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_knowledge_categories_on_deleted_at"
+    t.index ["parent_id"], name: "index_knowledge_categories_on_parent_id"
+    t.index ["tenant_id", "name"], name: "index_knowledge_categories_on_root_name", unique: true, where: "parent_id IS NULL AND deleted_at IS NULL"
+    t.index ["tenant_id", "parent_id", "name"], name: "index_knowledge_categories_on_parent_and_name", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "slug"], name: "index_knowledge_categories_on_tenant_id_and_slug", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id"], name: "index_knowledge_categories_on_tenant_id"
+  end
+
   create_table "lead_capture_forms", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.integer "campaign_id"
@@ -1228,21 +1246,61 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_152000) do
     t.index ["tenant_id"], name: "index_quotes_on_tenant_id"
   end
 
+  create_table "reference_doc_ratings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "helpful", null: false
+    t.integer "reference_doc_id", null: false
+    t.integer "reference_doc_version_id", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "visitor_token_digest", null: false
+    t.index ["reference_doc_id"], name: "index_reference_doc_ratings_on_reference_doc_id"
+    t.index ["reference_doc_version_id", "visitor_token_digest"], name: "index_reference_doc_ratings_on_version_and_visitor", unique: true
+    t.index ["reference_doc_version_id"], name: "index_reference_doc_ratings_on_reference_doc_version_id"
+    t.index ["tenant_id"], name: "index_reference_doc_ratings_on_tenant_id"
+  end
+
+  create_table "reference_doc_versions", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.integer "knowledge_category_id"
+    t.string "locale", null: false
+    t.integer "number", null: false
+    t.integer "reference_doc_id", null: false
+    t.integer "status", null: false
+    t.integer "tenant_id", null: false
+    t.string "title", null: false
+    t.integer "visibility", null: false
+    t.index ["created_by_id"], name: "index_reference_doc_versions_on_created_by_id"
+    t.index ["knowledge_category_id"], name: "index_reference_doc_versions_on_knowledge_category_id"
+    t.index ["reference_doc_id", "number"], name: "index_reference_doc_versions_on_doc_and_number", unique: true
+    t.index ["reference_doc_id"], name: "index_reference_doc_versions_on_reference_doc_id"
+    t.index ["tenant_id"], name: "index_reference_doc_versions_on_tenant_id"
+  end
+
   create_table "reference_docs", force: :cascade do |t|
     t.text "body", null: false
     t.integer "category_id"
     t.datetime "created_at", null: false
+    t.integer "current_version_id"
     t.datetime "deleted_at"
+    t.integer "knowledge_category_id"
+    t.string "locale", default: "en", null: false
     t.string "slug"
     t.integer "status", default: 1, null: false
     t.integer "tenant_id", null: false
     t.string "title", null: false
+    t.string "translation_key", null: false
     t.datetime "updated_at", null: false
     t.integer "visibility", default: 0, null: false
     t.index ["category_id"], name: "index_reference_docs_on_category_id"
+    t.index ["current_version_id"], name: "index_reference_docs_on_current_version_id"
     t.index ["deleted_at"], name: "index_reference_docs_on_deleted_at"
+    t.index ["knowledge_category_id"], name: "index_reference_docs_on_knowledge_category_id"
+    t.index ["tenant_id", "locale", "title"], name: "index_reference_docs_on_tenant_locale_title", unique: true, where: "deleted_at IS NULL"
     t.index ["tenant_id", "slug"], name: "index_reference_docs_on_tenant_id_and_slug", unique: true, where: "((slug IS NOT NULL) AND (deleted_at IS NULL))"
-    t.index ["tenant_id", "title"], name: "index_reference_docs_on_tenant_id_and_title", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["tenant_id", "translation_key", "locale"], name: "index_reference_docs_on_translation_and_locale", unique: true, where: "deleted_at IS NULL"
     t.index ["tenant_id"], name: "index_reference_docs_on_tenant_id"
   end
 
@@ -1822,6 +1880,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_152000) do
   add_foreign_key "import_identities", "import_runs", column: "last_seen_run_id"
   add_foreign_key "import_identities", "tenants"
   add_foreign_key "import_runs", "tenants"
+  add_foreign_key "knowledge_categories", "knowledge_categories", column: "parent_id"
+  add_foreign_key "knowledge_categories", "tenants"
   add_foreign_key "lead_capture_forms", "campaigns"
   add_foreign_key "lead_capture_forms", "tenants", on_delete: :cascade
   add_foreign_key "lead_routing_rules", "tenants", on_delete: :cascade
@@ -1877,7 +1937,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_152000) do
   add_foreign_key "quotes", "deliverables", on_delete: :nullify
   add_foreign_key "quotes", "quotes", column: "supersedes_id", on_delete: :nullify
   add_foreign_key "quotes", "tenants", on_delete: :cascade
+  add_foreign_key "reference_doc_ratings", "reference_doc_versions"
+  add_foreign_key "reference_doc_ratings", "reference_docs"
+  add_foreign_key "reference_doc_ratings", "tenants"
+  add_foreign_key "reference_doc_versions", "knowledge_categories", on_delete: :nullify
+  add_foreign_key "reference_doc_versions", "reference_docs"
+  add_foreign_key "reference_doc_versions", "tenants"
+  add_foreign_key "reference_doc_versions", "users", column: "created_by_id"
   add_foreign_key "reference_docs", "categories"
+  add_foreign_key "reference_docs", "knowledge_categories", on_delete: :nullify
+  add_foreign_key "reference_docs", "reference_doc_versions", column: "current_version_id", on_delete: :nullify
   add_foreign_key "reference_docs", "tenants"
   add_foreign_key "routing_rule_executions", "cases", on_delete: :cascade
   add_foreign_key "routing_rule_executions", "routing_rules", on_delete: :nullify

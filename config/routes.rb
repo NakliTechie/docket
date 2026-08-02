@@ -172,9 +172,13 @@ Rails.application.routes.draw do
     get "settings", to: "settings#show", as: :settings
     patch "settings", to: "settings#update"
     resource :lead_scorecard, only: %i[show update]
-    resources :reference_docs, except: :show do
-      member { post :toggle_published }
+    resources :reference_docs do
+      member do
+        post :toggle_published
+        post :retire
+      end
     end
+    resources :knowledge_categories, except: :show
     resources :api_tokens, only: %i[index create destroy]
     resources :service_accounts, except: :show do
       member do
@@ -220,7 +224,9 @@ Rails.application.routes.draw do
 
   namespace :portal do
     root to: "cases#new"
-    resources :kb, only: %i[index show], controller: "knowledge_base", param: :slug
+    resources :kb, only: %i[index show], controller: "knowledge_base", param: :slug do
+      member { post :rate }
+    end
     resources :cases, only: %i[new create]
     get "track", to: "tracking#new", as: :track
     post "track", to: "tracking#show", as: :track_lookup
@@ -326,7 +332,14 @@ Rails.application.routes.draw do
       resources :business_calendars, only: %i[index show create update destroy]
       resources :custom_fields, controller: "custom_fields", only: %i[index show create update]
       resources :macros, only: %i[index show create update destroy]
-      resources :reference_docs, only: %i[index show create update destroy]
+      resources :reference_docs, only: %i[index show create update destroy] do
+        member do
+          get :versions
+          post :publish
+          post :retire
+        end
+      end
+      resources :knowledge_categories, only: %i[index show create update destroy]
       resources :users, only: %i[index show create update]
       resources :api_tokens, only: %i[index create destroy]
       resources :service_accounts, only: %i[index show create update destroy] do

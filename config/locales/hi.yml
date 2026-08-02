@@ -505,6 +505,7 @@ hi:
       status:
         draft: "मसौदा"
         published: "प्रकाशित"
+        retired: "सेवानिवृत्त"
       visibility:
         internal: "आंतरिक"
         public: "सार्वजनिक"
@@ -1948,6 +1949,12 @@ hi:
         empty: "अभी तक कोई लेख प्रकाशित नहीं हुआ है।"
       show:
         back: "← सभी लेख"
+        helpful_question: "क्या यह लेख उपयोगी था?"
+        helpful_yes: "हाँ"
+        helpful_no: "नहीं"
+        rating_summary: "%{total} में से %{helpful} पाठकों ने इसे उपयोगी माना।"
+      rate:
+        recorded: "आपकी प्रतिक्रिया के लिए धन्यवाद।"
     customer:
       sso_failed: "साइन-इन विफल। कृपया पुनः प्रयास करें।"
       signed_in: "स्वागत है, %{name}।"
@@ -2559,12 +2566,14 @@ hi:
         status: "स्थिति"
         visibility: "दृश्यता"
         category: "श्रेणी"
+        locale: "भाषा"
       form:
         file_hint: "PDF, टेक्स्ट, मार्कडाउन या CSV — पाठ नीचे के फ़ील्ड में निकाला जाता है जिस पर एआई आधारित होता है।"
         body_hint: "एआई यही पुनर्प्राप्त और उद्धृत करता है। अपलोड के बाद स्वतंत्र रूप से संपादित करें।"
         lifecycle_legend: "प्रकाशन"
         visibility_hint: "आंतरिक लेख एआई को आधार देते हैं पर निजी रहते हैं। सार्वजनिक लेख प्रकाशित होने पर नागरिक ज्ञान-आधार में भी दिखते हैं।"
         no_category: "कोई श्रेणी नहीं"
+        locale_hint: "अनुवाद एक लेख पहचान साझा करते हैं, पर उनकी सामग्री और संस्करण इतिहास अलग रहता है।"
       errors:
         bad_pdf: "PDF के रूप में पढ़ा नहीं जा सका"
         extraction_failed: "पढ़ा नहीं जा सका — टेक्स्ट निकाला नहीं जा सका"
@@ -2575,9 +2584,12 @@ hi:
         confirm_delete: "यह दस्तावेज़ हटाएँ?"
         publish: "प्रकाशित करें"
         unpublish: "अप्रकाशित करें"
+        add_translation: "अनुवाद जोड़ें"
+        manage_categories: "श्रेणियाँ प्रबंधित करें"
         columns:
           title: "शीर्षक"
           status: "स्थिति"
+          locale_version: "भाषा / संस्करण"
           category: "श्रेणी"
           file: "फ़ाइल"
         empty:
@@ -2587,6 +2599,25 @@ hi:
         title: "नया संदर्भ दस्तावेज़"
       edit:
         title: "%{title} संपादित करें"
+      show:
+        back: "← ज्ञान-आधार"
+        summary: "%{language} · संस्करण %{version} · %{status}"
+        retire: "सेवानिवृत्त करें"
+        confirm_retire: "इस लेख को सेवानिवृत्त करें? यह खोज और सार्वजनिक पोर्टल से हट जाएगा।"
+        current_content: "वर्तमान सामग्री"
+        feedback: "उपयोगिता"
+        feedback_summary: "%{total} में से %{helpful} पाठकों ने इसे उपयोगी माना · %{score}%"
+        translations: "अनुवाद"
+        no_translations: "अभी कोई अनुवाद नहीं है।"
+        version_history: "संस्करण इतिहास"
+        current: "वर्तमान"
+        system: "सिस्टम"
+        columns:
+          version: "संस्करण"
+          status: "स्थिति"
+          category: "श्रेणी"
+          author: "लेखक"
+          created_at: "बनाया गया"
       create:
         created: "संदर्भ दस्तावेज़ बनाया गया।"
       update:
@@ -2596,6 +2627,39 @@ hi:
       toggle_published:
         published: "“%{title}” प्रकाशित किया गया।"
         unpublished: "“%{title}” अप्रकाशित किया गया।"
+      retire:
+        retired: "“%{title}” सेवानिवृत्त किया गया।"
+    knowledge_categories:
+      fields:
+        name: "नाम"
+        description: "विवरण"
+        parent: "मूल श्रेणी"
+        position: "क्रम"
+      form:
+        no_parent: "शीर्ष-स्तरीय श्रेणी"
+      index:
+        title: "ज्ञान श्रेणियाँ"
+        intro: "लेख ब्राउज़िंग और रिपोर्टिंग के लिए श्रेणी वृक्ष बनाएँ।"
+        articles: "लेख"
+        new_category: "नई श्रेणी"
+        confirm_delete: "यह श्रेणी हटाएँ? इसके लेख अश्रेणीकृत हो जाएँगे।"
+        columns:
+          path: "श्रेणी पथ"
+          description: "विवरण"
+          articles: "लेख"
+        empty:
+          title: "अभी कोई ज्ञान श्रेणी नहीं है"
+          hint: "शीर्ष-स्तरीय श्रेणियाँ बनाएँ और उनके नीचे विशिष्ट विषय जोड़ें।"
+      new:
+        title: "नई ज्ञान श्रेणी"
+      edit:
+        title: "%{name} संपादित करें"
+      create:
+        created: "ज्ञान श्रेणी बनाई गई।"
+      update:
+        updated: "ज्ञान श्रेणी अद्यतन की गई।"
+      destroy:
+        deleted: "ज्ञान श्रेणी हटाई गई।"
     roles:
       index:
         title: "भूमिकाएँ और अनुमतियाँ"

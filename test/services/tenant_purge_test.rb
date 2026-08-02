@@ -38,6 +38,14 @@ class TenantPurgeTest < ActiveSupport::TestCase
       Current.actor = actor
       contact = Contact.create!(name: "Purge Me", email: "purge@acme.test")
       kase = Case.create!(subject: "Purge case", contact: contact)
+      knowledge_category = KnowledgeCategory.create!(name: "Purge knowledge")
+      article = ReferenceDoc.create!(title: "Purge article", body: "Tenant-owned content",
+                                     knowledge_category: knowledge_category,
+                                     status: :published, visibility: :public)
+      article.reference_doc_ratings.create!(
+        reference_doc_version: article.current_version,
+        visitor_token_digest: "purge-visitor", helpful: true
+      )
       kase.files.attach(io: StringIO.new("purge blob"), filename: "purge.txt",
                         content_type: "text/plain")
       blob_id = kase.files.first.blob_id

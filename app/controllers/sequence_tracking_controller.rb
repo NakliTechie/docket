@@ -11,7 +11,8 @@ class SequenceTrackingController < ActionController::Base
 
   def click
     destination = SequenceTracking.click!(params[:token], params[:destination])
-    redirect_to destination, allow_other_host: true
+    response.location = destination.to_s
+    head :found
   rescue SequenceTracking::InvalidToken
     head :not_found
   end

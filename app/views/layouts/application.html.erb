@@ -98,7 +98,7 @@
             <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? ||
                   policy(ConnectorInvocation).index? %>
               <%= nav_group t("layout.nav.knowledge_automation"),
-                    active: %w[case_queues categories sla_policies entitlements business_calendars macros routing_rules escalation_rules custom_field_definitions approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
+                    active: %w[case_queues categories sla_policies entitlements business_calendars macros routing_rules escalation_rules custom_field_definitions approval_processes reference_docs knowledge_categories connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
                 <% if policy(CaseQueue).create? %>
                   <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                   <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
@@ -121,7 +121,8 @@
                   <%= nav_link t("layout.nav.approval_processes"), approval_processes_path, active: controller_name == "approval_processes" %>
                 <% end %>
                 <% if policy(ReferenceDoc).index? %>
-                  <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
+                  <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path,
+                               active: %w[reference_docs knowledge_categories].include?(controller_name) %>
                 <% end %>
                 <% if policy(ConnectorInvocation).index? %>
                   <%= nav_link t("layout.nav.agent_actions"), admin_connector_invocations_path, active: controller_name == "connector_invocations" %>

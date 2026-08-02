@@ -1,7 +1,7 @@
 module Admin
   class ReferenceDocsController < ApplicationController
     require_feature "service_desk.kb"
-    before_action :set_doc, only: %i[edit update destroy toggle_published]
+    before_action :set_doc, only: %i[show edit update destroy toggle_published retire]
 
     def index
       authorize ReferenceDoc
@@ -9,8 +9,22 @@ module Admin
     end
 
     def new
-      @reference_doc = ReferenceDoc.new
+      source = ReferenceDoc.find_by(id: params[:translation_of])
+      @reference_doc = if source
+        ReferenceDoc.new(translation_key: source.translation_key,
+                         knowledge_category: source.knowledge_category,
+                         visibility: source.visibility, status: :draft)
+      else
+        ReferenceDoc.new
+      end
       authorize @reference_doc
+    end
+
+    def show
+      authorize @reference_doc
+      @versions = @reference_doc.reference_doc_versions.includes(:created_by, :knowledge_category)
+      @translations = @reference_doc.translations
+      @helpfulness = @reference_doc.helpfulness_summary
     end
 
     def create
@@ -56,6 +70,12 @@ module Admin
                   notice: t(@reference_doc.status_published? ? ".published" : ".unpublished", title: @reference_doc.title)
     end
 
+    def retire
+      authorize @reference_doc, :update?
+      @reference_doc.status_retired!
+      redirect_to admin_reference_doc_path(@reference_doc), notice: t(".retired", title: @reference_doc.title)
+    end
+
     private
 
     def set_doc
@@ -63,7 +83,10 @@ module Admin
     end
 
     def doc_params
-      params.require(:reference_doc).permit(:title, :body, :file, :status, :visibility, :category_id)
+      params.require(:reference_doc).permit(
+        :title, :body, :file, :status, :visibility, :locale, :translation_key,
+        :knowledge_category_id, :category_id
+      )
     end
 
     def extract_body_from_upload

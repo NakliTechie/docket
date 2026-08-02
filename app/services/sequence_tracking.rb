@@ -32,7 +32,7 @@ class SequenceTracking
   end
 
   def self.click_url(delivery, destination)
-    destination = validated_destination(destination)
+    destination = validated_destination(destination).to_s
     token = verifier.generate({ "delivery_id" => delivery.id, "url" => destination })
     url_helpers.sequence_tracking_click_url(
       token: delivery.tracking_token,
@@ -83,7 +83,7 @@ class SequenceTracking
     uri = URI.parse(value.to_s)
     raise InvalidToken unless uri.is_a?(URI::HTTP) && uri.host.present? && uri.userinfo.nil?
 
-    uri.to_s
+    uri
   rescue URI::InvalidURIError
     raise InvalidToken, "tracking destination is invalid"
   end

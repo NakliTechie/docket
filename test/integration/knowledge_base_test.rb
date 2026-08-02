@@ -82,4 +82,71 @@ class KnowledgeBaseTest < ActionDispatch::IntegrationTest
     post toggle_published_admin_reference_doc_path(doc)
     assert_response :forbidden
   end
+
+  test "an admin can inspect versions add a translation and retire an article" do
+    sign_in_as users(:client_admin)
+    doc = ReferenceDoc.create!(title: "Version history", body: "one", status: :published)
+    doc.update!(body: "two")
+
+    get admin_reference_doc_path(doc)
+    assert_response :success
+    assert_select "summary", text: "v2 · current"
+    assert_select "summary", text: "v1"
+
+    post admin_reference_docs_path, params: { reference_doc: {
+      title: "संस्करण इतिहास", body: "दो", locale: "hi",
+      translation_key: doc.translation_key, status: "draft"
+    } }
+    assert_response :redirect
+    assert_equal [ "hi" ], doc.translations.pluck(:locale)
+
+    post retire_admin_reference_doc_path(doc)
+    assert_response :redirect
+    assert doc.reload.status_retired?
+    assert_equal 3, doc.version_number
+  end
+
+  test "an admin can build nested knowledge categories" do
+    sign_in_as users(:client_admin)
+    post admin_knowledge_categories_path,
+         params: { knowledge_category: { name: "Benefits", position: 1 } }
+    root = KnowledgeCategory.find_by!(name: "Benefits")
+    post admin_knowledge_categories_path,
+         params: { knowledge_category: { name: "Pensions", parent_id: root.id, position: 2 } }
+
+    assert_response :redirect
+    get admin_knowledge_categories_path
+    assert_response :success
+    assert_select "td", text: "Benefits / Pensions"
+  end
+
+  test "deleting a knowledge category detaches its articles with a new version" do
+    sign_in_as users(:client_admin)
+    category = KnowledgeCategory.create!(name: "Temporary topic")
+    article = ReferenceDoc.create!(title: "Categorised", body: "x", knowledge_category: category)
+
+    assert_difference -> { article.reload.version_number }, 1 do
+      delete admin_knowledge_category_path(category)
+    end
+    assert_response :see_other
+    assert_nil article.reload.knowledge_category
+  end
+
+  test "a portal visitor can change one helpfulness rating per article version" do
+    article = public_article
+
+    assert_difference "ReferenceDocRating.count", 1 do
+      post rate_portal_kb_path(article.slug), params: { helpful: "true" }
+    end
+    assert_response :redirect
+    assert_equal 100, article.helpfulness_summary[:score]
+
+    assert_no_difference "ReferenceDocRating.count" do
+      post rate_portal_kb_path(article.slug), params: { helpful: "false" }
+    end
+    assert_equal 0, article.helpfulness_summary[:score]
+
+    get portal_kb_path(article.slug)
+    assert_select "#helpfulness", text: /0 of 1 readers/
+  end
 end

@@ -155,7 +155,24 @@ module Docket
                                message_kind: :string, set_status: :string, set_priority: :string,
                                set_queue_id: :integer, set_assignee_id: :integer,
                                created_at: :datetime, updated_at: :datetime),
-          ReferenceDoc: object_schema(id: :integer, title: :string, body: :string, created_at: :datetime, updated_at: :datetime),
+          ReferenceDoc: object_schema(
+            id: :integer, title: :string, body: :string, slug: :string,
+            status: enum(ReferenceDoc.statuses.keys), visibility: enum(ReferenceDoc.visibilities.keys),
+            locale: :string, translation_key: :string, knowledge_category_id: :integer,
+            current_version: :integer, helpfulness: :object,
+            created_at: :datetime, updated_at: :datetime
+          ),
+          ReferenceDocVersion: object_schema(
+            id: :integer, number: :integer, title: :string, body: :string,
+            locale: :string, status: enum(ReferenceDocVersion.statuses.keys),
+            visibility: enum(ReferenceDocVersion.visibilities.keys),
+            knowledge_category_id: :integer, created_by_id: :integer, created_at: :datetime
+          ),
+          KnowledgeCategory: object_schema(
+            id: :integer, name: :string, slug: :string, description: :string,
+            parent_id: :integer, path: :string, position: :integer,
+            created_at: :datetime, updated_at: :datetime
+          ),
           User: object_schema(id: :integer, name: :string, email_address: :string,
                               role: enum(User.roles.keys), active: :boolean, locale: :string,
                               email_signature: :string,
@@ -367,6 +384,16 @@ module Docket
            create_note: "resource_type is cases or work_items; key is immutable after creation. Deactivate a field to preserve historical values.")
       crud(result, "macros", "Macro")
       crud(result, "reference_docs", "ReferenceDoc")
+      result["/reference_docs/{id}/versions"] = {
+        get: op("List immutable article versions", params: [ id_param ], schema: "ReferenceDocVersion")
+      }
+      result["/reference_docs/{id}/publish"] = {
+        post: op("Publish the article and record a version", params: [ id_param ], schema: "ReferenceDoc")
+      }
+      result["/reference_docs/{id}/retire"] = {
+        post: op("Retire the article and record a version", params: [ id_param ], schema: "ReferenceDoc")
+      }
+      crud(result, "knowledge_categories", "KnowledgeCategory")
 
       result["/users"] = {
         get: op("List users (admin, human tokens only)"),

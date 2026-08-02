@@ -18,8 +18,8 @@
       <% @articles.each do |article| %>
         <li>
           <%= link_to article.title, portal_kb_path(article.slug) %>
-          <% if article.category %>
-            <span class="muted">· <%= article.category.name %></span>
+          <% if article.knowledge_category %>
+            <span class="muted">· <%= article.knowledge_category.display_path %></span>
           <% end %>
         </li>
       <% end %>
