@@ -95,11 +95,12 @@ module Features
     "cases" => "service_desk", "queues" => "service_desk", "categories" => "service_desk",
     "sla_policies" => "service_desk", "macros" => "service_desk", "messages" => "service_desk",
     "reports" => "service_desk",
-    "reference_docs" => "service_desk.kb",
+    "reference_docs" => "service_desk.kb", "knowledge_categories" => "service_desk.kb",
     "leads" => "crm", "lead_capture_forms" => "crm", "deals" => "crm",
     "deal_line_items" => "crm", "deal_competitors" => "crm", "products" => "crm",
     "competitors" => "crm", "pipelines" => "crm",
     "sequences" => "crm.sequences", "sequence_enrollments" => "crm.sequences",
+    "campaigns" => "crm",
     "projects" => "work", "project_templates" => "work", "work_items" => "work",
     "work_item_relations" => "work", "work_comments" => "work",
     "sprints" => "work.sprints"

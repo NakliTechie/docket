@@ -165,6 +165,14 @@ module Api
           sms_consent: l.sms_consent, email_consent: l.email_consent,
           email_unsubscribed_at: l.email_unsubscribed_at,
           consent_captured_at: l.consent_captured_at, consent_source: l.consent_source,
+          first_touch_campaign_id: l.first_touch_campaign_id, first_touch_at: l.first_touch_at,
+          first_touch_utm_source: l.first_touch_utm_source,
+          first_touch_utm_medium: l.first_touch_utm_medium,
+          first_touch_utm_campaign: l.first_touch_utm_campaign,
+          first_touch_utm_term: l.first_touch_utm_term,
+          first_touch_utm_content: l.first_touch_utm_content,
+          first_touch_landing_page: l.first_touch_landing_page,
+          first_touch_referrer: l.first_touch_referrer,
           provenance: l.provenance, merged_into_id: l.merged_into_id, merged_at: l.merged_at,
           merged_lead_ids: l.merged_leads.ids,
           converted_at: l.converted_at, created_at: l.created_at, updated_at: l.updated_at
@@ -174,7 +182,8 @@ module Api
       def lead_capture_form(form)
         { id: form.id, name: form.name, slug: form.slug, field_mapping: form.field_mapping,
           consent_disclosure: form.consent_disclosure, active: form.active,
-          is_default: form.is_default, created_at: form.created_at, updated_at: form.updated_at }
+          is_default: form.is_default, campaign_id: form.campaign_id,
+          created_at: form.created_at, updated_at: form.updated_at }
       end
 
       def deal(d)
@@ -184,6 +193,14 @@ module Api
           owner_id: d.owner_id, contact_id: d.contact_id, organisation_id: d.organisation_id,
           lead_id: d.lead_id, expected_close_on: d.expected_close_on, closed_at: d.closed_at,
           lost_reason: d.lost_reason, onboarding_project_id: d.onboarding_project&.id,
+          first_touch_campaign_id: d.first_touch_campaign_id, first_touch_at: d.first_touch_at,
+          first_touch_utm_source: d.first_touch_utm_source,
+          first_touch_utm_medium: d.first_touch_utm_medium,
+          first_touch_utm_campaign: d.first_touch_utm_campaign,
+          first_touch_utm_term: d.first_touch_utm_term,
+          first_touch_utm_content: d.first_touch_utm_content,
+          first_touch_landing_page: d.first_touch_landing_page,
+          first_touch_referrer: d.first_touch_referrer,
           line_items_total_cents: d.line_items_total_cents,
           line_items: d.deal_line_items.map { |item| deal_line_item(item) },
           competitors: d.deal_competitors.map { |link| deal_competitor(link) },
@@ -216,6 +233,20 @@ module Api
           notes: competitor.notes, created_at: competitor.created_at, updated_at: competitor.updated_at }
       end
 
+      def campaign(campaign)
+        {
+          id: campaign.id, name: campaign.name, code: campaign.code,
+          description: campaign.description, status: campaign.status, channel: campaign.channel,
+          starts_on: campaign.starts_on, ends_on: campaign.ends_on,
+          budget_cents: campaign.budget_cents, currency: campaign.currency,
+          utm_source: campaign.utm_source, utm_medium: campaign.utm_medium,
+          utm_campaign: campaign.utm_campaign,
+          attributed_leads_count: campaign.attributed_leads.count,
+          attributed_deals_count: campaign.attributed_deals.count,
+          created_at: campaign.created_at, updated_at: campaign.updated_at
+        }
+      end
+
       def deal_contact_role(link)
         { id: link.id, deal_id: link.deal_id, contact_id: link.contact_id,
           contact_name: link.contact.name, role: link.role,
@@ -241,11 +272,14 @@ module Api
 
       def sequence(s)
         {
-          id: s.id, name: s.name, active: s.active,
+          id: s.id, name: s.name, active: s.active, owner_id: s.owner_id,
+          business_calendar_id: s.business_calendar_id,
           steps: s.ordered_steps.map { |st|
             { id: st.id, position: st.position, delay_days: st.delay_days,
-              channel: st.channel, subject: st.subject, body: st.body }
+              delay_hours: st.delay_hours, use_business_hours: st.use_business_hours,
+              template_key: st.template_key, channel: st.channel, subject: st.subject, body: st.body }
           },
+          analytics: s.delivery_analytics,
           created_at: s.created_at, updated_at: s.updated_at
         }
       end
@@ -258,7 +292,10 @@ module Api
           current_step_position: e.current_step_position, next_run_at: e.next_run_at,
           last_delivery: latest_delivery && {
             status: latest_delivery.status, channel: latest_delivery.channel,
-            claimed_at: latest_delivery.claimed_at, delivered_at: latest_delivery.delivered_at
+            claimed_at: latest_delivery.claimed_at, delivered_at: latest_delivery.delivered_at,
+            opened_at: latest_delivery.opened_at, clicked_at: latest_delivery.clicked_at,
+            replied_at: latest_delivery.replied_at, open_count: latest_delivery.open_count,
+            click_count: latest_delivery.click_count, activity_id: latest_delivery.activity_id
           },
           created_at: e.created_at, updated_at: e.updated_at
         }
@@ -319,7 +356,25 @@ module Api
       end
 
       def reference_doc(d)
-        { id: d.id, title: d.title, body: d.body, created_at: d.created_at, updated_at: d.updated_at }
+        { id: d.id, title: d.title, body: d.body, slug: d.slug, status: d.status,
+          visibility: d.visibility, locale: d.locale, translation_key: d.translation_key,
+          knowledge_category_id: d.knowledge_category_id,
+          current_version: d.version_number, helpfulness: d.helpfulness_summary,
+          created_at: d.created_at, updated_at: d.updated_at }
+      end
+
+      def reference_doc_version(version)
+        { id: version.id, number: version.number, title: version.title, body: version.body,
+          locale: version.locale, status: version.status, visibility: version.visibility,
+          knowledge_category_id: version.knowledge_category_id,
+          created_by_id: version.created_by_id, created_at: version.created_at }
+      end
+
+      def knowledge_category(category)
+        { id: category.id, name: category.name, slug: category.slug,
+          description: category.description, parent_id: category.parent_id,
+          path: category.display_path, position: category.position,
+          created_at: category.created_at, updated_at: category.updated_at }
       end
 
       def user(u)

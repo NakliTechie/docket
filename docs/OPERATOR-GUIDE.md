@@ -113,6 +113,37 @@ advisory, so another agent is visible without locking the record. Merge and
 split operations preserve messages, attachments, imported identities, work
 links, and lineage; old merged URLs resolve to the canonical case.
 
+## Knowledge lifecycle
+
+Knowledge articles have `draft`, `published`, and `retired` states plus
+`internal` or `public` visibility. Only published articles ground the agent.
+Published public articles also appear in the customer portal. Retiring an
+article removes it from both surfaces without deleting its history.
+
+Every content, status, language, visibility, or taxonomy change creates an
+immutable version row and advances the article's current-version pointer. Admin
+→ Knowledge → article title shows the full history, including prior content and
+the staff author when available. The API exposes the same history at
+`GET /api/v1/reference_docs/{id}/versions`; dedicated publish and retire actions
+are also documented in OpenAPI.
+
+Translations are independent locale variants linked by one translation key.
+Use **Add translation** from an article rather than creating an unrelated
+article. Portal search prefers the visitor's selected language and falls back
+to English when that article has no matching variant. Each variant keeps its
+own lifecycle, URL, attachments, and version history.
+
+**Manage categories** opens the knowledge-only taxonomy. Categories can nest to
+any depth; moving a category updates its displayed path. Deleting a category
+detaches its directly assigned articles and records that change as a new article
+version. Case categories remain separate because they control routing and AI
+auto-resolution.
+
+The public article page records one helpful/not-helpful vote per browser and
+article version. Docket stores a one-way visitor-token digest rather than an IP
+address. Editing or republishing creates a new version with a fresh score while
+retaining older version feedback for audit and analysis.
+
 ## Lead inquiry and CRM setup
 
 The legacy public inquiry lives at `/inquiry`. Admin-managed capture forms live
@@ -126,7 +157,22 @@ Catalog products and deal line items must use the deal's currency. Once a deal
 has line items its currency is locked, and its value is the audited sum of
 quantity × unit price. Competitor outcomes feed currency-separated loss
 reporting. Sequence enrollment requires recorded email consent; unsubscribe is
-public, tokenized, and suppresses future delivery.
+public, tokenized, and suppresses future delivery. Sequence steps support day
+and hour waits, optional business-calendar timing, email, SMS, calls, and manual
+tasks. Calls and tasks enter the assigned rep's Activity queue. Email receipts
+record unique opens, signed-link clicks, and replies. A reply whose From address
+matches the enrolled recipient cancels later steps and logs a completed email Activity.
+Configure the sequence reply domain under Admin → Settings → Intake so inbound
+mail routes `sequence+token` addresses back to this deployment.
+
+Campaigns provide first-touch attribution without an external analytics service.
+Create an active campaign with a unique `utm_campaign`, then use that value in
+links to `/inquiry` or a configured web-to-lead form. Docket stores UTM source,
+medium, campaign, term, content, landing page, and referrer in structured lead
+fields. Lead conversion copies the first touch to its deal. The Sales report
+shows windowed lead count, deal count, won count, and currency-separated won
+value per campaign. A capture form can supply a fallback active campaign when
+its links do not carry UTM parameters.
 
 ## Connectors, credentials, webhooks, and effectors
 

@@ -1,0 +1,36 @@
+<% page_title @campaign.name %>
+<div class="page-header">
+  <h1><%= @campaign.name %> <span class="badge badge-<%= @campaign.status_active? ? "open" : "unqualified" %>"><%= @campaign.human_status %></span></h1>
+  <div class="page-actions">
+    <% if policy(@campaign).update? %><%= link_to t("actions.edit"), edit_campaign_path(@campaign), class: "btn" %><% end %>
+    <% if policy(@campaign).destroy? %><%= button_to t("actions.delete"), campaign_path(@campaign), method: :delete, class: "btn btn-danger", form: { data: { turbo_confirm: t("campaigns.show.confirm_delete") } } %><% end %>
+  </div>
+</div>
+<div class="two-column">
+  <section>
+    <div class="panel"><h2 class="panel-title"><%= t("campaigns.show.details") %></h2><dl class="meta-list">
+      <dt><%= t("campaigns.fields.code") %></dt><dd><%= @campaign.code %></dd>
+      <dt><%= t("campaigns.fields.channel") %></dt><dd><%= @campaign.human_channel %></dd>
+      <dt><%= t("campaigns.fields.window") %></dt><dd><%= [@campaign.starts_on, @campaign.ends_on].compact.map { |date| l(date) }.join(" — ").presence || "—" %></dd>
+      <dt><%= t("campaigns.fields.budget") %></dt><dd><%= format_money(@campaign.budget_cents, @campaign.currency) %></dd>
+      <dt><%= t("campaigns.fields.utm_campaign") %></dt><dd class="mono"><%= @campaign.utm_campaign %></dd>
+      <% if @campaign.description.present? %><dt><%= t("campaigns.fields.description") %></dt><dd><%= @campaign.description %></dd><% end %>
+    </dl></div>
+  </section>
+  <aside>
+    <div class="panel"><h2 class="panel-title"><%= t("campaigns.show.influence") %></h2><dl class="meta-list">
+      <dt><%= t("campaigns.index.leads") %></dt><dd><%= @campaign.attributed_leads.count %></dd>
+      <dt><%= t("campaigns.index.deals") %></dt><dd><%= @campaign.attributed_deals.count %></dd>
+      <% won_values = @campaign.attributed_deals.status_won.group(:currency).sum(:value_cents) %>
+      <dt><%= t("campaigns.show.won_value") %></dt><dd><%= won_values.any? ? format_money_totals(won_values) : format_money(0, @campaign.currency) %></dd>
+    </dl></div>
+  </aside>
+</div>
+<div class="two-column">
+  <section class="panel"><h2 class="panel-title"><%= t("campaigns.show.recent_leads") %></h2>
+    <% if @leads.any? %><ul class="stack-sm"><% @leads.each do |lead| %><li><%= link_to lead.name, lead_path(lead) %></li><% end %></ul><% else %><p class="muted"><%= t("campaigns.show.no_leads") %></p><% end %>
+  </section>
+  <aside class="panel"><h2 class="panel-title"><%= t("campaigns.show.recent_deals") %></h2>
+    <% if @deals.any? %><ul class="stack-sm"><% @deals.each do |deal| %><li><%= link_to deal.name, deal_path(deal) %></li><% end %></ul><% else %><p class="muted"><%= t("campaigns.show.no_deals") %></p><% end %>
+  </aside>
+</div>

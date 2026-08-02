@@ -11,12 +11,18 @@ class CasesMailbox < ApplicationMailbox
   def process
     tenant = resolve_tenant
     inbound_email.update_column(:tenant_id, tenant.id)
-    # A tenant without the service desk has no cases to open. Bounce rather
-    # than silently manufacturing one — inbound mail was the last unguarded
-    # way into the desk.
-    return bounced! unless tenant.feature?("service_desk")
 
     ActsAsTenant.with_tenant(tenant) do
+      if sequence_reply_delivery
+        process_sequence_reply(sequence_reply_delivery)
+        return
+      end
+
+      # A tenant without the service desk has no cases to open. Bounce rather
+      # than silently manufacturing one — inbound mail was the last unguarded
+      # way into the desk.
+      return bounced! unless tenant.feature?("service_desk")
+
       if existing_case && sender_matches?(existing_case)
         thread_onto(existing_case)
       else
@@ -41,6 +47,30 @@ class CasesMailbox < ApplicationMailbox
 
   def recipients
     (Array(mail.to) + Array(mail.cc)).compact.map { |a| a.to_s.strip.downcase }
+  end
+
+  def sequence_reply_delivery
+    return @sequence_reply_delivery if defined?(@sequence_reply_delivery)
+
+    token = recipients.filter_map { |recipient| recipient[/\Asequence\+([^@]+)@/, 1] }.first
+    delivery = token && SequenceDelivery.where(channel: "email")
+                                        .find_by("LOWER(tracking_token) = ?", token.downcase)
+    @sequence_reply_delivery = delivery if delivery&.recipient.to_s.casecmp?(sender_email.to_s)
+  end
+
+  def process_sequence_reply(delivery)
+    enrollment = delivery.sequence_enrollment
+    delivery.record_reply!
+    enrollment.cancel! if enrollment.status_active?
+    Activity.create!(
+      subject: enrollment.enrollable,
+      owner: enrollment.enrolment_owner,
+      kind: :email,
+      status: :done,
+      completed_at: Time.current,
+      title: mail.subject.presence || "Sequence reply",
+      body: extract_body.presence || "(empty message)"
+    )
   end
 
   def ensure_sender

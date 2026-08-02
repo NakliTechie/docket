@@ -44,6 +44,7 @@ Rails.application.routes.draw do
     end
   end
   resources :sla_policies, except: :show
+  resources :entitlements, except: :show
   resources :business_calendars, except: :show
   resources :macros, except: :show
   resources :routing_rules, except: :show do
@@ -124,6 +125,7 @@ Rails.application.routes.draw do
   resources :products, except: :show
   resources :price_books, except: :show
   resources :competitors, except: :show
+  resources :campaigns
   resources :sequences
   resources :sequence_enrollments, only: %i[create] do
     member { post :cancel }
@@ -170,9 +172,13 @@ Rails.application.routes.draw do
     get "settings", to: "settings#show", as: :settings
     patch "settings", to: "settings#update"
     resource :lead_scorecard, only: %i[show update]
-    resources :reference_docs, except: :show do
-      member { post :toggle_published }
+    resources :reference_docs do
+      member do
+        post :toggle_published
+        post :retire
+      end
     end
+    resources :knowledge_categories, except: :show
     resources :api_tokens, only: %i[index create destroy]
     resources :service_accounts, except: :show do
       member do
@@ -218,7 +224,9 @@ Rails.application.routes.draw do
 
   namespace :portal do
     root to: "cases#new"
-    resources :kb, only: %i[index show], controller: "knowledge_base", param: :slug
+    resources :kb, only: %i[index show], controller: "knowledge_base", param: :slug do
+      member { post :rate }
+    end
     resources :cases, only: %i[new create]
     get "track", to: "tracking#new", as: :track
     post "track", to: "tracking#show", as: :track_lookup
@@ -241,6 +249,10 @@ Rails.application.routes.draw do
   get "sequence_unsubscribe/:token", to: "sequence_unsubscribes#show",
       as: :sequence_unsubscribe
   post "sequence_unsubscribe/:token", to: "sequence_unsubscribes#create"
+  get "sequence_tracking/:token/open.gif", to: "sequence_tracking#open",
+      as: :sequence_tracking_open
+  get "sequence_tracking/:token/click", to: "sequence_tracking#click",
+      as: :sequence_tracking_click
   get "survey/csat/:token", to: "csat_surveys#show", as: :csat_survey
   post "survey/csat/:token", to: "csat_surveys#create"
 
@@ -287,6 +299,7 @@ Rails.application.routes.draw do
       resources :deal_contact_roles, only: %i[update destroy]
       resources :products, only: %i[index show create update destroy]
       resources :competitors, only: %i[index show create update destroy]
+      resources :campaigns, only: %i[index show create update destroy]
       resources :activities, only: %i[index show create update destroy] do
         member { post :complete }
       end
@@ -319,7 +332,14 @@ Rails.application.routes.draw do
       resources :business_calendars, only: %i[index show create update destroy]
       resources :custom_fields, controller: "custom_fields", only: %i[index show create update]
       resources :macros, only: %i[index show create update destroy]
-      resources :reference_docs, only: %i[index show create update destroy]
+      resources :reference_docs, only: %i[index show create update destroy] do
+        member do
+          get :versions
+          post :publish
+          post :retire
+        end
+      end
+      resources :knowledge_categories, only: %i[index show create update destroy]
       resources :users, only: %i[index show create update]
       resources :api_tokens, only: %i[index create destroy]
       resources :service_accounts, only: %i[index show create update destroy] do

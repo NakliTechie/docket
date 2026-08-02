@@ -64,4 +64,36 @@ class SequenceTest < ActiveSupport::TestCase
     assert_equal "Hi Asha", step.render_subject(vars)
     assert_equal "From Acme — {{unknown}}", step.render_body(vars)
   end
+
+  test "hour delays can stay inside a business calendar" do
+    calendar = BusinessCalendar.new(name: "Sales hours", time_zone: "UTC")
+    (1..5).each do |weekday|
+      calendar.business_calendar_windows.build(weekday: weekday, starts_minute: 540, ends_minute: 1020)
+    end
+    calendar.save!
+    sequence = Sequence.new(name: "Timed", business_calendar: calendar)
+    step = sequence.sequence_steps.build(position: 0, delay_days: 0, delay_hours: 2,
+                                         use_business_hours: true, body: "Hello")
+    sequence.save!
+
+    assert_equal Time.utc(2026, 8, 10, 11, 0), step.scheduled_at(Time.utc(2026, 8, 7, 19, 0))
+  end
+
+  test "templates fill blank content and expose richer merge variables" do
+    sequence = Sequence.new(name: "Template")
+    step = sequence.sequence_steps.build(position: 0, template_key: "introduction")
+
+    assert sequence.valid?
+    assert_includes step.subject, "{{first_name}}"
+    assert_includes SequenceStep::VARIABLES, "owner_email"
+    assert_includes SequenceStep::VARIABLES, "deal_name"
+  end
+
+  test "manual steps require a sequence owner" do
+    sequence = Sequence.new(name: "Call plan")
+    sequence.sequence_steps.build(position: 0, channel: :call, body: "Call {{contact_name}}")
+
+    assert_not sequence.valid?
+    assert sequence.errors[:owner].any?
+  end
 end

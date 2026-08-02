@@ -45,6 +45,12 @@
   </div>
 
   <div class="form-row">
+    <%= f.label :first_touch_campaign_id, t("leads.fields.first_touch_campaign") %>
+    <%= f.collection_select :first_touch_campaign_id, Campaign.order(:name), :id, :name,
+          include_blank: t("forms.none") %>
+  </div>
+
+  <div class="form-row">
     <%= f.label :value_estimate, t("leads.fields.value_estimate") %>
     <%= f.number_field :value_estimate, step: "0.01", min: 0 %>
     <p class="form-hint"><%= t("leads.form.value_hint") %></p>

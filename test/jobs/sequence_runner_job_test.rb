@@ -123,4 +123,43 @@ class SequenceRunnerJobTest < ActiveJob::TestCase
     assert_equal seq.ordered_steps.second, enr.reload.current_step
     assert_equal 1, enr.current_step_position
   end
+
+  test "a call step creates a delivered receipt and an activity in the rep queue" do
+    sequence = Sequence.new(name: "Rep call", owner: users(:sales))
+    sequence.sequence_steps.build(position: 0, delay_days: 0, channel: :call,
+                                  subject: "Call {{first_name}}", body: "Discuss {{company_name}}")
+    sequence.save!
+    contact = Contact.create!(name: "Mira Rao", email: "mira.call@example.com")
+    enrollment = sequence.enroll!(contact)
+
+    assert_no_enqueued_jobs(only: SequenceDeliveryJob) do
+      assert_difference "Activity.count", 1 do
+        SequenceRunnerJob.perform_now
+      end
+    end
+
+    delivery = enrollment.sequence_deliveries.first
+    assert delivery.status_delivered?
+    assert_equal "call", delivery.channel
+    assert_equal users(:sales), delivery.activity.owner
+    assert_equal contact, delivery.activity.subject
+    assert_equal "Call Mira", delivery.activity.title
+  end
+
+  test "delivery payload includes expanded target and owner merge variables" do
+    sequence = Sequence.new(name: "Variable plan", owner: users(:sales))
+    sequence.sequence_steps.build(position: 0, delay_days: 0,
+                                  subject: "{{owner_name}} for {{first_name}}",
+                                  body: "{{sequence_name}} on {{today}}")
+    sequence.save!
+    lead = Lead.create!(name: "Ravi Kumar", email: "ravi.vars@example.com",
+                        owner: users(:sales), email_consent: true)
+    enrollment = sequence.enroll!(lead)
+
+    SequenceRunnerJob.perform_now
+
+    payload = enrollment.sequence_deliveries.first.payload
+    assert_equal "Sanjay Sales for Ravi", payload.fetch("subject")
+    assert_includes payload.fetch("body"), "Variable plan"
+  end
 end

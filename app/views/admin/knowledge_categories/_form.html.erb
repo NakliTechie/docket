@@ -1,0 +1,29 @@
+<%= form_with model: [ :admin, knowledge_category ], class: "form" do |f| %>
+  <%= render "shared/form_errors", record: knowledge_category %>
+
+  <div class="form-row">
+    <%= f.label :name, t("admin.knowledge_categories.fields.name") %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :description, t("admin.knowledge_categories.fields.description") %>
+    <%= f.text_area :description, rows: 4 %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :parent_id, t("admin.knowledge_categories.fields.parent") %>
+    <%= f.collection_select :parent_id, @parent_options, :id, :display_path,
+          { include_blank: t("admin.knowledge_categories.form.no_parent") } %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :position, t("admin.knowledge_categories.fields.position") %>
+    <%= f.number_field :position, min: 0 %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to t("actions.cancel"), admin_knowledge_categories_path, class: "btn" %>
+  </div>
+<% end %>

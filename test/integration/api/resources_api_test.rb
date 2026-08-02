@@ -106,5 +106,54 @@ module Api
       post "/api/v1/categories/#{category.id}/toggle_auto_resolve", headers: auth_header(agent_token)
       assert_response :forbidden
     end
+
+    test "reference doc lifecycle exposes versions publish and retire" do
+      post "/api/v1/reference_docs",
+           params: { reference_doc: { title: "API lifecycle", body: "Draft", status: "draft", locale: "en" } },
+           headers: auth_header(@admin_token), as: :json
+      assert_response :created
+      id = response.parsed_body.dig("data", "id")
+      assert_equal 1, response.parsed_body.dig("data", "current_version")
+
+      post "/api/v1/reference_docs/#{id}/publish", headers: auth_header(@admin_token), as: :json
+      assert_response :success
+      assert_equal "published", response.parsed_body.dig("data", "status")
+      assert_equal 2, response.parsed_body.dig("data", "current_version")
+
+      get "/api/v1/reference_docs/#{id}/versions", headers: auth_header(@admin_token)
+      assert_response :success
+      assert_equal [ 2, 1 ], response.parsed_body["data"].pluck("number")
+
+      post "/api/v1/reference_docs/#{id}/retire", headers: auth_header(@admin_token), as: :json
+      assert_response :success
+      assert_equal "retired", response.parsed_body.dig("data", "status")
+    end
+
+    test "knowledge category api builds and edits a taxonomy" do
+      post "/api/v1/knowledge_categories",
+           params: { knowledge_category: { name: "Benefits API", position: 1 } },
+           headers: auth_header(@admin_token), as: :json
+      assert_response :created
+      root_id = response.parsed_body.dig("data", "id")
+
+      post "/api/v1/knowledge_categories",
+           params: { knowledge_category: { name: "Pensions API", parent_id: root_id, position: 2 } },
+           headers: auth_header(@admin_token), as: :json
+      assert_response :created
+      child_id = response.parsed_body.dig("data", "id")
+      assert_equal "Benefits API / Pensions API", response.parsed_body.dig("data", "path")
+
+      patch "/api/v1/knowledge_categories/#{child_id}",
+            params: { knowledge_category: { name: "Retirement API" } },
+            headers: auth_header(@admin_token), as: :json
+      assert_response :success
+
+      get "/api/v1/knowledge_categories", headers: auth_header(@admin_token)
+      assert_response :success
+      assert_includes response.parsed_body["data"].pluck("id"), child_id
+
+      delete "/api/v1/knowledge_categories/#{child_id}", headers: auth_header(@admin_token)
+      assert_response :no_content
+    end
   end
 end

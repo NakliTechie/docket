@@ -1,0 +1,75 @@
+<% page_title @reference_doc.title %>
+<div class="page-header">
+  <div>
+    <p><%= link_to t("admin.reference_docs.show.back"), admin_reference_docs_path, class: "muted" %></p>
+    <h1><%= @reference_doc.title %></h1>
+    <p class="muted">
+      <%= t("admin.reference_docs.show.summary", language: @reference_doc.locale.upcase,
+            version: @reference_doc.version_number, status: t("reference_docs.enum.status.#{@reference_doc.status}")) %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <%= link_to t("actions.edit"), edit_admin_reference_doc_path(@reference_doc), class: "btn" %>
+    <%= link_to t("admin.reference_docs.index.add_translation"),
+          new_admin_reference_doc_path(translation_of: @reference_doc.id), class: "btn" %>
+    <% unless @reference_doc.status_retired? %>
+      <%= button_to t("admin.reference_docs.show.retire"), retire_admin_reference_doc_path(@reference_doc),
+            method: :post, class: "btn btn-danger", form: { class: "inline-form",
+            data: { turbo_confirm: t("admin.reference_docs.show.confirm_retire") } } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="two-column">
+  <section class="card">
+    <h2><%= t("admin.reference_docs.show.current_content") %></h2>
+    <div class="kb-body"><%= simple_format(@reference_doc.body) %></div>
+  </section>
+  <aside class="card">
+    <h2><%= t("admin.reference_docs.show.feedback") %></h2>
+    <p><%= t("admin.reference_docs.show.feedback_summary", helpful: @helpfulness[:helpful],
+              total: @helpfulness[:total], score: @helpfulness[:score] || "—") %></p>
+    <h2><%= t("admin.reference_docs.show.translations") %></h2>
+    <% if @translations.any? %>
+      <ul>
+        <% @translations.each do |translation| %>
+          <li><%= link_to "#{translation.locale.upcase}: #{translation.title}", admin_reference_doc_path(translation) %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="muted"><%= t("admin.reference_docs.show.no_translations") %></p>
+    <% end %>
+  </aside>
+</div>
+
+<section class="card">
+  <h2><%= t("admin.reference_docs.show.version_history") %></h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th><%= t("admin.reference_docs.show.columns.version") %></th>
+        <th><%= t("admin.reference_docs.show.columns.status") %></th>
+        <th><%= t("admin.reference_docs.show.columns.category") %></th>
+        <th><%= t("admin.reference_docs.show.columns.author") %></th>
+        <th><%= t("admin.reference_docs.show.columns.created_at") %></th>
+      </tr></thead>
+      <tbody>
+        <% @versions.each do |version| %>
+          <tr>
+            <td>
+              <details>
+                <summary>v<%= version.number %><%= " · #{t("admin.reference_docs.show.current")}" if version == @reference_doc.current_version %></summary>
+                <strong><%= version.title %></strong>
+                <div class="kb-body"><%= simple_format(version.body) %></div>
+              </details>
+            </td>
+            <td><%= t("reference_docs.enum.status.#{version.status}") %></td>
+            <td><%= version.knowledge_category&.display_path %></td>
+            <td><%= version.created_by&.name || t("admin.reference_docs.show.system") %></td>
+            <td><%= l(version.created_at, format: :short) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

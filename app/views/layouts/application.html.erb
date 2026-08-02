@@ -67,7 +67,7 @@
 
             <% if feature?("crm") && policy(Lead).index? %>
               <%= nav_group t("layout.nav.sales"),
-                    active: %w[leads lead_capture_forms deals products price_books competitors pipelines lead_routing_rules activities sequences sales_reports].include?(controller_name) do %>
+                    active: %w[leads lead_capture_forms deals products price_books competitors campaigns pipelines lead_routing_rules activities sequences sales_reports].include?(controller_name) do %>
                 <%= nav_link t("layout.nav.leads"), leads_path, active: controller_name == "leads" %>
                 <%= nav_link t("layout.nav.deals"), deals_path, active: controller_name == "deals" %>
                 <% if policy(Activity).index? %>
@@ -81,6 +81,7 @@
                   <%= nav_link t("layout.nav.products"), products_path, active: controller_name == "products" %>
                   <%= nav_link t("layout.nav.price_books"), price_books_path, active: controller_name == "price_books" %>
                   <%= nav_link t("layout.nav.competitors"), competitors_path, active: controller_name == "competitors" %>
+                  <%= nav_link t("layout.nav.campaigns"), campaigns_path, active: controller_name == "campaigns" %>
                   <% if feature?("crm.sequences") %>
                     <%= nav_link t("layout.nav.sequences"), sequences_path, active: controller_name == "sequences" %>
                   <% end %>
@@ -97,11 +98,12 @@
             <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? ||
                   policy(ConnectorInvocation).index? %>
               <%= nav_group t("layout.nav.knowledge_automation"),
-                    active: %w[case_queues categories sla_policies business_calendars macros routing_rules escalation_rules custom_field_definitions approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
+                    active: %w[case_queues categories sla_policies entitlements business_calendars macros routing_rules escalation_rules custom_field_definitions approval_processes reference_docs knowledge_categories connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
                 <% if policy(CaseQueue).create? %>
                   <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                   <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
                   <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
+                  <%= nav_link t("layout.nav.entitlements"), entitlements_path, active: controller_name == "entitlements" %>
                   <%= nav_link t("layout.nav.business_calendars"), business_calendars_path, active: controller_name == "business_calendars" %>
                   <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
                 <% end %>
@@ -119,7 +121,8 @@
                   <%= nav_link t("layout.nav.approval_processes"), approval_processes_path, active: controller_name == "approval_processes" %>
                 <% end %>
                 <% if policy(ReferenceDoc).index? %>
-                  <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path, active: controller_name == "reference_docs" %>
+                  <%= nav_link t("layout.nav.reference_docs"), admin_reference_docs_path,
+                               active: %w[reference_docs knowledge_categories].include?(controller_name) %>
                 <% end %>
                 <% if policy(ConnectorInvocation).index? %>
                   <%= nav_link t("layout.nav.agent_actions"), admin_connector_invocations_path, active: controller_name == "connector_invocations" %>

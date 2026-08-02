@@ -35,6 +35,7 @@ en:
       queues: "Queues"
       categories: "Categories"
       sla_policies: "SLA policies"
+      entitlements: "Entitlements"
       business_calendars: "Business calendars"
       macros: "Macros"
       routing_rules: "Routing rules"
@@ -53,6 +54,7 @@ en:
       products: "Products"
       price_books: "Price books"
       competitors: "Competitors"
+      campaigns: "Campaigns"
       users: "Users"
       roles: "Roles"
       tenants: "Tenants"
@@ -503,6 +505,7 @@ en:
       status:
         draft: "Draft"
         published: "Published"
+        retired: "Retired"
       visibility:
         internal: "Internal"
         public: "Public"
@@ -574,6 +577,8 @@ en:
       score: "Score"
       email_consent: "Marketing email opt-in"
       sms_consent: "SMS opt-in"
+      first_touch_campaign: "First-touch campaign"
+      utm: "First-touch UTM"
     form:
       value_hint: "Estimated deal value in rupees."
       email_consent_hint: "Only opted-in leads receive marketing sequence emails. Unsubscribing turns this off."
@@ -648,6 +653,7 @@ en:
       active: "Accept submissions"
       is_default: "Use for /inquiry"
       status: "Status"
+      campaign: "Default campaign"
     targets:
       name: "Lead name (required)"
       email: "Email source field"
@@ -656,6 +662,7 @@ en:
       notes: "Message / notes source field"
     form:
       mapping_hint: "Enter the public input name for each lead field. Keep at least email or phone; blank optional mappings are omitted."
+      campaign_hint: "Used as first-touch attribution when a submission has no matching utm_campaign."
     index:
       title: "Web-to-lead forms"
       subtitle: "Map public field names into Docket and retain form and consent provenance on the lead."
@@ -700,6 +707,7 @@ en:
       status: "Status"
       lost_reason: "Lost reason"
       price_book: "Price book"
+      first_touch_campaign: "First-touch campaign"
     form:
       pipeline_hint: "New deals land in this pipeline's first stage."
       lost_reason_hint: "Recorded when the deal is marked lost — feeds the sales report's loss breakdown."
@@ -1058,6 +1066,9 @@ en:
       no_losses: "No lost deals with a recorded reason in this period."
       competitor_losses: "Lost to competitors"
       no_competitor_losses: "No competitor-attributed losses in this period."
+      campaign_attribution: "First-touch campaign attribution"
+      no_campaign_attribution: "No lead or deal attribution in this period."
+      unattributed: "(unattributed)"
       columns:
         stage: "Stage"
         deals: "Deals"
@@ -1068,6 +1079,9 @@ en:
         reason: "Reason"
         avg_days: "Avg days in stage"
         competitor: "Competitor"
+        campaign: "Campaign"
+        leads: "Leads"
+        won_value: "Won value"
   products:
     fields:
       name: "Product"
@@ -1110,6 +1124,63 @@ en:
       updated: "Competitor updated."
     destroy:
       deleted: "Competitor deleted."
+
+  campaigns:
+    fields:
+      name: "Campaign"
+      code: "Internal code"
+      description: "Description"
+      status: "Status"
+      channel: "Channel"
+      starts_on: "Starts"
+      ends_on: "Ends"
+      window: "Campaign window"
+      budget: "Budget"
+      currency: "Currency (ISO code)"
+      utm_source: "UTM source"
+      utm_medium: "UTM medium"
+      utm_campaign: "UTM campaign"
+    enum:
+      status:
+        draft: "Draft"
+        active: "Active"
+        completed: "Completed"
+        archived: "Archived"
+      channel:
+        email: "Email"
+        paid_search: "Paid search"
+        social: "Social"
+        event: "Event"
+        referral: "Referral"
+        other: "Other"
+    form:
+      tracking: "Attribution tracking"
+      tracking_hint: "Incoming inquiry links match utm_campaign to an active campaign. Source and medium remain on the lead as first-touch evidence."
+    index:
+      title: "Campaigns"
+      new: "New campaign"
+      leads: "Leads"
+      deals: "Deals"
+      empty: "No campaigns yet."
+    show:
+      details: "Details"
+      influence: "First-touch influence"
+      won_value: "Won value"
+      recent_leads: "Recent attributed leads"
+      recent_deals: "Recent attributed deals"
+      no_leads: "No attributed leads."
+      no_deals: "No attributed deals."
+      confirm_delete: "Delete this campaign? Existing attribution remains in the audit trail."
+    new:
+      title: "New campaign"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Campaign created."
+    update:
+      updated: "Campaign updated."
+    destroy:
+      deleted: "Campaign deleted."
 
   pipelines:
     fields:
@@ -1161,20 +1232,37 @@ en:
       zero: "Same day"
       one: "After 1 day"
       other: "After %{count} days"
+    hour_count:
+      one: "1 hour"
+      other: "%{count} hours"
+    business_hours: "business hours"
     fields:
       name: "Name"
       active: "Active"
       steps: "Steps"
       position: "Order"
       delay_days: "Delay (days)"
+      delay_hours: "Delay (hours)"
+      use_business_hours: "Deliver during business hours"
+      owner: "Sequence owner"
+      business_calendar: "Business calendar"
+      template: "Template"
       channel: "Channel"
       subject: "Subject"
       body: "Message"
       remove: "Remove"
     form:
-      steps_hint: "Each step waits its delay, then reaches the target through your mail or SMS gateway."
-      body_hint: "Use {{contact_name}} and {{company_name}} for personalisation."
-      channel_hint: "SMS steps fire your MSG91 connector's DLT template with the contact's variables, and only reach contacts who have opted in."
+      steps_hint: "Each step waits its delay, then reaches the target through your mail or SMS gateway. Calls and tasks enter the owner's activity queue."
+      body_hint: "Available personalisation: %{variables}"
+      channel_hint: "Email and SMS require consent. Calls and manual tasks create an activity for the target owner or sequence owner."
+      owner_hint: "Required for sequences with call or manual task steps. A lead's owner takes precedence at enrollment time."
+      default_calendar: "Tenant default calendar"
+      custom_template: "Custom message"
+      template_hint: "Selecting a template fills blank subject and message fields when you save."
+    templates:
+      introduction: "Introduction"
+      follow_up: "Follow-up"
+      check_in: "Check-in"
     enum:
       status:
         active: "Active"
@@ -1183,6 +1271,8 @@ en:
       channel:
         email: "Email"
         sms: "SMS"
+        call: "Call"
+        manual_task: "Manual task"
     index:
       title: "Sequences"
       new_sequence: "New sequence"
@@ -1195,6 +1285,12 @@ en:
         hint: "A sequence sends a series of timed emails to leads or contacts."
     show:
       steps: "Steps"
+      analytics: "Engagement"
+      emails_sent: "Emails delivered"
+      open_rate: "Unique open rate"
+      click_rate: "Unique click rate"
+      reply_rate: "Reply rate"
+      manual_activities: "Manual activities"
       enrollments: "Enrollments"
       last_delivery: "Last delivery: %{status}"
       no_enrollments: "No one is enrolled yet."
@@ -1384,6 +1480,41 @@ en:
       updated: "SLA policy updated."
     destroy:
       deleted: "SLA policy deleted."
+
+  entitlements:
+    fields:
+      name: "Contract name"
+      holder: "Applies to"
+      organisation: "Organisation"
+      contact: "Contact"
+      sla_policy: "SLA policy"
+      starts_at: "Coverage starts"
+      ends_at: "Coverage ends"
+      coverage: "Coverage window"
+    form:
+      holder_hint: "Choose one organisation or one contact. Contact contracts take precedence over organisation contracts."
+      choose_policy: "Choose an SLA policy"
+      no_organisation: "No organisation"
+      no_contact: "No contact"
+    index:
+      title: "Entitlements"
+      subtitle: "Apply SLA service contracts to organisations or individual contacts."
+      new: "New entitlement"
+      no_end: "No end date"
+      confirm_delete: "Delete this entitlement?"
+      empty:
+        title: "No entitlements yet"
+        hint: "Entitlements apply an SLA policy before the tenant default."
+    new:
+      title: "New entitlement"
+    edit:
+      title: "Edit entitlement %{name}"
+    create:
+      created: "Entitlement created."
+    update:
+      updated: "Entitlement updated."
+    destroy:
+      deleted: "Entitlement deleted."
 
   business_calendars:
     fields:
@@ -1818,6 +1949,12 @@ en:
         empty: "No articles have been published yet."
       show:
         back: "← All articles"
+        helpful_question: "Was this article helpful?"
+        helpful_yes: "Yes"
+        helpful_no: "No"
+        rating_summary: "%{helpful} of %{total} readers found this helpful."
+      rate:
+        recorded: "Thank you for your feedback."
     customer:
       sso_failed: "Sign-in failed. Please try again."
       signed_in: "Welcome, %{name}."
@@ -2396,6 +2533,8 @@ en:
           default_queue_hint: "Portal and email cases land here unless the AI routes them."
           default_sla_policy: "Default SLA policy"
           outbound_email_from: "Outbound email From address"
+          sequence_reply_domain: "Sequence reply domain"
+          sequence_reply_domain_hint: "Inbound mail domain routed to this deployment. Replies use sequence+token addresses at this domain."
           notification_email_enabled: "Email staff about new and escalated notifications"
           csat_enabled: "Email a satisfaction survey when a case is resolved"
           sla_risk_minutes: "SLA risk window (business minutes)"
@@ -2427,12 +2566,14 @@ en:
         status: "Status"
         visibility: "Visibility"
         category: "Category"
+        locale: "Language"
       form:
         file_hint: "PDF, text, markdown or CSV — the text is extracted into the field below for the AI to ground on."
         body_hint: "This is what the AI retrieves and quotes. Edit freely after upload."
         lifecycle_legend: "Publishing"
         visibility_hint: "Internal articles ground the AI but stay private. Public articles also appear on the customer knowledge base (only when published)."
         no_category: "No category"
+        locale_hint: "Translations share one article identity while keeping independent content and version history."
       errors:
         bad_pdf: "could not be read as a PDF"
         extraction_failed: "could not be read — the text could not be extracted"
@@ -2443,9 +2584,12 @@ en:
         confirm_delete: "Delete this document?"
         publish: "Publish"
         unpublish: "Unpublish"
+        add_translation: "Add translation"
+        manage_categories: "Manage categories"
         columns:
           title: "Title"
           status: "Status"
+          locale_version: "Language / version"
           category: "Category"
           file: "File"
         empty:
@@ -2455,6 +2599,25 @@ en:
         title: "New reference document"
       edit:
         title: "Edit %{title}"
+      show:
+        back: "← Knowledge"
+        summary: "%{language} · version %{version} · %{status}"
+        retire: "Retire"
+        confirm_retire: "Retire this article? It will leave search and the public portal."
+        current_content: "Current content"
+        feedback: "Helpfulness"
+        feedback_summary: "%{helpful} of %{total} readers found this helpful · %{score}%"
+        translations: "Translations"
+        no_translations: "No translations yet."
+        version_history: "Version history"
+        current: "current"
+        system: "System"
+        columns:
+          version: "Version"
+          status: "Status"
+          category: "Category"
+          author: "Author"
+          created_at: "Created"
       create:
         created: "Reference document created."
       update:
@@ -2464,6 +2627,39 @@ en:
       toggle_published:
         published: "“%{title}” published."
         unpublished: "“%{title}” unpublished."
+      retire:
+        retired: "“%{title}” retired."
+    knowledge_categories:
+      fields:
+        name: "Name"
+        description: "Description"
+        parent: "Parent category"
+        position: "Position"
+      form:
+        no_parent: "Top-level category"
+      index:
+        title: "Knowledge categories"
+        intro: "Build a category tree for browsing and reporting across articles."
+        articles: "Articles"
+        new_category: "New category"
+        confirm_delete: "Delete this category? Its articles will become uncategorised."
+        columns:
+          path: "Category path"
+          description: "Description"
+          articles: "Articles"
+        empty:
+          title: "No knowledge categories yet"
+          hint: "Create top-level categories and nest specialised topics beneath them."
+      new:
+        title: "New knowledge category"
+      edit:
+        title: "Edit %{name}"
+      create:
+        created: "Knowledge category created."
+      update:
+        updated: "Knowledge category updated."
+      destroy:
+        deleted: "Knowledge category deleted."
     roles:
       index:
         title: "Roles & permissions"
@@ -2986,6 +3182,8 @@ en:
     errors:
       messages:
         cross_tenant: "belongs to another organisation"
+        exactly_one_entitlement_holder: "must select exactly one organisation or contact"
+        after_start: "must be after the coverage start"
       models:
         work_item:
           attributes:

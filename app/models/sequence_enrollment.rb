@@ -43,7 +43,7 @@ class SequenceEnrollment < ApplicationRecord
         next
       end
 
-      sequence_deliveries.create!(delivery_attributes(step))
+      create_delivery!(step)
 
       # Re-resolve "next" from the live ordered list, so a deletion elsewhere
       # can't shift us onto the wrong step.
@@ -53,7 +53,7 @@ class SequenceEnrollment < ApplicationRecord
       update!(
         current_step: next_step,
         current_step_position: current_step_position + 1,
-        next_run_at: next_step ? Time.current + next_step.delay_days.days : nil,
+        next_run_at: next_step&.scheduled_at(Time.current),
         status: next_step ? :active : :completed
       )
       advanced = true
@@ -82,10 +82,26 @@ class SequenceEnrollment < ApplicationRecord
   end
 
   def interpolation_vars
+    owner = enrolment_owner
+    deal = related_deal
+    name = enrollable.try(:name).to_s
     {
-      "contact_name" => enrollable.try(:name),
-      "company_name" => enrollable.try(:company_name) || enrollable.try(:organisation)&.name
+      "name" => name,
+      "contact_name" => name,
+      "first_name" => name.split.first,
+      "company_name" => enrollable.try(:company_name) || enrollable.try(:organisation)&.name,
+      "email" => enrollable.try(:email),
+      "phone" => enrollable.try(:phone),
+      "owner_name" => owner&.name,
+      "owner_email" => owner&.email_address,
+      "sequence_name" => sequence.name,
+      "deal_name" => deal&.name,
+      "today" => I18n.l(Date.current)
     }
+  end
+
+  def enrolment_owner
+    enrollable.try(:owner) || sequence.owner
   end
 
   private
@@ -94,12 +110,50 @@ class SequenceEnrollment < ApplicationRecord
     update!(status: :completed, next_run_at: nil)
   end
 
+  def create_delivery!(step)
+    attributes = delivery_attributes(step)
+    if step.channel_call? || step.channel_manual_task?
+      activity = Activity.create!(activity_attributes(step))
+      attributes[:activity] = activity
+    end
+    sequence_deliveries.create!(attributes)
+  end
+
   def delivery_attributes(step)
     if step.channel_sms?
       sms_delivery_attributes(step)
+    elsif step.channel_call? || step.channel_manual_task?
+      manual_delivery_attributes(step)
     else
       email_delivery_attributes(step)
     end
+  end
+
+  def activity_attributes(step)
+    {
+      tenant: tenant,
+      subject: enrollable,
+      owner: enrolment_owner,
+      kind: step.channel_call? ? :call : :task,
+      title: step.render_subject(interpolation_vars).presence || "#{sequence.name}: #{step.channel.humanize}",
+      body: step.render_body(interpolation_vars),
+      due_at: Time.current
+    }
+  end
+
+  def manual_delivery_attributes(step)
+    {
+      tenant: tenant,
+      sequence_step: step,
+      channel: step.channel,
+      recipient: enrolment_owner&.email_address,
+      status: :delivered,
+      delivered_at: Time.current,
+      payload: {
+        "subject" => step.render_subject(interpolation_vars),
+        "body" => step.render_body(interpolation_vars)
+      }
+    }
   end
 
   def email_delivery_attributes(step)
@@ -148,5 +202,12 @@ class SequenceEnrollment < ApplicationRecord
       last_error: reason,
       payload: { "variables" => interpolation_vars }
     }
+  end
+
+  def related_deal
+    return enrollable.converted_deal if enrollable.is_a?(Lead)
+    return enrollable.deals.open_deals.order(created_at: :desc).first if enrollable.is_a?(Contact)
+
+    nil
   end
 end

@@ -24,6 +24,16 @@
   <fieldset>
     <legend><%= t("admin.reference_docs.form.lifecycle_legend") %></legend>
 
+    <% if reference_doc.translation_key.present? %>
+      <%= f.hidden_field :translation_key %>
+    <% end %>
+
+    <div class="form-row">
+      <%= f.label :locale, t("admin.reference_docs.fields.locale") %>
+      <%= f.select :locale, I18n.available_locales.map { |locale| [ t("locales.#{locale}"), locale ] } %>
+      <p class="form-hint"><%= t("admin.reference_docs.form.locale_hint") %></p>
+    </div>
+
     <div class="form-row">
       <%= f.label :status, t("admin.reference_docs.fields.status") %>
       <%= f.select :status, ReferenceDoc.statuses.keys.map { |s| [ t("reference_docs.enum.status.#{s}"), s ] } %>
@@ -36,8 +46,8 @@
     </div>
 
     <div class="form-row">
-      <%= f.label :category_id, t("admin.reference_docs.fields.category") %>
-      <%= f.collection_select :category_id, Category.order(:name), :id, :name,
+      <%= f.label :knowledge_category_id, t("admin.reference_docs.fields.category") %>
+      <%= f.collection_select :knowledge_category_id, KnowledgeCategory.order(:name), :id, :display_path,
             { include_blank: t("admin.reference_docs.form.no_category") } %>
     </div>
   </fieldset>

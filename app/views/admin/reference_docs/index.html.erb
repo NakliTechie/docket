@@ -2,6 +2,7 @@
 <div class="page-header">
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
+    <%= link_to t(".manage_categories"), admin_knowledge_categories_path, class: "btn" %>
     <%= link_to new_admin_reference_doc_path, class: "btn btn-primary" do %>
       <%= icon "plus" %><%= t(".new_doc") %>
     <% end %>
@@ -16,6 +17,7 @@
         <tr>
           <th><%= t(".columns.title") %></th>
           <th><%= t(".columns.status") %></th>
+          <th><%= t(".columns.locale_version") %></th>
           <th><%= t(".columns.category") %></th>
           <th><%= t(".columns.file") %></th>
           <th class="actions"><%= t("tables.actions") %></th>
@@ -23,15 +25,16 @@
       </thead>
       <tbody>
         <% @reference_docs.each do |doc| %>
-          <tr class="<%= "muted-row" if doc.status_draft? %>">
-            <td><%= doc.title %></td>
+          <tr class="<%= "muted-row" unless doc.status_published? %>">
+            <td><%= link_to doc.title, admin_reference_doc_path(doc) %></td>
             <td>
               <span class="badge <%= doc.status_published? ? "badge-success" : "" %>"><%= t("reference_docs.enum.status.#{doc.status}") %></span>
               <% if doc.visibility_public? %>
                 <span class="badge"><%= t("reference_docs.enum.visibility.public") %></span>
               <% end %>
             </td>
-            <td class="table-meta"><%= doc.category&.name %></td>
+            <td><span class="badge"><%= doc.locale.upcase %></span> v<%= doc.version_number %></td>
+            <td class="table-meta"><%= doc.knowledge_category&.display_path %></td>
             <td class="table-meta">
               <% if doc.file.attached? %>
                 <%= link_to doc.file.filename, rails_blob_path(doc.file, disposition: "attachment") %>
@@ -42,6 +45,7 @@
                     toggle_published_admin_reference_doc_path(doc), method: :post,
                     class: "btn btn-sm", form: { class: "inline-form" } %>
               <%= link_to t("actions.edit"), edit_admin_reference_doc_path(doc), class: "btn btn-sm" %>
+              <%= link_to t(".add_translation"), new_admin_reference_doc_path(translation_of: doc.id), class: "btn btn-sm" %>
               <%= button_to t("actions.delete"), admin_reference_doc_path(doc), method: :delete, class: "btn btn-sm btn-danger",
                     form: { class: "inline-form", data: { turbo_confirm: t(".confirm_delete") } } %>
             </td>

@@ -24,6 +24,8 @@ class Lead < ApplicationRecord
   belongs_to :owner, -> { with_deleted }, class_name: "User", optional: true
   belongs_to :contact, -> { with_deleted }, optional: true
   belongs_to :converted_deal, -> { with_deleted }, class_name: "Deal", optional: true
+  belongs_to :first_touch_campaign, -> { with_deleted }, class_name: "Campaign", optional: true,
+             inverse_of: :attributed_leads
   # Which connector ingested this record (nil for portal/manual/API-created).
   belongs_to :source_connector, class_name: "Connector", optional: true
   belongs_to :merged_into, -> { with_deleted }, class_name: "Lead", optional: true
@@ -34,6 +36,7 @@ class Lead < ApplicationRecord
   normalizes :phone, with: ->(p) { p.gsub(/[^\d+]/, "").presence }
 
   before_validation :clear_email_unsubscribed_at_on_opt_in
+  before_validation :stamp_first_touch_at, if: :will_save_change_to_first_touch_campaign_id?
 
   validates :name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
@@ -142,7 +145,15 @@ class Lead < ApplicationRecord
       name: company_name.presence || name,
       pipeline: pipeline, pipeline_stage: pipeline.first_stage,
       owner: owner, contact: contact, organisation: contact.organisation,
-      lead: self, value_cents: value_estimate_cents
+      lead: self, value_cents: value_estimate_cents,
+      first_touch_campaign: first_touch_campaign, first_touch_at: first_touch_at,
+      first_touch_utm_source: first_touch_utm_source,
+      first_touch_utm_medium: first_touch_utm_medium,
+      first_touch_utm_campaign: first_touch_utm_campaign,
+      first_touch_utm_term: first_touch_utm_term,
+      first_touch_utm_content: first_touch_utm_content,
+      first_touch_landing_page: first_touch_landing_page,
+      first_touch_referrer: first_touch_referrer
     )
   end
 
@@ -153,6 +164,10 @@ class Lead < ApplicationRecord
 
   def clear_email_unsubscribed_at_on_opt_in
     self.email_unsubscribed_at = nil if will_save_change_to_email_consent? && email_consent?
+  end
+
+  def stamp_first_touch_at
+    self.first_touch_at ||= Time.current if first_touch_campaign_id.present?
   end
 
   def merge_lineage_is_valid

@@ -160,4 +160,32 @@ class CasesMailboxTest < ActionMailbox::TestCase
       )
     end
   end
+
+  test "a sequence reply records engagement, stops later steps, and creates a rep activity" do
+    sequence = Sequence.new(name: "Reply plan", owner: users(:sales))
+    sequence.sequence_steps.build(position: 0, delay_days: 0, subject: "Hello", body: "Reply here")
+    sequence.sequence_steps.build(position: 1, delay_days: 3, subject: "Later", body: "Follow-up")
+    sequence.save!
+    lead = Lead.create!(name: "Reply Target", email: "reply.target@example.com",
+                        owner: users(:sales), email_consent: true)
+    enrollment = sequence.enroll!(lead)
+    enrollment.advance!
+    delivery = enrollment.sequence_deliveries.first
+
+    assert_no_difference "Case.count" do
+      assert_difference "Activity.count", 1 do
+        receive_inbound_email_from_mail(
+          from: lead.email, to: SequenceTracking.reply_address(delivery),
+          subject: "Re: Hello", body: "Yes, let us talk."
+        )
+      end
+    end
+
+    assert delivery.reload.replied_at.present?
+    assert enrollment.reload.status_cancelled?
+    activity = Activity.order(:id).last
+    assert_equal users(:sales), activity.owner
+    assert_equal lead, activity.subject
+    assert_includes activity.body, "let us talk"
+  end
 end

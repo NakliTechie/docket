@@ -47,7 +47,7 @@ module Api
 
       def form_params
         params.require(:lead_capture_form).permit(:name, :slug, :consent_disclosure,
-                                                  :active, :is_default, field_mapping: {})
+                                                  :active, :is_default, :campaign_id, field_mapping: {})
       end
     end
   end

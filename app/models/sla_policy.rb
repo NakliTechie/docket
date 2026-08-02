@@ -12,6 +12,7 @@ class SlaPolicy < ApplicationRecord
   # unreachable via the hidden parent until it's restored).
   has_many :sla_targets, dependent: nil
   has_many :cases, dependent: nil
+  has_many :entitlements, dependent: nil
   belongs_to :business_calendar, optional: true
 
   accepts_nested_attributes_for :sla_targets, allow_destroy: true

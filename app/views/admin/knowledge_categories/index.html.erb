@@ -1,0 +1,46 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <div>
+    <h1><%= t(".title") %></h1>
+    <p class="muted"><%= t(".intro") %></p>
+  </div>
+  <div class="page-actions">
+    <%= link_to admin_reference_docs_path, class: "btn" do %>
+      <%= icon "arrow-left" %><%= t(".articles") %>
+    <% end %>
+    <%= link_to new_admin_knowledge_category_path, class: "btn btn-primary" do %>
+      <%= icon "plus" %><%= t(".new_category") %>
+    <% end %>
+  </div>
+</div>
+
+<% if @knowledge_categories.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th><%= t(".columns.path") %></th>
+        <th><%= t(".columns.description") %></th>
+        <th><%= t(".columns.articles") %></th>
+        <th class="actions"><%= t("tables.actions") %></th>
+      </tr></thead>
+      <tbody>
+        <% @knowledge_categories.each do |category| %>
+          <tr>
+            <td><%= category.display_path %></td>
+            <td class="table-meta"><%= category.description %></td>
+            <td><%= category.reference_docs.count %></td>
+            <td class="actions">
+              <%= link_to t("actions.edit"), edit_admin_knowledge_category_path(category), class: "btn btn-sm" %>
+              <%= button_to t("actions.delete"), admin_knowledge_category_path(category), method: :delete,
+                    class: "btn btn-sm btn-danger", form: { class: "inline-form",
+                    data: { turbo_confirm: t(".confirm_delete") } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+        action: link_to(t(".new_category"), new_admin_knowledge_category_path, class: "btn btn-primary") %>
+<% end %>

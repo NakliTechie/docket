@@ -60,11 +60,10 @@ segmentation, enrichment via LinkedIn + Zapier.
    LinkedIn/X handle, no messaging handle, no job title). Deals have no notes
    field, no next-step/follow-up date, no task or reminder object. No call or
    meeting objects.
-2. **Sequence depth.** Steps are email + SMS only, despite WhatsApp/Telegram
-   connectors existing in the catalogue. `sequence_deliveries` track
-   delivered/failed but no opens/clicks → no campaign analytics. **A reply
-   does not stop an enrollment** (cancel is manual, unsubscribe, or
-   consent-loss only) — a correctness gap, not a feature gap.
+2. **Sequence channel depth.** Steps cover email, SMS, rep calls, and manual
+   tasks with hour/business-calendar timing. Email receipts cover opens,
+   signed-link clicks, and authenticated replies; a reply stops later steps.
+   WhatsApp/Telegram remain case-intake channels rather than sequence steps.
 3. **Conversation-signal AI.** Breakcold's AI acts on inbox signals (reply →
    advance stage, create follow-up task, enrich record). Docket's rules are
    dwell-time-based because there is no seller conversation stream to watch;
@@ -92,12 +91,12 @@ segmentation, enrichment via LinkedIn + Zapier.
 2. Packaged `docket` Agent Skill + per-client setup guides — the tools and
    decisioning rules exist; wrapping 5–6 named workflows is documentation-
    weight work with outsized positioning value.
-3. Reply stops sequences — small, correctness.
-4. Sales tasks/reminders + deal notes — small schema, daily-workflow hole.
-5. WhatsApp/Telegram sequence steps + sequence touches on the 360 timeline —
+3. Deal notes and next-step reminders — the shared Activity queue covers calls
+   and tasks, but deal-specific planning remains thin.
+4. WhatsApp/Telegram sequence steps + sequence touches on the 360 timeline —
    the India-appropriate answer to Breakcold's multichannel story, on
    connectors already built.
-6. Longer-term: per-contact unified conversation view (already named as
+5. Longer-term: per-contact unified conversation view (already named as
    roadmap debt in the vision doc) — prerequisite for conversation-signal
    automation.
 

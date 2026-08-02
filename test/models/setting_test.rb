@@ -14,5 +14,9 @@ class SettingTest < ActiveSupport::TestCase
     assert_equal "https://models.example.test/v1", SettingContract.coerce(
       "llm_endpoint_url", "https://models.example.test/v1"
     )
+    assert_equal "inbound.example.test", SettingContract.coerce(
+      "sequence_reply_domain", "inbound.example.test"
+    )
+    assert SettingContract.invalid?(SettingContract.coerce("sequence_reply_domain", "bad domain"))
   end
 end

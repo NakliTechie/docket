@@ -48,4 +48,11 @@ class BusinessTimeTest < ActiveSupport::TestCase
     assert_equal Time.utc(2026, 11, 2, 15, 30),
                  BusinessTime.add_minutes(calendar: @calendar, from: from, minutes: 120)
   end
+
+  test "finds the next opening when a timestamp falls outside business hours" do
+    friday_evening = Time.utc(2026, 8, 7, 19, 0)
+
+    assert_equal Time.utc(2026, 8, 10, 9, 0),
+                 BusinessTime.next_opening(calendar: @calendar, at: friday_evening)
+  end
 end

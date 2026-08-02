@@ -35,6 +35,7 @@ hi:
       queues: "कतारें"
       categories: "श्रेणियाँ"
       sla_policies: "एसएलए नीतियाँ"
+      entitlements: "सेवा अधिकार"
       business_calendars: "कार्य कैलेंडर"
       macros: "मैक्रो"
       routing_rules: "रूटिंग नियम"
@@ -53,6 +54,7 @@ hi:
       products: "उत्पाद"
       price_books: "मूल्य पुस्तिकाएँ"
       competitors: "प्रतिस्पर्धी"
+      campaigns: "अभियान"
       users: "उपयोगकर्ता"
       roles: "भूमिकाएँ"
       tenants: "टेनेंट"
@@ -503,6 +505,7 @@ hi:
       status:
         draft: "मसौदा"
         published: "प्रकाशित"
+        retired: "सेवानिवृत्त"
       visibility:
         internal: "आंतरिक"
         public: "सार्वजनिक"
@@ -574,6 +577,8 @@ hi:
       score: "स्कोर"
       email_consent: "मार्केटिंग ईमेल सहमति"
       sms_consent: "SMS सहमति"
+      first_touch_campaign: "प्रथम-स्पर्श अभियान"
+      utm: "प्रथम-स्पर्श UTM"
     form:
       value_hint: "अनुमानित सौदा मूल्य रुपयों में।"
       email_consent_hint: "केवल सहमति देने वाली लीड्स को मार्केटिंग अनुक्रम ईमेल मिलते हैं। सदस्यता समाप्त करने पर यह बंद हो जाता है।"
@@ -648,6 +653,7 @@ hi:
       active: "सबमिशन स्वीकार करें"
       is_default: "/inquiry के लिए उपयोग करें"
       status: "स्थिति"
+      campaign: "डिफ़ॉल्ट अभियान"
     targets:
       name: "लीड नाम (आवश्यक)"
       email: "ईमेल स्रोत फ़ील्ड"
@@ -656,6 +662,7 @@ hi:
       notes: "संदेश / टिप्पणी स्रोत फ़ील्ड"
     form:
       mapping_hint: "हर लीड फ़ील्ड के लिए सार्वजनिक इनपुट नाम दें। कम से कम ईमेल या फ़ोन रखें; खाली वैकल्पिक मानचित्रण छोड़ दिए जाते हैं।"
+      campaign_hint: "जब सबमिशन में मेल खाता utm_campaign न हो, तब प्रथम-स्पर्श श्रेय के लिए उपयोग होता है।"
     index:
       title: "वेब-टू-लीड फ़ॉर्म"
       subtitle: "सार्वजनिक फ़ील्ड नाम Docket में मैप करें और फ़ॉर्म व सहमति का स्रोत लीड पर सुरक्षित रखें।"
@@ -700,6 +707,7 @@ hi:
       status: "स्थिति"
       lost_reason: "हार का कारण"
       price_book: "मूल्य पुस्तिका"
+      first_touch_campaign: "प्रथम-स्पर्श अभियान"
     form:
       pipeline_hint: "नए सौदे इस पाइपलाइन के पहले चरण में आते हैं।"
       lost_reason_hint: "सौदा हारा हुआ चिह्नित करने पर दर्ज — बिक्री रिपोर्ट के हार-विश्लेषण में जाता है।"
@@ -1058,6 +1066,9 @@ hi:
       no_losses: "इस अवधि में दर्ज कारण वाला कोई हारा सौदा नहीं।"
       competitor_losses: "प्रतिस्पर्धियों से हारे"
       no_competitor_losses: "इस अवधि में प्रतिस्पर्धी से जुड़ी कोई हार नहीं।"
+      campaign_attribution: "प्रथम-स्पर्श अभियान श्रेय"
+      no_campaign_attribution: "इस अवधि में कोई लीड या सौदा श्रेय नहीं।"
+      unattributed: "(बिना श्रेय)"
       columns:
         stage: "चरण"
         deals: "सौदे"
@@ -1068,6 +1079,9 @@ hi:
         reason: "कारण"
         avg_days: "चरण में औसत दिन"
         competitor: "प्रतिस्पर्धी"
+        campaign: "अभियान"
+        leads: "लीड्स"
+        won_value: "जीता मूल्य"
   products:
     fields:
       name: "उत्पाद"
@@ -1110,6 +1124,63 @@ hi:
       updated: "प्रतिस्पर्धी अद्यतन हुआ।"
     destroy:
       deleted: "प्रतिस्पर्धी हटाया गया।"
+
+  campaigns:
+    fields:
+      name: "अभियान"
+      code: "आंतरिक कोड"
+      description: "विवरण"
+      status: "स्थिति"
+      channel: "माध्यम"
+      starts_on: "आरंभ"
+      ends_on: "समाप्ति"
+      window: "अभियान अवधि"
+      budget: "बजट"
+      currency: "मुद्रा (ISO कोड)"
+      utm_source: "UTM स्रोत"
+      utm_medium: "UTM माध्यम"
+      utm_campaign: "UTM अभियान"
+    enum:
+      status:
+        draft: "मसौदा"
+        active: "सक्रिय"
+        completed: "पूर्ण"
+        archived: "संग्रहीत"
+      channel:
+        email: "ईमेल"
+        paid_search: "सशुल्क खोज"
+        social: "सोशल"
+        event: "कार्यक्रम"
+        referral: "रेफरल"
+        other: "अन्य"
+    form:
+      tracking: "श्रेय ट्रैकिंग"
+      tracking_hint: "आने वाले पूछताछ लिंक का utm_campaign सक्रिय अभियान से मेल खाता है। स्रोत और माध्यम प्रथम-स्पर्श प्रमाण के रूप में लीड पर रहते हैं।"
+    index:
+      title: "अभियान"
+      new: "नया अभियान"
+      leads: "लीड्स"
+      deals: "सौदे"
+      empty: "अभी कोई अभियान नहीं।"
+    show:
+      details: "विवरण"
+      influence: "प्रथम-स्पर्श प्रभाव"
+      won_value: "जीता मूल्य"
+      recent_leads: "हाल की श्रेयित लीड्स"
+      recent_deals: "हाल के श्रेयित सौदे"
+      no_leads: "कोई श्रेयित लीड नहीं।"
+      no_deals: "कोई श्रेयित सौदा नहीं।"
+      confirm_delete: "इस अभियान को हटाएं? मौजूदा श्रेय ऑडिट इतिहास में रहेगा।"
+    new:
+      title: "नया अभियान"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "अभियान बनाया गया।"
+    update:
+      updated: "अभियान अपडेट किया गया।"
+    destroy:
+      deleted: "अभियान हटाया गया।"
 
   pipelines:
     fields:
@@ -1161,20 +1232,37 @@ hi:
       zero: "उसी दिन"
       one: "1 दिन बाद"
       other: "%{count} दिन बाद"
+    hour_count:
+      one: "1 घंटा"
+      other: "%{count} घंटे"
+    business_hours: "कार्य समय"
     fields:
       name: "नाम"
       active: "सक्रिय"
       steps: "चरण"
       position: "क्रम"
       delay_days: "देरी (दिन)"
+      delay_hours: "देरी (घंटे)"
+      use_business_hours: "कार्य समय में डिलीवर करें"
+      owner: "अनुक्रम स्वामी"
+      business_calendar: "कार्य कैलेंडर"
+      template: "टेम्पलेट"
       channel: "माध्यम"
       subject: "विषय"
       body: "संदेश"
       remove: "हटाएं"
     form:
-      steps_hint: "हर चरण अपनी देरी के बाद लक्ष्य तक आपके मेल या SMS गेटवे से पहुँचता है।"
-      body_hint: "व्यक्तिगत करने के लिए {{contact_name}} और {{company_name}} का उपयोग करें।"
-      channel_hint: "SMS चरण आपके MSG91 कनेक्टर के DLT टेम्पलेट को संपर्क के वेरिएबल्स के साथ भेजते हैं, और केवल उन संपर्कों तक पहुँचते हैं जिन्होंने सहमति दी है।"
+      steps_hint: "हर चरण अपनी देरी के बाद मेल या SMS से लक्ष्य तक पहुँचता है। कॉल और कार्य स्वामी की गतिविधि कतार में आते हैं।"
+      body_hint: "उपलब्ध व्यक्तिगत मान: %{variables}"
+      channel_hint: "ईमेल और SMS के लिए सहमति आवश्यक है। कॉल और मैनुअल कार्य लक्ष्य या अनुक्रम स्वामी के लिए गतिविधि बनाते हैं।"
+      owner_hint: "कॉल या मैनुअल कार्य वाले अनुक्रमों के लिए आवश्यक। नामांकन पर लीड स्वामी को प्राथमिकता मिलती है।"
+      default_calendar: "टेनेंट डिफ़ॉल्ट कैलेंडर"
+      custom_template: "कस्टम संदेश"
+      template_hint: "टेम्पलेट चुनने पर सहेजते समय रिक्त विषय और संदेश भरे जाते हैं।"
+    templates:
+      introduction: "परिचय"
+      follow_up: "अनुवर्ती"
+      check_in: "स्थिति पूछें"
     enum:
       status:
         active: "सक्रिय"
@@ -1183,6 +1271,8 @@ hi:
       channel:
         email: "ईमेल"
         sms: "SMS"
+        call: "कॉल"
+        manual_task: "मैनुअल कार्य"
     index:
       title: "अनुक्रम"
       new_sequence: "नया अनुक्रम"
@@ -1195,6 +1285,12 @@ hi:
         hint: "एक अनुक्रम लीड या संपर्कों को समयबद्ध ईमेल की श्रृंखला भेजता है।"
     show:
       steps: "चरण"
+      analytics: "सहभागिता"
+      emails_sent: "डिलीवर किए गए ईमेल"
+      open_rate: "विशिष्ट खोलने की दर"
+      click_rate: "विशिष्ट क्लिक दर"
+      reply_rate: "उत्तर दर"
+      manual_activities: "मैनुअल गतिविधियाँ"
       enrollments: "नामांकन"
       last_delivery: "अंतिम डिलीवरी: %{status}"
       no_enrollments: "अभी कोई नामांकित नहीं है।"
@@ -1384,6 +1480,41 @@ hi:
       updated: "एसएलए नीति अद्यतन की गई।"
     destroy:
       deleted: "एसएलए नीति हटाई गई।"
+
+  entitlements:
+    fields:
+      name: "अनुबंध का नाम"
+      holder: "किस पर लागू"
+      organisation: "संगठन"
+      contact: "संपर्क"
+      sla_policy: "एसएलए नीति"
+      starts_at: "कवरेज प्रारंभ"
+      ends_at: "कवरेज समाप्त"
+      coverage: "कवरेज अवधि"
+    form:
+      holder_hint: "एक संगठन या एक संपर्क चुनें। संपर्क अनुबंध को संगठन अनुबंध पर प्राथमिकता मिलती है।"
+      choose_policy: "एसएलए नीति चुनें"
+      no_organisation: "कोई संगठन नहीं"
+      no_contact: "कोई संपर्क नहीं"
+    index:
+      title: "सेवा अधिकार"
+      subtitle: "संगठनों या व्यक्तिगत संपर्कों पर एसएलए सेवा अनुबंध लागू करें।"
+      new: "नया सेवा अधिकार"
+      no_end: "कोई समाप्ति तिथि नहीं"
+      confirm_delete: "यह सेवा अधिकार हटाएँ?"
+      empty:
+        title: "अभी कोई सेवा अधिकार नहीं"
+        hint: "सेवा अधिकार टेनेंट डिफ़ॉल्ट से पहले एसएलए नीति लागू करते हैं।"
+    new:
+      title: "नया सेवा अधिकार"
+    edit:
+      title: "%{name} सेवा अधिकार संपादित करें"
+    create:
+      created: "सेवा अधिकार बनाया गया।"
+    update:
+      updated: "सेवा अधिकार अद्यतन किया गया।"
+    destroy:
+      deleted: "सेवा अधिकार हटाया गया।"
 
   business_calendars:
     fields:
@@ -1818,6 +1949,12 @@ hi:
         empty: "अभी तक कोई लेख प्रकाशित नहीं हुआ है।"
       show:
         back: "← सभी लेख"
+        helpful_question: "क्या यह लेख उपयोगी था?"
+        helpful_yes: "हाँ"
+        helpful_no: "नहीं"
+        rating_summary: "%{total} में से %{helpful} पाठकों ने इसे उपयोगी माना।"
+      rate:
+        recorded: "आपकी प्रतिक्रिया के लिए धन्यवाद।"
     customer:
       sso_failed: "साइन-इन विफल। कृपया पुनः प्रयास करें।"
       signed_in: "स्वागत है, %{name}।"
@@ -2396,6 +2533,8 @@ hi:
           default_queue_hint: "पोर्टल और ईमेल के मामले यहीं आते हैं जब तक एआई उन्हें रूट न करे।"
           default_sla_policy: "डिफ़ॉल्ट एसएलए नीति"
           outbound_email_from: "आउटबाउंड ईमेल का From पता"
+          sequence_reply_domain: "अनुक्रम उत्तर डोमेन"
+          sequence_reply_domain_hint: "इस परिनियोजन पर रूट किया गया इनबाउंड मेल डोमेन। उत्तर इस डोमेन पर sequence+token पते का उपयोग करते हैं।"
           notification_email_enabled: "नई और बढ़ी हुई सूचनाओं के बारे में स्टाफ़ को ईमेल करें"
           csat_enabled: "मामला हल होने पर संतुष्टि सर्वे ईमेल करें"
           sla_risk_minutes: "एसएलए जोखिम अवधि (कार्य मिनट)"
@@ -2427,12 +2566,14 @@ hi:
         status: "स्थिति"
         visibility: "दृश्यता"
         category: "श्रेणी"
+        locale: "भाषा"
       form:
         file_hint: "PDF, टेक्स्ट, मार्कडाउन या CSV — पाठ नीचे के फ़ील्ड में निकाला जाता है जिस पर एआई आधारित होता है।"
         body_hint: "एआई यही पुनर्प्राप्त और उद्धृत करता है। अपलोड के बाद स्वतंत्र रूप से संपादित करें।"
         lifecycle_legend: "प्रकाशन"
         visibility_hint: "आंतरिक लेख एआई को आधार देते हैं पर निजी रहते हैं। सार्वजनिक लेख प्रकाशित होने पर नागरिक ज्ञान-आधार में भी दिखते हैं।"
         no_category: "कोई श्रेणी नहीं"
+        locale_hint: "अनुवाद एक लेख पहचान साझा करते हैं, पर उनकी सामग्री और संस्करण इतिहास अलग रहता है।"
       errors:
         bad_pdf: "PDF के रूप में पढ़ा नहीं जा सका"
         extraction_failed: "पढ़ा नहीं जा सका — टेक्स्ट निकाला नहीं जा सका"
@@ -2443,9 +2584,12 @@ hi:
         confirm_delete: "यह दस्तावेज़ हटाएँ?"
         publish: "प्रकाशित करें"
         unpublish: "अप्रकाशित करें"
+        add_translation: "अनुवाद जोड़ें"
+        manage_categories: "श्रेणियाँ प्रबंधित करें"
         columns:
           title: "शीर्षक"
           status: "स्थिति"
+          locale_version: "भाषा / संस्करण"
           category: "श्रेणी"
           file: "फ़ाइल"
         empty:
@@ -2455,6 +2599,25 @@ hi:
         title: "नया संदर्भ दस्तावेज़"
       edit:
         title: "%{title} संपादित करें"
+      show:
+        back: "← ज्ञान-आधार"
+        summary: "%{language} · संस्करण %{version} · %{status}"
+        retire: "सेवानिवृत्त करें"
+        confirm_retire: "इस लेख को सेवानिवृत्त करें? यह खोज और सार्वजनिक पोर्टल से हट जाएगा।"
+        current_content: "वर्तमान सामग्री"
+        feedback: "उपयोगिता"
+        feedback_summary: "%{total} में से %{helpful} पाठकों ने इसे उपयोगी माना · %{score}%"
+        translations: "अनुवाद"
+        no_translations: "अभी कोई अनुवाद नहीं है।"
+        version_history: "संस्करण इतिहास"
+        current: "वर्तमान"
+        system: "सिस्टम"
+        columns:
+          version: "संस्करण"
+          status: "स्थिति"
+          category: "श्रेणी"
+          author: "लेखक"
+          created_at: "बनाया गया"
       create:
         created: "संदर्भ दस्तावेज़ बनाया गया।"
       update:
@@ -2464,6 +2627,39 @@ hi:
       toggle_published:
         published: "“%{title}” प्रकाशित किया गया।"
         unpublished: "“%{title}” अप्रकाशित किया गया।"
+      retire:
+        retired: "“%{title}” सेवानिवृत्त किया गया।"
+    knowledge_categories:
+      fields:
+        name: "नाम"
+        description: "विवरण"
+        parent: "मूल श्रेणी"
+        position: "क्रम"
+      form:
+        no_parent: "शीर्ष-स्तरीय श्रेणी"
+      index:
+        title: "ज्ञान श्रेणियाँ"
+        intro: "लेख ब्राउज़िंग और रिपोर्टिंग के लिए श्रेणी वृक्ष बनाएँ।"
+        articles: "लेख"
+        new_category: "नई श्रेणी"
+        confirm_delete: "यह श्रेणी हटाएँ? इसके लेख अश्रेणीकृत हो जाएँगे।"
+        columns:
+          path: "श्रेणी पथ"
+          description: "विवरण"
+          articles: "लेख"
+        empty:
+          title: "अभी कोई ज्ञान श्रेणी नहीं है"
+          hint: "शीर्ष-स्तरीय श्रेणियाँ बनाएँ और उनके नीचे विशिष्ट विषय जोड़ें।"
+      new:
+        title: "नई ज्ञान श्रेणी"
+      edit:
+        title: "%{name} संपादित करें"
+      create:
+        created: "ज्ञान श्रेणी बनाई गई।"
+      update:
+        updated: "ज्ञान श्रेणी अद्यतन की गई।"
+      destroy:
+        deleted: "ज्ञान श्रेणी हटाई गई।"
     roles:
       index:
         title: "भूमिकाएँ और अनुमतियाँ"
@@ -2986,6 +3182,8 @@ hi:
     errors:
       messages:
         cross_tenant: "किसी अन्य संगठन का है"
+        exactly_one_entitlement_holder: "ठीक एक संगठन या संपर्क चुनना आवश्यक है"
+        after_start: "कवरेज प्रारंभ के बाद होना चाहिए"
       models:
         work_item:
           attributes:

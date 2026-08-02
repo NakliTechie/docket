@@ -5,7 +5,7 @@
 Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites — for any organization that runs support, sales, or engineering work and wants to **own its stack**. Three pillars in one deployment, sharing one identity, one audit log and one API:
 
 - **Service desk** — case intake (web portal, email, API and supported messaging connectors), scheduled/declarative routing, business-calendar SLA, approvals, collaboration, CSAT, and knowledge.
-- **CRM** — contacts, organizations, configurable lead capture, reviewed duplicate merge, pipelines, deals, products, competitors, sequences, and sales reporting.
+- **CRM** — contacts, organizations, configurable lead capture, reviewed duplicate merge, pipelines, deals, products, competitors, first-touch campaigns, sequences, and sales reporting.
 - **Work** — projects and templates, work items (`KEY-123`), assignment rules, relations, comments/watches, kanban boards, sprints, and transition approvals.
 
 They are not three products behind one login: a support case escalates into engineering work and the desk keeps the customer conversation, a won deal can open an onboarding project, and every object shares the contact it belongs to.
@@ -147,7 +147,7 @@ What turns on:
 - **draft** (default on): the agent drafts a grounded reply as an *internal note* for human review — one click inserts it into the composer.
 - **resolve** (off by default, earned): only for categories where an admin explicitly flips *AI auto-resolve* (Categories page — a deliberate action with its own confirmation and audit entry), and only above the resolve-confidence threshold. Auto-resolved replies always tell the customer how to reach a human, and any reply reopens the conversation with staff.
 
-Grounding = your uploaded **Knowledge** docs (PDF/text/markdown — text is extracted for retrieval) + previously resolved cases. Every agent step is logged on the case with its full prompt and response. Demo mode (`fake` provider) ships canned outputs so you can see the flow with no model at all.
+Grounding = your published **Knowledge** docs (PDF/text/markdown — text is extracted for retrieval). Every content or lifecycle change retains an immutable article version; locale variants and nested knowledge categories keep the corpus organised. Every agent step is logged on the case with its full prompt and response. Demo mode (`fake` provider) ships canned outputs so you can see the flow with no model at all.
 
 ### BYOK (external provider) — read first
 

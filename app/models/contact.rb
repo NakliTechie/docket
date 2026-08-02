@@ -18,6 +18,7 @@ class Contact < ApplicationRecord
   has_many :messages, as: :author, dependent: nil
   has_many :legal_holds, as: :subject, dependent: :destroy
   has_many :privacy_erasure_requests, as: :subject, dependent: :destroy
+  has_many :entitlements, dependent: nil
 
   normalizes :email, with: ->(e) { e.strip.downcase.presence }
   normalizes :phone, with: ->(p) { p.gsub(/[^\d+]/, "").presence }

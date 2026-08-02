@@ -15,6 +15,11 @@
   </fieldset>
   <div class="form-row"><%= f.label :consent_disclosure, t("lead_capture_forms.fields.consent_disclosure") %>
     <%= f.text_area :consent_disclosure %></div>
+  <div class="form-row"><%= f.label :campaign_id, t("lead_capture_forms.fields.campaign") %>
+    <%= f.collection_select :campaign_id, Campaign.order(:name), :id, :name,
+          { include_blank: t("forms.none") } %>
+    <p class="form-hint"><%= t("lead_capture_forms.form.campaign_hint") %></p>
+  </div>
   <label class="checkbox-row"><%= f.check_box :active %><%= t("lead_capture_forms.fields.active") %></label>
   <label class="checkbox-row"><%= f.check_box :is_default %><%= t("lead_capture_forms.fields.is_default") %></label>
   <div class="form-actions"><%= f.submit class: "btn btn-primary" %>

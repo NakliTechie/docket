@@ -110,6 +110,10 @@
       <dt><%= t("deals.fields.value") %></dt><dd><%= format_money(@deal.value_cents, @deal.currency) %></dd>
     <% end %>
     <dt><%= t("deals.fields.owner") %></dt><dd><%= @deal.owner&.name || t("forms.none") %></dd>
+    <% if @deal.first_touch_campaign %>
+      <dt><%= t("deals.fields.first_touch_campaign") %></dt>
+      <dd><%= link_to @deal.first_touch_campaign.name, campaign_path(@deal.first_touch_campaign) %></dd>
+    <% end %>
     <% if @deal.contact %>
       <dt><%= t("deals.fields.contact") %></dt>
       <dd><%= link_to @deal.contact.name, contact_path(@deal.contact) %></dd>

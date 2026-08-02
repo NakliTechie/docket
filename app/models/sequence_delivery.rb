@@ -16,11 +16,14 @@ class SequenceDelivery < ApplicationRecord
   belongs_to :sequence_enrollment, -> { with_deleted }
   belongs_to :sequence_step, -> { with_deleted }
   belongs_to :connector, optional: true
+  belongs_to :activity, optional: true
 
-  validates :channel, inclusion: { in: %w[email sms] }
+  validates :channel, inclusion: { in: %w[email sms call manual_task] }
   validates :sequence_step_id, uniqueness: { scope: :sequence_enrollment_id }
+  validates :tracking_token, presence: true, uniqueness: true
   validate :records_share_tenant
 
+  before_validation :ensure_tracking_token, on: :create
   after_create_commit :enqueue!, if: :status_pending?
 
   def enqueue!
@@ -64,7 +67,24 @@ class SequenceDelivery < ApplicationRecord
     update!(status: :failed, last_error: error.to_s.truncate(250))
   end
 
+  def record_open!
+    with_lock { update!(open_count: open_count + 1, opened_at: opened_at || Time.current) }
+  end
+
+  def record_click!
+    with_lock { update!(click_count: click_count + 1, clicked_at: clicked_at || Time.current) }
+  end
+
+  def record_reply!
+    with_lock { update!(replied_at: replied_at || Time.current) }
+  end
+
   private
+
+  def ensure_tracking_token
+    # Lowercase survives mail relays that normalize recipient local-parts.
+    self.tracking_token ||= SecureRandom.hex(24)
+  end
 
   def records_share_tenant
     return if tenant_id.blank?
@@ -77,6 +97,9 @@ class SequenceDelivery < ApplicationRecord
     end
     if connector && connector.tenant_id != tenant_id
       errors.add(:connector, :different_tenant)
+    end
+    if activity && activity.tenant_id != tenant_id
+      errors.add(:activity, :different_tenant)
     end
   end
 end

@@ -1,0 +1,2 @@
+class KnowledgeCategoryPolicy < ReferenceDocPolicy
+end

@@ -1,5 +1,6 @@
-<%= simple_format(@body) %>
+<p><%= @body_html %></p>
 <% if @unsubscribe_url %>
   <hr>
   <p><%= link_to t("crm_mailer.sequence_step.unsubscribe"), @unsubscribe_url %></p>
 <% end %>
+<%= image_tag @open_url, width: 1, height: 1, alt: "", style: "display:none" %>

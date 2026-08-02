@@ -46,8 +46,10 @@ module Api
       end
 
       def sequence_params
-        params.require(:sequence).permit(:name, :active,
-          sequence_steps_attributes: %i[id position delay_days channel subject body _destroy])
+        params.require(:sequence).permit(:name, :active, :owner_id, :business_calendar_id,
+          sequence_steps_attributes: %i[
+            id position delay_days delay_hours use_business_hours template_key channel subject body _destroy
+          ])
       end
     end
   end

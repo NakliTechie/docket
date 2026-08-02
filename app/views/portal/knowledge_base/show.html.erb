@@ -2,8 +2,21 @@
 <article class="portal-card">
   <p><%= link_to t(".back"), portal_kb_index_path, class: "muted" %></p>
   <h1><%= @article.title %></h1>
-  <% if @article.category %>
-    <p class="muted"><%= @article.category.name %></p>
+  <% if @article.knowledge_category %>
+    <p class="muted"><%= @article.knowledge_category.display_path %></p>
   <% end %>
   <div class="kb-body"><%= simple_format(@article.body) %></div>
+
+  <section id="helpfulness" class="card">
+    <h2><%= t(".helpful_question") %></h2>
+    <div class="form-actions">
+      <%= button_to t(".helpful_yes"), rate_portal_kb_path(@article.slug), method: :post,
+            params: { helpful: "true" }, class: "btn" %>
+      <%= button_to t(".helpful_no"), rate_portal_kb_path(@article.slug), method: :post,
+            params: { helpful: "false" }, class: "btn" %>
+    </div>
+    <% if @helpfulness[:total].positive? %>
+      <p class="muted"><%= t(".rating_summary", helpful: @helpfulness[:helpful], total: @helpfulness[:total]) %></p>
+    <% end %>
+  </section>
 </article>
