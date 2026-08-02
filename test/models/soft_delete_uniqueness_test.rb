@@ -7,9 +7,12 @@ require "test_helper"
 class SoftDeleteUniquenessTest < ActiveSupport::TestCase
   # Identifiers handed out to someone who may still hold them. Never reissued.
   DELIBERATELY_RESERVED = {
-    "Case" => :tracking_id,          # a customer quotes this back at you
-    "ServiceAccount" => :client_id,  # a credential resolves through it
-    "Message" => :external_message_id # a provider retry must never replay a deleted delivery
+    "Case" => [ :tracking_id ],          # a customer quotes this back at you
+    "ServiceAccount" => [ :client_id ],  # a credential resolves through it
+    "Message" => [
+      :external_message_id, # a provider retry must never replay a deleted delivery
+      :source_message_id    # a deleted bot reply must never cause the bot to answer twice
+    ]
   }.freeze
 
   def soft_deletable_models
@@ -26,7 +29,7 @@ class SoftDeleteUniquenessTest < ActiveSupport::TestCase
       end
     end
 
-    unexpected = unguarded.reject { |name, attribute| DELIBERATELY_RESERVED[name] == attribute }
+    unexpected = unguarded.reject { |name, attribute| Array(DELIBERATELY_RESERVED[name]).include?(attribute) }
     assert_empty unexpected,
                  "these reserve a value a soft-deleted row still holds. Either add " \
                  "conditions: -> { where(deleted_at: nil) }, or add them to " \
@@ -57,6 +60,16 @@ class SoftDeleteUniquenessTest < ActiveSupport::TestCase
     duplicate = Case.new(tracking_id: tracking_id, subject: "impostor",
                          contact: contacts(:asha))
     refute duplicate.valid?, "a customer holding this ID must never be shown a different case"
+  end
+
+  test "a soft-deleted bot response keeps its source-message claim" do
+    kase = Case.create!(subject: "Chat", contact: contacts(:asha), channel: :live_chat)
+    source = kase.messages.create!(body: "Question", direction: :inbound, author: contacts(:asha))
+    response = kase.messages.create!(body: "Answer", kind: :agent_turn, source_message: source)
+    response.destroy
+
+    duplicate = kase.messages.new(body: "Second answer", kind: :agent_turn, source_message: source)
+    assert_not duplicate.valid?
   end
 
   # The validation and the INDEX must agree. A live-scoped validation over a

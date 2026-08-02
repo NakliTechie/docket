@@ -12,6 +12,7 @@ module SettingContract
     "llm_api_key" => :secret,
     "llm_byok_enabled" => :bool,
     "ai_draft_enabled" => :bool,
+    "live_chat_bot_enabled" => :bool,
     "ai_route_confidence" => :float,
     "ai_resolve_confidence" => :float,
     "effector_agent_id" => :int,

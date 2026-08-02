@@ -4,7 +4,7 @@
 
 Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites — for any organization that runs support, sales, or engineering work and wants to **own its stack**. Three pillars in one deployment, sharing one identity, one audit log and one API:
 
-- **Service desk** — case intake (web portal, email, API and supported messaging connectors), scheduled/declarative routing, business-calendar SLA, approvals, collaboration, CSAT, and knowledge.
+- **Service desk** — case intake (web portal, live chat, email, API, IVR, and supported messaging connectors), scheduled/declarative routing, business-calendar SLA, approvals, collaboration, CSAT, and knowledge.
 - **CRM** — contacts, organizations, configurable lead capture, reviewed duplicate merge, pipelines, deals, products, competitors, first-touch campaigns, sequences, and sales reporting.
 - **Work** — projects and templates, work items (`KEY-123`), assignment rules, relations, comments/watches, kanban boards, sprints, and transition approvals.
 
@@ -112,6 +112,7 @@ DATABASE_URL=postgres:///docket_test PARALLEL_WORKERS=1 bin/rails db:test:prepar
 
 - **Submit a request** at `/portal` — name + email or phone, subject, description, attachments. No account. The confirmation screen (and email, if email was given) carries an unguessable tracking ID like `DKT-7F3K-92QX`.
 - **Track a case** at `/portal/track` — tracking ID **plus** the email or phone used at filing (a verification challenge; wrong pairs get one generic error). The status page shows public replies only — internal notes never appear — and accepts replies and attachments.
+- **Live chat** at `/portal/live_chat/new` — starts a realtime case conversation using a 24-hour bearer session. Staff public replies arrive over Action Cable. Admins may enable answers from published public knowledge articles; internal articles never enter the public-bot prompt.
 - **Customer SSO** (when configured): a "Log in with your account" button appears; signed-in customers get **My cases** — their full case list and pre-attributed filing with no tracking-ID dance. The anonymous flow always remains available.
 - **Email intake**: mail to your configured inbound address opens a case (attachments included); replies keeping the tracking ID in the subject thread onto the case *only when the sender address matches the case contact*.
 - Hindi/English toggle is in the header on every page.

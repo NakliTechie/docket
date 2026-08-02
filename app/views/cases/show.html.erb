@@ -292,6 +292,23 @@
       <%= render "shared/custom_field_values", record: @case, resource_type: "cases" %>
     </div>
 
+    <% if @call_records.any? %>
+      <div class="panel">
+        <h2 class="panel-title"><%= t(".call_records") %></h2>
+        <% @call_records.each do |call| %>
+          <dl class="meta-list call-record">
+            <dt><%= t(".call_status") %></dt><dd><%= call.status.humanize %></dd>
+            <dt><%= t(".call_from") %></dt><dd><%= call.from_number %></dd>
+            <% if call.duration_seconds %><dt><%= t(".call_duration") %></dt><dd><%= t(".call_seconds", count: call.duration_seconds) %></dd><% end %>
+            <% if call.recording_url.present? %>
+              <dt><%= t(".call_recording") %></dt>
+              <dd><%= recording_reference_link(call.recording_url) %></dd>
+            <% end %>
+          </dl>
+        <% end %>
+      </div>
+    <% end %>
+
     <div class="panel">
       <h2 class="panel-title"><%= t(".contact_360") %></h2>
       <dl class="meta-list">

@@ -44,6 +44,7 @@ class CasesController < ApplicationController
     CasePresence.touch_for!(@case, Current.user)
     @active_presences = CasePresence.active.where(case: @case).where.not(user: Current.user).includes(:user)
     @messages = @case.messages.with_attached_files.includes(:author).order(:created_at)
+    @call_records = @case.call_records.includes(:connector).order(:created_at)
     @message = Message.new(kind: params[:note] ? :internal_note : :public_reply,
                            body: flash[:compose_body]) # preserved after a failed save (M30)
     @contact_cases = @case.contact.cases.where.not(id: @case.id).order(created_at: :desc).limit(10)

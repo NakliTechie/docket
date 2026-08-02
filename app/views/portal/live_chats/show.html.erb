@@ -1,0 +1,49 @@
+<% page_title t("portal.live_chats.show.title") %>
+<div class="portal-card live-chat"
+     data-controller="live-chat"
+     data-live-chat-token-value="<%= @token %>"
+     data-live-chat-message-url-value="<%= message_portal_live_chat_path %>"
+     data-live-chat-error-value="<%= t("portal.live_chats.error") %>"
+     data-live-chat-you-value="<%= t("portal.live_chats.you") %>"
+     data-live-chat-staff-value="<%= t("portal.live_chats.staff") %>">
+  <div class="live-chat-header">
+    <div>
+      <h1><%= t("portal.live_chats.show.title") %></h1>
+      <p class="muted mono"><%= @live_chat.case.tracking_id %></p>
+    </div>
+    <%= button_to t("portal.live_chats.show.end"), end_chat_portal_live_chat_path,
+          method: :delete, class: "btn btn-ghost btn-sm",
+          form: { data: { turbo_confirm: t("portal.live_chats.show.end_confirm") } } %>
+  </div>
+
+  <p class="muted"><%= t("portal.live_chats.show.notice") %></p>
+  <div class="case-thread live-chat-thread" data-live-chat-target="thread" aria-live="polite">
+    <% @messages.each do |message| %>
+      <article class="thread-message direction-<%= message.direction %>" data-message-id="<%= message.id %>">
+        <div class="thread-message-head">
+          <span class="thread-message-author"><%= message.direction_inbound? ? t("portal.live_chats.you") : t("portal.live_chats.staff") %></span>
+          <span><%= l message.created_at, format: :short %></span>
+        </div>
+        <div class="thread-message-body"><%= message.body %></div>
+      </article>
+    <% end %>
+  </div>
+
+  <% if @live_chat.active? && !@live_chat.case.status_closed? %>
+    <%= form_with url: message_portal_live_chat_path, class: "form composer live-chat-composer",
+          data: { live_chat_target: "form", action: "submit->live-chat#send" } do |f| %>
+      <div class="form-row">
+        <%= f.label :body, t("portal.live_chats.show.reply"), class: "visually-hidden" %>
+        <%= f.text_area :body, required: true, placeholder: t("portal.live_chats.show.placeholder"),
+              data: { live_chat_target: "body" } %>
+      </div>
+      <div class="composer-toolbar">
+        <p class="form-hint" role="status" data-live-chat-target="status"></p>
+        <%= f.submit t("portal.live_chats.show.send"), class: "btn btn-primary",
+              data: { live_chat_target: "submit" } %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="flash flash-warning"><%= t("portal.live_chats.closed") %></p>
+  <% end %>
+</div>

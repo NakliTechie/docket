@@ -25,6 +25,8 @@
               active: controller_name == "tracking" %>
         <%= nav_link t("portal.nav.knowledge_base"), portal_kb_index_path,
               active: controller_name == "knowledge_base" %>
+        <%= nav_link t("portal.nav.live_chat"), new_portal_live_chat_path,
+              active: controller_name == "live_chats" %>
         <%= nav_link t("portal.nav.staff_sign_in"), new_session_path %>
         <% if session[:portal_contact_id] %>
           <%= nav_link t("portal.nav.my_cases"), portal_my_cases_path,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -176,6 +176,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_business_calendars_on_tenant_id"
     t.index ["tenant_id"], name: "index_business_calendars_one_default", unique: true, where: "(is_default = true)"
+  end
+
+  create_table "call_records", force: :cascade do |t|
+    t.integer "case_id", null: false
+    t.integer "connector_id", null: false
+    t.integer "contact_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "duration_seconds"
+    t.datetime "ended_at"
+    t.string "from_number", null: false
+    t.json "ivr_answers", default: {}, null: false
+    t.json "metadata", default: {}, null: false
+    t.string "provider_call_id", null: false
+    t.string "recording_url"
+    t.datetime "started_at"
+    t.string "status", default: "received", null: false
+    t.integer "tenant_id", null: false
+    t.string "to_number"
+    t.text "transcript"
+    t.datetime "updated_at", null: false
+    t.index ["case_id"], name: "index_call_records_on_case_id"
+    t.index ["connector_id"], name: "index_call_records_on_connector_id"
+    t.index ["contact_id"], name: "index_call_records_on_contact_id"
+    t.index ["tenant_id", "connector_id", "provider_call_id"], name: "index_call_records_on_tenant_connector_provider_id", unique: true
+    t.index ["tenant_id"], name: "index_call_records_on_tenant_id"
+    t.check_constraint "duration_seconds IS NULL OR duration_seconds >= 0", name: "call_records_duration_nonnegative"
   end
 
   create_table "campaigns", force: :cascade do |t|
@@ -900,6 +926,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
     t.index ["tenant_id"], name: "index_legal_holds_on_tenant_id"
   end
 
+  create_table "live_chats", force: :cascade do |t|
+    t.integer "case_id", null: false
+    t.integer "contact_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "ended_at"
+    t.datetime "expires_at", null: false
+    t.integer "tenant_id", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_id"], name: "index_live_chats_on_contact_id"
+    t.index ["tenant_id", "case_id"], name: "index_live_chats_on_tenant_id_and_case_id", unique: true
+    t.index ["tenant_id", "expires_at"], name: "index_live_chats_on_tenant_id_and_expires_at"
+    t.index ["tenant_id", "token_digest"], name: "index_live_chats_on_tenant_id_and_token_digest", unique: true
+    t.index ["tenant_id"], name: "index_live_chats_on_tenant_id"
+  end
+
   create_table "macros", force: :cascade do |t|
     t.text "body", null: false
     t.datetime "created_at", null: false
@@ -933,6 +975,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
     t.json "metadata"
     t.string "source_author_name"
     t.integer "source_connector_id"
+    t.integer "source_message_id"
     t.string "subject"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
@@ -942,7 +985,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
     t.index ["deleted_at"], name: "index_messages_on_deleted_at"
     t.index ["email_message_id"], name: "index_messages_on_email_message_id"
     t.index ["source_connector_id"], name: "index_messages_on_source_connector_id"
+    t.index ["source_message_id"], name: "index_messages_on_source_message_id"
     t.index ["tenant_id", "source_connector_id", "external_message_id"], name: "index_messages_on_tenant_connector_external_id", unique: true, where: "((source_connector_id IS NOT NULL) AND (external_message_id IS NOT NULL))"
+    t.index ["tenant_id", "source_message_id"], name: "index_messages_on_tenant_and_unique_source_message", unique: true, where: "source_message_id IS NOT NULL"
     t.index ["tenant_id"], name: "index_messages_on_tenant_id"
   end
 
@@ -1883,6 +1928,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
   add_foreign_key "business_calendar_exceptions", "business_calendars"
   add_foreign_key "business_calendar_windows", "business_calendars"
   add_foreign_key "business_calendars", "tenants"
+  add_foreign_key "call_records", "cases"
+  add_foreign_key "call_records", "connectors"
+  add_foreign_key "call_records", "contacts"
+  add_foreign_key "call_records", "tenants"
   add_foreign_key "campaigns", "tenants"
   add_foreign_key "case_presences", "cases", on_delete: :cascade
   add_foreign_key "case_presences", "tenants", on_delete: :cascade
@@ -1975,11 +2024,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
   add_foreign_key "legal_holds", "tenants"
   add_foreign_key "legal_holds", "users", column: "placed_by_id"
   add_foreign_key "legal_holds", "users", column: "released_by_id"
+  add_foreign_key "live_chats", "cases"
+  add_foreign_key "live_chats", "contacts"
+  add_foreign_key "live_chats", "tenants"
   add_foreign_key "macros", "queues", column: "set_queue_id", on_delete: :nullify
   add_foreign_key "macros", "tenants"
   add_foreign_key "macros", "users", column: "set_assignee_id", on_delete: :nullify
   add_foreign_key "messages", "cases"
   add_foreign_key "messages", "connectors", column: "source_connector_id"
+  add_foreign_key "messages", "messages", column: "source_message_id"
   add_foreign_key "messages", "tenants"
   add_foreign_key "notifications", "tenants"
   add_foreign_key "notifications", "users"

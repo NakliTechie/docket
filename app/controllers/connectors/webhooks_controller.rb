@@ -28,7 +28,12 @@ module Connectors
       connector = Connector.active.find_by(id: params[:id])
       return head :not_found unless connector
 
-      if connector.ingests?
+      if connector.ingests_calls?
+        return head :unauthorized unless connector.provider_instance.inbound_authentic?(request)
+
+        Connectors::TelephonyInbound.process(connector, connector.provider_instance.inbound_payload(request))
+        head :ok
+      elsif connector.ingests?
         return head :unauthorized unless connector.provider_instance.inbound_authentic?(request)
         # The provider decides how to read its own body (JSON, or form-encoded
         # for SMS providers) — see Provider#inbound_payload.
@@ -42,6 +47,8 @@ module Connectors
       end
     rescue JSON::ParserError
       render json: { error: "request body must be valid JSON" }, status: :bad_request
+    rescue ActiveRecord::RecordInvalid
+      render json: { error: "inbound payload is invalid" }, status: :unprocessable_entity
     end
 
     private

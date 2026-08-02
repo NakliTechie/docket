@@ -738,6 +738,12 @@ kbd {
   margin: var(--space-4) 0;
 }
 .portal-footer { text-align: center; padding: var(--space-5); }
+.live-chat-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.live-chat-header h1 { margin-bottom: 0; }
+.live-chat-thread { max-height: 28rem; overflow-y: auto; padding: var(--space-2); background: var(--color-paper-deep); border-radius: var(--radius); }
+.live-chat-thread .direction-inbound { margin-left: 12%; }
+.live-chat-thread .direction-outbound { margin-right: 12%; }
+.live-chat-composer { margin-top: var(--space-4); }
 
 /* Utility */
 .icon { vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

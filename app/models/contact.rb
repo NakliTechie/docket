@@ -16,6 +16,8 @@ class Contact < ApplicationRecord
   # Which connector ingested this record (nil for portal/manual/API-created).
   belongs_to :source_connector, class_name: "Connector", optional: true
   has_many :cases, dependent: :restrict_with_error
+  has_many :live_chats, dependent: :restrict_with_error
+  has_many :call_records, dependent: :restrict_with_error
   has_many :deals, dependent: :nullify
   has_many :work_links, as: :linkable, dependent: :destroy
   has_many :linked_work_items, through: :work_links, source: :work_item
