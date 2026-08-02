@@ -292,6 +292,72 @@ The 66 providers are implementation- and stub-tested, not collectively
 production-certified. Before relying on a provider, make one authenticated
 read/write round trip in a non-production vendor account and record the result.
 
+## Sovereign BI and extension model
+
+Docket keeps operational reports inside the application so its normal role,
+tenant, entitlement, and audit controls apply. For ad-hoc analytics, attach a
+self-hosted Metabase or Superset deployment to a PostgreSQL **read replica of
+the primary database**. Never connect BI to the writable primary or to the
+cache, queue, or cable databases. Treat dashboards as eventually consistent
+and show their data-freshness timestamp.
+
+Create the least-privileged role on the primary so PostgreSQL replicates its
+catalogue entries and grants. Supply its password through the deployment secret
+manager, not through checked-in SQL. Replace the owner and database names if
+the deployment does not use the Compose defaults:
+
+```sql
+CREATE ROLE docket_bi LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
+ALTER ROLE docket_bi CONNECTION LIMIT 10;
+ALTER ROLE docket_bi SET default_transaction_read_only = on;
+ALTER ROLE docket_bi SET statement_timeout = '60s';
+ALTER ROLE docket_bi SET idle_in_transaction_session_timeout = '60s';
+
+GRANT CONNECT ON DATABASE docket_production TO docket_bi;
+GRANT USAGE ON SCHEMA public TO docket_bi;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO docket_bi;
+ALTER DEFAULT PRIVILEGES FOR ROLE docket IN SCHEMA public
+  GRANT SELECT ON TABLES TO docket_bi;
+```
+
+Restrict the replica to the BI host, require certificate-verified TLS, use
+SCRAM credentials, and rotate the password. Pin dashboards to curated views
+instead of application tables because schema migrations can change those
+tables. Monitor replica delay with
+`now() - pg_last_xact_replay_timestamp()` and set a visible freshness SLO.
+
+Shared mode requires a separate isolation decision. A raw replica contains
+every tenant, and Docket's application-level tenant scoping does not protect an
+external SQL client. Only platform operators may receive raw-replica access.
+Give tenant analysts a per-tenant extract or database, or tenant-specific views
+enforced by a database role they cannot change. A dashboard filter is not an
+authorization boundary.
+
+The replica and the BI application's cache are additional stores of personal
+data. Include both in encryption, backup, retention, access-log, legal-hold,
+erasure-propagation, and cache-expiry procedures. Keep BI exports under the same
+controls. Before onboarding analysts, test cross-tenant denial, revoked-user
+denial, replica read-only behavior, freshness reporting, and erasure arrival.
+
+In Metabase, add the replica as PostgreSQL with the `docket_bi` credential,
+certificate verification, and only the required schemas or curated views.
+Use groups and collections to separate audiences. Disable unrestricted native
+SQL for ordinary analysts. Superset uses the same replica role through its
+PostgreSQL SQLAlchemy connection and its own dataset and role restrictions.
+
+The Metabase connector in Admin → Connectors serves a different path. It uses
+an `X-API-Key` to list or run saved Metabase questions for explicitly granted
+agents. It does not grant Metabase database access and is optional for the BI
+topology above.
+
+Docket has no proprietary extension marketplace. Its extension surface is the
+curated connector catalogue, signed webhooks, the OpenAPI-derived MCP server,
+and AGPL forkability. Use the self-hosted n8n connector for operator-owned
+automation outside Docket. Keep every extension behind tenant entitlements,
+role permissions, explicit service-account scopes, connector action grants,
+human approval where required, and audit logging. An external workflow must not
+become an ungoverned route around those controls.
+
 ## Decisioning and appeals
 
 Decisioning runs hourly or on demand over tenant-owned data. Autonomous signals

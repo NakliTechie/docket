@@ -30,6 +30,26 @@ class OperatorGuideTest < ActiveSupport::TestCase
     end
   end
 
+  test "documents the sovereign BI topology and extension boundary" do
+    normalized_guide = @guide.gsub(/\s+/, " ")
+
+    [
+      "read replica of the primary database",
+      "cache, queue, or cable databases",
+      "default_transaction_read_only",
+      "A dashboard filter is not an authorization boundary",
+      "X-API-Key",
+      "no proprietary extension marketplace",
+      "AGPL forkability",
+      "self-hosted n8n connector"
+    ].each do |expectation|
+      assert_includes normalized_guide, expectation
+    end
+
+    assert_includes @handoff, "Optional BI"
+    assert_includes @handoff, "database-enforced tenant isolation"
+  end
+
   test "go-live evidence guide is linked and covers every external launch gate" do
     assert @go_live_path.exist?
     assert_includes @handoff, "[GO-LIVE-VALIDATION.md](GO-LIVE-VALIDATION.md)"
