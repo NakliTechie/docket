@@ -69,7 +69,7 @@ module Api
       def lead_params
         params.require(:lead).permit(:name, :email, :phone, :company_name,
                                      :source, :owner_id, :value_estimate_cents, :notes,
-                                     :sms_consent, :email_consent)
+                                     :sms_consent, :email_consent, :first_touch_campaign_id)
       end
     end
   end

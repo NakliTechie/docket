@@ -36,6 +36,13 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     enrollment.advance!
     delivery = enrollment.sequence_deliveries.first
     assert delivery.tracking_token.present?
+    campaign = Campaign.create!(name: "Private campaign", code: "private-campaign",
+                                utm_campaign: "private-campaign")
+    attributed_lead = Lead.create!(
+      name: "Private lead", email: "private-lead-73f9@example.test", contact: contact,
+      first_touch_campaign: campaign, first_touch_utm_campaign: "private-campaign",
+      first_touch_landing_page: "https://example.test/?customer=#{marker}"
+    )
 
     result = Privacy::EraseContact.call(contact: contact)
 
@@ -48,6 +55,8 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     assert_nil kase.reload.description
     assert_equal "[Erased for privacy]", message.reload.body
     assert_nil delivery.reload.tracking_token
+    assert_nil attributed_lead.reload.first_touch_landing_page
+    assert_nil attributed_lead.first_touch_utm_campaign
     assert_not ActiveStorage::Blob.exists?(blob_id)
     assert result.request.status_completed?
     assert Privacy::ResidueScanner.call(

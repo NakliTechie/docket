@@ -42,11 +42,23 @@ class LeadMerge
     attributes[:consent_source] ||= @target.consent_source.presence || @source.consent_source
     attributes[:notes] = [ @target.notes, @source.notes ].compact_blank.uniq.join("\n\n")
     attributes[:labels] = (@target.labels.to_a + @source.labels.to_a).uniq
+    merge_first_touch(attributes)
     attributes[:provenance] = @target.provenance.to_h.merge(
       "merged_lead_ids" => (@target.provenance.to_h["merged_lead_ids"].to_a + [ @source.id ]).uniq,
       "last_merged_by_id" => @actor&.id
     )
     @target.update!(attributes)
+  end
+
+  def merge_first_touch(attributes)
+    return unless @source.first_touch_at.present?
+    return if @target.first_touch_at.present? && @target.first_touch_at <= @source.first_touch_at
+
+    %i[
+      first_touch_campaign_id first_touch_at first_touch_utm_source first_touch_utm_medium
+      first_touch_utm_campaign first_touch_utm_term first_touch_utm_content
+      first_touch_landing_page first_touch_referrer
+    ].each { |field| attributes[field] = @source.public_send(field) }
   end
 
   def move_deals

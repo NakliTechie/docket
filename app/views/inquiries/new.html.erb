@@ -8,6 +8,10 @@
         method: :post, class: "form" do |f| %>
     <%= render "shared/form_errors", record: @inquiry %>
 
+    <% (CampaignAttribution::UTM_KEYS + CampaignAttribution::CONTEXT_KEYS).each do |key| %>
+      <%= f.hidden_field key, value: @inquiry.public_send(key) %>
+    <% end %>
+
     <% if @capture_form %>
       <% @capture_form.mapping.each do |source_name, target| %>
         <div class="form-row">

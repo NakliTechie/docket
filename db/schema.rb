@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_152000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -176,6 +176,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_business_calendars_on_tenant_id"
     t.index ["tenant_id"], name: "index_business_calendars_one_default", unique: true, where: "(is_default = true)"
+  end
+
+  create_table "campaigns", force: :cascade do |t|
+    t.bigint "budget_cents", default: 0, null: false
+    t.integer "channel", default: 5, null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.datetime "deleted_at"
+    t.text "description"
+    t.date "ends_on"
+    t.string "name", null: false
+    t.date "starts_on"
+    t.integer "status", default: 0, null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "utm_campaign", null: false
+    t.string "utm_medium"
+    t.string "utm_source"
+    t.index ["deleted_at"], name: "index_campaigns_on_deleted_at"
+    t.index ["tenant_id", "code"], name: "index_live_campaigns_on_tenant_and_code", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "utm_campaign"], name: "index_live_campaigns_on_tenant_and_utm", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id"], name: "index_campaigns_on_tenant_id"
+    t.check_constraint "budget_cents >= 0", name: "campaigns_budget_non_negative"
+    t.check_constraint "ends_on IS NULL OR starts_on IS NULL OR ends_on >= starts_on", name: "campaigns_valid_date_window"
   end
 
   create_table "case_presences", force: :cascade do |t|
@@ -477,6 +502,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
     t.datetime "deleted_at"
     t.date "expected_close_on"
     t.string "external_id"
+    t.datetime "first_touch_at"
+    t.integer "first_touch_campaign_id"
+    t.text "first_touch_landing_page"
+    t.text "first_touch_referrer"
+    t.string "first_touch_utm_campaign"
+    t.string "first_touch_utm_content"
+    t.string "first_touch_utm_medium"
+    t.string "first_touch_utm_source"
+    t.string "first_touch_utm_term"
     t.json "labels"
     t.integer "lead_id"
     t.integer "lost_reason"
@@ -494,6 +528,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
     t.index ["contact_id"], name: "index_deals_on_contact_id"
     t.index ["deleted_at"], name: "index_deals_on_deleted_at"
     t.index ["external_id"], name: "index_deals_on_external_id"
+    t.index ["first_touch_campaign_id"], name: "index_deals_on_first_touch_campaign_id"
     t.index ["lead_id"], name: "index_deals_on_lead_id"
     t.index ["organisation_id"], name: "index_deals_on_organisation_id"
     t.index ["owner_id"], name: "index_deals_on_owner_id"
@@ -723,6 +758,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
 
   create_table "lead_capture_forms", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.integer "campaign_id"
     t.text "consent_disclosure"
     t.datetime "created_at", null: false
     t.json "field_mapping", default: {}, null: false
@@ -731,6 +767,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
     t.string "slug", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["campaign_id"], name: "index_lead_capture_forms_on_campaign_id"
     t.index ["tenant_id", "slug"], name: "index_lead_capture_forms_on_tenant_id_and_slug", unique: true
     t.index ["tenant_id"], name: "index_lead_capture_forms_on_tenant_id"
     t.index ["tenant_id"], name: "index_lead_capture_forms_one_default", unique: true, where: "is_default"
@@ -781,6 +818,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
     t.boolean "email_consent", default: false, null: false
     t.datetime "email_unsubscribed_at"
     t.string "external_id"
+    t.datetime "first_touch_at"
+    t.integer "first_touch_campaign_id"
+    t.text "first_touch_landing_page"
+    t.text "first_touch_referrer"
+    t.string "first_touch_utm_campaign"
+    t.string "first_touch_utm_content"
+    t.string "first_touch_utm_medium"
+    t.string "first_touch_utm_source"
+    t.string "first_touch_utm_term"
     t.json "labels"
     t.datetime "merged_at"
     t.bigint "merged_into_id"
@@ -803,6 +849,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
     t.index ["deleted_at"], name: "index_leads_on_deleted_at"
     t.index ["email"], name: "index_leads_on_email"
     t.index ["external_id"], name: "index_leads_on_external_id"
+    t.index ["first_touch_campaign_id"], name: "index_leads_on_first_touch_campaign_id"
     t.index ["merged_into_id"], name: "index_leads_on_merged_into_id"
     t.index ["owner_id"], name: "index_leads_on_owner_id"
     t.index ["source_connector_id"], name: "index_leads_on_source_connector_id"
@@ -1699,6 +1746,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
   add_foreign_key "business_calendar_exceptions", "business_calendars"
   add_foreign_key "business_calendar_windows", "business_calendars"
   add_foreign_key "business_calendars", "tenants"
+  add_foreign_key "campaigns", "tenants"
   add_foreign_key "case_presences", "cases", on_delete: :cascade
   add_foreign_key "case_presences", "tenants", on_delete: :cascade
   add_foreign_key "case_presences", "users", on_delete: :cascade
@@ -1734,6 +1782,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
   add_foreign_key "deal_line_items", "deals", on_delete: :cascade
   add_foreign_key "deal_line_items", "products", on_delete: :restrict
   add_foreign_key "deal_line_items", "tenants", on_delete: :cascade
+  add_foreign_key "deals", "campaigns", column: "first_touch_campaign_id"
   add_foreign_key "deals", "contacts"
   add_foreign_key "deals", "leads"
   add_foreign_key "deals", "organisations"
@@ -1773,10 +1822,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
   add_foreign_key "import_identities", "import_runs", column: "last_seen_run_id"
   add_foreign_key "import_identities", "tenants"
   add_foreign_key "import_runs", "tenants"
+  add_foreign_key "lead_capture_forms", "campaigns"
   add_foreign_key "lead_capture_forms", "tenants", on_delete: :cascade
   add_foreign_key "lead_routing_rules", "tenants", on_delete: :cascade
   add_foreign_key "lead_routing_rules", "users", column: "then_owner_id", on_delete: :nullify
   add_foreign_key "lead_scorecards", "tenants", on_delete: :cascade
+  add_foreign_key "leads", "campaigns", column: "first_touch_campaign_id"
   add_foreign_key "leads", "contacts"
   add_foreign_key "leads", "deals", column: "converted_deal_id"
   add_foreign_key "leads", "leads", column: "merged_into_id", on_delete: :restrict

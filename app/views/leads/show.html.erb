@@ -50,6 +50,14 @@
     <dt><%= t("leads.fields.score") %></dt>
     <dd><span class="badge band-<%= @lead.score_band %>"><%= @lead.score %></span> <%= @lead.human_score_band %></dd>
     <dt><%= t("leads.fields.owner") %></dt><dd><%= @lead.owner&.name || t("forms.none") %></dd>
+    <% if @lead.first_touch_campaign %>
+      <dt><%= t("leads.fields.first_touch_campaign") %></dt>
+      <dd><%= link_to @lead.first_touch_campaign.name, campaign_path(@lead.first_touch_campaign) %></dd>
+    <% end %>
+    <% if @lead.first_touch_utm_campaign.present? %>
+      <dt><%= t("leads.fields.utm") %></dt>
+      <dd class="mono"><%= [@lead.first_touch_utm_source, @lead.first_touch_utm_medium, @lead.first_touch_utm_campaign].compact.join(" / ") %></dd>
+    <% end %>
     <% if @lead.value_estimate_cents.present? %>
       <dt><%= t("leads.fields.value_estimate") %></dt><dd><%= number_to_currency(@lead.value_estimate_cents / 100.0, unit: "₹") %></dd>
     <% end %>

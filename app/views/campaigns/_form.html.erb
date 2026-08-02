@@ -1,0 +1,24 @@
+<%= form_with model: campaign, class: "form" do |f| %>
+  <%= render "shared/form_errors", record: campaign %>
+  <div class="form-grid">
+    <div class="form-row"><%= f.label :name, t("campaigns.fields.name") %><%= f.text_field :name, required: true %></div>
+    <div class="form-row"><%= f.label :code, t("campaigns.fields.code") %><%= f.text_field :code, required: true %></div>
+    <div class="form-row"><%= f.label :status, t("campaigns.fields.status") %><%= f.select :status, Campaign.statuses.keys.map { |value| [t("campaigns.enum.status.#{value}"), value] } %></div>
+    <div class="form-row"><%= f.label :channel, t("campaigns.fields.channel") %><%= f.select :channel, Campaign.channels.keys.map { |value| [t("campaigns.enum.channel.#{value}"), value] } %></div>
+    <div class="form-row"><%= f.label :starts_on, t("campaigns.fields.starts_on") %><%= f.date_field :starts_on %></div>
+    <div class="form-row"><%= f.label :ends_on, t("campaigns.fields.ends_on") %><%= f.date_field :ends_on %></div>
+    <div class="form-row"><%= f.label :budget, t("campaigns.fields.budget") %><%= f.number_field :budget, min: 0, step: 0.01 %></div>
+    <div class="form-row"><%= f.label :currency, t("campaigns.fields.currency") %><%= f.text_field :currency, maxlength: 3, required: true %></div>
+  </div>
+  <fieldset>
+    <legend><%= t("campaigns.form.tracking") %></legend>
+    <p class="form-hint"><%= t("campaigns.form.tracking_hint") %></p>
+    <div class="form-grid">
+      <div class="form-row"><%= f.label :utm_source, t("campaigns.fields.utm_source") %><%= f.text_field :utm_source %></div>
+      <div class="form-row"><%= f.label :utm_medium, t("campaigns.fields.utm_medium") %><%= f.text_field :utm_medium %></div>
+      <div class="form-row"><%= f.label :utm_campaign, t("campaigns.fields.utm_campaign") %><%= f.text_field :utm_campaign, required: true %></div>
+    </div>
+  </fieldset>
+  <div class="form-row"><%= f.label :description, t("campaigns.fields.description") %><%= f.text_area :description %></div>
+  <div class="form-actions"><%= f.submit class: "btn btn-primary" %><%= link_to t("actions.cancel"), campaigns_path, class: "btn" %></div>
+<% end %>

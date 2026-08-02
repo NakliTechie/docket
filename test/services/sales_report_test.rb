@@ -124,6 +124,23 @@ class SalesReportTest < ActiveSupport::TestCase
     assert_equal [ @rep ], @report.by_owner.map { |r| r[:owner] } # the unassigned deal added no row
   end
 
+  test "campaign attribution reports leads, deals, and won value by first touch" do
+    campaign = Campaign.create!(name: "Launch", code: "launch", utm_campaign: "launch")
+    Lead.create!(name: "Attributed lead", email: "attributed@example.com",
+                 first_touch_campaign: campaign)
+    open_deal(@new, 1000).update!(first_touch_campaign: campaign)
+    won = closed_deal(@won, 5000, closed_at: 1.day.ago, currency: "INR")
+    won.update!(first_touch_campaign: campaign)
+
+    row = @report.campaign_attribution.find { |item| item[:campaign] == campaign }
+    assert_equal 1, row[:leads_count]
+    assert_equal 2, row[:deals_count]
+    assert_equal 1, row[:won_count]
+    assert_equal({ "INR" => 500_000 }, row[:won_values_by_currency])
+    assert_includes @report.to_csv, "campaign_attribution,Launch"
+    assert_equal campaign.id, @report.as_json[:campaign_attribution].first[:campaign_id]
+  end
+
   test "velocity reports avg days-to-win and audit-mined per-stage dwell over won deals" do
     t0 = 8.days.ago
     deal = nil

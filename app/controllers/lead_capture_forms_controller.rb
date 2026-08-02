@@ -49,7 +49,7 @@ class LeadCaptureFormsController < ApplicationController
 
   def form_attributes
     base = params.require(:lead_capture_form).permit(:name, :slug, :consent_disclosure,
-                                                     :active, :is_default)
+                                                     :active, :is_default, :campaign_id)
     source_names = params.fetch(:mapping, {}).permit(*LeadCaptureForm::TARGET_FIELDS).to_h
     base[:field_mapping] = source_names.each_with_object({}) do |(target, source), mapping|
       mapping[source.to_s.strip] = target if source.present?

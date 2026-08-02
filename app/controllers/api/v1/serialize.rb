@@ -165,6 +165,14 @@ module Api
           sms_consent: l.sms_consent, email_consent: l.email_consent,
           email_unsubscribed_at: l.email_unsubscribed_at,
           consent_captured_at: l.consent_captured_at, consent_source: l.consent_source,
+          first_touch_campaign_id: l.first_touch_campaign_id, first_touch_at: l.first_touch_at,
+          first_touch_utm_source: l.first_touch_utm_source,
+          first_touch_utm_medium: l.first_touch_utm_medium,
+          first_touch_utm_campaign: l.first_touch_utm_campaign,
+          first_touch_utm_term: l.first_touch_utm_term,
+          first_touch_utm_content: l.first_touch_utm_content,
+          first_touch_landing_page: l.first_touch_landing_page,
+          first_touch_referrer: l.first_touch_referrer,
           provenance: l.provenance, merged_into_id: l.merged_into_id, merged_at: l.merged_at,
           merged_lead_ids: l.merged_leads.ids,
           converted_at: l.converted_at, created_at: l.created_at, updated_at: l.updated_at
@@ -174,7 +182,8 @@ module Api
       def lead_capture_form(form)
         { id: form.id, name: form.name, slug: form.slug, field_mapping: form.field_mapping,
           consent_disclosure: form.consent_disclosure, active: form.active,
-          is_default: form.is_default, created_at: form.created_at, updated_at: form.updated_at }
+          is_default: form.is_default, campaign_id: form.campaign_id,
+          created_at: form.created_at, updated_at: form.updated_at }
       end
 
       def deal(d)
@@ -184,6 +193,14 @@ module Api
           owner_id: d.owner_id, contact_id: d.contact_id, organisation_id: d.organisation_id,
           lead_id: d.lead_id, expected_close_on: d.expected_close_on, closed_at: d.closed_at,
           lost_reason: d.lost_reason, onboarding_project_id: d.onboarding_project&.id,
+          first_touch_campaign_id: d.first_touch_campaign_id, first_touch_at: d.first_touch_at,
+          first_touch_utm_source: d.first_touch_utm_source,
+          first_touch_utm_medium: d.first_touch_utm_medium,
+          first_touch_utm_campaign: d.first_touch_utm_campaign,
+          first_touch_utm_term: d.first_touch_utm_term,
+          first_touch_utm_content: d.first_touch_utm_content,
+          first_touch_landing_page: d.first_touch_landing_page,
+          first_touch_referrer: d.first_touch_referrer,
           line_items_total_cents: d.line_items_total_cents,
           line_items: d.deal_line_items.map { |item| deal_line_item(item) },
           competitors: d.deal_competitors.map { |link| deal_competitor(link) },
@@ -214,6 +231,20 @@ module Api
       def competitor(competitor)
         { id: competitor.id, name: competitor.name, website: competitor.website,
           notes: competitor.notes, created_at: competitor.created_at, updated_at: competitor.updated_at }
+      end
+
+      def campaign(campaign)
+        {
+          id: campaign.id, name: campaign.name, code: campaign.code,
+          description: campaign.description, status: campaign.status, channel: campaign.channel,
+          starts_on: campaign.starts_on, ends_on: campaign.ends_on,
+          budget_cents: campaign.budget_cents, currency: campaign.currency,
+          utm_source: campaign.utm_source, utm_medium: campaign.utm_medium,
+          utm_campaign: campaign.utm_campaign,
+          attributed_leads_count: campaign.attributed_leads.count,
+          attributed_deals_count: campaign.attributed_deals.count,
+          created_at: campaign.created_at, updated_at: campaign.updated_at
+        }
       end
 
       def deal_contact_role(link)

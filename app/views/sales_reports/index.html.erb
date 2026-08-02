@@ -153,6 +153,29 @@
 </div>
 
 <div class="panel">
+  <h2 class="panel-title"><%= t(".campaign_attribution") %></h2>
+  <% if @report.campaign_attribution.any? %>
+    <div class="table-wrap"><table><thead><tr>
+      <th><%= t(".columns.campaign") %></th>
+      <th><%= t(".columns.leads") %></th>
+      <th><%= t(".columns.deals") %></th>
+      <th><%= t(".columns.won") %></th>
+      <th><%= t(".columns.won_value") %></th>
+    </tr></thead><tbody>
+      <% @report.campaign_attribution.each do |row| %><tr>
+        <td><% if row[:campaign] %><%= link_to row[:campaign].name, campaign_path(row[:campaign]) %><% else %><%= t(".unattributed") %><% end %></td>
+        <td><%= row[:leads_count] %></td>
+        <td><%= row[:deals_count] %></td>
+        <td><%= row[:won_count] %></td>
+        <td><%= row[:won_values_by_currency].any? ? format_money_totals(row[:won_values_by_currency]) : "—" %></td>
+      </tr><% end %>
+    </tbody></table></div>
+  <% else %>
+    <p class="muted"><%= t(".no_campaign_attribution") %></p>
+  <% end %>
+</div>
+
+<div class="panel">
   <h2 class="panel-title"><%= t(".velocity") %></h2>
   <dl class="meta-list">
     <dt><%= t(".avg_days_to_win") %></dt>

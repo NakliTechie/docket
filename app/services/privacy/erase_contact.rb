@@ -122,11 +122,21 @@ module Privacy
         author_type: nil, author_id: nil
       )
       Deal.with_deleted.where(id: graph.fetch("Deal")).find_each do |deal|
-        deal.update_columns(name: "Erased opportunity #{deal.id}", external_id: nil, labels: nil)
+        deal.update_columns(
+          name: "Erased opportunity #{deal.id}", external_id: nil, labels: nil,
+          first_touch_utm_source: nil, first_touch_utm_medium: nil,
+          first_touch_utm_campaign: nil, first_touch_utm_term: nil,
+          first_touch_utm_content: nil, first_touch_landing_page: nil,
+          first_touch_referrer: nil
+        )
       end
       Lead.with_deleted.where(id: graph.fetch("Lead")).find_each do |lead|
         lead.update_columns(name: "Erased lead #{lead.id}", email: nil, phone: nil,
-                            company_name: nil, notes: nil, external_id: nil, labels: nil)
+                            company_name: nil, notes: nil, external_id: nil, labels: nil,
+                            first_touch_utm_source: nil, first_touch_utm_medium: nil,
+                            first_touch_utm_campaign: nil, first_touch_utm_term: nil,
+                            first_touch_utm_content: nil, first_touch_landing_page: nil,
+                            first_touch_referrer: nil)
       end
       WorkItem.with_deleted.where(id: graph.fetch("WorkItem")).find_each do |item|
         item.update_columns(title: "Erased linked work #{item.reference}", description: nil)

@@ -103,6 +103,33 @@ class SalesReport
     end
   end
 
+  # First-touch attribution: lead/deal creation is windowed by created_at;
+  # won revenue is windowed by closed_at, matching the report's headline totals.
+  def campaign_attribution
+    @campaign_attribution ||= begin
+      lead_counts = Lead.with_deleted.where(created_at: range).group(:first_touch_campaign_id).count
+      deal_counts = Deal.with_deleted.where(created_at: range).group(:first_touch_campaign_id).count
+      won = Deal.with_deleted.status_won.where(closed_at: range)
+      won_counts = won.group(:first_touch_campaign_id).count
+      won_values = won.group(:first_touch_campaign_id, :currency).sum(:value_cents)
+      ids = (lead_counts.keys + deal_counts.keys + won_counts.keys).uniq
+      campaigns = Campaign.with_deleted.where(id: ids.compact).index_by(&:id)
+
+      ids.map do |campaign_id|
+        values = won_values.each_with_object({}) do |((owner_id, currency), cents), totals|
+          totals[currency.to_s] = cents if owner_id == campaign_id
+        end
+        {
+          campaign: campaigns[campaign_id],
+          leads_count: lead_counts[campaign_id] || 0,
+          deals_count: deal_counts[campaign_id] || 0,
+          won_count: won_counts[campaign_id] || 0,
+          won_values_by_currency: values.sort.to_h
+        }
+      end.sort_by { |row| [ row[:campaign].nil? ? 1 : 0, row[:campaign]&.name.to_s ] }
+    end
+  end
+
   # Rep leaderboard: open pipeline value (snapshot) + won value (windowed)
   # per owner, biggest contributor first.
   def by_owner
@@ -167,6 +194,17 @@ class SalesReport
         csv << [ "competitor_loss", csv_safe(row[:competitor]&.name), row[:count],
                  decimal_value(row[:value_cents]), row[:currency], from, to ]
       end
+      campaign_attribution.each do |row|
+        label = csv_safe(row[:campaign]&.name || "unattributed")
+        if row[:won_values_by_currency].empty?
+          csv << [ "campaign_attribution", label, row[:leads_count], 0, nil, from, to ]
+        else
+          row[:won_values_by_currency].each do |currency, cents|
+            csv << [ "campaign_attribution", label, row[:leads_count],
+                     decimal_value(cents), currency, from, to ]
+          end
+        end
+      end
       by_owner.each do |row|
         csv << [ "owner", csv_safe(row[:owner]&.name), nil,
                  decimal_value(row[:open_value_cents] + row[:won_value_cents]),
@@ -185,6 +223,10 @@ class SalesReport
       competitor_losses: competitor_losses.map { |row|
         row.except(:competitor).merge(competitor_id: row[:competitor]&.id,
                                       competitor: row[:competitor]&.name)
+      },
+      campaign_attribution: campaign_attribution.map { |row|
+        row.except(:campaign).merge(campaign_id: row[:campaign]&.id,
+                                    campaign: row[:campaign]&.name)
       },
       velocity: velocity.merge(stage_dwell: velocity[:stage_dwell].map { |row|
         row.except(:stage).merge(stage_id: row[:stage]&.id, stage: row[:stage]&.name)

@@ -23,6 +23,8 @@ class Deal < ApplicationRecord
   belongs_to :contact, -> { with_deleted }, optional: true
   belongs_to :organisation, -> { with_deleted }, optional: true
   belongs_to :lead, -> { with_deleted }, optional: true
+  belongs_to :first_touch_campaign, -> { with_deleted }, class_name: "Campaign", optional: true,
+             inverse_of: :attributed_deals
   # PG11 — the price book this deal's line items resolve prices through.
   belongs_to :price_book, -> { with_deleted }, optional: true
   # Which connector ingested this record (nil for portal/manual/API-created).
@@ -49,6 +51,7 @@ class Deal < ApplicationRecord
   normalizes :currency, with: ->(currency) { currency.to_s.strip.upcase }
 
   before_validation :apply_default_pipeline, on: :create
+  before_validation :stamp_first_touch_at, if: :will_save_change_to_first_touch_campaign_id?
   before_save :derive_status_from_stage, if: :will_save_change_to_pipeline_stage_id?
 
   scope :open_deals, -> { where(status: :open) }
@@ -79,6 +82,10 @@ class Deal < ApplicationRecord
   end
 
   private
+
+  def stamp_first_touch_at
+    self.first_touch_at ||= Time.current if first_touch_campaign_id.present?
+  end
 
   def apply_default_pipeline
     self.pipeline ||= Pipeline.default

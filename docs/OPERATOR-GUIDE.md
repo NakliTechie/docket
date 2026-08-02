@@ -134,6 +134,15 @@ matches the enrolled recipient cancels later steps and logs a completed email Ac
 Configure the sequence reply domain under Admin → Settings → Intake so inbound
 mail routes `sequence+token` addresses back to this deployment.
 
+Campaigns provide first-touch attribution without an external analytics service.
+Create an active campaign with a unique `utm_campaign`, then use that value in
+links to `/inquiry` or a configured web-to-lead form. Docket stores UTM source,
+medium, campaign, term, content, landing page, and referrer in structured lead
+fields. Lead conversion copies the first touch to its deal. The Sales report
+shows windowed lead count, deal count, won count, and currency-separated won
+value per campaign. A capture form can supply a fallback active campaign when
+its links do not carry UTM parameters.
+
 ## Connectors, credentials, webhooks, and effectors
 
 The application registry contains **65** provider implementations. The admin

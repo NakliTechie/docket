@@ -124,6 +124,7 @@ it to users:
 6. **CRM module** — pipeline/stages, public lead-capture forms and consent text,
    catalog/competitors, and sequences. Set the inbound sequence reply domain.
    Test unsubscribe, reply-stop, open tracking, and signed click tracking before use.
+   Create active campaign records before publishing UTM-tagged inquiry links.
 7. **Notifications/CSAT** — choose the SLA risk window and whether notifications
    also send email; enable CSAT only after SMTP is proven.
 

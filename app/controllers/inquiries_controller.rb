@@ -8,7 +8,10 @@ class InquiriesController < ApplicationController
 
   def new
     @capture_form = capture_form
-    @inquiry = LeadInquiry.new
+    values = params.permit(*CampaignAttribution::UTM_KEYS).to_h
+    values["landing_page"] = request.original_url.to_s.first(2_048)
+    values["referrer"] = request.referer.to_s.first(2_048).presence
+    @inquiry = LeadInquiry.new(values.merge("campaign" => @capture_form&.campaign))
   end
 
   def create
@@ -39,7 +42,8 @@ class InquiriesController < ApplicationController
 
   def inquiry_params
     params.require(:lead_inquiry).permit(:name, :email, :phone, :company_name, :message,
-                                         :email_consent, :sms_consent, fields: {})
+      :email_consent, :sms_consent,
+      *CampaignAttribution::UTM_KEYS, *CampaignAttribution::CONTEXT_KEYS, fields: {})
   end
 
   def capture_form
@@ -64,6 +68,9 @@ class InquiriesController < ApplicationController
     email_consent = !!boolean.cast(permitted[:email_consent])
     sms_consent = !!boolean.cast(permitted[:sms_consent])
     consented = email_consent || sms_consent
+    attribution = permitted.slice(
+      *CampaignAttribution::UTM_KEYS, *CampaignAttribution::CONTEXT_KEYS
+    ).to_h
     attributes.merge(
       email_consent: email_consent, sms_consent: sms_consent,
       consent_captured_at: consented ? Time.current : nil,
@@ -71,7 +78,8 @@ class InquiriesController < ApplicationController
       provenance: {
         "channel" => "web_form", "capture_form_id" => @capture_form&.id,
         "capture_form_slug" => @capture_form&.slug, "request_id" => request.request_id
-      }.compact
-    )
+      }.compact,
+      campaign: @capture_form&.campaign
+    ).merge(attribution)
   end
 end

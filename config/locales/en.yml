@@ -54,6 +54,7 @@ en:
       products: "Products"
       price_books: "Price books"
       competitors: "Competitors"
+      campaigns: "Campaigns"
       users: "Users"
       roles: "Roles"
       tenants: "Tenants"
@@ -575,6 +576,8 @@ en:
       score: "Score"
       email_consent: "Marketing email opt-in"
       sms_consent: "SMS opt-in"
+      first_touch_campaign: "First-touch campaign"
+      utm: "First-touch UTM"
     form:
       value_hint: "Estimated deal value in rupees."
       email_consent_hint: "Only opted-in leads receive marketing sequence emails. Unsubscribing turns this off."
@@ -649,6 +652,7 @@ en:
       active: "Accept submissions"
       is_default: "Use for /inquiry"
       status: "Status"
+      campaign: "Default campaign"
     targets:
       name: "Lead name (required)"
       email: "Email source field"
@@ -657,6 +661,7 @@ en:
       notes: "Message / notes source field"
     form:
       mapping_hint: "Enter the public input name for each lead field. Keep at least email or phone; blank optional mappings are omitted."
+      campaign_hint: "Used as first-touch attribution when a submission has no matching utm_campaign."
     index:
       title: "Web-to-lead forms"
       subtitle: "Map public field names into Docket and retain form and consent provenance on the lead."
@@ -701,6 +706,7 @@ en:
       status: "Status"
       lost_reason: "Lost reason"
       price_book: "Price book"
+      first_touch_campaign: "First-touch campaign"
     form:
       pipeline_hint: "New deals land in this pipeline's first stage."
       lost_reason_hint: "Recorded when the deal is marked lost — feeds the sales report's loss breakdown."
@@ -1059,6 +1065,9 @@ en:
       no_losses: "No lost deals with a recorded reason in this period."
       competitor_losses: "Lost to competitors"
       no_competitor_losses: "No competitor-attributed losses in this period."
+      campaign_attribution: "First-touch campaign attribution"
+      no_campaign_attribution: "No lead or deal attribution in this period."
+      unattributed: "(unattributed)"
       columns:
         stage: "Stage"
         deals: "Deals"
@@ -1069,6 +1078,9 @@ en:
         reason: "Reason"
         avg_days: "Avg days in stage"
         competitor: "Competitor"
+        campaign: "Campaign"
+        leads: "Leads"
+        won_value: "Won value"
   products:
     fields:
       name: "Product"
@@ -1111,6 +1123,63 @@ en:
       updated: "Competitor updated."
     destroy:
       deleted: "Competitor deleted."
+
+  campaigns:
+    fields:
+      name: "Campaign"
+      code: "Internal code"
+      description: "Description"
+      status: "Status"
+      channel: "Channel"
+      starts_on: "Starts"
+      ends_on: "Ends"
+      window: "Campaign window"
+      budget: "Budget"
+      currency: "Currency (ISO code)"
+      utm_source: "UTM source"
+      utm_medium: "UTM medium"
+      utm_campaign: "UTM campaign"
+    enum:
+      status:
+        draft: "Draft"
+        active: "Active"
+        completed: "Completed"
+        archived: "Archived"
+      channel:
+        email: "Email"
+        paid_search: "Paid search"
+        social: "Social"
+        event: "Event"
+        referral: "Referral"
+        other: "Other"
+    form:
+      tracking: "Attribution tracking"
+      tracking_hint: "Incoming inquiry links match utm_campaign to an active campaign. Source and medium remain on the lead as first-touch evidence."
+    index:
+      title: "Campaigns"
+      new: "New campaign"
+      leads: "Leads"
+      deals: "Deals"
+      empty: "No campaigns yet."
+    show:
+      details: "Details"
+      influence: "First-touch influence"
+      won_value: "Won value"
+      recent_leads: "Recent attributed leads"
+      recent_deals: "Recent attributed deals"
+      no_leads: "No attributed leads."
+      no_deals: "No attributed deals."
+      confirm_delete: "Delete this campaign? Existing attribution remains in the audit trail."
+    new:
+      title: "New campaign"
+    edit:
+      title: "Edit %{name}"
+    create:
+      created: "Campaign created."
+    update:
+      updated: "Campaign updated."
+    destroy:
+      deleted: "Campaign deleted."
 
   pipelines:
     fields:

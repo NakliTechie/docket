@@ -64,18 +64,28 @@ module Docket
                               notes: :string, sms_consent: :boolean, email_consent: :boolean,
                               email_unsubscribed_at: :datetime,
                               consent_captured_at: :datetime, consent_source: :string,
+                              first_touch_campaign_id: :integer, first_touch_at: :datetime,
+                              first_touch_utm_source: :string, first_touch_utm_medium: :string,
+                              first_touch_utm_campaign: :string, first_touch_utm_term: :string,
+                              first_touch_utm_content: :string, first_touch_landing_page: :string,
+                              first_touch_referrer: :string,
                               provenance: :object, merged_into_id: :integer, merged_at: :datetime,
                               merged_lead_ids: { type: "array", items: { type: "integer" } },
                               converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
           LeadCaptureForm: object_schema(id: :integer, name: :string, slug: :string,
                                          field_mapping: :object, consent_disclosure: :string,
-                                         active: :boolean, is_default: :boolean,
+                                         active: :boolean, is_default: :boolean, campaign_id: :integer,
                                          created_at: :datetime, updated_at: :datetime),
           Deal: object_schema(id: :integer, name: :string, pipeline_id: :integer, pipeline_stage_id: :integer,
                               status: enum(Deal.statuses.keys), value_cents: :integer, currency: :string,
                               owner_id: :integer, contact_id: :integer, organisation_id: :integer, lead_id: :integer,
                               expected_close_on: :datetime, closed_at: :datetime,
                               lost_reason: enum(Deal.lost_reasons.keys), onboarding_project_id: :integer,
+                              first_touch_campaign_id: :integer, first_touch_at: :datetime,
+                              first_touch_utm_source: :string, first_touch_utm_medium: :string,
+                              first_touch_utm_campaign: :string, first_touch_utm_term: :string,
+                              first_touch_utm_content: :string, first_touch_landing_page: :string,
+                              first_touch_referrer: :string,
                               line_items_total_cents: :integer,
                               line_items: { type: "array", items: { type: "object" } },
                               competitors: { type: "array", items: { type: "object" } },
@@ -93,6 +103,14 @@ module Docket
                                       currency: :string, created_at: :datetime, updated_at: :datetime),
           Competitor: object_schema(id: :integer, name: :string, website: :string, notes: :string,
                                     created_at: :datetime, updated_at: :datetime),
+          Campaign: object_schema(id: :integer, name: :string, code: :string,
+                                  description: :string, status: enum(Campaign.statuses.keys),
+                                  channel: enum(Campaign.channels.keys), starts_on: :date, ends_on: :date,
+                                  budget_cents: :integer, currency: :string, utm_source: :string,
+                                  utm_medium: :string, utm_campaign: :string,
+                                  attributed_leads_count: :integer,
+                                  attributed_deals_count: :integer,
+                                  created_at: :datetime, updated_at: :datetime),
           DealCompetitor: object_schema(id: :integer, deal_id: :integer, competitor_id: :integer,
                                         competitor_name: :string, disposition: :string, notes: :string,
                                         created_at: :datetime, updated_at: :datetime),
@@ -330,6 +348,7 @@ module Docket
         responses: { "200" => "Closed, with moved_items count" }) }
 
       crud(result, "sequences", "Sequence")
+      crud(result, "campaigns", "Campaign")
       result["/sequence_enrollments"] = {
         get: op("List sequence enrollments", params: [ query_param("sequence_id") ], schema: "SequenceEnrollment"),
         post: op("Enroll a Lead or Contact in a sequence",
@@ -506,6 +525,7 @@ module Docket
       when :integer then { type: "integer" }
       when :boolean then { type: "boolean" }
       when :datetime then { type: "string", format: "date-time" }
+      when :date then { type: "string", format: "date" }
       when :object then { type: "object" }
       when :string then { type: "string" }
       when Hash then type

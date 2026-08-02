@@ -100,6 +100,7 @@ module Features
     "deal_line_items" => "crm", "deal_competitors" => "crm", "products" => "crm",
     "competitors" => "crm", "pipelines" => "crm",
     "sequences" => "crm.sequences", "sequence_enrollments" => "crm.sequences",
+    "campaigns" => "crm",
     "projects" => "work", "project_templates" => "work", "work_items" => "work",
     "work_item_relations" => "work", "work_comments" => "work",
     "sprints" => "work.sprints"

@@ -125,6 +125,7 @@ Rails.application.routes.draw do
   resources :products, except: :show
   resources :price_books, except: :show
   resources :competitors, except: :show
+  resources :campaigns
   resources :sequences
   resources :sequence_enrollments, only: %i[create] do
     member { post :cancel }
@@ -292,6 +293,7 @@ Rails.application.routes.draw do
       resources :deal_contact_roles, only: %i[update destroy]
       resources :products, only: %i[index show create update destroy]
       resources :competitors, only: %i[index show create update destroy]
+      resources :campaigns, only: %i[index show create update destroy]
       resources :activities, only: %i[index show create update destroy] do
         member { post :complete }
       end

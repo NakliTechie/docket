@@ -54,6 +54,7 @@ hi:
       products: "उत्पाद"
       price_books: "मूल्य पुस्तिकाएँ"
       competitors: "प्रतिस्पर्धी"
+      campaigns: "अभियान"
       users: "उपयोगकर्ता"
       roles: "भूमिकाएँ"
       tenants: "टेनेंट"
@@ -575,6 +576,8 @@ hi:
       score: "स्कोर"
       email_consent: "मार्केटिंग ईमेल सहमति"
       sms_consent: "SMS सहमति"
+      first_touch_campaign: "प्रथम-स्पर्श अभियान"
+      utm: "प्रथम-स्पर्श UTM"
     form:
       value_hint: "अनुमानित सौदा मूल्य रुपयों में।"
       email_consent_hint: "केवल सहमति देने वाली लीड्स को मार्केटिंग अनुक्रम ईमेल मिलते हैं। सदस्यता समाप्त करने पर यह बंद हो जाता है।"
@@ -649,6 +652,7 @@ hi:
       active: "सबमिशन स्वीकार करें"
       is_default: "/inquiry के लिए उपयोग करें"
       status: "स्थिति"
+      campaign: "डिफ़ॉल्ट अभियान"
     targets:
       name: "लीड नाम (आवश्यक)"
       email: "ईमेल स्रोत फ़ील्ड"
@@ -657,6 +661,7 @@ hi:
       notes: "संदेश / टिप्पणी स्रोत फ़ील्ड"
     form:
       mapping_hint: "हर लीड फ़ील्ड के लिए सार्वजनिक इनपुट नाम दें। कम से कम ईमेल या फ़ोन रखें; खाली वैकल्पिक मानचित्रण छोड़ दिए जाते हैं।"
+      campaign_hint: "जब सबमिशन में मेल खाता utm_campaign न हो, तब प्रथम-स्पर्श श्रेय के लिए उपयोग होता है।"
     index:
       title: "वेब-टू-लीड फ़ॉर्म"
       subtitle: "सार्वजनिक फ़ील्ड नाम Docket में मैप करें और फ़ॉर्म व सहमति का स्रोत लीड पर सुरक्षित रखें।"
@@ -701,6 +706,7 @@ hi:
       status: "स्थिति"
       lost_reason: "हार का कारण"
       price_book: "मूल्य पुस्तिका"
+      first_touch_campaign: "प्रथम-स्पर्श अभियान"
     form:
       pipeline_hint: "नए सौदे इस पाइपलाइन के पहले चरण में आते हैं।"
       lost_reason_hint: "सौदा हारा हुआ चिह्नित करने पर दर्ज — बिक्री रिपोर्ट के हार-विश्लेषण में जाता है।"
@@ -1059,6 +1065,9 @@ hi:
       no_losses: "इस अवधि में दर्ज कारण वाला कोई हारा सौदा नहीं।"
       competitor_losses: "प्रतिस्पर्धियों से हारे"
       no_competitor_losses: "इस अवधि में प्रतिस्पर्धी से जुड़ी कोई हार नहीं।"
+      campaign_attribution: "प्रथम-स्पर्श अभियान श्रेय"
+      no_campaign_attribution: "इस अवधि में कोई लीड या सौदा श्रेय नहीं।"
+      unattributed: "(बिना श्रेय)"
       columns:
         stage: "चरण"
         deals: "सौदे"
@@ -1069,6 +1078,9 @@ hi:
         reason: "कारण"
         avg_days: "चरण में औसत दिन"
         competitor: "प्रतिस्पर्धी"
+        campaign: "अभियान"
+        leads: "लीड्स"
+        won_value: "जीता मूल्य"
   products:
     fields:
       name: "उत्पाद"
@@ -1111,6 +1123,63 @@ hi:
       updated: "प्रतिस्पर्धी अद्यतन हुआ।"
     destroy:
       deleted: "प्रतिस्पर्धी हटाया गया।"
+
+  campaigns:
+    fields:
+      name: "अभियान"
+      code: "आंतरिक कोड"
+      description: "विवरण"
+      status: "स्थिति"
+      channel: "माध्यम"
+      starts_on: "आरंभ"
+      ends_on: "समाप्ति"
+      window: "अभियान अवधि"
+      budget: "बजट"
+      currency: "मुद्रा (ISO कोड)"
+      utm_source: "UTM स्रोत"
+      utm_medium: "UTM माध्यम"
+      utm_campaign: "UTM अभियान"
+    enum:
+      status:
+        draft: "मसौदा"
+        active: "सक्रिय"
+        completed: "पूर्ण"
+        archived: "संग्रहीत"
+      channel:
+        email: "ईमेल"
+        paid_search: "सशुल्क खोज"
+        social: "सोशल"
+        event: "कार्यक्रम"
+        referral: "रेफरल"
+        other: "अन्य"
+    form:
+      tracking: "श्रेय ट्रैकिंग"
+      tracking_hint: "आने वाले पूछताछ लिंक का utm_campaign सक्रिय अभियान से मेल खाता है। स्रोत और माध्यम प्रथम-स्पर्श प्रमाण के रूप में लीड पर रहते हैं।"
+    index:
+      title: "अभियान"
+      new: "नया अभियान"
+      leads: "लीड्स"
+      deals: "सौदे"
+      empty: "अभी कोई अभियान नहीं।"
+    show:
+      details: "विवरण"
+      influence: "प्रथम-स्पर्श प्रभाव"
+      won_value: "जीता मूल्य"
+      recent_leads: "हाल की श्रेयित लीड्स"
+      recent_deals: "हाल के श्रेयित सौदे"
+      no_leads: "कोई श्रेयित लीड नहीं।"
+      no_deals: "कोई श्रेयित सौदा नहीं।"
+      confirm_delete: "इस अभियान को हटाएं? मौजूदा श्रेय ऑडिट इतिहास में रहेगा।"
+    new:
+      title: "नया अभियान"
+    edit:
+      title: "%{name} संपादित करें"
+    create:
+      created: "अभियान बनाया गया।"
+    update:
+      updated: "अभियान अपडेट किया गया।"
+    destroy:
+      deleted: "अभियान हटाया गया।"
 
   pipelines:
     fields:

@@ -2,6 +2,8 @@ class LeadCaptureForm < ApplicationRecord
   acts_as_tenant(:tenant)
   include Audited
 
+  belongs_to :campaign, -> { with_deleted }, optional: true
+
   TARGET_FIELDS = %w[name email phone company_name notes].freeze
   DEFAULT_MAPPING = {
     "name" => "name", "email" => "email", "phone" => "phone",
