@@ -13,7 +13,8 @@ class OrganisationsController < ApplicationController
       case_scope: feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none,
       deal_scope: feature?("crm") && policy(Deal).index? ? policy_scope(Deal) : Deal.none,
       work_scope: feature?("work") && policy(WorkItem).index? ? policy_scope(WorkItem) : WorkItem.none,
-      activity_scope: feature?("crm") && policy(Activity).index? ? policy_scope(Activity) : Activity.none
+      activity_scope: feature?("crm") && policy(Activity).index? ? policy_scope(Activity) : Activity.none,
+      sequence_delivery_scope: sequence_delivery_scope
     ).call
     @cases = result.cases
     @case_count = result.case_count
@@ -59,6 +60,12 @@ class OrganisationsController < ApplicationController
   end
 
   private
+
+  def sequence_delivery_scope
+    return SequenceDelivery.none unless feature?("crm.sequences") && policy(Sequence).index?
+
+    SequenceDelivery.all
+  end
 
   def set_organisation
     @organisation = Organisation.find(params[:id])

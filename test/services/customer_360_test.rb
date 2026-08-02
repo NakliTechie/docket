@@ -80,4 +80,49 @@ class Customer360Test < ActiveSupport::TestCase
     result = Customer360.new(subject: @contact, activity_scope: Activity.none).call
     assert_empty result.timeline.select { |event| event.kind == :activity }
   end
+
+  # --- CR-4: completed sequence touches feed the timeline ---
+
+  def delivered_sequence_touch(target, channel: "email", subject: "Follow-up sent")
+    owner = users(:sales) if %w[call manual_task].include?(channel)
+    sequence = Sequence.new(name: "Renewal cadence", owner: owner)
+    step = sequence.sequence_steps.build(position: 0, delay_days: 0, channel: channel,
+                                         subject: subject, body: "Hello")
+    sequence.save!
+    enrollment = sequence.enroll!(target)
+    SequenceDelivery.create!(
+      sequence_enrollment: enrollment, sequence_step: step, channel: channel,
+      recipient: target.email, status: :delivered, delivered_at: Time.current,
+      payload: { "subject" => subject, "body" => "Hello" }
+    )
+  end
+
+  def with_sequences
+    Customer360.new(subject: @contact, sequence_delivery_scope: SequenceDelivery.all).call
+  end
+
+  test "delivered sequence email on a linked lead appears in the contact timeline" do
+    lead = Lead.create!(name: "Linked lead", email: @contact.email, contact: @contact)
+    delivery = delivered_sequence_touch(lead)
+
+    event = with_sequences.timeline.find { |candidate| candidate.record == delivery }
+
+    assert event
+    assert_equal :sequence_email, event.kind
+    assert_equal "Follow-up sent", event.title
+  end
+
+  test "undelivered and manual sequence rows do not duplicate customer touches" do
+    delivered_sequence_touch(@contact).update!(status: :failed, delivered_at: nil)
+    delivered_sequence_touch(@contact, channel: "manual_task", subject: "Call customer")
+
+    assert_empty with_sequences.timeline.select { |event| event.kind.to_s.start_with?("sequence_") }
+  end
+
+  test "sequence delivery scope none contributes no sequence events" do
+    delivered_sequence_touch(@contact)
+    result = Customer360.new(subject: @contact, sequence_delivery_scope: SequenceDelivery.none).call
+
+    assert_empty result.timeline.select { |event| event.kind.to_s.start_with?("sequence_") }
+  end
 end

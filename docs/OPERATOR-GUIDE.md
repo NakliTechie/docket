@@ -208,6 +208,8 @@ record unique opens, signed-link clicks, and replies. A reply whose From address
 matches the enrolled recipient cancels later steps and logs a completed email Activity.
 Configure the sequence reply domain under Admin → Settings → Intake so inbound
 mail routes `sequence+token` addresses back to this deployment.
+Delivered sequence email and SMS receipts appear on the Customer 360 activity
+timeline. Skipped or failed deliveries do not appear as customer touches.
 
 Contact, lead, and deal pages share a chronological seller conversation. A rep
 can send email from the record when outbound SMTP is available. Each record also
