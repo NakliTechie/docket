@@ -20,7 +20,11 @@ end
 # a CPU-DoS. Legit integrations refresh ~hourly (1h token TTL), so this is
 # generous for real use (M25).
 Rack::Attack.throttle("api/oauth_token", limit: 30, period: 5.minutes) do |request|
-  request.ip if request.post? && request.path == "/api/v1/oauth/token"
+  request.ip if request.post? && %w[/api/v1/oauth/token /oauth/token].include?(request.path)
+end
+
+Rack::Attack.throttle("oauth/client_registration", limit: 10, period: 1.hour) do |request|
+  request.ip if request.post? && request.path == "/oauth/register"
 end
 
 # Public lead-capture form (v1.2 CRM).

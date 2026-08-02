@@ -83,6 +83,15 @@ Use `/api/v1/openapi.json` for the complete route and schema inventory. The MCP
 catalog is derived from the same document and removes operations disabled by
 the tenant's features; MCP creates no additional authority.
 
+Remote AI clients connect at `/api/v1/mcp`. Docket publishes protected-resource
+and authorization-server metadata, supports dynamic client registration, and
+requires authorization code with PKCE S256 for staff-delegated access. Access
+tokens are bound to the MCP resource; rotating refresh tokens require the
+`offline_access` scope. The consented OAuth scopes intersect with the user's
+role permissions and tenant entitlements. Client-specific setup and the six
+packaged workflows are documented in `docs/CONNECT-MCP.md`; the distributable
+Agent Skill is in `skills/docket/`.
+
 `connectors:invoke` is a coarse prerequisite, not an action grant. Each service
 account also needs an explicit connector/action grant selected in Admin →
 Service accounts. Removing the scope or disabling an action makes that action

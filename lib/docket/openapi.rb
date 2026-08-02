@@ -14,7 +14,8 @@ module Docket
           "x-docket-version": Docket::VERSION,
           description: "Sovereign case-management API. Every action the UI can perform is available here. " \
                        "Auth: per-user tokens (`Authorization: Bearer dkt_…`) carry that user's console permissions; " \
-                       "service accounts exchange client credentials at /oauth/token for a scoped bearer (`dkts_…`). " \
+                       "service accounts exchange client credentials at /oauth/token for a scoped bearer (`dkts_…`); " \
+                       "MCP clients discover authorization-code OAuth with PKCE and dynamic registration from the public well-known metadata. " \
                        "Scoped service accounts may act on behalf of a contact via `on_behalf_of` (the operator's customer ID)."
         },
         servers: [ { url: "/api/v1" } ],
@@ -240,17 +241,18 @@ module Docket
       result = {}
 
       result["/oauth/token"] = {
-        post: op("Exchange service-account client credentials for a scoped bearer token",
+        post: op("Exchange client credentials, an authorization code, or a refresh token for a scoped bearer token",
                  security: [], request: {
-                   grant_type: { type: "string", enum: [ "client_credentials" ] },
-                   client_id: :string, client_secret: :string
+                   grant_type: { type: "string", enum: %w[client_credentials authorization_code refresh_token] },
+                   client_id: :string, client_secret: :string, code: :string, redirect_uri: :string,
+                   code_verifier: :string, refresh_token: :string, resource: :string
                  },
                  responses: { "200" => "Access token issued", "401" => "Invalid client" })
       }
       result["/openapi.json"] = { get: op("This document", security: []) }
       result["/mcp"] = {
-        post: op("Model Context Protocol endpoint (JSON-RPC 2.0): initialize, tools/list, and tools/call " \
-                 "expose every api/v1 operation as an MCP tool, under the same bearer auth, tenant and scopes.",
+        post: op("Model Context Protocol endpoint (JSON-RPC 2.0): tools, six governed prompts, and three resources " \
+                 "under the same bearer auth, tenant, role, and scopes.",
                  request: { jsonrpc: :string, id: :integer, method: :string, params: :object },
                  responses: { "200" => "JSON-RPC response", "202" => "Accepted (notification)" })
       }

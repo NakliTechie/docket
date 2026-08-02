@@ -36,6 +36,34 @@ class AdminManagementTest < ActionDispatch::IntegrationTest
     assert_not ServiceAccount.exists?(account.id)
   end
 
+  test "admin can inspect and deactivate a connected OAuth app" do
+    client = OauthClient.create!(tenant: tenants(:primary), client_name: "Claude",
+                                 redirect_uris: [ "https://claude.ai/api/mcp/auth_callback" ],
+                                 grant_types: %w[authorization_code refresh_token], response_types: [ "code" ],
+                                 token_endpoint_auth_method: "none")
+    token = OauthAccessToken.issue!(user: users(:admin), oauth_client: client,
+                                    scopes: %w[cases:read], resource: Oauth::Metadata.resource)
+    refresh = OauthRefreshToken.issue!(oauth_client: client, user: users(:admin),
+                                       scopes: %w[cases:read], resource: Oauth::Metadata.resource)
+    sign_in_as users(:admin)
+
+    get admin_oauth_clients_path
+    assert_response :success
+    assert_match "Claude", response.body
+
+    delete admin_oauth_client_path(client)
+    assert_redirected_to admin_oauth_clients_path
+    assert_not client.reload.active?
+    assert_not OauthAccessToken.exists?(token.id)
+    assert_not OauthRefreshToken.exists?(refresh.id)
+  end
+
+  test "staff without service-account authority cannot inspect connected OAuth apps" do
+    sign_in_as users(:readonly)
+    get admin_oauth_clients_path
+    assert_response :forbidden
+  end
+
   test "admin can grant and revoke selected connector actions" do
     sign_in_as users(:admin)
     connector = Connector.create!(name: "CRM", provider: "http_json", target: "contacts",

@@ -1,0 +1,27 @@
+<% content_for :title, t("oauth.authorizations.title") %>
+
+<section class="card stack stack-lg narrow-panel">
+  <div>
+    <p class="eyebrow"><%= t("oauth.authorizations.eyebrow") %></p>
+    <h1><%= t("oauth.authorizations.title") %></h1>
+    <p class="muted"><%= t("oauth.authorizations.intro", client: @authorization_request.client.client_name) %></p>
+  </div>
+
+  <%= form_with url: oauth_authorize_path, method: :post, class: "stack" do %>
+    <%= hidden_field_tag :request_token, @request_token %>
+    <fieldset class="stack-sm">
+      <legend><%= t("oauth.authorizations.permissions") %></legend>
+      <% @authorization_request.scopes.each do |scope| %>
+        <label class="check-row">
+          <%= check_box_tag "scopes[]", scope, true %>
+          <span><strong><%= scope %></strong><br><span class="muted text-sm"><%= t("oauth.scopes.#{scope.tr(':', '_')}") %></span></span>
+        </label>
+      <% end %>
+    </fieldset>
+    <p class="muted text-sm"><%= t("oauth.authorizations.role_limit", user: Current.user.name) %></p>
+    <div class="actions">
+      <%= button_tag t("oauth.authorizations.allow"), name: "decision", value: "allow", class: "btn btn-primary" %>
+      <%= button_tag t("oauth.authorizations.deny"), name: "decision", value: "deny", class: "btn" %>
+    </div>
+  <% end %>
+</section>

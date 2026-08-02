@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_180000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -984,14 +984,75 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_170000) do
   create_table "oauth_access_tokens", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at", null: false
+    t.integer "oauth_client_id"
+    t.string "resource"
     t.datetime "revoked_at"
     t.json "scopes", null: false
-    t.integer "service_account_id", null: false
+    t.integer "service_account_id"
     t.string "token_digest", null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id"
     t.index ["expires_at"], name: "index_oauth_access_tokens_on_expires_at"
+    t.index ["oauth_client_id"], name: "index_oauth_access_tokens_on_oauth_client_id"
     t.index ["service_account_id"], name: "index_oauth_access_tokens_on_service_account_id"
     t.index ["token_digest"], name: "index_oauth_access_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_oauth_access_tokens_on_user_id"
+    t.check_constraint "(service_account_id IS NOT NULL AND user_id IS NULL) OR (service_account_id IS NULL AND user_id IS NOT NULL AND oauth_client_id IS NOT NULL AND resource IS NOT NULL)", name: "oauth_access_tokens_one_principal"
+  end
+
+  create_table "oauth_authorization_codes", force: :cascade do |t|
+    t.string "code_challenge", null: false
+    t.string "code_digest", null: false
+    t.datetime "consumed_at"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.integer "oauth_client_id", null: false
+    t.string "redirect_uri", null: false
+    t.string "resource", null: false
+    t.json "scopes", default: [], null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["code_digest"], name: "index_oauth_authorization_codes_on_code_digest", unique: true
+    t.index ["expires_at"], name: "index_oauth_authorization_codes_on_expires_at"
+    t.index ["oauth_client_id"], name: "index_oauth_authorization_codes_on_oauth_client_id"
+    t.index ["tenant_id"], name: "index_oauth_authorization_codes_on_tenant_id"
+    t.index ["user_id"], name: "index_oauth_authorization_codes_on_user_id"
+  end
+
+  create_table "oauth_clients", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "client_id", null: false
+    t.string "client_name", null: false
+    t.string "client_secret_digest"
+    t.datetime "created_at", null: false
+    t.json "grant_types", default: [], null: false
+    t.json "redirect_uris", default: [], null: false
+    t.json "response_types", default: [], null: false
+    t.integer "tenant_id", null: false
+    t.string "token_endpoint_auth_method", default: "none", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_oauth_clients_on_client_id", unique: true
+    t.index ["tenant_id", "active"], name: "index_oauth_clients_on_tenant_id_and_active"
+    t.index ["tenant_id"], name: "index_oauth_clients_on_tenant_id"
+  end
+
+  create_table "oauth_refresh_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.integer "oauth_client_id", null: false
+    t.string "resource", null: false
+    t.datetime "revoked_at"
+    t.json "scopes", default: [], null: false
+    t.integer "tenant_id", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["expires_at"], name: "index_oauth_refresh_tokens_on_expires_at"
+    t.index ["oauth_client_id"], name: "index_oauth_refresh_tokens_on_oauth_client_id"
+    t.index ["tenant_id"], name: "index_oauth_refresh_tokens_on_tenant_id"
+    t.index ["token_digest"], name: "index_oauth_refresh_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_oauth_refresh_tokens_on_user_id"
   end
 
   create_table "organisations", force: :cascade do |t|
@@ -1922,7 +1983,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_170000) do
   add_foreign_key "messages", "tenants"
   add_foreign_key "notifications", "tenants"
   add_foreign_key "notifications", "users"
+  add_foreign_key "oauth_access_tokens", "oauth_clients", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "service_accounts"
+  add_foreign_key "oauth_access_tokens", "users", on_delete: :cascade
+  add_foreign_key "oauth_authorization_codes", "oauth_clients", on_delete: :cascade
+  add_foreign_key "oauth_authorization_codes", "tenants", on_delete: :cascade
+  add_foreign_key "oauth_authorization_codes", "users", on_delete: :cascade
+  add_foreign_key "oauth_clients", "tenants", on_delete: :cascade
+  add_foreign_key "oauth_refresh_tokens", "oauth_clients", on_delete: :cascade
+  add_foreign_key "oauth_refresh_tokens", "tenants", on_delete: :cascade
+  add_foreign_key "oauth_refresh_tokens", "users", on_delete: :cascade
   add_foreign_key "organisations", "organisations", column: "parent_id", on_delete: :nullify
   add_foreign_key "organisations", "tenants"
   add_foreign_key "pipeline_stages", "pipelines"

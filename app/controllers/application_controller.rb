@@ -52,7 +52,7 @@ class ApplicationController < ActionController::Base
 
   # Auth endpoints (sessions, passwords) sit outside policy land.
   def skip_pundit?
-    is_a?(SessionsController) || is_a?(PasswordsController)
+    is_a?(SessionsController) || is_a?(PasswordsController) || is_a?(Oauth::AuthorizationsController)
   end
 
   def forbidden

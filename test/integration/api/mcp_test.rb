@@ -26,6 +26,8 @@ module Api
         assert_equal 1, res["id"]
         assert_equal "docket", res.dig("result", "serverInfo", "name")
         assert res.dig("result", "capabilities", "tools")
+        assert res.dig("result", "capabilities", "prompts")
+        assert res.dig("result", "capabilities", "resources")
       end
 
       test "tools/list maps api/v1 operations to tools and omits public endpoints" do
@@ -125,6 +127,34 @@ module Api
                   params: { name: "post_cases_id_transition", arguments: { "id" => kase.id, "status" => "in_progress" } })
         assert_equal true, res.dig("result", "isError"), "the inner request is 403 — no cases:write scope"
         assert kase.reload.status_triaged?, "the write did not happen"
+      end
+
+      test "prompts expose six governed workflows and validate arguments" do
+        prompts = rpc(jsonrpc: "2.0", id: 40, method: "prompts/list").dig("result", "prompts")
+        assert_equal 6, prompts.size
+        assert_includes prompts.map { |prompt| prompt["name"] }, "triage_case"
+
+        prompt = rpc(jsonrpc: "2.0", id: 41, method: "prompts/get",
+                     params: { name: "triage_case", arguments: { case_id: "DCK-123" } })
+        assert_includes prompt.dig("result", "messages", 0, "content", "text"), "DCK-123"
+
+        invalid = rpc(jsonrpc: "2.0", id: 42, method: "prompts/get",
+                      params: { name: "triage_case", arguments: {} })
+        assert_equal(-32602, invalid.dig("error", "code"))
+      end
+
+      test "resources expose workflows, operator guidance, and tenant-filtered OpenAPI" do
+        resources = rpc(jsonrpc: "2.0", id: 43, method: "resources/list").dig("result", "resources")
+        assert_equal 3, resources.size
+        assert_includes resources.map { |resource| resource["uri"] }, "docket://workflows"
+
+        result = rpc(jsonrpc: "2.0", id: 44, method: "resources/read",
+                     params: { uri: "docket://workflows" })
+        assert_includes result.dig("result", "contents", 0, "text"), "triage_case"
+
+        invalid = rpc(jsonrpc: "2.0", id: 45, method: "resources/read",
+                      params: { uri: "docket://unknown" })
+        assert_equal(-32602, invalid.dig("error", "code"))
       end
 
       test "an unknown tool is a JSON-RPC invalid-params error" do

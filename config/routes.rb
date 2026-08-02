@@ -11,6 +11,14 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
   post "locale", to: "locales#update", as: :locale
 
+  get "/.well-known/oauth-protected-resource", to: "oauth/metadata#protected_resource"
+  get "/.well-known/oauth-protected-resource/api/v1/mcp", to: "oauth/metadata#protected_resource"
+  get "/.well-known/oauth-authorization-server", to: "oauth/metadata#authorization_server"
+  get "/oauth/authorize", to: "oauth/authorizations#new", as: :oauth_authorize
+  post "/oauth/authorize", to: "oauth/authorizations#create"
+  post "/oauth/register", to: "oauth/registrations#create"
+  post "/oauth/token", to: "oauth/tokens#create"
+
   resources :notifications, only: :index do
     member { patch :read }
     collection { patch :read_all }
@@ -185,6 +193,7 @@ Rails.application.routes.draw do
         post :rotate_secret
       end
     end
+    resources :oauth_clients, only: %i[index destroy]
     resources :webhook_endpoints, except: :show do
       member do
         get :deliveries
@@ -261,7 +270,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      post "oauth/token", to: "oauth#token"
+      post "oauth/token", to: "/oauth/tokens#create"
       get "openapi.json", to: "openapi#show"
       # MCP server face (PG5): JSON-RPC over the api/v1 surface.
       post "mcp", to: "mcp#handle"

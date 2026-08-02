@@ -2,7 +2,7 @@ module Api
   module V1
     # API auth has two shapes (handoff §5):
     #   dkt_…  per-user token — full console parity via Pundit policies
-    #   dkts_… service-account bearer (client credentials) — scope-gated
+    #   dkts_… OAuth bearer — service-account or user consent, scope-gated
     class BaseController < ActionController::API
       include TenantResolution
       include FeatureGating
@@ -64,7 +64,7 @@ module Api
       end
 
       def current_user
-        current_api_token&.user
+        current_api_token&.user || current_access_token&.user
       end
 
       def service_account
@@ -85,6 +85,9 @@ module Api
       # Service accounts must hold the named scope.
       def authorize_api!(record, query, scope:)
         if current_user
+          if current_access_token&.user && scope.present? && !current_access_token.scope?(scope)
+            raise ScopeDenied, scope
+          end
           authorize(record, query)
         elsif scope.nil? || !current_access_token.scope?(scope)
           raise ScopeDenied, scope.to_s
@@ -93,6 +96,9 @@ module Api
 
       def api_scope(model, scope:)
         if current_user
+          if current_access_token&.user && !current_access_token.scope?(scope)
+            raise ScopeDenied, scope
+          end
           policy_scope(model)
         elsif current_access_token.scope?(scope)
           model.respond_to?(:visible_to) ? model.visible_to(nil, manage: scope == "work:manage") : model.all

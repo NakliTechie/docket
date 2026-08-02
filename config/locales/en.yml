@@ -1,4 +1,32 @@
 en:
+  oauth:
+    authorizations:
+      eyebrow: "Connected app"
+      title: "Authorize Docket access"
+      intro: "%{client} requests permission to act through Docket's MCP server."
+      permissions: "Choose permissions"
+      role_limit: "Access remains limited by %{user}'s Docket role and tenant entitlements."
+      allow: "Allow access"
+      deny: "Deny"
+    scopes:
+      cases_read: "Read cases and case history."
+      cases_write: "Create and update cases."
+      contacts_read: "Read contacts."
+      contacts_write: "Create and update contacts."
+      organisations_read: "Read organisations."
+      organisations_write: "Create and update organisations."
+      crm_read: "Read leads, deals, pipelines, and activities."
+      crm_write: "Create and update CRM records."
+      work_read: "Read projects and work items."
+      work_write: "Create and update work items."
+      work_manage: "Manage project configuration."
+      config_read: "Read operational configuration and knowledge."
+      config_write: "Manage operational configuration and knowledge."
+      audit_read: "Read audit and security history."
+      webhooks_manage: "Manage webhook endpoints."
+      connectors_read: "Read connector configuration."
+      connectors_invoke: "Invoke explicitly granted connector actions."
+      offline_access: "Maintain access with rotating refresh tokens."
   layout:
     product_name: "Docket"
     skip_to_content: "Skip to main content"
@@ -2442,6 +2470,7 @@ en:
         action_budget_window: "Per window (minutes)"
       index:
         title: "Service accounts"
+        connected_apps: "Connected apps"
         new_account: "New service account"
         intro: "Machine-to-machine credentials for your own systems (netbanking, CRM, IVR). They exchange client credentials at /api/v1/oauth/token for a scoped bearer token."
         secret_title: "Client secret — copy it now"
@@ -2471,6 +2500,25 @@ en:
         deleted: "Service account deleted."
       rotate_secret:
         rotated: "Secret rotated. Copy the new value now."
+    oauth_clients:
+      index:
+        title: "Connected OAuth apps"
+        intro: "MCP clients registered for staff-delegated access. Deactivation revokes their codes, access tokens, and refresh tokens."
+        service_accounts: "Service accounts"
+        active_badge: "Active"
+        inactive_badge: "Inactive"
+        deactivate: "Deactivate"
+        confirm_deactivate: "Deactivate this app? Every server-side token for it is revoked immediately."
+        columns:
+          client: "Client"
+          redirects: "Redirect URIs"
+          authorization: "Authorization"
+          status: "Status"
+        empty:
+          title: "No connected apps"
+          hint: "Apps appear here after dynamic OAuth registration."
+      destroy:
+        deactivated: "Connected app deactivated and its tokens revoked."
     webhook_endpoints:
       fields:
         name: "Name"

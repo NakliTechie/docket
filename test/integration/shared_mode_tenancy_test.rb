@@ -90,6 +90,36 @@ class SharedModeTenancyTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "dynamic OAuth clients are registered and resolved only on their tenant host" do
+    host! "acme.docket.app"
+    post "/oauth/register", params: {
+      client_name: "Acme AI", redirect_uris: [ "https://client.example/callback" ],
+      grant_types: %w[authorization_code refresh_token], response_types: [ "code" ],
+      token_endpoint_auth_method: "none"
+    }, as: :json
+    assert_response :created
+    acme_client = ActsAsTenant.with_tenant(@acme) do
+      OauthClient.find_by!(client_id: response.parsed_body.fetch("client_id"))
+    end
+    assert_equal @acme.id, acme_client.tenant_id
+
+    primary_client = ActsAsTenant.with_tenant(tenants(:primary)) do
+      OauthClient.create!(client_name: "Primary AI", redirect_uris: [ "https://client.example/callback" ],
+                          grant_types: %w[authorization_code refresh_token], response_types: [ "code" ],
+                          token_endpoint_auth_method: "none")
+    end
+    sign_in_as @acme_user
+    verifier = "v" * 43
+    challenge = Base64.urlsafe_encode64(Digest::SHA256.digest(verifier), padding: false)
+    get "/oauth/authorize", params: {
+      response_type: "code", client_id: primary_client.client_id,
+      redirect_uri: primary_client.redirect_uris.first,
+      code_challenge: challenge, code_challenge_method: "S256"
+    }
+    assert_response :bad_request
+    assert_match "unknown OAuth client", response.body
+  end
+
   # SharedCredential had no tenant_id and no acts_as_tenant — its policy Scope
   # returns `scope.all` and the controller does an unscoped find, so the console
   # listed every tenant's credentials at once.
