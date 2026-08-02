@@ -28,7 +28,11 @@ module Api
 
       def update
         authorize_api!(@contact, :update?, scope: "contacts:write")
-        if @contact.update(contact_update_params)
+        attributes = contact_update_params
+        custom_fields = attributes.delete(:custom_fields)
+        @contact.assign_attributes(attributes)
+        @contact.assign_custom_fields(custom_fields) if custom_fields
+        if @contact.save
           render json: { data: Serialize.contact(@contact) }
         else
           render_validation_errors(@contact)
@@ -59,14 +63,14 @@ module Api
       ].freeze
 
       def contact_params
-        params.require(:contact).permit(*EDITABLE_ATTRS, :external_id)
+        params.require(:contact).permit(*EDITABLE_ATTRS, :external_id, custom_fields: {})
       end
 
       # external_id (the SSO-linkage key) is settable on create but not
       # rewritable on update — repointing it would hijack a customer's
       # verified portal identity.
       def contact_update_params
-        params.require(:contact).permit(*EDITABLE_ATTRS)
+        params.require(:contact).permit(*EDITABLE_ATTRS, custom_fields: {})
       end
     end
   end

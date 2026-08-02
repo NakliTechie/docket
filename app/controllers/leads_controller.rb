@@ -36,7 +36,11 @@ class LeadsController < ApplicationController
 
   def update
     authorize @lead
-    if @lead.update(lead_params)
+    attributes = lead_params
+    custom_fields = attributes.delete(:custom_fields)
+    @lead.assign_attributes(attributes)
+    @lead.assign_custom_fields(custom_fields) if custom_fields
+    if @lead.save
       redirect_to @lead, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity
@@ -80,6 +84,7 @@ class LeadsController < ApplicationController
   def lead_params
     params.require(:lead).permit(:name, :email, :phone, :company_name,
                                  :source, :owner_id, :value_estimate, :notes,
-                                 :sms_consent, :email_consent, :first_touch_campaign_id)
+                                 :sms_consent, :email_consent, :first_touch_campaign_id,
+                                 custom_fields: {})
   end
 end

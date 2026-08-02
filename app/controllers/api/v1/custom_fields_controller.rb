@@ -51,7 +51,7 @@ module Api
 
       def ensure_resource_feature!
         resource_type = normalized_resource_type
-        ensure_feature!(resource_type == "cases" ? "service_desk" : "work")
+        ensure_feature!(CustomFieldDefinition.feature_for(resource_type))
       end
 
       def definition_params

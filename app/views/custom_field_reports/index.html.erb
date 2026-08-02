@@ -13,7 +13,11 @@
   <div class="form-row">
     <%= f.label :resource_type, t(".resource") %>
     <%= f.select :resource_type,
-          [[t("custom_fields.index.cases"), "cases"], [t("custom_fields.index.work_items"), "work_items"]],
+          CustomFieldDefinition::RESOURCE_TYPES.filter_map { |resource_type|
+            next unless CustomFieldReportPolicy.new(Current.user, resource_type).index?
+            next unless feature?(CustomFieldDefinition.feature_for(resource_type))
+            [t("custom_fields.index.#{resource_type}"), resource_type]
+          },
           { selected: @resource_type } %>
   </div>
   <div class="form-row">

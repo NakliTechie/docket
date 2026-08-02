@@ -43,6 +43,24 @@ class Connectors::SyncTest < ActiveSupport::TestCase
     assert_equal 1, conn.connector_runs.last.records_updated
   end
 
+  test "coerces governed contact fields and preserves values outside the connector mapping" do
+    CustomFieldDefinition.create!(resource_type: "contacts", key: "account_tier", label: "Account tier",
+                                  field_type: :single_select, options: %w[Gold Silver])
+    CustomFieldDefinition.create!(resource_type: "contacts", key: "relationship_note",
+                                  label: "Relationship note", field_type: :short_text)
+    contact = Contact.create!(name: "Existing", external_id: "CIF-CUSTOM",
+                              custom_fields: { relationship_note: "Keep this" })
+    conn = connector(mapping: {
+      "external_id" => "id", "name" => "name", "custom_fields.account_tier" => "tier"
+    })
+
+    stub_fetch(conn, [ { "id" => "CIF-CUSTOM", "name" => "Updated", "tier" => "Gold" } ])
+    Connectors::Sync.run(conn)
+
+    assert_equal "Gold", contact.reload.custom_fields.fetch("account_tier")
+    assert_equal "Keep this", contact.custom_fields.fetch("relationship_note")
+  end
+
   test "skips records with no mapped identity" do
     conn = connector
     stub_fetch(conn, [ { "id" => "", "email" => "", "name" => "Nameless" } ])

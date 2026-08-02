@@ -117,10 +117,12 @@ module Features
   # Is this api/v1 path available to the tenant in scope?
   def api_path_enabled?(path)
     normalized_path = path.to_s.delete_prefix("/")
-    return enabled?("service_desk") || enabled?("work") if normalized_path.start_with?("reports/custom_fields")
+    if normalized_path.start_with?("reports/custom_fields")
+      return enabled?("service_desk") || enabled?("crm") || enabled?("work")
+    end
 
     resource = normalized_path.split("/").first.to_s
-    return enabled?("service_desk") || enabled?("work") if resource == "custom_fields"
+    return enabled?("service_desk") || enabled?("crm") || enabled?("work") if resource == "custom_fields"
 
     owner = owner_of_api_path(path)
     owner.nil? || enabled?(owner)

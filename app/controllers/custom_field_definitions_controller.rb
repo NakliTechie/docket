@@ -1,9 +1,11 @@
 class CustomFieldDefinitionsController < ApplicationController
   before_action :set_definition, only: %i[edit update]
+  before_action :ensure_resource_feature!
 
   def index
     authorize CustomFieldDefinition
     @resource_type = normalized_resource_type
+    authorize CustomFieldDefinition.new(resource_type: @resource_type), :show?
     @definitions = policy_scope(CustomFieldDefinition).for_resource(@resource_type).ordered
   end
 
@@ -45,10 +47,18 @@ class CustomFieldDefinitionsController < ApplicationController
   end
 
   def normalized_resource_type
-    value = params[:resource_type].presence || "cases"
+    value = @definition&.resource_type || params[:resource_type].presence ||
+            params.dig(:custom_field_definition, :resource_type).presence ||
+            CustomFieldDefinition::RESOURCE_TYPES.find do |resource_type|
+      Current.user&.can?(CustomFieldDefinition.manage_permission_for(resource_type))
+    end
     return value if CustomFieldDefinition::RESOURCE_TYPES.include?(value)
 
     raise ActionController::BadRequest, "unsupported custom-field resource"
+  end
+
+  def ensure_resource_feature!
+    ensure_feature!(CustomFieldDefinition.feature_for(normalized_resource_type))
   end
 
   def definition_params

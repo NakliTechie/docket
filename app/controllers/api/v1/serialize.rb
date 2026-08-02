@@ -73,6 +73,7 @@ module Api
           preferred_language: c.preferred_language, notes: c.notes,
           sms_consent: c.sms_consent, email_consent: c.email_consent,
           email_unsubscribed_at: c.email_unsubscribed_at,
+          custom_fields: c.custom_fields,
           created_at: c.created_at, updated_at: c.updated_at
         }
       end
@@ -174,6 +175,7 @@ module Api
           first_touch_landing_page: l.first_touch_landing_page,
           first_touch_referrer: l.first_touch_referrer,
           provenance: l.provenance, merged_into_id: l.merged_into_id, merged_at: l.merged_at,
+          custom_fields: l.custom_fields,
           merged_lead_ids: l.merged_leads.ids,
           converted_at: l.converted_at, created_at: l.created_at, updated_at: l.updated_at
         }
@@ -201,6 +203,7 @@ module Api
           first_touch_utm_content: d.first_touch_utm_content,
           first_touch_landing_page: d.first_touch_landing_page,
           first_touch_referrer: d.first_touch_referrer,
+          custom_fields: d.custom_fields,
           line_items_total_cents: d.line_items_total_cents,
           line_items: d.deal_line_items.map { |item| deal_line_item(item) },
           competitors: d.deal_competitors.map { |link| deal_competitor(link) },

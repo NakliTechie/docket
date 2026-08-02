@@ -13,7 +13,7 @@ class FeatureGatingTest < ActionDispatch::IntegrationTest
     disable!("crm")
     sign_in_as users(:admin) # super_admin: role authority is not the limit here
 
-    [ leads_path, deals_path, pipelines_path ].each do |path|
+    [ leads_path, deals_path, pipelines_path, custom_fields_path(resource_type: "contacts") ].each do |path|
       get path
       assert_response :not_found, "#{path} should not exist for a tenant without CRM"
     end

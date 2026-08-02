@@ -3,6 +3,8 @@ module Imports
   # apply; preview therefore exposes missing columns, dropped columns, and enum
   # values before any durable run can begin.
   class Csv
+    CUSTOM_FIELD_ENTITIES = CustomFieldDefinition::RESOURCE_TYPES.freeze
+
     ENTITY_CONTRACTS = {
       "organisations" => {
         model: Organisation, allowed: %w[name kind created_at updated_at], required: %w[name]
@@ -356,7 +358,7 @@ module Imports
     end
 
     def valid_custom_field_target?(field)
-      %w[cases work_items].include?(@entity) && field.start_with?("custom_fields.")
+      CUSTOM_FIELD_ENTITIES.include?(@entity) && field.start_with?("custom_fields.")
     end
 
     def custom_field_targets(targets)
@@ -364,7 +366,7 @@ module Imports
     end
 
     def custom_field_definitions
-      @custom_field_definitions ||= if %w[cases work_items].include?(@entity)
+      @custom_field_definitions ||= if CUSTOM_FIELD_ENTITIES.include?(@entity)
         CustomFieldDefinition.for_resource(@entity).index_by(&:key)
       else
         {}

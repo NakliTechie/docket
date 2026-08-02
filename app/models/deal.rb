@@ -7,6 +7,9 @@ class Deal < ApplicationRecord
   include Audited
   include Labelable
   include HumanEnums
+  include HasCustomFields
+
+  has_custom_fields_for :deals
 
   humanizes_enums :status, :lost_reason
 

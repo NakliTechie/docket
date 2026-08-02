@@ -64,4 +64,15 @@ class CsvImportTest < ActiveSupport::TestCase
                                    mapping: contract.merge("custom_fields.missing" => "Legacy Segment"))
     assert_includes invalid[:errors], 'custom field "missing" is not defined for cases'
   end
+
+  test "CRM contracts map typed custom fields" do
+    CustomFieldDefinition.create!(resource_type: "contacts", key: "segment", label: "Segment",
+                                  field_type: :single_select, options: %w[Gold Silver])
+    contract = mapping.merge("custom_fields.segment" => "Legacy Segment")
+    result = Imports::Csv.call(payload: csv, entity: "contacts",
+                               identity_column: "Source ID", mapping: contract)
+
+    assert_empty result.errors
+    assert_equal "Gold", Contact.find_by!(email: "ravi.csv@example.test").custom_fields.fetch("segment")
+  end
 end

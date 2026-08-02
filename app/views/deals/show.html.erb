@@ -130,4 +130,5 @@
       <dd><%= link_to @deal.lead.name, lead_path(@deal.lead) %></dd>
     <% end %>
   </dl>
+  <%= render "shared/custom_field_values", record: @deal, resource_type: "deals" %>
 </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_161000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -382,6 +382,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_160000) do
 
   create_table "contacts", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.string "email"
     t.boolean "email_consent", default: false, null: false
@@ -499,6 +500,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_160000) do
     t.integer "contact_id"
     t.datetime "created_at", null: false
     t.string "currency", default: "INR", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.date "expected_close_on"
     t.string "external_id"
@@ -831,6 +833,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_160000) do
     t.datetime "converted_at"
     t.integer "converted_deal_id"
     t.datetime "created_at", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.string "email"
     t.boolean "email_consent", default: false, null: false

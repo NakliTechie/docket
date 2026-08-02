@@ -61,6 +61,8 @@
     <%= f.text_area :notes %>
   </div>
 
+  <%= render "shared/custom_fields", record: lead, resource_type: "leads" %>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), leads_path, class: "btn" %>

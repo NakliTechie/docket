@@ -50,10 +50,16 @@ class CrmDepthTest < ActionDispatch::IntegrationTest
   end
 
   test "duplicate review is exact and merge preserves lineage and moves deals" do
-    target = Lead.create!(name: "Canonical", email: "same@example.com", notes: "Target")
+    CustomFieldDefinition.create!(resource_type: "leads", key: "account_tier", label: "Account tier",
+                                  field_type: :short_text)
+    CustomFieldDefinition.create!(resource_type: "leads", key: "territory", label: "Territory",
+                                  field_type: :short_text)
+    target = Lead.create!(name: "Canonical", email: "same@example.com", notes: "Target",
+                          custom_fields: { account_tier: "Platinum" })
     source = Lead.create!(name: "Duplicate", email: "SAME@example.com", notes: "Source",
                           email_consent: true, consent_captured_at: 1.day.ago,
-                          provenance: { "channel" => "web_form" })
+                          provenance: { "channel" => "web_form" },
+                          custom_fields: { account_tier: "Gold", territory: "West" })
     unrelated = Lead.create!(name: "Similar name", email: "different@example.com")
     deal = Deal.create!(name: "Duplicate deal", pipeline: pipelines(:sales), lead: source)
 
@@ -70,6 +76,8 @@ class CrmDepthTest < ActionDispatch::IntegrationTest
     assert_includes target.notes, "Target"
     assert_includes target.notes, "Source"
     assert_includes target.provenance["merged_lead_ids"], source.id
+    assert_equal "Platinum", target.custom_fields.fetch("account_tier")
+    assert_equal "West", target.custom_fields.fetch("territory")
 
     get lead_path(source)
     assert_response :success

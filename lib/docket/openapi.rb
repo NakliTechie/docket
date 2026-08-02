@@ -54,6 +54,7 @@ module Docket
             id: :integer, name: :string, email: :string, phone: :string, external_id: :string,
             organisation_id: :integer, preferred_language: :string, notes: :string,
             sms_consent: :boolean, email_consent: :boolean, email_unsubscribed_at: :datetime,
+            custom_fields: :object,
             created_at: :datetime, updated_at: :datetime
           ),
           Organisation: object_schema(id: :integer, name: :string, kind: :string, external_ref: :string,
@@ -69,6 +70,7 @@ module Docket
                               first_touch_utm_campaign: :string, first_touch_utm_term: :string,
                               first_touch_utm_content: :string, first_touch_landing_page: :string,
                               first_touch_referrer: :string,
+                              custom_fields: :object,
                               provenance: :object, merged_into_id: :integer, merged_at: :datetime,
                               merged_lead_ids: { type: "array", items: { type: "integer" } },
                               converted_at: :datetime, created_at: :datetime, updated_at: :datetime),
@@ -86,6 +88,7 @@ module Docket
                               first_touch_utm_campaign: :string, first_touch_utm_term: :string,
                               first_touch_utm_content: :string, first_touch_landing_page: :string,
                               first_touch_referrer: :string,
+                              custom_fields: :object,
                               line_items_total_cents: :integer,
                               line_items: { type: "array", items: { type: "object" } },
                               competitors: { type: "array", items: { type: "object" } },
@@ -382,7 +385,7 @@ module Docket
       crud(result, "business_calendars", "BusinessCalendar")
       crud(result, "custom_fields", "CustomFieldDefinition", extra_params: %w[resource_type],
            only: %i[index show create update],
-           create_note: "resource_type is cases or work_items; key is immutable after creation. Deactivate a field to preserve historical values.")
+           create_note: "resource_type is cases, contacts, leads, deals, or work_items; key is immutable after creation. Deactivate a field to preserve historical values.")
       crud(result, "macros", "Macro")
       crud(result, "reference_docs", "ReferenceDoc")
       result["/reference_docs/{id}/versions"] = {
@@ -459,7 +462,7 @@ module Docket
         "resolution rate, SLA breach count and compliance, AI-vs-human reply split (admin or audit:read)",
         params: [ query_param("from"), query_param("to") ]) }
       result["/reports/custom_fields"] = { get: op(
-        "Distribution report for one reportable case or work-item custom field",
+        "Distribution report for one reportable case, contact, lead, deal, or work-item custom field",
         params: [ query_param("resource_type"), query_param("field") ]) }
       result["/reports/csat"] = { get: op(
         "CSAT invitations, response rate, average, and score distribution",

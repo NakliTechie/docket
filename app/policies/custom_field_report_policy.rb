@@ -1,10 +1,8 @@
 class CustomFieldReportPolicy < ApplicationPolicy
   def index?
-    case record.to_s
-    when "cases" then permit?("case:read")
-    when "work_items" then permit?("work:read")
-    else false
-    end
+    permit?(CustomFieldDefinition.read_permission_for(record))
+  rescue KeyError
+    false
   end
 
   def export? = index? && permit?("report:export")

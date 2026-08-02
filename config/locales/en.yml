@@ -2181,6 +2181,7 @@ en:
         email: "Email ←"
         name: "Name ←"
         phone: "Phone ←"
+        custom_field: "%{label} (custom) ←"
       targets:
         contacts: "Contacts"
         leads: "Leads"
@@ -3113,8 +3114,11 @@ en:
       inactive: "Inactive"
     index:
       title: "Custom fields"
-      intro: "Add typed, governed fields to cases and work items. Deactivate fields to preserve historical values."
+      intro: "Add typed, governed fields to cases, contacts, leads, deals, and work items. Deactivate fields to preserve historical values."
       cases: "Cases"
+      contacts: "Contacts"
+      leads: "Leads"
+      deals: "Deals"
       work_items: "Work items"
       new_field: "New field"
       report: "View report"

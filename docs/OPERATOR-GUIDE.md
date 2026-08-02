@@ -70,7 +70,7 @@ tokens (`dkts_…`) must carry one or more of these exact scopes:
 | `crm:read`, `crm:write` | CRM records, capture-form configuration, catalog, deal products/competitors, and sales operations. |
 | `work:read`, `work:write` | Work items, comments, and relations. |
 | `work:manage` | Projects, templates, sprints, and Work configuration. |
-| `config:read`, `config:write` | Service-desk/settings configuration endpoints as allowed by the endpoint policy. |
+| `config:read`, `config:write` | Service-desk, CRM, Work, knowledge, and settings configuration endpoints as allowed by the endpoint policy. |
 | `audit:read` | Audit verification and reporting endpoints. |
 | `webhooks:manage` | Webhook endpoint and delivery administration. |
 | `connectors:read`, `connectors:invoke` | Inspect connectors or invoke enabled connector actions. |
@@ -81,6 +81,25 @@ tokens, and service accounts—is deliberately unavailable to service accounts.
 Use `/api/v1/openapi.json` for the complete route and schema inventory. The MCP
 catalog is derived from the same document and removes operations disabled by
 the tenant's features; MCP creates no additional authority.
+
+`connectors:invoke` is a coarse prerequisite, not an action grant. Each service
+account also needs an explicit connector/action grant selected in Admin →
+Service accounts. Removing the scope or disabling an action makes that action
+undiscoverable and non-invokable for the account.
+
+## Governed custom fields
+
+Admin → Custom fields manages typed fields for cases, contacts, leads, deals,
+and work items. Service-desk supervisors manage case fields. Client admins
+manage CRM and Work fields. Keys are immutable API contracts; deactivate a
+field to retain historical values without offering it on new forms.
+
+Fields support short or long text, integers, decimals, booleans, dates, and
+single- or multi-select vocabularies. Required fields validate every write path.
+Reportable fields appear in the distribution report and its CSV export when the
+actor holds both resource-read and report-export authority. Console forms, REST
+payloads, generic CSV imports, and Salesforce mappings share the same coercion
+and validation rules. Record changes retain actor-attributed audit entries.
 
 ## Business calendars and SLA
 
@@ -119,7 +138,7 @@ links, and lineage; old merged URLs resolve to the canonical case.
 
 ## Knowledge lifecycle
 
-Knowledge articles have `draft`, `published`, and `retired` states plus
+Knowledge articles have `draft`, `under_review`, `published`, and `retired` states plus
 `internal` or `public` visibility. Only published articles ground the agent.
 Published public articles also appear in the customer portal. Retiring an
 article removes it from both surfaces without deleting its history.
@@ -188,8 +207,10 @@ a completed authorization-code connection. `paused`, `error`, and `draft` are
 traffic kill switches in every direction.
 
 Pull connectors map into contacts, leads, deals, or cases using an explicit
-identity field and target-specific required fields. Scheduled sync runs every
-five minutes and selects only connectors whose configured interval is due.
+identity field and target-specific required fields. Active governed custom
+fields appear in the connector mapping form and use the same typed validation
+as console, API, and import writes. Scheduled sync runs every five minutes and
+selects only connectors whose configured interval is due.
 Inbound messaging connectors verify their provider signature before creating
 or threading a case. Outbound Docket webhooks use `whsec_…` HMAC-SHA256 secrets,
 publish no internal notes, and retain delivery attempts with retry history.

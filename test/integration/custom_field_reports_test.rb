@@ -37,4 +37,17 @@ class CustomFieldReportsTest < ActionDispatch::IntegrationTest
     get custom_field_report_path, params: { resource_type: "cases", field: "region" }
     assert_response :not_found
   end
+
+  test "CRM field reports use the matching record scope" do
+    definition = CustomFieldDefinition.create!(resource_type: "contacts", key: "account_tier",
+                                               label: "Account tier", field_type: :short_text,
+                                               reportable: true)
+    contacts(:asha).assign_custom_fields(account_tier: "Gold")
+    contacts(:asha).save!
+    sign_in_as users(:admin)
+
+    get custom_field_report_path, params: { resource_type: "contacts", field: definition.key }
+    assert_response :success
+    assert_match "Gold", response.body
+  end
 end

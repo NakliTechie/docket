@@ -145,7 +145,8 @@ namespace :docket do
           status_map: maps.fetch("case_statuses", {}),
           stage_map: maps.fetch("opportunity_stages", {}),
           lead_status_map: maps.fetch("lead_statuses", {}),
-          lead_source_map: maps.fetch("lead_sources", {})
+          lead_source_map: maps.fetch("lead_sources", {}),
+          custom_field_maps: maps.fetch("custom_fields", {})
         )
         puts JSON.pretty_generate(preview)
       end
@@ -161,7 +162,8 @@ namespace :docket do
           status_map: maps.fetch("case_statuses", {}),
           stage_map: maps.fetch("opportunity_stages", {}),
           lead_status_map: maps.fetch("lead_statuses", {}),
-          lead_source_map: maps.fetch("lead_sources", {}), **common_options
+          lead_source_map: maps.fetch("lead_sources", {}),
+          custom_field_maps: maps.fetch("custom_fields", {}), **common_options
         )
         report(result, "Salesforce import")
       end

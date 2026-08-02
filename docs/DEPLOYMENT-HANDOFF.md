@@ -123,7 +123,7 @@ it to users:
 5. **Work module** — one project per team; each seeds its own board columns.
    Set WIP limits/default assignment rules and reusable onboarding templates.
 6. **CRM module** — pipeline/stages, public lead-capture forms and consent text,
-   catalog/competitors, and sequences. Set the inbound sequence reply domain.
+   governed contact/lead/deal fields, catalog/competitors, and sequences. Set the inbound sequence reply domain.
    Test unsubscribe, reply-stop, open tracking, and signed click tracking before use.
    Create active campaign records before publishing UTM-tagged inquiry links.
 7. **Notifications/CSAT** — choose the SLA risk window and whether notifications

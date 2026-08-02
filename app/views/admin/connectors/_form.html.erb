@@ -58,6 +58,16 @@
                     id: "connector_field_mapping_#{docket_field}_#{target_name}", placeholder: t("admin.connectors.mapping_placeholder") %>
             </div>
           <% end %>
+          <% CustomFieldDefinition.for_resource(target_name).active.ordered.each do |definition| %>
+            <% docket_field = "custom_fields.#{definition.key}" %>
+            <div class="form-row">
+              <%= label_tag "connector_field_mapping_custom_#{definition.key}_#{target_name}",
+                    t("admin.connectors.mapping.custom_field", label: definition.label) %>
+              <%= text_field_tag "connector[field_mapping][#{docket_field}]", (connector.field_mapping || {})[docket_field],
+                    id: "connector_field_mapping_custom_#{definition.key}_#{target_name}",
+                    placeholder: t("admin.connectors.mapping_placeholder") %>
+            </div>
+          <% end %>
           <% if target_name == "deals" %>
             <div class="form-row">
               <%= label_tag "connector_config_default_pipeline_id_deals",

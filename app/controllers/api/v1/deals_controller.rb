@@ -29,7 +29,11 @@ module Api
 
       def update
         authorize_api!(@deal, :update?, scope: "crm:write")
-        if @deal.update(deal_params)
+        attributes = deal_params
+        custom_fields = attributes.delete(:custom_fields)
+        @deal.assign_attributes(attributes)
+        @deal.assign_custom_fields(custom_fields) if custom_fields
+        if @deal.save
           render json: { data: Serialize.deal(@deal) }
         else
           render_validation_errors(@deal)
@@ -79,7 +83,7 @@ module Api
       def deal_params
         params.require(:deal).permit(:name, :pipeline_id, :pipeline_stage_id, :owner_id,
                                      :contact_id, :organisation_id, :value, :currency, :expected_close_on,
-                                     :lost_reason, :first_touch_campaign_id)
+                                     :lost_reason, :first_touch_campaign_id, custom_fields: {})
       end
     end
   end

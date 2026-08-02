@@ -45,6 +45,36 @@ class CustomFieldValuesTest < ActiveSupport::TestCase
     assert item.save
   end
 
+  test "CRM resources coerce governed values independently" do
+    resources = {
+      "contacts" => contacts(:asha),
+      "leads" => Lead.create!(name: "CRM custom lead", email: "crm-fields-lead@example.test"),
+      "deals" => Deal.create!(name: "CRM custom deal", pipeline: pipelines(:sales))
+    }
+
+    resources.each do |resource_type, record|
+      field("account_tier", :single_select, resource_type: resource_type, options: %w[Gold Silver])
+      record.assign_custom_fields(account_tier: "Gold")
+      assert record.save, resource_type
+      assert_equal "Gold", record.reload.custom_fields.fetch("account_tier"), resource_type
+    end
+  end
+
+  test "CRM custom-field changes retain actor-attributed audit evidence" do
+    field("account_tier", :short_text, resource_type: "contacts")
+    contact = contacts(:asha)
+    Current.actor = users(:client_admin)
+
+    contact.assign_custom_fields(account_tier: "Gold")
+    contact.save!
+
+    entry = AuditEntry.where(auditable: contact, action: "contact.update").order(:id).last
+    assert_equal users(:client_admin), entry.actor
+    assert_equal [ {}, { "account_tier" => "Gold" } ], entry.changeset.fetch("custom_fields")
+  ensure
+    Current.actor = nil
+  end
+
   test "deactivated fields remain readable without blocking unrelated edits" do
     definition = field("legacy_tier", :short_text)
     kase = cases(:pension_case)

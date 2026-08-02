@@ -8,6 +8,9 @@ class Lead < ApplicationRecord
   include Audited
   include Labelable
   include HumanEnums
+  include HasCustomFields
+
+  has_custom_fields_for :leads
 
   humanizes_enums :status, :source, :score_band
 

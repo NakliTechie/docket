@@ -2,7 +2,7 @@ require "test_helper"
 
 class CustomFieldsTest < ActionDispatch::IntegrationTest
   setup do
-    sign_in_as users(:admin)
+    sign_in_as users(:client_admin)
   end
 
   test "an administrator manages typed definitions without deleting their contract" do
@@ -55,5 +55,42 @@ class CustomFieldsTest < ActionDispatch::IntegrationTest
     } }
     assert_response :forbidden
     refute CustomFieldDefinition.exists?(key: "secret")
+  end
+
+  test "an administrator configures and records CRM custom fields" do
+    %w[contacts leads deals].each do |resource_type|
+      post custom_fields_path, params: { custom_field_definition: {
+        resource_type: resource_type, key: "account_tier", label: "Account tier",
+        field_type: "single_select", options_text: "Gold\nSilver", active: "1", reportable: "1"
+      } }
+      assert_redirected_to custom_fields_path(resource_type: resource_type)
+    end
+
+    patch contact_path(contacts(:asha)), params: { contact: { custom_fields: { account_tier: "Gold" } } }
+    assert_redirected_to contact_path(contacts(:asha))
+    assert_equal "Gold", contacts(:asha).reload.custom_fields.fetch("account_tier")
+
+    post leads_path, params: { lead: {
+      name: "Governed lead", email: "governed-lead@example.test",
+      custom_fields: { account_tier: "Silver" }
+    } }
+    lead = Lead.find_by!(email: "governed-lead@example.test")
+    assert_equal "Silver", lead.custom_fields.fetch("account_tier")
+
+    post deals_path, params: { deal: {
+      name: "Governed deal", pipeline_id: pipelines(:sales).id,
+      custom_fields: { account_tier: "Gold" }
+    } }
+    deal = Deal.find_by!(name: "Governed deal")
+    assert_equal "Gold", deal.custom_fields.fetch("account_tier")
+  end
+
+  test "support supervisors cannot manage CRM field definitions" do
+    sign_in_as users(:customer_service_supervisor)
+    post custom_fields_path, params: { custom_field_definition: {
+      resource_type: "contacts", key: "private_tier", label: "Private tier", field_type: "short_text"
+    } }
+    assert_response :forbidden
+    refute CustomFieldDefinition.exists?(resource_type: "contacts", key: "private_tier")
   end
 end

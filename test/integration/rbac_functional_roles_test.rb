@@ -139,6 +139,10 @@ class RbacFunctionalRolesTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{run_decisions_path}']", count: 1
     assert_select "a[href='#{admin_service_accounts_path}']", count: 0
     assert_select "a[href='#{admin_settings_path}']", count: 0
+    get custom_fields_path(resource_type: "contacts")
+    assert_response :success
+    get new_custom_field_path(resource_type: "deals")
+    assert_response :success
   end
 
   test "the roles matrix page is visible to user-managers and renders permissions" do

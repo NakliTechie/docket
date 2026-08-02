@@ -42,6 +42,7 @@ class LeadMerge
     attributes[:consent_source] ||= @target.consent_source.presence || @source.consent_source
     attributes[:notes] = [ @target.notes, @source.notes ].compact_blank.uniq.join("\n\n")
     attributes[:labels] = (@target.labels.to_a + @source.labels.to_a).uniq
+    attributes[:custom_fields] = @source.custom_fields.to_h.merge(@target.custom_fields.to_h)
     merge_first_touch(attributes)
     attributes[:provenance] = @target.provenance.to_h.merge(
       "merged_lead_ids" => (@target.provenance.to_h["merged_lead_ids"].to_a + [ @source.id ]).uniq,

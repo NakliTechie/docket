@@ -1,14 +1,14 @@
 class CustomFieldDefinitionPolicy < ApplicationPolicy
-  def index? = case_manager? || work_manager?
+  def index? = CustomFieldDefinition::MANAGE_PERMISSIONS.values.any? { |permission| permit?(permission) }
   def show? = manage_resource?
   def create? = manage_resource?
   def update? = manage_resource?
 
   class Scope < Scope
     def resolve
-      resources = []
-      resources << "cases" if user&.can?("queue:manage")
-      resources << "work_items" if user&.can?("project:manage")
+      resources = CustomFieldDefinition::RESOURCE_TYPES.select do |resource_type|
+        user&.can?(CustomFieldDefinition.manage_permission_for(resource_type))
+      end
       scope.where(resource_type: resources)
     end
   end
@@ -16,13 +16,8 @@ class CustomFieldDefinitionPolicy < ApplicationPolicy
   private
 
   def manage_resource?
-    case record.resource_type
-    when "cases" then case_manager?
-    when "work_items" then work_manager?
-    else false
-    end
+    permit?(CustomFieldDefinition.manage_permission_for(record.resource_type))
+  rescue KeyError
+    false
   end
-
-  def case_manager? = permit?("queue:manage")
-  def work_manager? = permit?("project:manage")
 end
