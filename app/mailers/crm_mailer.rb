@@ -2,6 +2,18 @@
 # same SMTP config as every other mail; without SMTP the delivery job records
 # a skipped receipt and the null transport remains the final egress fail-safe.
 class CrmMailer < ApplicationMailer
+  def conversation_message(message)
+    @message = message
+    options = {
+      to: message.recipient_email,
+      subject: message.subject_line.presence || I18n.t("crm_messages.mail.default_subject")
+    }
+    reply_address = CrmMailboxAddress.address_for(message.subject)
+    options[:reply_to] = reply_address if reply_address
+    headers["X-Docket-CRM-Message-ID"] = message.id.to_s
+    mail(**options)
+  end
+
   def sequence_delivery(delivery)
     @body = delivery.payload.fetch("body", "")
     @body_html = SequenceTracking.html_body(delivery)

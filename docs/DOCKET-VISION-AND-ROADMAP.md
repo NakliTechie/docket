@@ -25,7 +25,7 @@ Docket contests exactly that deal shape with three arguments procurement cannot 
 One product, three capabilities:
 
 - **Case management** — intake, triage, lifecycle, SLA, escalation, closure, full audit trail. Grievances, service requests, support tickets: same object, different vocabulary per deployment.
-- **Customer/customer 360** — one contact workspace with recent case, CRM, and work summaries; a unified chronological communications timeline remains roadmap work.
+- **Customer/customer 360** — one contact workspace with recent case, CRM, and work summaries; contact, lead, and deal records now add a permission-scoped chronological conversation across CRM email and public case messages.
 - **Agentic resolution** — tier-1 cases resolved conversationally by an agent running on models inside the deployment (Ollama/vLLM endpoint), with confidence gating: resolve / draft-for-human-review / route-to-queue. BYOK frontier escape hatch available but off by default in sovereign deployments. Resolve-don't-deflect — Parley's locked principle, inherited.
 
 What Docket is **not** (not contested): forecasting, CPQ, territory management, AppExchange-style marketplace, marketing automation, Salesforce's integration sprawl. Sales-CRM objects arrive in v1.2 as a module, not the anchor.

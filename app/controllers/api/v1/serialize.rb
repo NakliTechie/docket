@@ -69,6 +69,8 @@ module Api
       def contact(c)
         {
           id: c.id, name: c.name, email: c.email, phone: c.phone,
+          job_title: c.job_title, whatsapp_handle: c.whatsapp_handle,
+          telegram_handle: c.telegram_handle,
           external_id: c.external_id, organisation_id: c.organisation_id,
           preferred_language: c.preferred_language, notes: c.notes,
           sms_consent: c.sms_consent, email_consent: c.email_consent,
@@ -160,6 +162,8 @@ module Api
       def lead(l)
         {
           id: l.id, name: l.name, email: l.email, phone: l.phone,
+          job_title: l.job_title, whatsapp_handle: l.whatsapp_handle,
+          telegram_handle: l.telegram_handle,
           company_name: l.company_name, source: l.source, status: l.status,
           owner_id: l.owner_id, contact_id: l.contact_id, converted_deal_id: l.converted_deal_id,
           value_estimate_cents: l.value_estimate_cents, notes: l.notes,
@@ -195,6 +199,7 @@ module Api
           owner_id: d.owner_id, contact_id: d.contact_id, organisation_id: d.organisation_id,
           lead_id: d.lead_id, expected_close_on: d.expected_close_on, closed_at: d.closed_at,
           lost_reason: d.lost_reason, onboarding_project_id: d.onboarding_project&.id,
+          notes: d.notes, next_step: d.next_step, next_step_at: d.next_step_at,
           first_touch_campaign_id: d.first_touch_campaign_id, first_touch_at: d.first_touch_at,
           first_touch_utm_source: d.first_touch_utm_source,
           first_touch_utm_medium: d.first_touch_utm_medium,
@@ -208,6 +213,27 @@ module Api
           line_items: d.deal_line_items.map { |item| deal_line_item(item) },
           competitors: d.deal_competitors.map { |link| deal_competitor(link) },
           created_at: d.created_at, updated_at: d.updated_at
+        }
+      end
+
+      def crm_message(message)
+        {
+          id: message.id, subject_type: message.subject_type, subject_id: message.subject_id,
+          channel: message.channel, direction: message.direction,
+          author_type: message.author_type, author_id: message.author_id,
+          sender_email: message.sender_email, recipient_email: message.recipient_email,
+          subject_line: message.subject_line, body: message.body,
+          delivery_status: message.delivery_status, occurred_at: message.occurred_at,
+          created_at: message.created_at, updated_at: message.updated_at
+        }
+      end
+
+      def crm_conversation_entry(entry)
+        {
+          record_type: entry.record.class.name, record_id: entry.record.id,
+          context: entry.context, channel: entry.channel, direction: entry.direction,
+          author: entry.author, subject_line: entry.subject_line,
+          body: entry.body, occurred_at: entry.occurred_at
         }
       end
 

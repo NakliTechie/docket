@@ -63,6 +63,21 @@
     <%= f.date_field :expected_close_on %>
   </div>
 
+  <div class="form-row">
+    <%= f.label :next_step, t("deals.fields.next_step") %>
+    <%= f.text_area :next_step, rows: 3 %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :next_step_at, t("deals.fields.next_step_at") %>
+    <%= f.datetime_local_field :next_step_at %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :notes, t("deals.fields.notes") %>
+    <%= f.text_area :notes, rows: 5 %>
+  </div>
+
   <% if PriceBook.active.any? %>
     <div class="form-row">
       <%= f.label :price_book_id, t("deals.fields.price_book") %>

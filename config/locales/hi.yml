@@ -566,6 +566,9 @@ hi:
       name: "नाम"
       email: "ईमेल"
       phone: "फ़ोन"
+      job_title: "पदनाम"
+      whatsapp_handle: "WhatsApp नंबर"
+      telegram_handle: "Telegram उपयोगकर्ता नाम"
       external_id: "ग्राहक आईडी"
       organisation: "संगठन"
       preferred_language: "पसंदीदा भाषा"
@@ -612,6 +615,9 @@ hi:
       company_name: "कंपनी"
       email: "ईमेल"
       phone: "फ़ोन"
+      job_title: "पदनाम"
+      whatsapp_handle: "WhatsApp नंबर"
+      telegram_handle: "Telegram उपयोगकर्ता नाम"
       source: "स्रोत"
       owner: "स्वामी"
       value_estimate: "अनुमानित मूल्य (₹)"
@@ -727,6 +733,41 @@ hi:
     sequence_step:
       unsubscribe: "मार्केटिंग ईमेल से सदस्यता समाप्त करें"
 
+  crm_messages:
+    title: "बातचीत"
+    count:
+      one: "1 संदेश"
+      other: "%{count} संदेश"
+    compose: "ईमेल लिखें"
+    send: "%{recipient} को भेजें"
+    created: "%{recipient} के लिए ईमेल कतार में रखा गया।"
+    empty: "इस रिकॉर्ड पर कोई ईमेल या संदेश इतिहास नहीं है।"
+    bcc_hint: "अपने मेलबॉक्स से भेजे ईमेल को दर्ज करने के लिए इस रिकॉर्ड-विशिष्ट पते को BCC करें। इस पते पर आए उत्तर इसी बातचीत में जुड़ते हैं।"
+    unknown_author: "अज्ञात प्रेषक"
+    fields:
+      subject_line: "विषय"
+      body: "संदेश"
+    context:
+      lead: "लीड: %{name}"
+      deal: "सौदा: %{name}"
+    mail:
+      default_subject: "Docket से संदेश"
+    enum:
+      channel:
+        email: "ईमेल"
+        whatsapp: "WhatsApp"
+        telegram: "Telegram"
+      direction:
+        outbound: "जावक"
+        inbound: "आवक"
+      delivery_status:
+        pending: "लंबित"
+        attempting: "भेजा जा रहा है"
+        delivered: "पहुंचा"
+        failed: "विफल"
+        skipped: "अनुपलब्ध"
+        recorded: "दर्ज"
+
   sequence_unsubscribes:
     show:
       title: "सदस्यता समाप्त करें"
@@ -752,6 +793,9 @@ hi:
       lost_reason: "हार का कारण"
       price_book: "मूल्य पुस्तिका"
       first_touch_campaign: "प्रथम-स्पर्श अभियान"
+      notes: "सौदा टिप्पणियाँ"
+      next_step: "अगला कदम"
+      next_step_at: "फ़ॉलो-अप समय"
     form:
       pipeline_hint: "नए सौदे इस पाइपलाइन के पहले चरण में आते हैं।"
       lost_reason_hint: "सौदा हारा हुआ चिह्नित करने पर दर्ज — बिक्री रिपोर्ट के हार-विश्लेषण में जाता है।"
@@ -2676,8 +2720,8 @@ hi:
           default_queue_hint: "पोर्टल और ईमेल के मामले यहीं आते हैं जब तक एआई उन्हें रूट न करे।"
           default_sla_policy: "डिफ़ॉल्ट एसएलए नीति"
           outbound_email_from: "आउटबाउंड ईमेल का From पता"
-          sequence_reply_domain: "अनुक्रम उत्तर डोमेन"
-          sequence_reply_domain_hint: "इस परिनियोजन पर रूट किया गया इनबाउंड मेल डोमेन। उत्तर इस डोमेन पर sequence+token पते का उपयोग करते हैं।"
+          sequence_reply_domain: "CRM और अनुक्रम उत्तर डोमेन"
+          sequence_reply_domain_hint: "इस परिनियोजन पर रूट किया गया इनबाउंड मेल डोमेन। CRM BCC पते crm+token और अनुक्रम उत्तर sequence+token का उपयोग करते हैं।"
           notification_email_enabled: "नई और बढ़ी हुई सूचनाओं के बारे में स्टाफ़ को ईमेल करें"
           csat_enabled: "मामला हल होने पर संतुष्टि सर्वे ईमेल करें"
           sla_risk_minutes: "एसएलए जोखिम अवधि (कार्य मिनट)"

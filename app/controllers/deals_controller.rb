@@ -38,6 +38,12 @@ class DealsController < ApplicationController
     @available_competitors = policy_scope(Competitor).where.not(id: @deal.competitor_ids).order(:name)
     @deal_contact_role = DealContactRole.new(deal: @deal)
     @available_role_contacts = Contact.where.not(id: @deal.role_contacts.select(:id)).order(:name)
+    case_scope = feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none
+    visible_types = [ "Deal" ]
+    visible_types << "Contact" if policy(Contact).index?
+    visible_types << "Lead" if policy(Lead).index?
+    @conversation = CrmConversation.call(@deal, case_scope: case_scope, visible_types: visible_types)
+    @crm_bcc_address = CrmMailboxAddress.address_for(@deal)
   end
 
   def new
@@ -123,6 +129,7 @@ class DealsController < ApplicationController
     params.require(:deal).permit(:name, :pipeline_id, :pipeline_stage_id, :owner_id,
                                  :contact_id, :organisation_id, :value, :currency, :expected_close_on,
                                  :lost_reason, :price_book_id, :first_touch_campaign_id,
+                                 :notes, :next_step, :next_step_at,
                                  custom_fields: {})
   end
 end

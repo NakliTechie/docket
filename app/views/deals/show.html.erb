@@ -12,6 +12,9 @@
   </div>
 </div>
 
+<%= render "shared/crm_conversation", subject: @deal, conversation: @conversation,
+      bcc_address: @crm_bcc_address %>
+
 <div class="panel">
   <h2 class="panel-title"><%= t("deals.show.products") %></h2>
   <% if @deal.deal_line_items.any? %>
@@ -124,6 +127,15 @@
     <% end %>
     <% if @deal.expected_close_on %>
       <dt><%= t("deals.fields.expected_close_on") %></dt><dd><%= l @deal.expected_close_on %></dd>
+    <% end %>
+    <% if @deal.next_step.present? %>
+      <dt><%= t("deals.fields.next_step") %></dt><dd><%= @deal.next_step %></dd>
+    <% end %>
+    <% if @deal.next_step_at.present? %>
+      <dt><%= t("deals.fields.next_step_at") %></dt><dd><%= l @deal.next_step_at, format: :short %></dd>
+    <% end %>
+    <% if @deal.notes.present? %>
+      <dt><%= t("deals.fields.notes") %></dt><dd><%= simple_format(@deal.notes) %></dd>
     <% end %>
     <% if @deal.lead %>
       <dt><%= t("deals.fields.source_lead") %></dt>

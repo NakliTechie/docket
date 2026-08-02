@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_200000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -416,6 +416,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
     t.datetime "erased_at"
     t.string "erasure_token"
     t.string "external_id"
+    t.string "job_title"
     t.json "labels", default: [], null: false
     t.string "name", null: false
     t.text "notes"
@@ -424,8 +425,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
     t.string "preferred_language", default: "en", null: false
     t.boolean "sms_consent", default: false, null: false
     t.integer "source_connector_id"
+    t.string "telegram_handle"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.string "whatsapp_handle"
     t.index ["deleted_at"], name: "index_contacts_on_deleted_at"
     t.index ["email"], name: "index_contacts_on_email"
     t.index ["organisation_id"], name: "index_contacts_on_organisation_id"
@@ -434,6 +437,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
     t.index ["tenant_id", "erasure_token"], name: "index_contacts_on_tenant_id_and_erasure_token", unique: true, where: "(erasure_token IS NOT NULL)"
     t.index ["tenant_id", "external_id"], name: "index_contacts_on_tenant_id_and_external_id", unique: true, where: "((external_id IS NOT NULL) AND (deleted_at IS NULL))"
     t.index ["tenant_id"], name: "index_contacts_on_tenant_id"
+  end
+
+  create_table "crm_messages", force: :cascade do |t|
+    t.integer "author_id"
+    t.string "author_type"
+    t.text "body", null: false
+    t.integer "channel", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.datetime "delivered_at"
+    t.datetime "delivery_claimed_at"
+    t.text "delivery_last_error"
+    t.integer "delivery_status", default: 0, null: false
+    t.integer "direction", default: 0, null: false
+    t.string "email_message_id"
+    t.string "external_message_id"
+    t.json "metadata", default: {}, null: false
+    t.datetime "occurred_at", null: false
+    t.string "recipient_email"
+    t.string "sender_email"
+    t.integer "source_connector_id"
+    t.integer "subject_id", null: false
+    t.string "subject_line"
+    t.string "subject_type", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_type", "author_id"], name: "index_crm_messages_on_author"
+    t.index ["deleted_at"], name: "index_crm_messages_on_deleted_at"
+    t.index ["source_connector_id"], name: "index_crm_messages_on_source_connector_id"
+    t.index ["subject_type", "subject_id"], name: "index_crm_messages_on_subject"
+    t.index ["tenant_id", "email_message_id"], name: "index_crm_messages_on_tenant_email_message", unique: true, where: "email_message_id IS NOT NULL"
+    t.index ["tenant_id", "source_connector_id", "external_message_id"], name: "index_crm_messages_on_tenant_connector_external", unique: true, where: "source_connector_id IS NOT NULL AND external_message_id IS NOT NULL"
+    t.index ["tenant_id", "subject_type", "subject_id", "occurred_at"], name: "index_crm_messages_on_tenant_subject_occurred"
+    t.index ["tenant_id"], name: "index_crm_messages_on_tenant_id"
   end
 
   create_table "csat_surveys", force: :cascade do |t|
@@ -544,6 +581,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
     t.integer "lead_id"
     t.integer "lost_reason"
     t.string "name", null: false
+    t.text "next_step"
+    t.datetime "next_step_at"
+    t.text "notes"
     t.integer "organisation_id"
     t.integer "owner_id"
     t.integer "pipeline_id", null: false
@@ -567,6 +607,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
     t.index ["price_book_id"], name: "index_deals_on_price_book_id"
     t.index ["source_connector_id"], name: "index_deals_on_source_connector_id"
     t.index ["status"], name: "index_deals_on_status"
+    t.index ["tenant_id", "next_step_at"], name: "index_deals_on_tenant_id_and_next_step_at"
     t.index ["tenant_id"], name: "index_deals_on_tenant_id"
   end
 
@@ -876,6 +917,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
     t.string "first_touch_utm_medium"
     t.string "first_touch_utm_source"
     t.string "first_touch_utm_term"
+    t.string "job_title"
     t.json "labels"
     t.datetime "merged_at"
     t.bigint "merged_into_id"
@@ -890,9 +932,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
     t.integer "source", default: 2, null: false
     t.integer "source_connector_id"
     t.integer "status", default: 0, null: false
+    t.string "telegram_handle"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "value_estimate_cents"
+    t.string "whatsapp_handle"
     t.index ["contact_id"], name: "index_leads_on_contact_id"
     t.index ["converted_deal_id"], name: "index_leads_on_converted_deal_id"
     t.index ["deleted_at"], name: "index_leads_on_deleted_at"
@@ -1955,6 +1999,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_190100) do
   add_foreign_key "connectors", "tenants"
   add_foreign_key "contacts", "organisations"
   add_foreign_key "contacts", "tenants"
+  add_foreign_key "crm_messages", "connectors", column: "source_connector_id"
+  add_foreign_key "crm_messages", "tenants"
   add_foreign_key "csat_surveys", "cases", on_delete: :cascade
   add_foreign_key "csat_surveys", "contacts", on_delete: :nullify
   add_foreign_key "csat_surveys", "tenants", on_delete: :cascade

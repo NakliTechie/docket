@@ -566,6 +566,9 @@ en:
       name: "Name"
       email: "Email"
       phone: "Phone"
+      job_title: "Job title"
+      whatsapp_handle: "WhatsApp number"
+      telegram_handle: "Telegram username"
       external_id: "Customer ID"
       organisation: "Organisation"
       preferred_language: "Preferred language"
@@ -612,6 +615,9 @@ en:
       company_name: "Company"
       email: "Email"
       phone: "Phone"
+      job_title: "Job title"
+      whatsapp_handle: "WhatsApp number"
+      telegram_handle: "Telegram username"
       source: "Source"
       owner: "Owner"
       value_estimate: "Estimated value (₹)"
@@ -727,6 +733,41 @@ en:
     sequence_step:
       unsubscribe: "Unsubscribe from marketing emails"
 
+  crm_messages:
+    title: "Conversation"
+    count:
+      one: "1 message"
+      other: "%{count} messages"
+    compose: "Write an email"
+    send: "Send to %{recipient}"
+    created: "Email queued for %{recipient}."
+    empty: "No email or messaging history on this record."
+    bcc_hint: "BCC this record-specific address to log an email sent from your own mailbox. Replies sent to it join this thread."
+    unknown_author: "Unknown sender"
+    fields:
+      subject_line: "Subject"
+      body: "Message"
+    context:
+      lead: "Lead: %{name}"
+      deal: "Deal: %{name}"
+    mail:
+      default_subject: "Message from Docket"
+    enum:
+      channel:
+        email: "Email"
+        whatsapp: "WhatsApp"
+        telegram: "Telegram"
+      direction:
+        outbound: "Outbound"
+        inbound: "Inbound"
+      delivery_status:
+        pending: "Pending"
+        attempting: "Sending"
+        delivered: "Delivered"
+        failed: "Failed"
+        skipped: "Unavailable"
+        recorded: "Recorded"
+
   sequence_unsubscribes:
     show:
       title: "Unsubscribe"
@@ -752,6 +793,9 @@ en:
       lost_reason: "Lost reason"
       price_book: "Price book"
       first_touch_campaign: "First-touch campaign"
+      notes: "Deal notes"
+      next_step: "Next step"
+      next_step_at: "Follow up at"
     form:
       pipeline_hint: "New deals land in this pipeline's first stage."
       lost_reason_hint: "Recorded when the deal is marked lost — feeds the sales report's loss breakdown."
@@ -2676,8 +2720,8 @@ en:
           default_queue_hint: "Portal and email cases land here unless the AI routes them."
           default_sla_policy: "Default SLA policy"
           outbound_email_from: "Outbound email From address"
-          sequence_reply_domain: "Sequence reply domain"
-          sequence_reply_domain_hint: "Inbound mail domain routed to this deployment. Replies use sequence+token addresses at this domain."
+          sequence_reply_domain: "CRM and sequence reply domain"
+          sequence_reply_domain_hint: "Inbound mail domain routed to this deployment. CRM BCC addresses use crm+token; sequence replies use sequence+token."
           notification_email_enabled: "Email staff about new and escalated notifications"
           csat_enabled: "Email a satisfaction survey when a case is resolved"
           sla_risk_minutes: "SLA risk window (business minutes)"

@@ -21,6 +21,8 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     end
     contact = Contact.create!(name: "Private Person", email: "private-73f9@example.test",
                               phone: "+9199999973", external_id: "CIF-PRIVATE-73F9",
+                              job_title: "Private buyer", whatsapp_handle: "+9199999973",
+                              telegram_handle: "private_73f9",
                               notes: marker,
                               custom_fields: { private_email: "private-73f9@example.test" })
     contact.add_label("churn_risk")
@@ -51,7 +53,16 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
       custom_fields: { private_email: "private-73f9@example.test" }
     )
     deal = Deal.create!(name: "Private deal", pipeline: pipelines(:sales), contact: contact,
+                        notes: "Deal #{marker}", next_step: "Call #{marker}", next_step_at: 1.day.from_now,
                         custom_fields: { private_email: "private-73f9@example.test" })
+    crm_message = CrmMessage.create!(
+      subject: deal, body: "CRM #{marker}", subject_line: "Private thread",
+      direction: :inbound, delivery_status: :recorded,
+      sender_email: contact.email, email_message_id: "private-crm@example.test"
+    )
+    crm_message.files.attach(io: StringIO.new(marker), filename: "crm-private.txt",
+                             content_type: "text/plain")
+    crm_blob_id = crm_message.files.first.blob_id
     decision = Decision.create!(rule: "contact_risk", version: "1", subject: contact,
                                 subject_label: contact.name, signal: "churn_risk",
                                 decision_class: "autonomous", status: :applied)
@@ -63,6 +74,9 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     assert contact.erased_at.present?
     assert_nil contact.email
     assert_nil contact.phone
+    assert_nil contact.job_title
+    assert_nil contact.whatsapp_handle
+    assert_nil contact.telegram_handle
     assert_match(/\Aerased-/, contact.external_id)
     assert_nil kase.reload.description
     assert_equal "[Erased for privacy]", message.reload.body
@@ -74,6 +88,12 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     assert_empty kase.custom_fields
     assert_empty attributed_lead.custom_fields
     assert_empty deal.reload.custom_fields
+    assert_nil deal.notes
+    assert_nil deal.next_step
+    assert_nil deal.next_step_at
+    assert_equal "[Erased for privacy]", crm_message.reload.body
+    assert_nil crm_message.sender_email
+    assert_not ActiveStorage::Blob.exists?(crm_blob_id)
     assert_equal "Erased contact", decision.reload.subject_label
     assert_not ActiveStorage::Blob.exists?(blob_id)
     assert result.request.status_completed?
