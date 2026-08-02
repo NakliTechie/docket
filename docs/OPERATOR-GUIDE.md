@@ -55,7 +55,8 @@ another assignable role.
 
 The wider Salesforce/Freshdesk/Jira role research and the reasons behind this
 inventory are recorded in
-`plan/role-inventory-and-market-research-2026-07-30.md`.
+`plan/_archive/role-inventory-and-market-research-2026-07-30.md`; the current
+maintenance snapshot is `plan/role-inventory-current-2026-08-02.md`.
 
 ## Service-account API scopes
 
