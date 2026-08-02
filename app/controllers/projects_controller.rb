@@ -12,7 +12,7 @@ class ProjectsController < ApplicationController
     # This becomes a SELECT id subquery. Strip display ordering: PostgreSQL
     # rejects ORDER BY key on the DISTINCT membership scope when the subquery
     # selects only id (SQLite happened to accept it).
-    @open_counts = WorkItem.open.where(project: @projects.reorder(nil)).group(:project_id).count
+    @open_counts = policy_scope(WorkItem).open.where(project: @projects.reorder(nil)).group(:project_id).count
   end
 
   def show
@@ -21,12 +21,13 @@ class ProjectsController < ApplicationController
   end
 
   def new
-    @project = Project.new
+    @project = Project.new(lead: Current.user)
     authorize @project
   end
 
   def create
     @project = Project.new(project_params)
+    @project.lead ||= Current.user
     authorize @project
     if @project.save
       redirect_to project_board_path(@project), notice: t(".created", key: @project.key)

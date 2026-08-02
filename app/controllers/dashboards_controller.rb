@@ -14,7 +14,17 @@ class DashboardsController < ApplicationController
 
     @from = parse_date(params[:from]) || 30.days.ago.to_date
     @to = parse_date(params[:to]) || Date.current
-    @overview = DashboardOverview.new(from: @from, to: @to)
+    cases = RecordVisibility.resolve(Current.user, Case.with_deleted)
+    @overview = DashboardOverview.new(
+      from: @from,
+      to: @to,
+      deal_scope: RecordVisibility.resolve(Current.user, Deal.with_deleted),
+      lead_scope: RecordVisibility.resolve(Current.user, Lead.with_deleted),
+      case_scope: cases,
+      contact_scope: RecordVisibility.resolve(Current.user, Contact.all),
+      message_scope: Message.with_deleted.where(case_id: cases.select(:id)),
+      decision_scope: RecordVisibility.resolve(Current.user, Decision.all)
+    )
 
     respond_to do |format|
       format.html

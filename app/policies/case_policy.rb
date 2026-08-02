@@ -1,7 +1,6 @@
 class CasePolicy < ApplicationPolicy
-  # Single-tenant: all staff see all cases; mutation rights differ.
   def index? = permit?("case:read")
-  def show?  = permit?("case:read")
+  def show?  = permit?("case:read") && record_in_scope?(:read)
 
   def create? = permit?("case:write")
 
@@ -9,19 +8,20 @@ class CasePolicy < ApplicationPolicy
   # any case; restricted writers (the service desk) only their own, unassigned,
   # or in-queue cases.
   def update?
-    permit?("case:write") && (full_case_write? || workable_by_agent?)
+    permit?("case:write") && record_in_scope?(:write) &&
+      (full_case_write? || workable_by_agent?)
   end
 
   def transition? = update?
   def assign?     = update?
 
-  def destroy? = permit?("case:delete")
+  def destroy? = permit?("case:delete") && record_in_scope?(:write)
   def merge? = destroy?
   def split? = destroy?
 
   class Scope < Scope
     def resolve
-      permit?("case:read") ? scope.all : scope.none
+      permit?("case:read") ? record_scope : scope.none
     end
   end
 

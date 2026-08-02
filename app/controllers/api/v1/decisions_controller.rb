@@ -14,12 +14,12 @@ module Api
 
       def index
         authorize_decision(:index?)
-        pagy, records = pagy(decision_scope)
+        pagy, records = pagy(filtered_decision_scope)
         render json: { data: records.map { |d| Serialize.decision(d) }, pagination: pagination_meta(pagy) }
       end
 
       def show
-        authorize_decision(:show?)
+        authorize decision, :show?
         render json: { data: Serialize.decision(decision) }
       end
 
@@ -30,13 +30,13 @@ module Api
       end
 
       def approve
-        authorize_decision(:approve?)
+        authorize decision, :approve?
         Decisioning::Dispatcher.approve!(decision, approver: current_user, reason: params[:reason])
         render json: { data: Serialize.decision(decision.reload) }
       end
 
       def reject
-        authorize_decision(:reject?)
+        authorize decision, :reject?
         Decisioning::Dispatcher.reject!(decision, approver: current_user)
         render json: { data: Serialize.decision(decision.reload) }
       end
@@ -47,8 +47,8 @@ module Api
         @decision ||= Decision.find(params[:id])
       end
 
-      def decision_scope
-        scope = Decision.recent_first
+      def filtered_decision_scope
+        scope = policy_scope(Decision).recent_first
         scope = scope.where(status: params[:status]) if Decision.statuses.key?(params[:status])
         scope = scope.where(decision_class: params[:decision_class]) if params[:decision_class].present?
         scope

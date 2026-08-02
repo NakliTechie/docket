@@ -148,6 +148,7 @@ Rails.application.routes.draw do
   post "decisions/:id/reject", to: "decisions#reject", as: :reject_decision
 
   namespace :admin do
+    resources :teams, except: :show
     resources :users do
       member do
         post :activate

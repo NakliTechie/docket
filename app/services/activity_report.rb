@@ -4,10 +4,13 @@
 class ActivityReport
   attr_reader :from, :to
 
-  def initialize(from:, to:, viewer: nil)
+  def initialize(from:, to:, viewer: nil, case_scope: Case.with_deleted,
+                 message_scope: Message.with_deleted)
     @from = from
     @to = to
     @viewer = viewer
+    @cases = case_scope
+    @messages = message_scope
   end
 
   # Audit rows are tenant-scoped for this report unless the viewer is
@@ -43,20 +46,20 @@ class ActivityReport
   # soft-deleted still counts — otherwise deleting a record silently
   # rewrites past usage figures. (with_deleted throughout.)
   def volume_by_queue
-    @volume_by_queue ||= Case.with_deleted.where(created_at: range).group(:queue_id).count
+    @volume_by_queue ||= @cases.where(created_at: range).group(:queue_id).count
                              .transform_keys { |id| CaseQueue.with_deleted.find_by(id: id) }
   end
 
   def volume_by_staff
-    @volume_by_staff ||= Case.with_deleted.where(created_at: range).where.not(assignee_id: nil)
+    @volume_by_staff ||= @cases.where(created_at: range).where.not(assignee_id: nil)
                              .group(:assignee_id).count
                              .transform_keys { |id| User.with_deleted.find_by(id: id) }
   end
 
   def stats
     @stats ||= begin
-      created = Case.with_deleted.where(created_at: range).count
-      resolved_scope = Case.with_deleted.where(resolved_at: range)
+      created = @cases.where(created_at: range).count
+      resolved_scope = @cases.where(resolved_at: range)
       resolved = resolved_scope.count
       compliant = resolved_scope.where(resolution_breached: false).count
       {
@@ -65,8 +68,8 @@ class ActivityReport
         resolution_rate: created.zero? ? nil : (resolved * 100.0 / created).round(1),
         sla_breaches: breach_events,
         sla_compliance: resolved.zero? ? nil : (compliant * 100.0 / resolved).round(1),
-        agent_turns: Message.with_deleted.where(created_at: range, kind: :agent_turn).count,
-        human_replies: Message.with_deleted.where(created_at: range, kind: :public_reply, direction: :outbound).count
+        agent_turns: @messages.where(created_at: range, kind: :agent_turn).count,
+        human_replies: @messages.where(created_at: range, kind: :public_reply, direction: :outbound).count
       }
     end
   end

@@ -58,6 +58,34 @@ inventory are recorded in
 `plan/_archive/role-inventory-and-market-research-2026-07-30.md`; the current
 maintenance snapshot is `plan/role-inventory-current-2026-08-02.md`.
 
+### Record scope
+
+Roles and record scope are independent controls. A role determines which
+actions a person may perform. The person's read and write scopes independently
+limit which operational records those actions can reach. Both controls must
+allow an action. `global` means every applicable record in the active tenant;
+it never crosses a tenant boundary.
+
+| Scope | Records included |
+|---|---|
+| `owned` | Records owned or reported by the person. |
+| `assigned` | Owned records plus cases and work items assigned to the person. |
+| `queue` | Directly owned or assigned records plus cases in the person's queues, their customer/CRM records, and linked work. |
+| `team` | Records owned, reported, or assigned to members of an explicit team. |
+| `account` | Directly owned or assigned records plus assigned organisations, descendant organisations, their contacts, related service/CRM records, and linked work. |
+| `global` | Every applicable record in the active tenant. This is the compatibility default. |
+
+Admin → Teams manages explicit team membership. Admin → Users assigns each
+person's read scope, write scope, teams, and account roots. Owners are available
+on cases, contacts, organisations, leads, and deals; work items use reporter and
+assignee; projects use lead. A person's own scope relationships cannot be
+edited by that person. Use a separate administrator to avoid self-expansion.
+
+Lists, search, customer timelines, reports, decision review, secondary records,
+and API responses use the same record boundary. Historical report rows remain
+limited to records inside the viewer's boundary. Service accounts keep their
+explicit API-scope model and do not inherit a human record scope.
+
 ## Service-account API scopes
 
 User tokens (`dkt_…`) inherit the user's console permissions. Service-account

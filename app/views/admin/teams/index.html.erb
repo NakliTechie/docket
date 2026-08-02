@@ -1,0 +1,43 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <div>
+    <h1><%= t(".title") %></h1>
+    <p class="page-subtitle"><%= t(".intro") %></p>
+  </div>
+  <div class="page-actions">
+    <%= link_to new_admin_team_path, class: "btn btn-primary" do %>
+      <%= icon "plus" %><%= t(".new_team") %>
+    <% end %>
+  </div>
+</div>
+
+<% if @teams.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.name") %></th>
+          <th><%= t(".columns.members") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @teams.each do |team| %>
+          <tr>
+            <td><strong><%= team.name %></strong><br><span class="table-meta"><%= team.description %></span></td>
+            <td><%= team.members.map(&:name).join(", ").presence || t(".no_members") %></td>
+            <td class="actions">
+              <%= link_to t("actions.edit"), edit_admin_team_path(team), class: "btn btn-sm" %>
+              <%= button_to t("actions.delete"), admin_team_path(team), method: :delete,
+                    class: "btn btn-sm btn-danger", form: { class: "inline-form",
+                    data: { turbo_confirm: t(".confirm_delete") } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint"),
+        action: link_to(t(".new_team"), new_admin_team_path, class: "btn btn-primary") %>
+<% end %>

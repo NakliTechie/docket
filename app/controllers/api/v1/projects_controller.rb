@@ -22,6 +22,7 @@ module Api
       def create
         authorize_api!(Project.new, :create?, scope: "work:manage")
         project = Project.new(project_params)
+        project.lead ||= current_user
         if project.save
           render json: { data: Serialize.project(project) }, status: :created
         else

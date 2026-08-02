@@ -13,12 +13,13 @@
 </div>
 
 <p class="muted"><%= @organisation.human_kind %><% if @organisation.external_ref.present? %> · <span class="mono"><%= @organisation.external_ref %></span><% end %></p>
-<% if @organisation.parent %>
-  <p class="muted"><%= t(".parent") %>: <%= link_to @organisation.parent.name, organisation_path(@organisation.parent) %></p>
+<p class="muted"><%= t("organisations.fields.owner") %>: <%= @organisation.owner&.name || t("forms.none") %></p>
+<% if @parent %>
+  <p class="muted"><%= t(".parent") %>: <%= link_to @parent.name, organisation_path(@parent) %></p>
 <% end %>
-<% if @organisation.children.any? %>
+<% if @children.any? %>
   <p class="muted"><%= t(".sub_accounts") %>:
-    <%= safe_join(@organisation.children.order(:name).map { |child| link_to(child.name, organisation_path(child)) }, ", ") %>
+    <%= safe_join(@children.map { |child| link_to(child.name, organisation_path(child)) }, ", ") %>
   </p>
 <% end %>
 <% if @organisation.notes.present? %><p><%= @organisation.notes %></p><% end %>

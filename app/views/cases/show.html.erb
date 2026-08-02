@@ -169,6 +169,10 @@
     <div class="panel">
       <h2 class="panel-title"><%= t(".status_panel") %></h2>
       <p><%= status_badge(@case) %> <%= priority_badge(@case) %> <%= sla_chip(@case) %></p>
+      <dl class="meta-list">
+        <dt><%= t(".owner") %></dt><dd><%= @case.owner&.name || t("forms.none") %></dd>
+        <dt><%= t(".assignee") %></dt><dd><%= @case.assignee&.name || t("cases.unassigned") %></dd>
+      </dl>
       <% if policy(@case).transition? %>
         <div class="stack-sm">
           <% Case::TRANSITIONS.fetch(@case.status, []).each do |next_status| %>
@@ -200,10 +204,9 @@
     <% if feature?("work") && policy(WorkItem).index? %>
       <div class="panel">
         <h2 class="panel-title"><%= t("work.escalation.panel_title") %></h2>
-        <% linked = @case.work_items.includes(:project, :workflow_state) %>
-        <% if linked.any? %>
+        <% if @linked_work_items.any? %>
           <ul class="linked-list">
-            <% linked.each do |item| %>
+            <% @linked_work_items.each do |item| %>
               <li>
                 <%= link_to item.reference, work_item_path(item), class: "mono" %>
                 <%= item.title %>

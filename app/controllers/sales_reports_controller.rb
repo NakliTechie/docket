@@ -7,7 +7,12 @@ class SalesReportsController < ApplicationController
     authorize :sales_report, policy_class: SalesReportPolicy
     @from = parse_date(params[:from]) || 30.days.ago.to_date
     @to = parse_date(params[:to]) || Date.current
-    @report = SalesReport.new(from: @from, to: @to)
+    @report = SalesReport.new(
+      from: @from,
+      to: @to,
+      deal_scope: RecordVisibility.resolve(Current.user, Deal.with_deleted),
+      lead_scope: RecordVisibility.resolve(Current.user, Lead.with_deleted)
+    )
 
     respond_to do |format|
       format.html

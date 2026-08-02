@@ -9,12 +9,14 @@ module Admin
     def index
       authorize DecisionAppeal
       @appeals = policy_scope(DecisionAppeal).recent_first.includes(:decision, :appellant)
-      @appealable = Decision.status_applied.where(decision_class: "of_record").recent_first
+      @appealable = RecordVisibility.resolve(Current.user, Decision.all)
+                                     .status_applied.where(decision_class: "of_record").recent_first
     end
 
     def create
       authorize DecisionAppeal
-      decision = Decision.find(params[:decision_id])
+      decision = RecordVisibility.resolve(Current.user, Decision.all, access: :write)
+                                 .find(params[:decision_id])
       Decisioning::Dispatcher.file_appeal!(decision, grounds: params[:grounds].to_s)
       redirect_to admin_decision_appeals_path, notice: t(".filed")
     rescue Decisioning::Error, ActiveRecord::RecordInvalid => e
@@ -40,7 +42,7 @@ module Admin
     private
 
     def set_appeal
-      @appeal = DecisionAppeal.find(params[:id])
+      @appeal = policy_scope(DecisionAppeal).find(params[:id])
     end
   end
 end

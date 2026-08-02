@@ -16,6 +16,7 @@ module Api
       def create
         authorize_api!(Organisation.new, :create?, scope: "organisations:write")
         organisation = Organisation.new(organisation_params)
+        organisation.owner ||= current_user
         if organisation.save
           render json: { data: Serialize.organisation(organisation) }, status: :created
         else
@@ -45,7 +46,7 @@ module Api
       end
 
       def organisation_params
-        params.require(:organisation).permit(:name, :kind, :external_ref, :notes)
+        params.require(:organisation).permit(:name, :kind, :external_ref, :notes, :owner_id)
       end
     end
   end

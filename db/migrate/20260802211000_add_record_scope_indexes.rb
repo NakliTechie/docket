@@ -1,0 +1,21 @@
+class AddRecordScopeIndexes < ActiveRecord::Migration[8.1]
+  def change
+    add_index :cases, %i[tenant_id owner_id]
+    add_index :cases, %i[tenant_id assignee_id]
+    add_index :cases, %i[tenant_id queue_id]
+    add_index :contacts, %i[tenant_id owner_id]
+    add_index :contacts, %i[tenant_id organisation_id]
+    add_index :organisations, %i[tenant_id owner_id]
+    add_index :organisations, %i[tenant_id parent_id]
+    add_index :leads, %i[tenant_id owner_id]
+    add_index :leads, %i[tenant_id contact_id]
+    add_index :deals, %i[tenant_id owner_id]
+    add_index :deals, %i[tenant_id contact_id]
+    add_index :deals, %i[tenant_id organisation_id]
+    add_index :work_items, %i[tenant_id reporter_id]
+    add_index :work_items, %i[tenant_id assignee_id]
+    add_index :activities, %i[tenant_id owner_id]
+    add_index :team_memberships, %i[tenant_id user_id team_id]
+    add_index :account_memberships, %i[tenant_id user_id organisation_id]
+  end
+end

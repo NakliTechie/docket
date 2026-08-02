@@ -40,6 +40,7 @@ module Api
           k = Case.new(case_params.except(:contact_id))
           k.contact = contact
           k.channel = :api
+          k.owner ||= current_user
           k.save!
           create_initial_message(k)
           k
@@ -128,7 +129,8 @@ module Api
 
       def case_params
         params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                     :queue_id, :assignee_id, :contact_id, :sla_policy_id, :lock_version,
+                                     :queue_id, :assignee_id, :owner_id, :contact_id,
+                                     :sla_policy_id, :lock_version,
                                      custom_fields: {})
       end
 

@@ -84,6 +84,7 @@ en:
       competitors: "Competitors"
       campaigns: "Campaigns"
       users: "Users"
+      teams: "Teams"
       roles: "Roles"
       tenants: "Tenants"
       activity: "Activity"
@@ -268,6 +269,8 @@ en:
     in: "in %{time}"
 
   errors:
+    messages:
+      scope_self_managed: "You cannot change a scope relationship that affects your own access. Ask another administrator."
     forbidden:
       title: "You do not have access to this page"
       body: "Your role does not permit this action. Contact your administrator if you believe this is a mistake."
@@ -387,6 +390,7 @@ en:
       queue: "Queue"
       category: "Category"
       assignee: "Assignee"
+      owner: "Owner"
       sla_policy: "SLA policy"
     form:
       new_contact: "Create contact here"
@@ -464,6 +468,7 @@ en:
       phone: "Phone"
       external_id: "Customer ID"
       organisation: "Organisation"
+      owner: "Owner"
       other_cases: "Other cases"
       collision_warning: "%{agents} is also viewing this case. Coordinate before editing."
       case_tools: "Case tools"
@@ -575,6 +580,7 @@ en:
       organisation: "Organisation"
       preferred_language: "Preferred language"
       notes: "Notes"
+      owner: "Owner"
       segments: "Decisioning segments"
       email_consent: "Marketing email opt-in"
       sms_consent: "SMS opt-in"
@@ -1462,6 +1468,7 @@ en:
       parent: "Parent account"
       external_ref: "External reference"
       notes: "Notes"
+      owner: "Owner"
     form:
       external_ref_hint: "Your own code for this organisation (e.g. branch code)."
       no_parent: "None (top-level account)"
@@ -2470,8 +2477,22 @@ en:
         email_signature: "Reply signature"
         email_signature_hint: "Added to this agent's public email and messaging replies."
         queues: "Queue memberships"
+        record_scope: "Record scope"
+        record_read_scope: "Read scope"
+        record_write_scope: "Write scope"
+        teams: "Teams"
+        scoped_accounts: "Assigned accounts"
       form:
         password_hint: "Leave blank to keep the current password."
+        record_scope_hint: "Permissions define the actions. Read and write scope independently limit the records those actions reach. Global means all records in the active tenant, never another tenant."
+        scope_self_managed: "Another administrator must change your record scopes, team memberships, or account assignments."
+      record_scopes:
+        owned: "Owned by this user"
+        assigned: "Owned by or assigned to this user"
+        queue: "Own/assigned records plus queue-related customers"
+        team: "Records owned by or assigned to team members"
+        account: "Own/assigned records plus assigned accounts"
+        global: "All records in the active tenant"
       index:
         title: "Users"
         new_user: "New user"
@@ -2508,6 +2529,35 @@ en:
         activated: "User activated."
       deactivate:
         deactivated: "User deactivated."
+    teams:
+      fields:
+        name: "Name"
+        description: "Description"
+        members: "Members"
+      form:
+        members_hint: "Team scope reaches records owned by or assigned to any selected member. Queue membership remains separate."
+      index:
+        title: "Teams"
+        intro: "Explicit groups used by the team record scope. Teams grant no permissions by themselves."
+        new_team: "New team"
+        no_members: "No members"
+        confirm_delete: "Delete this team? Its record-scope relationship will stop applying."
+        columns:
+          name: "Team"
+          members: "Members"
+        empty:
+          title: "No teams yet"
+          hint: "Create a team before assigning team-scoped users."
+      new:
+        title: "New team"
+      edit:
+        title: "Edit %{name}"
+      create:
+        created: "Team created."
+      update:
+        updated: "Team updated."
+      destroy:
+        deleted: "Team deleted."
         cannot_deactivate_self: "You cannot deactivate your own account."
 
     api_tokens:

@@ -18,6 +18,7 @@ module Api
           category_id: c.category_id,
           category: c.category&.name,
           assignee_id: c.assignee_id,
+          owner_id: c.owner_id,
           contact_id: c.contact_id,
           sla_policy_id: c.sla_policy_id,
           first_response_due_at: c.first_response_due_at,
@@ -71,7 +72,7 @@ module Api
           id: c.id, name: c.name, email: c.email, phone: c.phone,
           job_title: c.job_title, whatsapp_handle: c.whatsapp_handle,
           telegram_handle: c.telegram_handle,
-          external_id: c.external_id, organisation_id: c.organisation_id,
+          external_id: c.external_id, organisation_id: c.organisation_id, owner_id: c.owner_id,
           preferred_language: c.preferred_language, notes: c.notes,
           sms_consent: c.sms_consent, email_consent: c.email_consent,
           email_unsubscribed_at: c.email_unsubscribed_at,
@@ -81,7 +82,7 @@ module Api
       end
 
       def organisation(o)
-        { id: o.id, name: o.name, kind: o.kind, external_ref: o.external_ref,
+        { id: o.id, name: o.name, kind: o.kind, external_ref: o.external_ref, owner_id: o.owner_id,
           notes: o.notes, created_at: o.created_at, updated_at: o.updated_at }
       end
 
@@ -410,6 +411,9 @@ module Api
         { id: u.id, name: u.name, email_address: u.email_address, role: u.role,
           active: u.active, locale: u.locale, email_signature: u.email_signature,
           queue_ids: u.queue_memberships.map(&:queue_id),
+          record_read_scope: u.record_read_scope, record_write_scope: u.record_write_scope,
+          team_ids: u.team_memberships.map(&:team_id),
+          scoped_account_ids: u.account_memberships.map(&:organisation_id),
           created_at: u.created_at, updated_at: u.updated_at }
       end
 

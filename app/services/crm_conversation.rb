@@ -2,8 +2,11 @@ class CrmConversation
   LIMIT = 100
   Entry = Data.define(:record, :context, :channel, :direction, :author, :subject_line, :body, :occurred_at)
 
-  def self.call(subject, limit: LIMIT, case_scope: Case.none, visible_types: [ subject.class.name ])
-    new(subject, limit: limit, case_scope: case_scope, visible_types: visible_types).call
+  def self.call(subject, limit: LIMIT, case_scope: Case.none, contact_scope: Contact.none,
+                lead_scope: Lead.none, deal_scope: Deal.none,
+                visible_types: [ subject.class.name ])
+    new(subject, limit: limit, case_scope: case_scope, contact_scope: contact_scope,
+         lead_scope: lead_scope, deal_scope: deal_scope, visible_types: visible_types).call
   end
 
   def self.recipient_email(subject)
@@ -13,10 +16,13 @@ class CrmConversation
     end
   end
 
-  def initialize(subject, limit:, case_scope:, visible_types:)
+  def initialize(subject, limit:, case_scope:, contact_scope:, lead_scope:, deal_scope:, visible_types:)
     @subject = subject
     @limit = limit
     @case_scope = case_scope
+    @contact_scope = contact_scope
+    @lead_scope = lead_scope
+    @deal_scope = deal_scope
     @visible_types = visible_types
   end
 
@@ -75,14 +81,14 @@ class CrmConversation
     records = [ @subject ]
     case @subject
     when Contact
-      records.concat(Lead.where(contact: @subject).to_a) if visible?("Lead")
-      records.concat(Deal.where(contact: @subject).to_a) if visible?("Deal")
+      records.concat(@lead_scope.where(contact: @subject).to_a) if visible?("Lead")
+      records.concat(@deal_scope.where(contact: @subject).to_a) if visible?("Deal")
     when Lead
-      records << @subject.contact if @subject.contact && visible?("Contact")
-      records << @subject.converted_deal if @subject.converted_deal && visible?("Deal")
+      records << @contact_scope.find_by(id: @subject.contact_id) if visible?("Contact")
+      records << @deal_scope.find_by(id: @subject.converted_deal_id) if visible?("Deal")
     when Deal
-      records << @subject.contact if @subject.contact && visible?("Contact")
-      records << @subject.lead if @subject.lead && visible?("Lead")
+      records << @contact_scope.find_by(id: @subject.contact_id) if visible?("Contact")
+      records << @lead_scope.find_by(id: @subject.lead_id) if visible?("Lead")
     end
     records.compact.uniq
   end

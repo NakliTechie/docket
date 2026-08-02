@@ -14,12 +14,14 @@ class OperationalReport
   attr_reader :from, :to
   MAX_RANGE_DAYS = 366
 
-  def initialize(from:, to:)
+  def initialize(from:, to:, case_scope: Case.with_deleted, contact_scope: Contact.all)
     raise ArgumentError, "report start must not be after its end" if from > to
     raise ArgumentError, "report range cannot exceed #{MAX_RANGE_DAYS} days" if (to - from).to_i > MAX_RANGE_DAYS
 
     @from = from
     @to = to
+    @cases = case_scope
+    @contacts = contact_scope
   end
 
   def range
@@ -30,16 +32,16 @@ class OperationalReport
 
   # Snapshot: open cases grouped by status / priority / queue.
   def open_by_status
-    @open_by_status ||= label_counts(Case.open_cases.group(:status).count, Case.statuses)
+    @open_by_status ||= label_counts(open_cases.group(:status).count, Case.statuses)
   end
 
   def open_by_priority
-    @open_by_priority ||= label_counts(Case.open_cases.group(:priority).count, Case.priorities)
+    @open_by_priority ||= label_counts(open_cases.group(:priority).count, Case.priorities)
   end
 
   def open_by_queue
     @open_by_queue ||= begin
-      counts = Case.open_cases.group(:queue_id).count
+      counts = open_cases.group(:queue_id).count
       queues = CaseQueue.with_deleted.where(id: counts.keys.compact).index_by(&:id)
       counts.map { |qid, count| { queue: queues[qid], count: count } }
             .sort_by { |row| -row[:count] }
@@ -49,7 +51,7 @@ class OperationalReport
   # Snapshot leading indicator: open, not-yet-breached cases whose resolution
   # deadline falls in the next 24h. Already-overdue ones are breaches, not risk.
   def sla_at_risk
-    @sla_at_risk ||= Case.open_cases
+    @sla_at_risk ||= open_cases
                          .where(resolution_breached: false)
                          .where(resolution_due_at: Time.current..(Time.current + 24.hours))
                          .count
@@ -60,7 +62,7 @@ class OperationalReport
     @backlog_age ||= begin
       now = Time.current
       buckets = { "under_1d" => 0, "1_3d" => 0, "3_7d" => 0, "over_7d" => 0 }
-      Case.open_cases.pluck(:created_at).each do |created_at|
+      open_cases.pluck(:created_at).each do |created_at|
         age = now - created_at
         bucket = if age < 1.day then "under_1d"
         elsif age < 3.days then "1_3d"
@@ -76,7 +78,7 @@ class OperationalReport
   # Windowed: cases created per channel.
   def channel_mix
     @channel_mix ||= label_counts(
-      Case.with_deleted.where(created_at: range).group(:channel).count, Case.channels
+      @cases.where(created_at: range).group(:channel).count, Case.channels
     )
   end
 
@@ -84,7 +86,7 @@ class OperationalReport
   # zero-filled so every day in from..to is present and ordered.
   def cases_created_trend
     @cases_created_trend ||= begin
-      by_day = Case.with_deleted.where(created_at: range).pluck(:created_at)
+      by_day = @cases.where(created_at: range).pluck(:created_at)
                    .group_by { |t| t.to_date }.transform_values(&:size)
       (from..to).map { |date| { date: date, count: by_day[date] || 0 } }
     end
@@ -131,7 +133,7 @@ class OperationalReport
   # first — the "value per connector" view unlocked by source_connector_id.
   def records_per_connector
     @records_per_connector ||= begin
-      counts = Contact.where.not(source_connector_id: nil).group(:source_connector_id).count
+      counts = @contacts.where.not(source_connector_id: nil).group(:source_connector_id).count
       connectors = Connector.where(id: counts.keys).index_by(&:id)
       counts.map { |cid, count| { connector: connectors[cid], count: count } }
             .sort_by { |row| -row[:count] }
@@ -177,6 +179,10 @@ class OperationalReport
   end
 
   private
+
+  def open_cases
+    @open_cases ||= @cases.where(deleted_at: nil).open_cases
+  end
 
   # Group-count keys can come back as the raw integer or the enum label
   # depending on the adapter; normalise to the string label either way.

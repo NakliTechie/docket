@@ -1,9 +1,10 @@
 class CsatReport
   attr_reader :from, :to
 
-  def initialize(from:, to:)
+  def initialize(from:, to:, case_scope: Case.with_deleted)
     @from = from
     @to = to
+    @case_scope = case_scope
   end
 
   def as_json
@@ -32,7 +33,8 @@ class CsatReport
   private
 
   def invited
-    @invited ||= CsatSurvey.where(invited_at: from.beginning_of_day..to.end_of_day)
+    @invited ||= CsatSurvey.where(case_id: @case_scope.select(:id))
+                           .where(invited_at: from.beginning_of_day..to.end_of_day)
   end
 
   def responded = invited.responded

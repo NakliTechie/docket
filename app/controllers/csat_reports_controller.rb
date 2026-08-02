@@ -5,7 +5,11 @@ class CsatReportsController < ApplicationController
     authorize :csat_report, policy_class: CsatReportPolicy
     @from = parse_date(params[:from]) || 30.days.ago.to_date
     @to = parse_date(params[:to]) || Date.current
-    @report = CsatReport.new(from: @from, to: @to)
+    @report = CsatReport.new(
+      from: @from,
+      to: @to,
+      case_scope: RecordVisibility.resolve(Current.user, Case.with_deleted)
+    )
 
     respond_to do |format|
       format.html
