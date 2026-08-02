@@ -101,6 +101,10 @@ module ApplicationHelper
     when :activity
       # Logged interactions have no standalone page — plain text (String#truncate).
       "#{record.human_kind} · #{record.title.to_s.truncate(80)}"
+    when :sequence_email, :sequence_sms
+      sequence = record.sequence_enrollment.sequence
+      details = [ sequence.name, event.title ].uniq.join(" · ")
+      link_to details, sequence_path(sequence)
     else # case_opened / case_resolved / case_closed
       link_to "#{record.tracking_id} · #{record.subject}", case_path(record)
     end

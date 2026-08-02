@@ -205,6 +205,8 @@ hi:
       work_opened: "कार्य खोला गया"
       work_closed: "कार्य बंद किया गया"
       activity: "गतिविधि"
+      sequence_email: "अनुक्रम ईमेल"
+      sequence_sms: "अनुक्रम SMS"
 
   search:
     index:

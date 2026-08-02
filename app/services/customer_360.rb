@@ -15,12 +15,13 @@ class Customer360
   Event = Data.define(:at, :kind, :record, :title)
 
   def initialize(subject:, case_scope: Case.none, deal_scope: Deal.none, work_scope: WorkItem.none,
-                 activity_scope: Activity.none)
+                 activity_scope: Activity.none, sequence_delivery_scope: SequenceDelivery.none)
     @subject = subject
     @case_scope = case_scope
     @deal_scope = deal_scope
     @work_scope = work_scope
     @activity_scope = activity_scope
+    @sequence_delivery_scope = sequence_delivery_scope
   end
 
   def call
@@ -28,12 +29,13 @@ class Customer360
     deals = deal_relation
     work_items = work_relation(deals)
     activities = activity_relation(cases, deals)
+    sequence_deliveries = sequence_delivery_relation
     Result.new(
       cases: cases.order(created_at: :desc).limit(LIMIT).to_a, case_count: cases.count,
       deals: deals.order(updated_at: :desc).limit(LIMIT).to_a, deal_count: deals.count,
       work_items: work_items.order(updated_at: :desc).limit(LIMIT).to_a,
       work_item_count: work_items.count,
-      timeline: timeline(cases, deals, work_items, activities)
+      timeline: timeline(cases, deals, work_items, activities, sequence_deliveries)
     )
   end
 
@@ -43,10 +45,35 @@ class Customer360
   # interleaved newest-first. An off/absent module contributes a `.none` scope,
   # so its events simply don't appear — the timeline inherits the same
   # entitlement gating as the summary panels.
-  def timeline(cases, deals, work_items, activities)
+  def timeline(cases, deals, work_items, activities, sequence_deliveries)
     events = case_events(cases) + message_events(cases) + deal_events(deals) +
-             work_events(work_items) + activity_events(activities)
+             work_events(work_items) + activity_events(activities) + sequence_events(sequence_deliveries)
     events.select(&:at).sort_by(&:at).reverse.first(TIMELINE_LIMIT)
+  end
+
+  # A sequence may target the Contact directly or a Lead later linked to that
+  # Contact. Organisation workspaces aggregate both forms over their contacts.
+  # Only delivered email/SMS rows are customer touches; manual steps already
+  # appear as Activities and skipped/failed rows never reached the customer.
+  def sequence_delivery_relation
+    contact_ids = @subject.is_a?(Contact) ? [ @subject.id ] : @subject.contacts.select(:id)
+    lead_ids = Lead.where(contact_id: contact_ids).select(:id)
+    base = @sequence_delivery_scope.joins(:sequence_enrollment)
+                                   .status_delivered
+                                   .where(channel: %w[email sms])
+                                   .where.not(delivered_at: nil)
+    direct = base.where(sequence_enrollments: { enrollable_type: "Contact", enrollable_id: contact_ids })
+    linked_leads = base.where(sequence_enrollments: { enrollable_type: "Lead", enrollable_id: lead_ids })
+    direct.or(linked_leads)
+  end
+
+  def sequence_events(deliveries)
+    deliveries.preload(sequence_enrollment: :sequence)
+              .order(delivered_at: :desc).limit(TIMELINE_LIMIT).map do |delivery|
+      title = delivery.payload.to_h["subject"].presence || delivery.sequence_enrollment.sequence.name
+      Event.new(at: delivery.delivered_at, kind: :"sequence_#{delivery.channel}",
+                record: delivery, title: title)
+    end
   end
 
   # Activities directly on the subject (a Contact), plus those on its deals and

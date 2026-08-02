@@ -205,6 +205,8 @@ en:
       work_opened: "Work opened"
       work_closed: "Work closed"
       activity: "Activity"
+      sequence_email: "Sequence email"
+      sequence_sms: "Sequence SMS"
 
   search:
     index:
