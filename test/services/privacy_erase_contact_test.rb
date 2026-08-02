@@ -29,6 +29,13 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
                                        events: [ "case.created" ], active: false)
     WebhookDelivery.create!(webhook_endpoint: endpoint, event: "case.created",
                             payload: { subject: marker }, status: :delivered)
+    sequence = Sequence.new(name: "Privacy sequence")
+    sequence.sequence_steps.build(position: 0, delay_days: 0, body: "Private outreach")
+    sequence.save!
+    enrollment = sequence.enroll!(contact)
+    enrollment.advance!
+    delivery = enrollment.sequence_deliveries.first
+    assert delivery.tracking_token.present?
 
     result = Privacy::EraseContact.call(contact: contact)
 
@@ -40,6 +47,7 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     assert_match(/\Aerased-/, contact.external_id)
     assert_nil kase.reload.description
     assert_equal "[Erased for privacy]", message.reload.body
+    assert_nil delivery.reload.tracking_token
     assert_not ActiveStorage::Blob.exists?(blob_id)
     assert result.request.status_completed?
     assert Privacy::ResidueScanner.call(

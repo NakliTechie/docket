@@ -26,6 +26,7 @@
           <tr>
             <th><%= t("sequences.fields.position") %></th>
             <th><%= t("sequences.fields.delay_days") %></th>
+            <th><%= t("sequences.fields.channel") %></th>
             <th><%= t("sequences.fields.subject") %></th>
           </tr>
         </thead>
@@ -33,7 +34,12 @@
           <% @sequence.ordered_steps.each do |step| %>
             <tr>
               <td><%= step.position + 1 %></td>
-              <td><%= t("sequences.day_count", count: step.delay_days) %></td>
+              <td>
+                <%= t("sequences.day_count", count: step.delay_days) %>
+                <% if step.delay_hours.positive? %> · <%= t("sequences.hour_count", count: step.delay_hours) %><% end %>
+                <% if step.use_business_hours? %> · <%= t("sequences.business_hours") %><% end %>
+              </td>
+              <td><%= t("sequences.enum.channel.#{step.channel}") %></td>
               <td><%= step.subject.presence || "—" %></td>
             </tr>
           <% end %>
@@ -43,6 +49,16 @@
   </section>
 
   <aside>
+    <div class="panel">
+      <h2 class="panel-title"><%= t(".analytics") %></h2>
+      <dl class="meta-list">
+        <dt><%= t(".emails_sent") %></dt><dd><%= @analytics[:emails_sent] %></dd>
+        <dt><%= t(".open_rate") %></dt><dd><%= @analytics[:open_rate] %>% (<%= @analytics[:opened] %>)</dd>
+        <dt><%= t(".click_rate") %></dt><dd><%= @analytics[:click_rate] %>% (<%= @analytics[:clicked] %>)</dd>
+        <dt><%= t(".reply_rate") %></dt><dd><%= @analytics[:reply_rate] %>% (<%= @analytics[:replied] %>)</dd>
+        <dt><%= t(".manual_activities") %></dt><dd><%= @analytics[:manual_activities] %></dd>
+      </dl>
+    </div>
     <div class="panel">
       <h2 class="panel-title"><%= t(".enrollments") %></h2>
       <% if @enrollments.any? %>

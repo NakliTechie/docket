@@ -126,7 +126,13 @@ Catalog products and deal line items must use the deal's currency. Once a deal
 has line items its currency is locked, and its value is the audited sum of
 quantity × unit price. Competitor outcomes feed currency-separated loss
 reporting. Sequence enrollment requires recorded email consent; unsubscribe is
-public, tokenized, and suppresses future delivery.
+public, tokenized, and suppresses future delivery. Sequence steps support day
+and hour waits, optional business-calendar timing, email, SMS, calls, and manual
+tasks. Calls and tasks enter the assigned rep's Activity queue. Email receipts
+record unique opens, signed-link clicks, and replies. A reply whose From address
+matches the enrolled recipient cancels later steps and logs a completed email Activity.
+Configure the sequence reply domain under Admin → Settings → Intake so inbound
+mail routes `sequence+token` addresses back to this deployment.
 
 ## Connectors, credentials, webhooks, and effectors
 

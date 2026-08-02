@@ -142,7 +142,8 @@ module Privacy
       SequenceEnrollment.with_deleted.where(id: graph.fetch("SequenceEnrollment"))
                         .update_all(status: SequenceEnrollment.statuses.fetch("cancelled"), next_run_at: nil)
       SequenceDelivery.where(id: graph.fetch("SequenceDelivery"))
-                      .update_all(recipient: nil, payload: {}, last_error: "recipient erased")
+                      .update_all(recipient: nil, payload: {}, tracking_token: nil,
+                                  last_error: "recipient erased")
       SecurityEvent.where(tenant_id: @tenant.id).where(email: identifiers).update_all(
         email: nil, metadata: nil, ip_address: nil, user_agent: nil
       )

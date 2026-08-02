@@ -242,6 +242,10 @@ Rails.application.routes.draw do
   get "sequence_unsubscribe/:token", to: "sequence_unsubscribes#show",
       as: :sequence_unsubscribe
   post "sequence_unsubscribe/:token", to: "sequence_unsubscribes#create"
+  get "sequence_tracking/:token/open.gif", to: "sequence_tracking#open",
+      as: :sequence_tracking_open
+  get "sequence_tracking/:token/click", to: "sequence_tracking#click",
+      as: :sequence_tracking_click
   get "survey/csat/:token", to: "csat_surveys#show", as: :csat_survey
   post "survey/csat/:token", to: "csat_surveys#create"
 

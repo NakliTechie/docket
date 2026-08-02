@@ -241,11 +241,14 @@ module Api
 
       def sequence(s)
         {
-          id: s.id, name: s.name, active: s.active,
+          id: s.id, name: s.name, active: s.active, owner_id: s.owner_id,
+          business_calendar_id: s.business_calendar_id,
           steps: s.ordered_steps.map { |st|
             { id: st.id, position: st.position, delay_days: st.delay_days,
-              channel: st.channel, subject: st.subject, body: st.body }
+              delay_hours: st.delay_hours, use_business_hours: st.use_business_hours,
+              template_key: st.template_key, channel: st.channel, subject: st.subject, body: st.body }
           },
+          analytics: s.delivery_analytics,
           created_at: s.created_at, updated_at: s.updated_at
         }
       end
@@ -258,7 +261,10 @@ module Api
           current_step_position: e.current_step_position, next_run_at: e.next_run_at,
           last_delivery: latest_delivery && {
             status: latest_delivery.status, channel: latest_delivery.channel,
-            claimed_at: latest_delivery.claimed_at, delivered_at: latest_delivery.delivered_at
+            claimed_at: latest_delivery.claimed_at, delivered_at: latest_delivery.delivered_at,
+            opened_at: latest_delivery.opened_at, clicked_at: latest_delivery.clicked_at,
+            replied_at: latest_delivery.replied_at, open_count: latest_delivery.open_count,
+            click_count: latest_delivery.click_count, activity_id: latest_delivery.activity_id
           },
           created_at: e.created_at, updated_at: e.updated_at
         }

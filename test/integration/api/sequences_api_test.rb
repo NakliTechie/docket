@@ -13,6 +13,8 @@ module Api
       } }, headers: auth_header(@admin_token), as: :json
       assert_response :created
       assert_equal 1, response.parsed_body["data"]["steps"].size
+      assert_equal 0, response.parsed_body.dig("data", "steps", 0, "delay_hours")
+      assert response.parsed_body["data"].key?("analytics")
 
       get "/api/v1/sequences", headers: auth_header(service_token_for(%w[crm:read]))
       assert_response :success

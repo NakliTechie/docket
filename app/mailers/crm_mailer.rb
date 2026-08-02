@@ -4,11 +4,16 @@
 class CrmMailer < ApplicationMailer
   def sequence_delivery(delivery)
     @body = delivery.payload.fetch("body", "")
+    @body_html = SequenceTracking.html_body(delivery)
+    @open_url = SequenceTracking.open_url(delivery)
     @unsubscribe_url = SequenceUnsubscribe.url_for(delivery.sequence_enrollment.enrollable)
+    @reply_address = SequenceTracking.reply_address(delivery)
     headers["X-Docket-Delivery-ID"] = "sequence-#{delivery.id}"
     headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
-    mail to: delivery.recipient, subject: delivery.payload.fetch("subject"),
-         template_name: "sequence_step"
+    mail_options = { to: delivery.recipient, subject: delivery.payload.fetch("subject"),
+                     template_name: "sequence_step" }
+    mail_options[:reply_to] = @reply_address if @reply_address
+    mail(**mail_options)
   end
 end

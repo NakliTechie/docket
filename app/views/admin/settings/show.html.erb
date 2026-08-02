@@ -113,6 +113,11 @@
       <%= label_tag :outbound_email_from, t(".fields.outbound_email_from") %>
       <%= text_field_tag :outbound_email_from, Setting.get("outbound_email_from"), placeholder: "support@example.com" %>
     </div>
+    <div class="form-row">
+      <%= label_tag :sequence_reply_domain, t(".fields.sequence_reply_domain") %>
+      <%= text_field_tag :sequence_reply_domain, Setting.get("sequence_reply_domain"), placeholder: "inbound.example.com" %>
+      <p class="form-hint"><%= t(".fields.sequence_reply_domain_hint") %></p>
+    </div>
     <div class="checkbox-row form-row">
       <%= hidden_field_tag :notification_email_enabled, "0" %>
       <%= check_box_tag :notification_email_enabled, "1",

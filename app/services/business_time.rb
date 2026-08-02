@@ -3,6 +3,7 @@ class BusinessTime
 
   def self.add_minutes(...) = new(...).add_minutes
   def self.minutes_between(...) = new(...).minutes_between
+  def self.next_opening(calendar:, at:) = new(calendar: calendar, from: at).next_opening
 
   def initialize(calendar:, from:, minutes: nil, to: nil)
     @calendar = calendar
@@ -49,6 +50,18 @@ class BusinessTime
       cursor = start_of_next_day(cursor)
     end
     total
+  end
+
+  def next_opening
+    cursor = in_zone(@from)
+    MAX_DAYS.times do
+      windows_for(cursor.to_date).each do |opening, closing|
+        return opening.utc if cursor < opening
+        return cursor.utc if cursor < closing
+      end
+      cursor = start_of_next_day(cursor)
+    end
+    raise RangeError, "business-time opening exceeds #{MAX_DAYS} days"
   end
 
   private

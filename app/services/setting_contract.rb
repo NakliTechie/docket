@@ -18,6 +18,7 @@ module SettingContract
     "default_queue_id" => :int,
     "default_sla_policy_id" => :int,
     "outbound_email_from" => :string,
+    "sequence_reply_domain" => :string,
     "notification_email_enabled" => :bool,
     "csat_enabled" => :bool,
     "sla_risk_minutes" => :int,
@@ -62,6 +63,7 @@ module SettingContract
     return value.clamp(0.0, 1.0) if Setting::PROBABILITY_KEYS.include?(key.to_s)
     return value.clamp(1, 10_080) if key.to_s == "sla_risk_minutes"
     return INVALID if key.to_s == "llm_endpoint_url" && !valid_http_url?(value)
+    return INVALID if key.to_s == "sequence_reply_domain" && !valid_domain?(value)
 
     value
   end
@@ -69,6 +71,11 @@ module SettingContract
   def invalid?(value)
     value.equal?(INVALID)
   end
+
+  def valid_domain?(value)
+    value.to_s.match?(/\A[a-z0-9.-]+\z/i) && value.to_s.include?(".")
+  end
+  private_class_method :valid_domain?
 
   def valid_shape?(raw, type)
     return true if raw.nil?

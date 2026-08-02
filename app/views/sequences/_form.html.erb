@@ -13,6 +13,20 @@
     <%= f.label :active, t("sequences.fields.active") %>
   </div>
 
+  <div class="form-row <%= "field-error" if sequence.errors[:owner].any? %>">
+    <%= f.label :owner_id, t("sequences.fields.owner") %>
+    <%= f.collection_select :owner_id, User.active.staff.order(:name), :id, :name,
+                            { include_blank: t("forms.none") } %>
+    <p class="form-hint"><%= t("sequences.form.owner_hint") %></p>
+    <% sequence.errors[:owner].each do |msg| %><p class="field-error-message"><%= msg %></p><% end %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :business_calendar_id, t("sequences.fields.business_calendar") %>
+    <%= f.collection_select :business_calendar_id, BusinessCalendar.order(:name), :id, :name,
+                            { include_blank: t("sequences.form.default_calendar") } %>
+  </div>
+
   <fieldset>
     <legend><%= t("sequences.fields.steps") %></legend>
     <p class="form-hint"><%= t("sequences.form.steps_hint") %></p>
@@ -23,9 +37,23 @@
           <%= sf.number_field :position, min: 0, style: "width:4rem" %>
           <%= sf.label :delay_days, t("sequences.fields.delay_days") %>
           <%= sf.number_field :delay_days, min: 0, style: "width:5rem" %>
+          <%= sf.label :delay_hours, t("sequences.fields.delay_hours") %>
+          <%= sf.number_field :delay_hours, min: 0, max: 23, style: "width:5rem" %>
           <% unless sequence.new_record? %>
             <label><%= sf.check_box :_destroy %> <%= t("sequences.fields.remove") %></label>
           <% end %>
+        </div>
+        <div class="checkbox-row form-row">
+          <%= sf.hidden_field :use_business_hours, value: "0" %>
+          <%= sf.check_box :use_business_hours %>
+          <%= sf.label :use_business_hours, t("sequences.fields.use_business_hours") %>
+        </div>
+        <div class="form-row">
+          <%= sf.label :template_key, t("sequences.fields.template") %>
+          <%= sf.select :template_key,
+                        SequenceStep::TEMPLATES.keys.map { |key| [t("sequences.templates.#{key}"), key] },
+                        { include_blank: t("sequences.form.custom_template") } %>
+          <p class="form-hint"><%= t("sequences.form.template_hint") %></p>
         </div>
         <div class="form-row">
           <%= sf.label :channel, t("sequences.fields.channel") %>
@@ -39,7 +67,7 @@
         <div class="form-row">
           <%= sf.label :body, t("sequences.fields.body") %>
           <%= sf.text_area :body, rows: 4 %>
-          <p class="form-hint"><%= t("sequences.form.body_hint") %></p>
+          <p class="form-hint"><%= t("sequences.form.body_hint", variables: SequenceStep::VARIABLES.map { |v| "{{#{v}}}" }.join(" ")) %></p>
         </div>
       </div>
     <% end %>

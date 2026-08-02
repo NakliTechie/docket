@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_151000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -1273,25 +1273,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_150000) do
   end
 
   create_table "sequence_deliveries", force: :cascade do |t|
+    t.integer "activity_id"
     t.string "channel", null: false
     t.datetime "claimed_at"
+    t.integer "click_count", default: 0, null: false
+    t.datetime "clicked_at"
     t.integer "connector_id"
     t.datetime "created_at", null: false
     t.datetime "delivered_at"
     t.string "last_error"
+    t.integer "open_count", default: 0, null: false
+    t.datetime "opened_at"
     t.json "payload", default: {}, null: false
     t.string "recipient"
+    t.datetime "replied_at"
     t.integer "sequence_enrollment_id", null: false
     t.integer "sequence_step_id", null: false
     t.integer "status", default: 0, null: false
     t.integer "tenant_id", null: false
+    t.string "tracking_token"
     t.datetime "updated_at", null: false
+    t.index ["activity_id"], name: "index_sequence_deliveries_on_activity_id"
     t.index ["connector_id"], name: "index_sequence_deliveries_on_connector_id"
     t.index ["sequence_enrollment_id", "sequence_step_id"], name: "index_sequence_deliveries_on_enrollment_and_step", unique: true
     t.index ["sequence_enrollment_id"], name: "index_sequence_deliveries_on_sequence_enrollment_id"
     t.index ["sequence_step_id"], name: "index_sequence_deliveries_on_sequence_step_id"
     t.index ["status", "created_at"], name: "index_sequence_deliveries_on_status_and_created_at"
     t.index ["tenant_id"], name: "index_sequence_deliveries_on_tenant_id"
+    t.index ["tracking_token"], name: "index_sequence_deliveries_on_tracking_token", unique: true
   end
 
   create_table "sequence_enrollments", force: :cascade do |t|
@@ -1320,11 +1329,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_150000) do
     t.integer "channel", default: 0, null: false
     t.datetime "created_at", null: false
     t.integer "delay_days", default: 0, null: false
+    t.integer "delay_hours", default: 0, null: false
     t.datetime "deleted_at"
     t.integer "position", default: 0, null: false
     t.integer "sequence_id", null: false
     t.string "subject"
+    t.string "template_key"
     t.datetime "updated_at", null: false
+    t.boolean "use_business_hours", default: false, null: false
     t.index ["deleted_at"], name: "index_sequence_steps_on_deleted_at"
     t.index ["sequence_id", "position"], name: "index_sequence_steps_on_sequence_id_and_position"
     t.index ["sequence_id"], name: "index_sequence_steps_on_sequence_id"
@@ -1332,12 +1344,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_150000) do
 
   create_table "sequences", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.integer "business_calendar_id"
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "name", null: false
+    t.integer "owner_id"
     t.integer "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["business_calendar_id"], name: "index_sequences_on_business_calendar_id"
     t.index ["deleted_at"], name: "index_sequences_on_deleted_at"
+    t.index ["owner_id"], name: "index_sequences_on_owner_id"
     t.index ["tenant_id"], name: "index_sequences_on_tenant_id"
   end
 
@@ -1823,6 +1839,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_150000) do
   add_foreign_key "saved_views", "tenants"
   add_foreign_key "saved_views", "users"
   add_foreign_key "security_events", "tenants"
+  add_foreign_key "sequence_deliveries", "activities"
   add_foreign_key "sequence_deliveries", "connectors"
   add_foreign_key "sequence_deliveries", "sequence_enrollments"
   add_foreign_key "sequence_deliveries", "sequence_steps"
@@ -1831,7 +1848,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_150000) do
   add_foreign_key "sequence_enrollments", "sequences"
   add_foreign_key "sequence_enrollments", "tenants"
   add_foreign_key "sequence_steps", "sequences"
+  add_foreign_key "sequences", "business_calendars"
   add_foreign_key "sequences", "tenants"
+  add_foreign_key "sequences", "users", column: "owner_id"
   add_foreign_key "service_accounts", "tenants"
   add_foreign_key "sessions", "users"
   add_foreign_key "shared_credentials", "tenants"
