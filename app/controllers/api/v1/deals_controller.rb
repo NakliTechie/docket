@@ -83,7 +83,8 @@ module Api
       def deal_params
         params.require(:deal).permit(:name, :pipeline_id, :pipeline_stage_id, :owner_id,
                                      :contact_id, :organisation_id, :value, :currency, :expected_close_on,
-                                     :lost_reason, :first_touch_campaign_id, custom_fields: {})
+                                     :lost_reason, :first_touch_campaign_id,
+                                     :notes, :next_step, :next_step_at, custom_fields: {})
       end
     end
   end

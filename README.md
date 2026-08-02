@@ -5,7 +5,7 @@
 Docket is the free, public-code answer to proprietary service-cloud + AI-agent suites — for any organization that runs support, sales, or engineering work and wants to **own its stack**. Three pillars in one deployment, sharing one identity, one audit log and one API:
 
 - **Service desk** — case intake (web portal, live chat, email, API, IVR, and supported messaging connectors), scheduled/declarative routing, business-calendar SLA, approvals, collaboration, CSAT, and knowledge.
-- **CRM** — contacts, organizations, configurable lead capture, reviewed duplicate merge, pipelines, deals, products, competitors, first-touch campaigns, sequences, and sales reporting.
+- **CRM** — contacts, organizations, seller conversations with signed BCC capture, configurable lead capture, reviewed duplicate merge, pipelines, deals, products, competitors, first-touch campaigns, sequences, and sales reporting.
 - **Work** — projects and templates, work items (`KEY-123`), assignment rules, relations, comments/watches, kanban boards, sprints, and transition approvals.
 
 They are not three products behind one login: a support case escalates into engineering work and the desk keeps the customer conversation, a won deal can open an onboarding project, and every object shares the contact it belongs to.

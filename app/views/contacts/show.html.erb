@@ -15,6 +15,11 @@
   </div>
 </div>
 
+<% if feature?("crm") %>
+  <%= render "shared/crm_conversation", subject: @contact, conversation: @conversation,
+        bcc_address: @crm_bcc_address %>
+<% end %>
+
 <div class="two-column">
   <section aria-label="<%= t("customer_360.title") %>">
     <%= render "shared/customer_360" %>
@@ -29,6 +34,15 @@
         <% end %>
         <% if @contact.phone.present? %>
           <dt><%= t("contacts.fields.phone") %></dt><dd><%= @contact.phone %></dd>
+        <% end %>
+        <% if @contact.job_title.present? %>
+          <dt><%= t("contacts.fields.job_title") %></dt><dd><%= @contact.job_title %></dd>
+        <% end %>
+        <% if @contact.whatsapp_handle.present? %>
+          <dt><%= t("contacts.fields.whatsapp_handle") %></dt><dd><%= @contact.whatsapp_handle %></dd>
+        <% end %>
+        <% if @contact.telegram_handle.present? %>
+          <dt><%= t("contacts.fields.telegram_handle") %></dt><dd>@<%= @contact.telegram_handle %></dd>
         <% end %>
         <% if @contact.external_id.present? %>
           <dt><%= t("contacts.fields.external_id") %></dt><dd class="mono"><%= @contact.external_id %></dd>

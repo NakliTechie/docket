@@ -20,6 +20,25 @@ class EntitlementContainmentTest < ActionDispatch::IntegrationTest
     refute_match cases(:pension_case).tracking_id, response.body
   end
 
+  test "a contact page and agent catalogs hide CRM conversations when CRM is off" do
+    CrmMessage.create!(subject: contacts(:asha), body: "Seller-only thread marker",
+                       direction: :inbound, delivery_status: :recorded,
+                       sender_email: contacts(:asha).email)
+    disable!("crm")
+    sign_in_as users(:admin)
+
+    get contact_path(contacts(:asha))
+    assert_response :success
+    refute_match "Seller-only thread marker", response.body
+    refute_match I18n.t("crm_messages.title"), response.body
+
+    Mcp::Catalog.reset!
+    get "/api/v1/openapi.json"
+    refute_includes response.parsed_body["paths"].keys, "/crm_messages"
+  ensure
+    Mcp::Catalog.reset!
+  end
+
   test "the command palette neither links to nor enumerates a disabled module" do
     disable!("service_desk")
     sign_in_as users(:admin)

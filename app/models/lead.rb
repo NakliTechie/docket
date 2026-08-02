@@ -34,15 +34,22 @@ class Lead < ApplicationRecord
   belongs_to :merged_into, -> { with_deleted }, class_name: "Lead", optional: true
   has_many :merged_leads, class_name: "Lead", foreign_key: :merged_into_id, dependent: nil,
                           inverse_of: :merged_into
+  has_many :crm_messages, as: :subject, dependent: :restrict_with_error
 
   normalizes :email, with: ->(e) { e.strip.downcase.presence }
   normalizes :phone, with: ->(p) { p.gsub(/[^\d+]/, "").presence }
+  normalizes :job_title, with: ->(value) { value.to_s.strip.presence }
+  normalizes :whatsapp_handle, with: ->(value) { value.to_s.gsub(/[^\d+]/, "").presence }
+  normalizes :telegram_handle, with: ->(value) { value.to_s.strip.delete_prefix("@").presence }
 
   before_validation :clear_email_unsubscribed_at_on_opt_in
   before_validation :stamp_first_touch_at, if: :will_save_change_to_first_touch_campaign_id?
 
   validates :name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
+  validates :job_title, length: { maximum: 255 }, allow_nil: true
+  validates :whatsapp_handle, format: { with: /\A\+?\d{7,15}\z/ }, allow_nil: true
+  validates :telegram_handle, format: { with: /\A[a-zA-Z0-9_]{5,32}\z/ }, allow_nil: true
   validate :reachable_somehow
   validate :merge_lineage_is_valid
 
@@ -129,6 +136,8 @@ class Lead < ApplicationRecord
     return existing if existing
 
     Contact.create!(name: name, email: email, phone: phone,
+                    job_title: job_title, whatsapp_handle: whatsapp_handle,
+                    telegram_handle: telegram_handle,
                     email_consent: email_consent, email_unsubscribed_at: email_unsubscribed_at,
                     organisation: resolve_organisation, preferred_language: "en")
   end

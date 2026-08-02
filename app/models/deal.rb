@@ -45,13 +45,17 @@ class Deal < ApplicationRecord
   # PG8 — contact roles on this deal.
   has_many :deal_contact_roles, dependent: nil
   has_many :role_contacts, through: :deal_contact_roles, source: :contact
+  has_many :crm_messages, as: :subject, dependent: :restrict_with_error
 
   validates :name, presence: true
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }
+  validates :next_step, presence: true, if: :next_step_at?
+  validates :next_step, length: { maximum: 2_000 }, allow_nil: true
   validate :stage_belongs_to_pipeline
   validate :currency_is_locked_by_line_items
 
   normalizes :currency, with: ->(currency) { currency.to_s.strip.upcase }
+  normalizes :next_step, with: ->(value) { value.to_s.strip.presence }
 
   before_validation :apply_default_pipeline, on: :create
   before_validation :stamp_first_touch_at, if: :will_save_change_to_first_touch_campaign_id?

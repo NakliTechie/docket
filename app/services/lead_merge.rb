@@ -16,6 +16,7 @@ class LeadMerge
       validate!
       merge_attributes
       move_deals
+      move_crm_messages
       move_active_enrollments
       @source.update!(merged_into: @target, merged_at: Time.current)
     end
@@ -33,7 +34,7 @@ class LeadMerge
 
   def merge_attributes
     attributes = {}
-    %i[email phone company_name owner_id value_estimate_cents].each do |field|
+    %i[email phone company_name job_title whatsapp_handle telegram_handle owner_id value_estimate_cents].each do |field|
       attributes[field] = @source.public_send(field) if @target.public_send(field).blank?
     end
     attributes[:email_consent] = @target.email_consent? || @source.email_consent?
@@ -67,6 +68,10 @@ class LeadMerge
     if @target.converted_deal_id.blank? && @source.converted_deal_id?
       @target.update!(converted_deal: @source.converted_deal)
     end
+  end
+
+  def move_crm_messages
+    CrmMessage.where(subject: @source).find_each { |message| message.update!(subject: @target) }
   end
 
   def move_active_enrollments

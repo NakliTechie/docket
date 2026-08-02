@@ -1,0 +1,50 @@
+<div class="panel" id="crm-conversation">
+  <div class="panel-header">
+    <h2 class="panel-title"><%= t("crm_messages.title") %></h2>
+    <span class="badge"><%= t("crm_messages.count", count: conversation.size) %></span>
+  </div>
+
+  <% recipient = CrmConversation.recipient_email(subject) %>
+  <% if policy(subject).update? && recipient.present? %>
+    <details class="conversation-compose">
+      <summary><%= t("crm_messages.compose") %></summary>
+      <%= form_with url: crm_messages_path, scope: :crm_message, class: "form" do |form| %>
+        <%= form.hidden_field :subject_type, value: subject.class.name %>
+        <%= form.hidden_field :subject_id, value: subject.id %>
+        <div class="form-row">
+          <%= form.label :subject_line, t("crm_messages.fields.subject_line") %>
+          <%= form.text_field :subject_line, required: true, maxlength: 998 %>
+        </div>
+        <div class="form-row">
+          <%= form.label :body, t("crm_messages.fields.body") %>
+          <%= form.text_area :body, required: true, rows: 5 %>
+        </div>
+        <%= form.submit t("crm_messages.send", recipient: recipient), class: "btn btn-primary" %>
+      <% end %>
+    </details>
+  <% end %>
+
+  <% if bcc_address.present? %>
+    <p class="form-hint"><%= t("crm_messages.bcc_hint") %></p>
+    <p><code class="bcc-address"><%= bcc_address %></code></p>
+  <% end %>
+
+  <% if conversation.any? %>
+    <ol class="conversation-thread">
+      <% conversation.each do |entry| %>
+        <li class="conversation-entry conversation-<%= entry.direction %>">
+          <div class="conversation-meta">
+            <span class="badge"><%= entry.channel.to_s.humanize %></span>
+            <strong><%= entry.author %></strong>
+            <span><%= entry.context %></span>
+            <time datetime="<%= entry.occurred_at.iso8601 %>"><%= l entry.occurred_at, format: :short %></time>
+          </div>
+          <% if entry.subject_line.present? %><h3><%= entry.subject_line %></h3><% end %>
+          <%= simple_format(entry.body) %>
+        </li>
+      <% end %>
+    </ol>
+  <% else %>
+    <p class="empty-state"><%= t("crm_messages.empty") %></p>
+  <% end %>
+</div>

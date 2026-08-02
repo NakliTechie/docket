@@ -71,7 +71,8 @@ module Api
       end
 
       def lead_params
-        params.require(:lead).permit(:name, :email, :phone, :company_name,
+        params.require(:lead).permit(:name, :email, :phone, :company_name, :job_title,
+                                     :whatsapp_handle, :telegram_handle,
                                      :source, :owner_id, :value_estimate_cents, :notes,
                                      :sms_consent, :email_consent, :first_touch_campaign_id,
                                      custom_fields: {})

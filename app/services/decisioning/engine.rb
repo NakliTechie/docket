@@ -12,6 +12,7 @@ module Decisioning
       Rules::StalledDeal,
       Rules::ReengageStaleLead,
       Rules::RoutingSuggestion,
+      Rules::ConversationReply,
       Rules::ChurnRisk,
       Rules::AtRiskContact,
       Rules::VipContact

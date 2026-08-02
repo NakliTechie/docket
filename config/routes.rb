@@ -127,6 +127,7 @@ Rails.application.routes.draw do
     resources :competitor_links, controller: "deal_competitors", only: :create
     resources :contact_roles, controller: "deal_contact_roles", only: :create
   end
+  resources :crm_messages, only: :create
   resources :deal_line_items, only: %i[update destroy]
   resources :deal_competitors, only: %i[update destroy]
   resources :deal_contact_roles, only: %i[update destroy]
@@ -319,6 +320,7 @@ Rails.application.routes.draw do
       resources :activities, only: %i[index show create update destroy] do
         member { post :complete }
       end
+      resources :crm_messages, only: %i[index create]
       resources :sequences, only: %i[index show create update destroy]
       resources :sequence_enrollments, only: %i[index show create] do
         member { post :cancel }

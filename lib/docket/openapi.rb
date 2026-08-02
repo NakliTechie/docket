@@ -53,6 +53,7 @@ module Docket
           ),
           Contact: object_schema(
             id: :integer, name: :string, email: :string, phone: :string, external_id: :string,
+            job_title: :string, whatsapp_handle: :string, telegram_handle: :string,
             organisation_id: :integer, preferred_language: :string, notes: :string,
             sms_consent: :boolean, email_consent: :boolean, email_unsubscribed_at: :datetime,
             labels: { type: "array", items: { type: "string" } }, custom_fields: :object,
@@ -61,6 +62,7 @@ module Docket
           Organisation: object_schema(id: :integer, name: :string, kind: :string, external_ref: :string,
                                       notes: :string, created_at: :datetime, updated_at: :datetime),
           Lead: object_schema(id: :integer, name: :string, email: :string, phone: :string,
+                              job_title: :string, whatsapp_handle: :string, telegram_handle: :string,
                               company_name: :string, source: enum(Lead.sources.keys), status: enum(Lead.statuses.keys),
                               owner_id: :integer, contact_id: :integer, converted_deal_id: :integer, value_estimate_cents: :integer,
                               notes: :string, sms_consent: :boolean, email_consent: :boolean,
@@ -84,6 +86,7 @@ module Docket
                               owner_id: :integer, contact_id: :integer, organisation_id: :integer, lead_id: :integer,
                               expected_close_on: :datetime, closed_at: :datetime,
                               lost_reason: enum(Deal.lost_reasons.keys), onboarding_project_id: :integer,
+                              notes: :string, next_step: :string, next_step_at: :datetime,
                               first_touch_campaign_id: :integer, first_touch_at: :datetime,
                               first_touch_utm_source: :string, first_touch_utm_medium: :string,
                               first_touch_utm_campaign: :string, first_touch_utm_term: :string,
@@ -94,6 +97,14 @@ module Docket
                               line_items: { type: "array", items: { type: "object" } },
                               competitors: { type: "array", items: { type: "object" } },
                               created_at: :datetime, updated_at: :datetime),
+          CrmMessage: object_schema(
+            id: :integer, subject_type: enum(CrmMessage::SUBJECT_TYPES), subject_id: :integer,
+            channel: enum(CrmMessage.channels.keys), direction: enum(CrmMessage.directions.keys),
+            author_type: :string, author_id: :integer, sender_email: :string,
+            recipient_email: :string, subject_line: :string, body: :string,
+            delivery_status: enum(CrmMessage.delivery_statuses.keys), occurred_at: :datetime,
+            created_at: :datetime, updated_at: :datetime
+          ),
           Product: object_schema(id: :integer, name: :string, sku: :string, description: :string,
                                  default_unit_price_cents: :integer, currency: :string,
                                  active: :boolean, created_at: :datetime, updated_at: :datetime),
@@ -294,6 +305,13 @@ module Docket
            create_note: "Maps public field names to lead attributes and records consent provenance. Requires crm:write.")
       crud(result, "pipelines", "Pipeline")
       crud(result, "deals", "Deal", extra_params: %w[pipeline_id status])
+      result["/crm_messages"] = {
+        get: op("List the unified email and messaging conversation for a Contact, Lead, or Deal",
+                params: [ query_param("subject_type"), query_param("subject_id") ]),
+        post: op("Send and record an email on a Contact, Lead, or Deal",
+                 request: { subject_type: :string, subject_id: :integer, crm_message: :object },
+                 schema: "CrmMessage")
+      }
       result["/deals/{id}/move"] = { post: op("Move a deal to another stage in its pipeline (the kanban drag)",
         params: [ id_param ], request: { pipeline_stage_id: :integer }, responses: { "200" => "Moved" }) }
       result["/deals/{id}/onboard"] = { post: op(

@@ -19,6 +19,21 @@
   </div>
 
   <div class="form-row">
+    <%= f.label :job_title, t("contacts.fields.job_title") %>
+    <%= f.text_field :job_title %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :whatsapp_handle, t("contacts.fields.whatsapp_handle") %>
+    <%= f.telephone_field :whatsapp_handle %>
+  </div>
+
+  <div class="form-row">
+    <%= f.label :telegram_handle, t("contacts.fields.telegram_handle") %>
+    <%= f.text_field :telegram_handle %>
+  </div>
+
+  <div class="form-row">
     <label><%= f.check_box :email_consent %> <%= t("contacts.fields.email_consent") %></label>
     <p class="form-hint"><%= t("contacts.form.email_consent_hint") %></p>
   </div>

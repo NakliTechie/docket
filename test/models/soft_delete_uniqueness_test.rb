@@ -12,6 +12,10 @@ class SoftDeleteUniquenessTest < ActiveSupport::TestCase
     "Message" => [
       :external_message_id, # a provider retry must never replay a deleted delivery
       :source_message_id    # a deleted bot reply must never cause the bot to answer twice
+    ],
+    "CrmMessage" => [
+      :email_message_id,    # an inbound RFC message must never re-enter a deleted CRM thread
+      :external_message_id  # a provider retry must never replay a deleted CRM delivery
     ]
   }.freeze
 

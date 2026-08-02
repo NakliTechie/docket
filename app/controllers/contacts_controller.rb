@@ -15,6 +15,14 @@ class ContactsController < ApplicationController
       activity_scope: feature?("crm") && policy(Activity).index? ? policy_scope(Activity) : Activity.none
     ).call
     assign_customer_360(result)
+    if feature?("crm")
+      case_scope = feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none
+      visible_types = [ "Contact" ]
+      visible_types << "Lead" if policy(Lead).index?
+      visible_types << "Deal" if policy(Deal).index?
+      @conversation = CrmConversation.call(@contact, case_scope: case_scope, visible_types: visible_types)
+      @crm_bcc_address = CrmMailboxAddress.address_for(@contact)
+    end
   end
 
   def new
@@ -75,7 +83,8 @@ class ContactsController < ApplicationController
   end
 
   EDITABLE_ATTRS = %i[
-    name email phone organisation_id preferred_language notes sms_consent email_consent
+    name email phone job_title whatsapp_handle telegram_handle organisation_id preferred_language
+    notes sms_consent email_consent
   ].freeze
 
   def contact_params

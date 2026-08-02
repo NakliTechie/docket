@@ -9,10 +9,16 @@ class CasesMailbox < ApplicationMailbox
   before_processing :ensure_sender
 
   def process
-    tenant = resolve_tenant
+    crm_target = CrmMailboxAddress.record_for(recipients)
+    tenant = crm_target&.tenant || resolve_tenant
     inbound_email.update_column(:tenant_id, tenant.id)
 
     ActsAsTenant.with_tenant(tenant) do
+      if crm_target
+        process_crm_message(crm_target)
+        return
+      end
+
       if sequence_reply_delivery
         process_sequence_reply(sequence_reply_delivery)
         return
@@ -29,6 +35,8 @@ class CasesMailbox < ApplicationMailbox
         open_new_case
       end
     end
+  rescue CrmMailboxAddress::InvalidAddress
+    bounced!
   end
 
   private
@@ -46,7 +54,40 @@ class CasesMailbox < ApplicationMailbox
   end
 
   def recipients
-    (Array(mail.to) + Array(mail.cc)).compact.map { |a| a.to_s.strip.downcase }
+    header_recipients = %w[X-Original-To Delivered-To Envelope-To X-Envelope-To].flat_map do |name|
+      Array(mail[name]&.addresses)
+    end
+    (Array(mail.to) + Array(mail.cc) + Array(mail.bcc) + header_recipients)
+      .compact.map { |address| address.to_s.strip.downcase }
+  end
+
+  def process_crm_message(target)
+    return bounced! unless target.tenant.feature?("crm")
+    return if CrmMessage.with_deleted.exists?(email_message_id: mail.message_id)
+
+    customer_email = CrmConversation.recipient_email(target).to_s.downcase.presence
+    author = User.active.find_by(email_address: sender_email)
+    direction = author ? :outbound : :inbound
+    return bounced! unless author || customer_email&.casecmp?(sender_email)
+
+    message = CrmMessage.new(
+      subject: target,
+      author: author,
+      channel: :email,
+      direction: direction,
+      delivery_status: :recorded,
+      sender_email: sender_email,
+      recipient_email: direction == :outbound ? customer_email : CrmMailboxAddress.address_for(target),
+      subject_line: mail.subject,
+      email_message_id: mail.message_id,
+      body: extract_body.presence || "(empty message)",
+      occurred_at: Time.current,
+      metadata: { "ingress" => "bcc" }
+    )
+    attach_files(message)
+    message.save!
+  rescue ActiveRecord::RecordNotUnique
+    nil
   end
 
   def sequence_reply_delivery

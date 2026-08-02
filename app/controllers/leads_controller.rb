@@ -13,6 +13,12 @@ class LeadsController < ApplicationController
   def show
     authorize @lead
     @duplicate_leads = LeadDuplicateFinder.call(@lead).order(created_at: :desc)
+    case_scope = feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none
+    visible_types = [ "Lead" ]
+    visible_types << "Contact" if policy(Contact).index?
+    visible_types << "Deal" if policy(Deal).index?
+    @conversation = CrmConversation.call(@lead, case_scope: case_scope, visible_types: visible_types)
+    @crm_bcc_address = CrmMailboxAddress.address_for(@lead)
   end
 
   def new
@@ -82,7 +88,8 @@ class LeadsController < ApplicationController
   end
 
   def lead_params
-    params.require(:lead).permit(:name, :email, :phone, :company_name,
+    params.require(:lead).permit(:name, :email, :phone, :company_name, :job_title,
+                                 :whatsapp_handle, :telegram_handle,
                                  :source, :owner_id, :value_estimate, :notes,
                                  :sms_consent, :email_consent, :first_touch_campaign_id,
                                  custom_fields: {})

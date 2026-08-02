@@ -57,7 +57,8 @@ module Privacy
       # Only globally scrub strong identity tokens. Narrative fields are
       # redacted directly inside affected_graph; treating a common subject or
       # reply body as an identity could corrupt unrelated customers' evidence.
-      values = [ @contact.email, @contact.phone, @contact.external_id ]
+      values = [ @contact.email, @contact.phone, @contact.external_id,
+                 @contact.whatsapp_handle, @contact.telegram_handle ]
       values.compact_blank.map(&:to_s).select { |value| value.length >= 4 }.uniq
     end
 
@@ -73,14 +74,20 @@ module Privacy
         enrollable_type: "Contact", enrollable_id: @contact.id
       ).pluck(:id)
       delivery_ids = SequenceDelivery.where(sequence_enrollment_id: enrollment_ids).pluck(:id)
-      email_ids = Message.with_deleted.where(id: message_ids).where.not(email_message_id: nil)
-                         .pluck(:email_message_id)
+      crm_message_ids = CrmMessage.with_deleted.where(subject_type: "Contact", subject_id: @contact.id)
+                                  .or(CrmMessage.with_deleted.where(subject_type: "Lead", subject_id: lead_ids))
+                                  .or(CrmMessage.with_deleted.where(subject_type: "Deal", subject_id: deal_ids))
+                                  .pluck(:id)
+      email_ids = Message.with_deleted.where(id: message_ids).where.not(email_message_id: nil).pluck(:email_message_id)
+      email_ids.concat(CrmMessage.with_deleted.where(id: crm_message_ids).where.not(email_message_id: nil)
+                                 .pluck(:email_message_id))
       inbound_ids = ActionMailbox::InboundEmail.where(message_id: email_ids).pluck(:id)
       {
         "Contact" => [ @contact.id ], "Case" => case_ids, "Message" => message_ids,
         "Deal" => deal_ids, "Lead" => lead_ids, "WorkItem" => work_item_ids,
         "WorkComment" => comment_ids, "Notification" => notification_ids,
         "SequenceEnrollment" => enrollment_ids, "SequenceDelivery" => delivery_ids,
+        "CrmMessage" => crm_message_ids,
         "ActionMailbox::InboundEmail" => inbound_ids
       }
     end
@@ -108,7 +115,8 @@ module Privacy
     def redact_domain_records!(graph, identifiers)
       @contact.update_columns(
         name: "Erased contact #{@token.first(8)}", email: nil, phone: nil,
-        external_id: "erased-#{@token}", notes: nil, sms_consent: false,
+        external_id: "erased-#{@token}", notes: nil, job_title: nil,
+        whatsapp_handle: nil, telegram_handle: nil, sms_consent: false,
         organisation_id: nil, source_connector_id: nil, erased_at: Time.current,
         erasure_token: @token, labels: [], custom_fields: {}, deleted_at: Time.current
       )
@@ -124,7 +132,7 @@ module Privacy
       Deal.with_deleted.where(id: graph.fetch("Deal")).find_each do |deal|
         deal.update_columns(
           name: "Erased opportunity #{deal.id}", external_id: nil, labels: nil,
-          custom_fields: {},
+          custom_fields: {}, notes: nil, next_step: nil, next_step_at: nil,
           first_touch_utm_source: nil, first_touch_utm_medium: nil,
           first_touch_utm_campaign: nil, first_touch_utm_term: nil,
           first_touch_utm_content: nil, first_touch_landing_page: nil,
@@ -133,6 +141,7 @@ module Privacy
       end
       Lead.with_deleted.where(id: graph.fetch("Lead")).find_each do |lead|
         lead.update_columns(name: "Erased lead #{lead.id}", email: nil, phone: nil,
+                            job_title: nil, whatsapp_handle: nil, telegram_handle: nil,
                             company_name: nil, notes: nil, external_id: nil, labels: nil,
                             custom_fields: {},
                             first_touch_utm_source: nil, first_touch_utm_medium: nil,
@@ -159,6 +168,11 @@ module Privacy
       SequenceDelivery.where(id: graph.fetch("SequenceDelivery"))
                       .update_all(recipient: nil, payload: {}, tracking_token: nil,
                                   last_error: "recipient erased")
+      CrmMessage.with_deleted.where(id: graph.fetch("CrmMessage")).update_all(
+        body: "[Erased for privacy]", subject_line: nil, sender_email: nil,
+        recipient_email: nil, email_message_id: nil, external_message_id: nil,
+        metadata: {}, delivery_last_error: "recipient erased"
+      )
       SecurityEvent.where(tenant_id: @tenant.id).where(email: identifiers).update_all(
         email: nil, metadata: nil, ip_address: nil, user_agent: nil
       )
@@ -169,6 +183,7 @@ module Privacy
       inbound_ids = graph.fetch("ActionMailbox::InboundEmail")
       pairs = {
         "Case" => graph.fetch("Case"), "Message" => message_ids,
+        "CrmMessage" => graph.fetch("CrmMessage"),
         "WorkItem" => graph.fetch("WorkItem"), "ActionMailbox::InboundEmail" => inbound_ids
       }
       attachments = pairs.flat_map do |type, ids|

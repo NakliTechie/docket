@@ -209,6 +209,18 @@ matches the enrolled recipient cancels later steps and logs a completed email Ac
 Configure the sequence reply domain under Admin → Settings → Intake so inbound
 mail routes `sequence+token` addresses back to this deployment.
 
+Contact, lead, and deal pages share a chronological seller conversation. A rep
+can send email from the record when outbound SMTP is available. Each record also
+shows a signed `crm+token` BCC address. Add that address to a message sent from a
+staff user's registered email to record the outbound copy without sending it
+again. Customer replies sent to the same address record as inbound only when the
+From address matches the record's contact or lead email. Route both `crm+*` and
+`sequence+*` recipients at the configured reply domain into Action Mailbox.
+
+WhatsApp and Telegram handles are identity fields in this release. Their CRM
+conversation entries can be imported by a connector. Docket does not send a
+WhatsApp or Telegram message from the record composer.
+
 Campaigns provide first-touch attribution without an external analytics service.
 Create an active campaign with a unique `utm_campaign`, then use that value in
 links to `/inquiry` or a configured web-to-lead form. Docket stores UTM source,

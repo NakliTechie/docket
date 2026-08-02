@@ -84,6 +84,12 @@ module Decisioning
         # Overturning removes the work the agent opened. Soft-delete, so the
         # audit trail of what it did survives the reversal.
         WorkItem.where(id: decision.action_params&.dig("work_item_id")).find_each(&:destroy)
+      when "advance_deal_stage"
+        previous_stage_id = decision.action_params&.dig("previous_pipeline_stage_id")
+        if subject.is_a?(Deal) && previous_stage_id
+          stage = subject.pipeline.pipeline_stages.find_by(id: previous_stage_id)
+          subject.move_to_stage!(stage) if stage
+        end
       else subject&.try(:remove_label, decision.signal)
       end
       decision
@@ -122,6 +128,8 @@ module Decisioning
         end
       when "apply_routing_rule"
         apply_routing_rule!(decision, subject)
+      when "advance_deal_stage"
+        advance_deal_stage!(decision, subject)
       else # "label" — attach the reversible segment tag (the default)
         subject&.try(:add_label, decision.signal)
       end
@@ -224,8 +232,28 @@ module Decisioning
       end
     end
 
+    def advance_deal_stage!(decision, subject)
+      raise Decisioning::Error, "conversation signal requires an open deal" unless subject.is_a?(Deal) && subject.status_open?
+
+      message = CrmMessage.find_by(id: decision.action_params&.dig("crm_message_id"),
+                                   subject: subject, direction: :inbound)
+      raise Decisioning::Error, "the triggering customer reply is unavailable" unless message
+
+      target = subject.pipeline.pipeline_stages.find_by(id: decision.action_params&.dig("pipeline_stage_id"))
+      unless target && !target.terminal? && target.position > subject.pipeline_stage.position
+        raise Decisioning::Error, "the proposed pipeline advance no longer applies"
+      end
+
+      decision.update_column(
+        :action_params,
+        (decision.action_params || {}).merge("previous_pipeline_stage_id" => subject.pipeline_stage_id)
+      )
+      subject.move_to_stage!(target)
+    end
+
     private_class_method :owner_feature_for_subject
     private_class_method :apply_routing_rule!
+    private_class_method :advance_deal_stage!
     private_class_method :apply_locked!
   end
 end

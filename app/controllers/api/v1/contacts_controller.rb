@@ -59,7 +59,8 @@ module Api
       end
 
       EDITABLE_ATTRS = %i[
-        name email phone organisation_id preferred_language notes sms_consent email_consent
+        name email phone job_title whatsapp_handle telegram_handle organisation_id preferred_language
+        notes sms_consent email_consent
       ].freeze
 
       def contact_params
