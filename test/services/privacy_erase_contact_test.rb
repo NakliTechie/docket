@@ -23,6 +23,7 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
                               phone: "+9199999973", external_id: "CIF-PRIVATE-73F9",
                               notes: marker,
                               custom_fields: { private_email: "private-73f9@example.test" })
+    contact.add_label("churn_risk")
     kase = Case.create!(subject: "Request #{marker}", description: "Description #{marker}",
                         contact: contact, custom_fields: { private_email: "private-73f9@example.test" })
     message = kase.messages.create!(body: "Message #{marker}", kind: :internal_note,
@@ -51,6 +52,9 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     )
     deal = Deal.create!(name: "Private deal", pipeline: pipelines(:sales), contact: contact,
                         custom_fields: { private_email: "private-73f9@example.test" })
+    decision = Decision.create!(rule: "contact_risk", version: "1", subject: contact,
+                                subject_label: contact.name, signal: "churn_risk",
+                                decision_class: "autonomous", status: :applied)
 
     result = Privacy::EraseContact.call(contact: contact)
 
@@ -66,9 +70,11 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     assert_nil attributed_lead.reload.first_touch_landing_page
     assert_nil attributed_lead.first_touch_utm_campaign
     assert_empty contact.custom_fields
+    assert_empty contact.labels
     assert_empty kase.custom_fields
     assert_empty attributed_lead.custom_fields
     assert_empty deal.reload.custom_fields
+    assert_equal "Erased contact", decision.reload.subject_label
     assert_not ActiveStorage::Blob.exists?(blob_id)
     assert result.request.status_completed?
     assert Privacy::ResidueScanner.call(

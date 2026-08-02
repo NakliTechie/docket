@@ -29,6 +29,7 @@ module Api
       assert_response :success
       assert_equal "Via API", response.parsed_body["data"]["name"]
       assert_equal true, response.parsed_body["data"]["sms_consent"]
+      assert_equal [], response.parsed_body["data"]["labels"]
 
       get "/api/v1/contacts", params: { q: "viaapi" }, headers: auth_header(@admin_token)
       assert_equal 1, response.parsed_body["data"].size

@@ -19,6 +19,15 @@ class Decision < ApplicationRecord
   # Parked decisions that need a human before they can act (confirm / of_record).
   scope :awaiting_confirmation, -> { status_proposed.where.not(decision_class: "autonomous") }
 
+  # Customer visibility is deliberately narrower than staff visibility. Only
+  # decisions directly concerning the signed-in contact or one of their cases
+  # enter the portal; internal CRM records stay private.
+  scope :concerning, ->(contact) {
+    direct = where(subject_type: "Contact", subject_id: contact.id)
+    case_decisions = where(subject_type: "Case", subject_id: contact.cases.select(:id))
+    direct.or(case_decisions)
+  }
+
   def autonomous? = decision_class == "autonomous"
   def of_record? = decision_class == "of_record"
 

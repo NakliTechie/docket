@@ -110,7 +110,7 @@ module Privacy
         name: "Erased contact #{@token.first(8)}", email: nil, phone: nil,
         external_id: "erased-#{@token}", notes: nil, sms_consent: false,
         organisation_id: nil, source_connector_id: nil, erased_at: Time.current,
-        erasure_token: @token, custom_fields: {}, deleted_at: Time.current
+        erasure_token: @token, labels: [], custom_fields: {}, deleted_at: Time.current
       )
       Case.with_deleted.where(id: graph.fetch("Case")).find_each do |kase|
         kase.update_columns(subject: "Erased request #{kase.tracking_id}", description: nil,
@@ -152,6 +152,8 @@ module Privacy
       )
       Decision.where(subject_type: "Case", subject_id: graph.fetch("Case"))
               .update_all(subject_label: "Erased request", action_params: {})
+      Decision.where(subject_type: "Contact", subject_id: @contact.id)
+              .update_all(subject_label: "Erased contact", action_params: {})
       SequenceEnrollment.with_deleted.where(id: graph.fetch("SequenceEnrollment"))
                         .update_all(status: SequenceEnrollment.statuses.fetch("cancelled"), next_run_at: nil)
       SequenceDelivery.where(id: graph.fetch("SequenceDelivery"))

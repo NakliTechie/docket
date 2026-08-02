@@ -25,6 +25,16 @@ class DecisioningAppealsTest < ActiveSupport::TestCase
     assert_equal "wrong call", appeal.grounds
   end
 
+  test "a decision cannot carry two pending appeals" do
+    decision = applied_of_record_decision
+    Decisioning::Dispatcher.file_appeal!(decision, grounds: "first", appellant: contacts(:asha))
+
+    assert_raises(Decisioning::Error) do
+      Decisioning::Dispatcher.file_appeal!(decision, grounds: "second", appellant: contacts(:asha))
+    end
+    assert_equal 1, decision.appeals.status_pending.count
+  end
+
   test "overturning reverses the decision and dismisses it; a reasoned order is required" do
     decision = applied_of_record_decision
     appeal = Decisioning::Dispatcher.file_appeal!(decision, grounds: "wrong")

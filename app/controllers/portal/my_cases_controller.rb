@@ -62,15 +62,5 @@ module Portal
         redirect_to portal_my_case_path(@case), alert: message.errors.full_messages.to_sentence
       end
     end
-
-    private
-
-    def current_contact
-      @current_contact ||= Contact.find_by(id: session[:portal_contact_id])
-    end
-
-    def require_customer
-      redirect_to portal_root_path, alert: t("portal.customer.sign_in_required") if current_contact.nil?
-    end
   end
 end

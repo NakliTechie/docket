@@ -239,10 +239,19 @@ read/write round trip in a non-production vendor account and record the result.
 
 Decisioning runs hourly or on demand over tenant-owned data. Autonomous signals
 apply only reversible actions; `confirm` and `of_record` proposals wait for a
-reviewer. A decision of record requires a reasoned order and is contestable.
+reviewer. Built-in rules flag recent low-CSAT churn risk, open-SLA-breach risk,
+and customers with active SLA coverage; imported or legacy cases can receive a
+human-confirmed suggestion from the existing routing-rule catalogue. These are
+explainable defaults, not predictive ML scores.
+
+A decision of record requires a reasoned order and is contestable. Signed-in
+customers can inspect decisions concerning themselves or their cases under
+Portal → My decisions and file one pending appeal per decision. Internal CRM
+decisions remain outside that customer scope.
 Admin → Appeals lets an authorized reviewer record grounds, uphold the decision,
 or overturn it; supported effects are reversed while the decision and appeal
-history remain audited.
+history remain audited. The Dashboard reports approval, rejection, and upheld-
+appeal override rates per rule for the selected decision cohort.
 
 ## Security events and import mode
 

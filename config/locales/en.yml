@@ -528,6 +528,7 @@ en:
       organisation: "Organisation"
       preferred_language: "Preferred language"
       notes: "Notes"
+      segments: "Decisioning segments"
       email_consent: "Marketing email opt-in"
       sms_consent: "SMS opt-in"
     form:
@@ -938,6 +939,21 @@ en:
       approved: "Decision approved and applied."
     reject:
       rejected: "Decision rejected."
+  decisioning:
+    labels:
+      churn_risk: "Churn risk"
+      at_risk_contact: "At-risk customer"
+      vip_contact: "Priority customer"
+    rules:
+      lead_score: "Lead score"
+      sla_at_risk: "SLA at risk"
+      stalled_deal: "Stalled deal"
+      reengage_stale_lead: "Re-engage stale lead"
+      routing_suggestion: "Routing suggestion"
+      churn_risk: "Churn risk"
+      at_risk_contact: "At-risk customer"
+      vip_contact: "Priority customer"
+
   dashboards:
     index:
       title: "Dashboard"
@@ -1015,6 +1031,9 @@ en:
       decisions_applied: "Applied"
       decisions_rejected: "Rejected"
       pending_confirmation: "Awaiting confirmation"
+      decision_quality: "Decision quality by rule"
+      decision_quality_note: "Rates use decisions created in the selected window. Approval and rejection divide human-reviewed proposals; override is an upheld appeal divided by approved decisions."
+      no_decision_quality: "No rule decisions were created in this window."
       recent_decisions: "Recent decisions"
       approve: "Approve"
       reject: "Reject"
@@ -1036,6 +1055,10 @@ en:
         tier: "Tier"
         act: "Act"
         dstatus: "Status"
+        proposed: "Open"
+        approval_rate: "Approval rate"
+        rejection_rate: "Rejection rate"
+        override_rate: "Override rate"
   sales_reports:
     index:
       title: "Sales report"
@@ -1940,6 +1963,7 @@ en:
       track: "Track a case"
       knowledge_base: "Help"
       my_cases: "My cases"
+      decisions: "My decisions"
       sign_out: "Sign out"
       customer_sign_in: "Log in with your account"
       staff_sign_in: "Staff sign in"
@@ -1979,6 +2003,28 @@ en:
       new:
         title: "File a new case"
         intro: "This case will be linked to your account — no tracking ID needed."
+    decisions:
+      index:
+        title: "My decisions"
+        intro: "Applied decisions of record concerning you or your cases. You may file an appeal and explain what should be reconsidered."
+        rule: "Rule"
+        decision: "Decision"
+        reason: "Reasoned order"
+        reason_unavailable: "No reason was recorded."
+        decided_on: "Decided on"
+        grounds: "Why are you appealing?"
+        grounds_placeholder: "Explain the facts or evidence the reviewer should reconsider."
+        file: "File appeal"
+        resolution: "Review outcome: %{resolution}"
+        appeal_status:
+          pending: "Appeal awaiting review"
+          overturned: "Appeal upheld"
+          denied: "Appeal denied"
+        empty:
+          title: "No decisions of record"
+          hint: "Any applied decision of record concerning you or your cases will appear here."
+      appeal:
+        filed: "Your appeal was filed for review."
     cases:
       new:
         title: "Submit a support request"
@@ -2730,6 +2776,8 @@ en:
         intro: "Contests against decisions of record. Overturn reverses the decision; deny lets it stand. Overturning is a reasoned order."
         open_appeals: "Open appeals"
         no_open_appeals: "No appeals awaiting review."
+        resolved_appeals: "Resolved appeals"
+        no_resolved_appeals: "No appeals have been resolved."
         file_against: "Decisions of record (appealable)"
         none_appealable: "No applied decisions of record to appeal."
         already_appealed: "Appeal open"
@@ -2740,7 +2788,11 @@ en:
         grounds_placeholder: "Grounds for the appeal"
         columns:
           decision: "Decision"
+          appellant: "Appellant"
           grounds: "Grounds"
+          outcome: "Outcome"
+          resolution: "Review outcome"
+        staff_recorded: "Recorded by staff"
       create:
         filed: "Appeal filed."
       overturn:

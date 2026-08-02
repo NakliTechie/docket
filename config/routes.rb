@@ -236,6 +236,9 @@ Rails.application.routes.draw do
         post :reply
       end
     end
+    resources :decisions, only: :index do
+      member { post :appeal }
+    end
     delete "session", to: "customer_sessions#destroy", as: :customer_session
   end
 

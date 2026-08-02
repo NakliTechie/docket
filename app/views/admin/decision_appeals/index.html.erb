@@ -13,6 +13,7 @@
       <thead>
         <tr>
           <th><%= t(".columns.decision") %></th>
+          <th><%= t(".columns.appellant") %></th>
           <th><%= t(".columns.grounds") %></th>
           <th></th>
         </tr>
@@ -21,6 +22,7 @@
         <% open_appeals.each do |appeal| %>
           <tr>
             <td><span class="mono"><%= appeal.decision.rule %></span> — <%= appeal.decision.subject_label %></td>
+            <td><%= appeal.appellant&.name || t(".staff_recorded") %></td>
             <td><%= appeal.grounds %></td>
             <td class="table-actions">
               <%= form_with url: overturn_admin_decision_appeal_path(appeal), class: "inline-form" do %>
@@ -36,6 +38,37 @@
   </div>
 <% else %>
   <p class="muted"><%= t(".no_open_appeals") %></p>
+<% end %>
+
+<h2><%= t(".resolved_appeals") %></h2>
+<% resolved_appeals = @appeals.reject(&:status_pending?) %>
+<% if resolved_appeals.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.decision") %></th>
+          <th><%= t(".columns.appellant") %></th>
+          <th><%= t(".columns.grounds") %></th>
+          <th><%= t(".columns.outcome") %></th>
+          <th><%= t(".columns.resolution") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% resolved_appeals.each do |appeal| %>
+          <tr>
+            <td><span class="mono"><%= appeal.decision.rule %></span> — <%= appeal.decision.subject_label %></td>
+            <td><%= appeal.appellant&.name || t(".staff_recorded") %></td>
+            <td><%= appeal.grounds %></td>
+            <td><%= appeal.status.humanize %></td>
+            <td><%= appeal.resolution.presence || "—" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="muted"><%= t(".no_resolved_appeals") %></p>
 <% end %>
 
 <h2><%= t(".file_against") %></h2>

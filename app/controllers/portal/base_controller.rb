@@ -8,6 +8,14 @@ module Portal
 
     private
 
+    def current_contact
+      @current_contact ||= Contact.find_by(id: session[:portal_contact_id])
+    end
+
+    def require_customer
+      redirect_to portal_root_path, alert: t("portal.customer.sign_in_required") if current_contact.nil?
+    end
+
     # Only real multipart uploads — never a bare string. Without this a
     # customer (or anyone) could pass files: ["<active-storage-signed-id>"]
     # to attach an arbitrary existing blob by reference, or a garbage

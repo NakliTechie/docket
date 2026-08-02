@@ -29,6 +29,10 @@
         <% if session[:portal_contact_id] %>
           <%= nav_link t("portal.nav.my_cases"), portal_my_cases_path,
                 active: controller_name == "my_cases" %>
+          <% if feature?("decisioning") %>
+            <%= nav_link t("portal.nav.decisions"), portal_decisions_path,
+                  active: controller_name == "decisions" %>
+          <% end %>
         <% end %>
       </nav>
       <div class="app-header-right">

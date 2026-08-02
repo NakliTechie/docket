@@ -42,6 +42,14 @@
         <% if @contact.notes.present? %>
           <dt><%= t("contacts.fields.notes") %></dt><dd><%= @contact.notes %></dd>
         <% end %>
+        <% if @contact.labels.any? %>
+          <dt><%= t("contacts.fields.segments") %></dt>
+          <dd>
+            <% @contact.labels.each do |label| %>
+              <span class="badge badge-role"><%= t("decisioning.labels.#{label}", default: label.humanize) %></span>
+            <% end %>
+          </dd>
+        <% end %>
       </dl>
       <%= render "shared/custom_field_values", record: @contact, resource_type: "contacts" %>
     </div>

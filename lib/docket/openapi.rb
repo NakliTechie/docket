@@ -54,7 +54,7 @@ module Docket
             id: :integer, name: :string, email: :string, phone: :string, external_id: :string,
             organisation_id: :integer, preferred_language: :string, notes: :string,
             sms_consent: :boolean, email_consent: :boolean, email_unsubscribed_at: :datetime,
-            custom_fields: :object,
+            labels: { type: "array", items: { type: "string" } }, custom_fields: :object,
             created_at: :datetime, updated_at: :datetime
           ),
           Organisation: object_schema(id: :integer, name: :string, kind: :string, external_ref: :string,

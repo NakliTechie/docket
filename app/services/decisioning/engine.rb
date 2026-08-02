@@ -10,7 +10,11 @@ module Decisioning
       Rules::LeadScore,
       Rules::SlaAtRisk,
       Rules::StalledDeal,
-      Rules::ReengageStaleLead
+      Rules::ReengageStaleLead,
+      Rules::RoutingSuggestion,
+      Rules::ChurnRisk,
+      Rules::AtRiskContact,
+      Rules::VipContact
     ].freeze
 
     def run(rules: RULES)

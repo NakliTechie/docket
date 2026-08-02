@@ -528,6 +528,7 @@ hi:
       organisation: "संगठन"
       preferred_language: "पसंदीदा भाषा"
       notes: "टिप्पणियाँ"
+      segments: "निर्णयन खंड"
       email_consent: "मार्केटिंग ईमेल सहमति"
       sms_consent: "SMS सहमति"
     form:
@@ -938,6 +939,21 @@ hi:
       approved: "निर्णय अनुमोदित और लागू।"
     reject:
       rejected: "निर्णय अस्वीकृत।"
+  decisioning:
+    labels:
+      churn_risk: "ग्राहक छोड़ने का जोखिम"
+      at_risk_contact: "जोखिमग्रस्त ग्राहक"
+      vip_contact: "प्राथमिकता ग्राहक"
+    rules:
+      lead_score: "लीड स्कोर"
+      sla_at_risk: "SLA जोखिम"
+      stalled_deal: "रुका हुआ सौदा"
+      reengage_stale_lead: "निष्क्रिय लीड से पुनः संपर्क"
+      routing_suggestion: "रूटिंग सुझाव"
+      churn_risk: "ग्राहक छोड़ने का जोखिम"
+      at_risk_contact: "जोखिमग्रस्त ग्राहक"
+      vip_contact: "प्राथमिकता ग्राहक"
+
   dashboards:
     index:
       title: "डैशबोर्ड"
@@ -1015,6 +1031,9 @@ hi:
       decisions_applied: "लागू"
       decisions_rejected: "अस्वीकृत"
       pending_confirmation: "पुष्टि की प्रतीक्षा में"
+      decision_quality: "नियम अनुसार निर्णय गुणवत्ता"
+      decision_quality_note: "दरें चयनित अवधि में बनाए गए निर्णयों पर आधारित हैं। अनुमोदन और अस्वीकृति मानव-समीक्षित प्रस्तावों को बाँटते हैं; पलटाव दर अनुमोदित निर्णयों में स्वीकृत अपीलों का अनुपात है।"
+      no_decision_quality: "इस अवधि में कोई नियम निर्णय नहीं बनाया गया।"
       recent_decisions: "हाल के निर्णय"
       approve: "अनुमोदित करें"
       reject: "अस्वीकार करें"
@@ -1036,6 +1055,10 @@ hi:
         tier: "स्तर"
         act: "कार्रवाई"
         dstatus: "स्थिति"
+        proposed: "लंबित"
+        approval_rate: "अनुमोदन दर"
+        rejection_rate: "अस्वीकृति दर"
+        override_rate: "पलटाव दर"
   sales_reports:
     index:
       title: "बिक्री रिपोर्ट"
@@ -1940,6 +1963,7 @@ hi:
       track: "मामला ट्रैक करें"
       knowledge_base: "सहायता"
       my_cases: "मेरे मामले"
+      decisions: "मेरे निर्णय"
       sign_out: "साइन आउट"
       customer_sign_in: "अपने खाते से लॉग इन करें"
       staff_sign_in: "स्टाफ़ साइन इन"
@@ -1979,6 +2003,28 @@ hi:
       new:
         title: "नया मामला दर्ज करें"
         intro: "यह मामला आपके खाते से जुड़ेगा — किसी ट्रैकिंग आईडी की आवश्यकता नहीं।"
+    decisions:
+      index:
+        title: "मेरे निर्णय"
+        intro: "आपसे या आपके मामलों से संबंधित लागू रिकॉर्ड-स्तर निर्णय। आप अपील दर्ज कर बता सकते हैं कि किस बात पर पुनर्विचार होना चाहिए।"
+        rule: "नियम"
+        decision: "निर्णय"
+        reason: "सकारण आदेश"
+        reason_unavailable: "कोई कारण दर्ज नहीं किया गया।"
+        decided_on: "निर्णय तिथि"
+        grounds: "आप अपील क्यों कर रहे हैं?"
+        grounds_placeholder: "वे तथ्य या साक्ष्य बताएँ जिन पर समीक्षक को पुनर्विचार करना चाहिए।"
+        file: "अपील दर्ज करें"
+        resolution: "समीक्षा परिणाम: %{resolution}"
+        appeal_status:
+          pending: "अपील समीक्षा की प्रतीक्षा में"
+          overturned: "अपील स्वीकृत"
+          denied: "अपील अस्वीकृत"
+        empty:
+          title: "कोई रिकॉर्ड-स्तर निर्णय नहीं"
+          hint: "आपसे या आपके मामलों से संबंधित लागू रिकॉर्ड-स्तर निर्णय यहाँ दिखेंगे।"
+      appeal:
+        filed: "आपकी अपील समीक्षा हेतु दर्ज की गई।"
     cases:
       new:
         title: "सहायता अनुरोध सबमिट करें"
@@ -2730,6 +2776,8 @@ hi:
         intro: "रिकॉर्ड-स्तर निर्णयों के विरुद्ध आपत्तियाँ। पलटने पर निर्णय उलट जाता है; अस्वीकार करने पर कायम रहता है। पलटना एक सकारण आदेश है।"
         open_appeals: "लंबित अपीलें"
         no_open_appeals: "समीक्षा हेतु कोई अपील नहीं।"
+        resolved_appeals: "निपटाई गई अपीलें"
+        no_resolved_appeals: "अभी कोई अपील नहीं निपटाई गई।"
         file_against: "रिकॉर्ड-स्तर निर्णय (अपील-योग्य)"
         none_appealable: "अपील करने योग्य कोई लागू रिकॉर्ड-निर्णय नहीं।"
         already_appealed: "अपील लंबित"
@@ -2740,7 +2788,11 @@ hi:
         grounds_placeholder: "अपील का आधार"
         columns:
           decision: "निर्णय"
+          appellant: "अपीलकर्ता"
           grounds: "आधार"
+          outcome: "परिणाम"
+          resolution: "समीक्षा परिणाम"
+        staff_recorded: "स्टाफ़ द्वारा दर्ज"
       create:
         filed: "अपील दर्ज की गई।"
       overturn:

@@ -307,7 +307,7 @@
         <tbody>
           <% @overview.pending_confirmations.each do |decision| %>
             <tr>
-              <td><%= decision.rule.humanize %></td>
+              <td><%= t("decisioning.rules.#{decision.rule}", default: decision.rule.humanize) %></td>
               <td><%= decision.subject_label %></td>
               <td><%= decision.recommendation %></td>
               <td class="row-actions">
@@ -321,6 +321,37 @@
         </tbody>
       </table>
     </div>
+  <% end %>
+
+  <h3 class="panel-title"><%= t(".decision_quality") %></h3>
+  <p class="muted"><%= t(".decision_quality_note") %></p>
+  <% if @overview.decision_quality.any? %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><%= t(".columns.rule") %></th>
+            <th><%= t(".columns.proposed") %></th>
+            <th><%= t(".columns.approval_rate") %></th>
+            <th><%= t(".columns.rejection_rate") %></th>
+            <th><%= t(".columns.override_rate") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @overview.decision_quality.each do |quality| %>
+            <tr>
+              <td><%= t("decisioning.rules.#{quality.rule}", default: quality.rule.humanize) %></td>
+              <td><%= quality.proposed_count %></td>
+              <td><%= quality.approval_rate ? t(".percent", value: quality.approval_rate) : "—" %></td>
+              <td><%= quality.rejection_rate ? t(".percent", value: quality.rejection_rate) : "—" %></td>
+              <td><%= quality.override_rate ? t(".percent", value: quality.override_rate) : "—" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="muted"><%= t(".no_decision_quality") %></p>
   <% end %>
 
   <h3 class="panel-title"><%= t(".recent_decisions") %></h3>
@@ -338,7 +369,7 @@
         <tbody>
           <% @overview.decisions.each do |decision| %>
             <tr>
-              <td><%= decision.rule.humanize %></td>
+              <td><%= t("decisioning.rules.#{decision.rule}", default: decision.rule.humanize) %></td>
               <td><%= decision.subject_label %></td>
               <td><%= decision.decision_class.to_s.humanize %></td>
               <td><%= decision.status.humanize %></td>

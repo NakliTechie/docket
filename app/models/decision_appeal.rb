@@ -13,6 +13,9 @@ class DecisionAppeal < ApplicationRecord
   enum :status, { pending: 0, overturned: 1, denied: 2 }, prefix: true
 
   validates :grounds, presence: true
+  validates :decision_id, uniqueness: { scope: :tenant_id, conditions: -> { status_pending } },
+                          if: :status_pending?
+  validates_same_tenant :decision, :appellant, :reviewed_by
 
   scope :recent_first, -> { order(id: :desc) }
 end

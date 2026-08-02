@@ -3,7 +3,7 @@ require "test_helper"
 class JsonColumnTypesTest < ActiveSupport::TestCase
   EXPECTED = {
     audit_entries: %i[changeset metadata], cases: %i[labels custom_fields],
-    contacts: %i[custom_fields], deals: %i[labels custom_fields], leads: %i[labels provenance custom_fields],
+    contacts: %i[labels custom_fields], deals: %i[labels custom_fields], leads: %i[labels provenance custom_fields],
     connector_invocations: %i[args result],
     connectors: %i[auto_approve_actions config enabled_actions field_mapping],
     decisions: %i[action_params],
