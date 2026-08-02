@@ -17,6 +17,9 @@ class Message < ApplicationRecord
   # Provider delivery identity for inbound replay protection. Scoped by
   # connector because providers may issue the same id in separate accounts.
   belongs_to :source_connector, class_name: "Connector", optional: true
+  belongs_to :source_message, class_name: "Message", optional: true
+  has_one :assistant_response, class_name: "Message", foreign_key: :source_message_id,
+                               dependent: nil, inverse_of: :source_message
 
   has_many_attached :files
   include AttachableValidation
@@ -30,6 +33,9 @@ class Message < ApplicationRecord
   validates :external_message_id,
             uniqueness: { scope: %i[tenant_id source_connector_id] },
             allow_nil: true
+  validates :source_message_id, uniqueness: { scope: :tenant_id }, allow_nil: true
+  validates_same_tenant :source_message
+  validate :source_message_belongs_to_case
 
   after_create :stamp_first_response
   after_create :reopen_conversation_on_customer_reply
@@ -38,6 +44,8 @@ class Message < ApplicationRecord
   after_create_commit :enqueue_sentiment_analysis
   after_create_commit :publish_message_webhook
   after_create_commit :notify_mentions
+  after_create_commit :broadcast_to_live_chat
+  after_create_commit :enqueue_live_chat_assistant
 
   def author_display_name
     return source_author_name if source_author_name.present?
@@ -100,6 +108,7 @@ class Message < ApplicationRecord
     return if Imports::Mode.running?
 
     return unless direction_outbound? && (kind_public_reply? || kind_agent_turn?)
+    return if self.case.channel_live_chat? && self.case.live_chat&.active?
     return if self.case.source_connector&.ingests?
     return if self.case.contact.email.blank?
     CaseMailer.public_reply(self).deliver_later
@@ -136,5 +145,26 @@ class Message < ApplicationRecord
 
   def notify_mentions
     Notifications::Events.mentions(self)
+  end
+
+  def source_message_belongs_to_case
+    return if source_message.blank? || source_message.case_id == case_id
+
+    errors.add(:source_message, :invalid)
+  end
+
+  def broadcast_to_live_chat
+    live_chat = self.case.live_chat
+    return unless live_chat
+    return unless kind_public_reply? || kind_agent_turn?
+
+    LiveChatChannel.broadcast_to(live_chat, LiveChatMessageSerializer.call(self))
+  end
+
+  def enqueue_live_chat_assistant
+    return unless direction_inbound? && self.case.channel_live_chat?
+    return unless Setting.get("live_chat_bot_enabled", false) == true && Llm.enabled?
+
+    LiveChatAssistantJob.perform_later(id)
   end
 end

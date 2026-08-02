@@ -37,7 +37,7 @@ class Case < ApplicationRecord
                   resolved: 4, closed: 5, reopened: 6 }, default: :new, prefix: true
   enum :priority, { low: 0, normal: 1, high: 2, urgent: 3 }, default: :normal, prefix: true
   enum :channel, { web_portal: 0, email: 1, api: 2, staff: 3, phone: 4, walk_in: 5,
-                   whatsapp: 6, telegram: 7, sms: 8 },
+                   whatsapp: 6, telegram: 7, sms: 8, live_chat: 9 },
        default: :web_portal, prefix: true
 
   belongs_to :contact, -> { with_deleted }
@@ -62,6 +62,8 @@ class Case < ApplicationRecord
   has_many :routing_rule_executions, dependent: nil
   has_one :csat_survey, dependent: nil
   has_many :case_presences, dependent: :destroy
+  has_one :live_chat, dependent: :destroy
+  has_many :call_records, dependent: nil
   has_many_attached :files
   include AttachableValidation
 

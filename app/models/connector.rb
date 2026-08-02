@@ -35,6 +35,7 @@ class Connector < ApplicationRecord
   validates_same_tenant :shared_credential
   has_many :connector_runs, dependent: :delete_all
   has_many :invocations, class_name: "ConnectorInvocation", dependent: :destroy
+  has_many :call_records, dependent: :restrict_with_error
 
   # draft = wired but not live (configure-later): excluded from the active
   # scope, so agents and the scheduler never touch it until it's activated.
@@ -77,6 +78,10 @@ class Connector < ApplicationRecord
   # Does this provider turn inbound webhooks into cases (PG2)?
   def ingests?
     Connectors::Registry.klass(provider)&.ingests? || false
+  end
+
+  def ingests_calls?
+    Connectors::Registry.klass(provider)&.ingests_calls? || false
   end
 
   # Has every required secret (own vault or shared)? A draft connector can be

@@ -1,0 +1,29 @@
+<% page_title t("portal.live_chats.new.title") %>
+<div class="portal-card">
+  <h1><%= t("portal.live_chats.new.title") %></h1>
+  <p class="muted"><%= t("portal.live_chats.new.intro") %></p>
+
+  <%= form_with model: @submission, url: portal_live_chat_path, class: "form" do |f| %>
+    <%= render "shared/form_errors", record: @submission %>
+    <% unless session[:portal_contact_id] %>
+      <div class="form-row">
+        <%= f.label :name, t("portal.live_chats.new.name") %>
+        <%= f.text_field :name, required: true, autocomplete: "name" %>
+      </div>
+      <div class="form-row">
+        <%= f.label :email, t("portal.live_chats.new.email") %>
+        <%= f.email_field :email, autocomplete: "email" %>
+      </div>
+      <div class="form-row">
+        <%= f.label :phone, t("portal.live_chats.new.phone") %>
+        <%= f.telephone_field :phone, autocomplete: "tel" %>
+        <p class="form-hint"><%= t("portal.live_chats.new.contact_hint") %></p>
+      </div>
+    <% end %>
+    <div class="form-row">
+      <%= f.label :message, t("portal.live_chats.new.message") %>
+      <%= f.text_area :message, required: true, rows: 5, autofocus: true %>
+    </div>
+    <%= f.submit t("portal.live_chats.new.start"), class: "btn btn-primary" %>
+  <% end %>
+</div>

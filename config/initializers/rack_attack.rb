@@ -11,6 +11,10 @@ Rack::Attack.throttle("portal/tracking", limit: 15, period: 15.minutes) do |requ
   request.ip if request.post? && request.path.start_with?("/portal/track")
 end
 
+Rack::Attack.throttle("portal/live_chat_messages", limit: 60, period: 5.minutes) do |request|
+  request.ip if request.post? && request.path == "/portal/live_chat/message"
+end
+
 Rack::Attack.throttle("portal/general", limit: 300, period: 5.minutes) do |request|
   request.ip if request.path.start_with?("/portal")
 end

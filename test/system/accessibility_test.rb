@@ -54,6 +54,9 @@ class AccessibilityTest < ApplicationSystemTestCase
     visit portal_root_path
     assert_no_axe_violations "portal form"
 
+    visit new_portal_live_chat_path
+    assert_no_axe_violations "portal live chat form"
+
     visit portal_track_path
     assert_no_axe_violations "portal tracking"
   end

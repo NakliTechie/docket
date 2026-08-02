@@ -38,6 +38,15 @@ module ApplicationHelper
     tag.span(kase.human_status, class: "badge badge-status status-#{kase.status.dasherize}")
   end
 
+  def recording_reference_link(url)
+    uri = URI.parse(url.to_s)
+    return unless uri.is_a?(URI::HTTP) && uri.host.present? && uri.userinfo.blank?
+
+    link_to t("cases.show.open_recording"), uri.to_s, target: "_blank", rel: "noopener noreferrer"
+  rescue URI::InvalidURIError
+    nil
+  end
+
   def priority_badge(kase)
     tag.span(kase.human_priority, class: "badge badge-priority priority-#{kase.priority}")
   end

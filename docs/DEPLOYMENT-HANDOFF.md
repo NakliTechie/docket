@@ -222,7 +222,7 @@ environment-owned SMTP/TLS/DNS/inbound-mail checks below.
 
 ## 8. Known gaps — tell the customer before they find them
 
-- **The 65 connectors are implementation/stub-tested, not live-certified.** Every one is
+- **The 66 connectors are implementation/stub-tested, not live-certified.** Every one is
   implemented against the vendor's documented API and unit-tested against a
   stub, but none has made an authenticated call with real credentials. Validate
   the ones a customer actually depends on before relying on them.

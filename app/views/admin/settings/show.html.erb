@@ -73,6 +73,11 @@
       <%= check_box_tag :ai_draft_enabled, "1", Setting.get("ai_draft_enabled", true) != false %>
       <%= label_tag :ai_draft_enabled, t(".fields.ai_draft_enabled") %>
     </div>
+    <div class="checkbox-row form-row">
+      <%= hidden_field_tag :live_chat_bot_enabled, "0" %>
+      <%= check_box_tag :live_chat_bot_enabled, "1", Setting.get("live_chat_bot_enabled", false) == true %>
+      <%= label_tag :live_chat_bot_enabled, t(".fields.live_chat_bot_enabled") %>
+    </div>
     <div class="form-row">
       <%= label_tag :ai_route_confidence, t(".fields.ai_route_confidence") %>
       <%= number_field_tag :ai_route_confidence, Setting.get("ai_route_confidence", CaseAgent::ROUTE_CONFIDENCE_DEFAULT), step: 0.05, min: 0, max: 1 %>

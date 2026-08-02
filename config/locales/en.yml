@@ -368,6 +368,7 @@ en:
         whatsapp: "WhatsApp"
         telegram: "Telegram"
         sms: "SMS"
+        live_chat: "Live chat"
     sort:
       created_at: "Created"
       priority: "Priority"
@@ -470,6 +471,15 @@ en:
       split_action: "Split into a new case"
       split_subject: "New case subject"
       split_messages: "Messages to move"
+      call_records: "Call details"
+      call_status: "Status"
+      call_from: "Caller"
+      call_duration: "Duration"
+      call_seconds:
+        one: "%{count} second"
+        other: "%{count} seconds"
+      call_recording: "Recording"
+      open_recording: "Open provider recording"
     new:
       title: "New case"
     edit:
@@ -527,6 +537,10 @@ en:
       failed: "AI agent run could not complete."
     inbound:
       no_subject: "New message"
+    telephony:
+      subject: "Inbound call from %{number}"
+      call_received: "Inbound telephone call received from %{number}."
+      ivr_summary: "IVR responses: %{answers}"
 
   reference_docs:
     enum:
@@ -1995,6 +2009,31 @@ en:
       sign_out: "Sign out"
       customer_sign_in: "Log in with your account"
       staff_sign_in: "Staff sign in"
+      live_chat: "Live chat"
+    live_chats:
+      you: "You"
+      staff: "Support team"
+      closed: "This conversation is closed. Start a new chat if you need more help."
+      ended: "The conversation ended."
+      expired: "That chat expired. Start a new conversation."
+      error: "The message could not be sent. Check your connection and try again."
+      new:
+        title: "Chat with support"
+        intro: "Start a live conversation. A support person will reply here. Published help articles may provide an automated answer when your organisation enables that option."
+        name: "Your name"
+        email: "Email"
+        phone: "Phone"
+        contact_hint: "Provide an email or phone so the team can follow up if you leave this page."
+        message: "How can we help?"
+        start: "Start chat"
+      show:
+        title: "Support chat"
+        notice: "Keep this page open for live replies. Never share a password, OTP, or payment credential."
+        reply: "Message"
+        placeholder: "Write a message…"
+        send: "Send"
+        end: "End chat"
+        end_confirm: "End this chat? You cannot add more messages afterward."
     knowledge_base:
       index:
         title: "Help & answers"
@@ -2627,6 +2666,7 @@ en:
           secret_set: "(set — enter a new value to replace)"
           llm_byok_enabled: "I understand: enable external (BYOK) provider"
           ai_draft_enabled: "Draft replies for human review on new cases"
+          live_chat_bot_enabled: "Answer live chats from published public help articles"
           effector_agent: "Case effector agent"
           effector_agent_hint: "The service account an AI agent acts as when a staffer runs it on a case. Its connector scopes bound what it can do; write actions still need approval."
           ai_route_confidence: "Routing confidence threshold"

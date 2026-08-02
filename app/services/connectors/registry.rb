@@ -28,6 +28,7 @@ module Connectors
         "gupshup" => Connectors::GupshupProvider,
         "plivo" => Connectors::PlivoProvider,
         "exotel" => Connectors::ExotelProvider,
+        "telephony_webhook" => Connectors::TelephonyWebhookProvider,
         "kaleyra" => Connectors::KaleyraProvider,
         "sinch" => Connectors::SinchProvider,
         "cashfree" => Connectors::CashfreeProvider,

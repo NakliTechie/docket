@@ -19,10 +19,14 @@ module ActiveSupport
     # way an isolated deploy does. Use the normal ambient slot, not
     # ActsAsTenant.test_tenant: that hard pin silently beat `with_tenant` and
     # made our second-tenant tests continue querying primary.
-    setup { ActsAsTenant.current_tenant = tenants(:primary) }
+    setup do
+      ActsAsTenant.current_tenant = tenants(:primary)
+      I18n.locale = I18n.default_locale
+    end
     teardown do
       ActsAsTenant.current_tenant = nil
       Current.reset
+      I18n.locale = I18n.default_locale
     end
 
     # Add more helper methods to be used by all tests here...

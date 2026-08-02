@@ -98,6 +98,9 @@ module Connectors
     # acting as an outbound effector / pull-sync)? Messaging providers override.
     def self.ingests? = false
 
+    # Does this provider normalize inbound telephone/IVR call events?
+    def self.ingests_calls? = false
+
     # Authenticate an inbound webhook request. Default: the X-Docket-Signature
     # HMAC over the connector's per-endpoint webhook_secret (the sync-ping
     # scheme). Messaging providers override with their platform's scheme.
@@ -121,6 +124,10 @@ module Connectors
     #     body:, channel:, external_message_id: }
     # Non-message events (delivery receipts, edits) → []. Default: not inbound.
     def ingest(_payload) = []
+
+    # Normalize a webhook payload into call events. Each event carries a stable
+    # provider_call_id, caller number, state, and optional recording/transcript.
+    def ingest_calls(_payload) = []
 
     # Some platforms (Meta/WhatsApp) verify a webhook URL with a GET handshake.
     # → the challenge string to echo, or nil to reject. Default: no handshake.

@@ -9,7 +9,7 @@ remain authoritative when code and prose differ.
 
 Docket has three independently entitled pillars:
 
-- **Service desk:** portal, email/API intake, routing, business-calendar SLA,
+- **Service desk:** portal, live-chat, email/API/IVR intake, routing, business-calendar SLA,
   saved views and bulk actions, collision signals, replies and attachments,
   merge/split, CSAT, approvals, knowledge, and reports.
 - **CRM:** contacts and organisations, configurable web-to-lead forms,
@@ -181,6 +181,13 @@ article version. Docket stores a one-way visitor-token digest rather than an IP
 address. Editing or republishing creates a new version with a fresh score while
 retaining older version feedback for audit and analysis.
 
+Portal → Live chat creates a normal case and carries public replies over Action
+Cable. Its bearer is stored only as a digest and expires after 24 inactive
+hours. Admin → Settings → AI can enable a knowledge answer on this surface.
+That option is off by default. The public assistant retrieves only published,
+public articles; internal articles and case text from other customers never
+enter its prompt. Low-confidence or ungrounded output is not sent.
+
 ## Lead inquiry and CRM setup
 
 The legacy public inquiry lives at `/inquiry`. Admin-managed capture forms live
@@ -213,7 +220,7 @@ its links do not carry UTM parameters.
 
 ## Connectors, credentials, webhooks, and effectors
 
-The application registry contains **65** provider implementations. The admin
+The application registry contains **66** provider implementations. The admin
 connector picker is the canonical list. A connector starts in `draft`, stores
 non-secret config separately from encrypted credentials, and cannot sync,
 ingest, or invoke until it is active and configured. OAuth providers also need
@@ -229,6 +236,33 @@ Inbound messaging connectors verify their provider signature before creating
 or threading a case. Outbound Docket webhooks use `whsec_…` HMAC-SHA256 secrets,
 publish no internal notes, and retain delivery attempts with retry history.
 
+The `Telephony / IVR webhook` connector accepts provider-neutral call events at
+the connector webhook URL. Sign the raw JSON body with the connector's webhook
+secret and send `X-Docket-Signature: sha256=<hex HMAC-SHA256>`. A single event
+uses this envelope:
+
+```json
+{
+  "provider_call_id": "call-100",
+  "from_number": "+919876500001",
+  "to_number": "18001234",
+  "status": "completed",
+  "duration_seconds": 82,
+  "recording_url": "https://voice.example.in/recordings/call-100",
+  "ivr_answers": { "language": "hi", "topic": "pension" },
+  "transcript": "My pension is delayed.",
+  "started_at": "2026-08-02T10:00:00Z",
+  "ended_at": "2026-08-02T10:01:22Z"
+}
+```
+
+`provider_call_id` and `from_number` are required. A first callback creates one
+phone case. Later callbacks update its call state, duration, transcript, and
+recording reference without duplicating the case. Terminal states do not
+regress when callbacks arrive out of order. Docket stores the provider URL as a
+reference; it does not download the recording. Configure retention and access
+controls at the voice provider.
+
 Shared credentials are tenant-local encrypted bags for a key/licence reused by
 multiple connectors. A connector's own secret wins over the shared value.
 Secrets and OAuth token bundles are redacted from logs and audit changesets.
@@ -240,7 +274,7 @@ reason and cannot be silently auto-approved. Optional per-agent/per-connector
 rolling budgets cap action volume. Every proposal, approval, rejection, and
 observation is audited. Admin → Connector invocations is the operational log.
 
-The 65 providers are implementation- and stub-tested, not collectively
+The 66 providers are implementation- and stub-tested, not collectively
 production-certified. Before relying on a provider, make one authenticated
 read/write round trip in a non-production vendor account and record the result.
 

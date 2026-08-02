@@ -233,6 +233,10 @@ Rails.application.routes.draw do
 
   namespace :portal do
     root to: "cases#new"
+    resource :live_chat, only: %i[new create show] do
+      post :message
+      delete :end_chat
+    end
     resources :kb, only: %i[index show], controller: "knowledge_base", param: :slug do
       member { post :rate }
     end
