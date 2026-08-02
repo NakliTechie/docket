@@ -1,7 +1,7 @@
 <% page_title t(".title") %>
 <div class="page-header">
   <h1><%= t(".title") %></h1>
-  <% if @report %>
+  <% if @report && CustomFieldReportPolicy.new(Current.user, @resource_type).export? %>
     <%= link_to t(".export_csv"), custom_field_report_path(format: :csv,
           resource_type: @resource_type, field: @definition.key), class: "btn" %>
   <% end %>

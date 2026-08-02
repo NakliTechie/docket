@@ -435,7 +435,7 @@ module Docket
 
       result["/decisions"] = { get: op(
         "List decisioning proposals — the contestability history. Filter by status or decision_class. " \
-        "Human token only (invocation:review); the decisioning review surface is not exposed to service accounts.",
+        "Human token only (decision:run); the decisioning review surface is not exposed to service accounts.",
         params: [ query_param("page"), query_param("per_page"), query_param("status"), query_param("decision_class") ],
         schema: "Decision") }
       result["/decisions/run"] = { post: op(

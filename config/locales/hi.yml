@@ -504,6 +504,7 @@ hi:
     enum:
       status:
         draft: "मसौदा"
+        under_review: "समीक्षाधीन"
         published: "प्रकाशित"
         retired: "सेवानिवृत्त"
       visibility:
@@ -1597,10 +1598,14 @@ hi:
       role:
         super_admin: "सुपर प्रशासक"
         client_admin: "क्लाइंट प्रशासक"
+        customer_service_supervisor: "ग्राहक सेवा पर्यवेक्षक"
         finance: "वित्त"
         sales: "बिक्री"
         customer_service: "ग्राहक सेवा"
         technical: "तकनीकी"
+        decision_reviewer: "निर्णय समीक्षक"
+        knowledge_manager: "ज्ञान प्रबंधक"
+        auditor: "लेखा परीक्षक"
         readonly: "केवल-पठन"
 
   macros:

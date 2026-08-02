@@ -15,7 +15,7 @@ module Admin
                          knowledge_category: source.knowledge_category,
                          visibility: source.visibility, status: :draft)
       else
-        ReferenceDoc.new
+        ReferenceDoc.new(status: :draft)
       end
       authorize @reference_doc
     end
@@ -28,8 +28,10 @@ module Admin
     end
 
     def create
-      @reference_doc = ReferenceDoc.new(doc_params)
-      authorize @reference_doc
+      attributes = doc_params
+      attributes[:status] ||= "draft"
+      @reference_doc = ReferenceDoc.new(attributes)
+      authorize @reference_doc, create_policy_query
       extract_body_from_upload
       # errors.empty? first: save re-runs validations and clears the errors
       # extract_body_from_upload added, so a failed extraction would
@@ -46,8 +48,8 @@ module Admin
     end
 
     def update
-      authorize @reference_doc
       @reference_doc.assign_attributes(doc_params)
+      authorize @reference_doc, update_policy_query
       extract_body_from_upload
       if @reference_doc.errors.empty? && @reference_doc.save
         redirect_to admin_reference_docs_path, notice: t(".updated")
@@ -64,14 +66,14 @@ module Admin
 
     # One-click publish/unpublish from the index (lifecycle without a full edit).
     def toggle_published
-      authorize @reference_doc, :update?
+      authorize @reference_doc, :publish?
       @reference_doc.status_published? ? @reference_doc.status_draft! : @reference_doc.status_published!
       redirect_to admin_reference_docs_path,
                   notice: t(@reference_doc.status_published? ? ".published" : ".unpublished", title: @reference_doc.title)
     end
 
     def retire
-      authorize @reference_doc, :update?
+      authorize @reference_doc, :retire?
       @reference_doc.status_retired!
       redirect_to admin_reference_doc_path(@reference_doc), notice: t(".retired", title: @reference_doc.title)
     end
@@ -87,6 +89,22 @@ module Admin
         :title, :body, :file, :status, :visibility, :locale, :translation_key,
         :knowledge_category_id, :category_id
       )
+    end
+
+    def update_policy_query
+      return :publish? if @reference_doc.status_published?
+      return :review? if @reference_doc.status_under_review?
+      return :retire? if @reference_doc.status_retired?
+
+      :update?
+    end
+
+    def create_policy_query
+      return :publish? if @reference_doc.status_published?
+      return :review? if @reference_doc.status_under_review?
+      return :retire? if @reference_doc.status_retired?
+
+      :create?
     end
 
     def extract_body_from_upload

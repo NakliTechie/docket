@@ -48,8 +48,9 @@ Jira/Freshdesk mapping files have this shape:
 
 Jira status targets are exact Docket workflow-state names. Freshdesk status
 targets are Docket case-status keys. Role targets must be one of
-`super_admin`, `client_admin`, `finance`, `sales`, `customer_service`,
-`technical`, or `readonly`. Do not map an external administrator to
+`super_admin`, `client_admin`, `customer_service_supervisor`, `finance`,
+`sales`, `customer_service`, `technical`, `decision_reviewer`,
+`knowledge_manager`, `auditor`, or `readonly`. Do not map an external administrator to
 `super_admin` unless that person is genuinely a cross-tenant platform operator.
 
 Salesforce uses explicit object-specific maps:

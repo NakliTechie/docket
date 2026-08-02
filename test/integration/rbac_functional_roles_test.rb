@@ -77,6 +77,57 @@ class RbacFunctionalRolesTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "customer service supervisor manages desk configuration without platform authority" do
+    sign_in_as users(:customer_service_supervisor)
+
+    get dashboard_path
+    assert_response :success
+    get new_case_queue_path
+    assert_response :success
+    get new_routing_rule_path
+    assert_response :success
+    get new_sla_policy_path
+    assert_response :success
+    get new_macro_path
+    assert_response :success
+    get admin_settings_path
+    assert_response :forbidden
+  end
+
+  test "decision reviewer reaches approval and decision surfaces without operational writes" do
+    sign_in_as users(:decision_reviewer)
+
+    get admin_approval_requests_path
+    assert_response :success
+    get dashboard_path
+    assert_response :success
+    assert_select "form[action='#{run_decisions_path}']", count: 1
+    post cases_path, params: { case: { subject: "x", description: "y", priority: "normal" } }
+    assert_response :forbidden
+  end
+
+  test "knowledge manager owns article lifecycle without user administration" do
+    sign_in_as users(:knowledge_manager)
+
+    get admin_reference_docs_path
+    assert_response :success
+    get new_admin_reference_doc_path
+    assert_response :success
+    get admin_users_path
+    assert_response :forbidden
+  end
+
+  test "auditor reads oversight surfaces and exports without mutation authority" do
+    sign_in_as users(:auditor)
+
+    get admin_activity_path
+    assert_response :success
+    get dashboard_path(format: :csv)
+    assert_response :success
+    post cases_path, params: { case: { subject: "x", description: "y", priority: "normal" } }
+    assert_response :forbidden
+  end
+
   test "client admin sees review controls but not connector management" do
     sign_in_as users(:client_admin)
 

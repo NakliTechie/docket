@@ -146,6 +146,26 @@ class SetupFlowTest < ActionDispatch::IntegrationTest
     sign_in_as users(:technical)
     get root_path
     assert_redirected_to admin_connectors_path
+
+    reset!
+    sign_in_as users(:customer_service_supervisor)
+    get root_path
+    assert_redirected_to dashboard_path
+
+    reset!
+    sign_in_as users(:decision_reviewer)
+    get root_path
+    assert_redirected_to dashboard_path
+
+    reset!
+    sign_in_as users(:knowledge_manager)
+    get root_path
+    assert_redirected_to admin_reference_docs_path
+
+    reset!
+    sign_in_as users(:auditor)
+    get root_path
+    assert_redirected_to dashboard_path
   end
 
   private

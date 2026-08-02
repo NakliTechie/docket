@@ -31,16 +31,20 @@ permission it did not already have.
 ## Roles
 
 Admin → Roles & permissions renders the exact matrix from the application. The
-seven fixed roles are:
+11 fixed roles are:
 
 | Role | Intended use and principal authority |
 |---|---|
 | `super_admin` | Cross-tenant platform operator; every permission. Grant only to the hosting/operator team. |
-| `client_admin` | Tenant administrator; manages users and service/CRM/Work configuration and records, reports, approvals, audit, and connector invocation, but not platform settings, connector administration, or machine credentials. |
-| `finance` | Read access across cases, contacts, CRM, and Work; operational/sales reports and finance read/write. |
+| `client_admin` | Tenant administrator; manages users, service/CRM/Work configuration, knowledge lifecycles, records, reports, approvals, audit, and connector invocation, but not platform settings, connector administration, or machine credentials. |
+| `customer_service_supervisor` | Support team lead; manages queues, routing, SLAs, macros, cases, contacts, operational exports, and approved connector invocation. |
+| `finance` | Read access across cases, contacts, CRM, and Work; operational/sales exports and finance read/write. |
 | `sales` | Contact, lead, and deal work; pipeline read, sequence enrollment, sales reporting, plus read access to cases and Work. |
 | `customer_service` | Case and contact operations, Work read/write, operational reports, and approved connector invocation. |
-| `technical` | Case/contact read, Work read/write, operational reports, knowledge, webhook management, and connector read/operate. |
+| `technical` | Case/contact read, Work read/write, operational reports, knowledge read, webhook management, and connector read/operate. |
+| `decision_reviewer` | Maker-checker reviewer; reviews connector approvals and appeals, runs decisions, and reads supporting records and audit history. |
+| `knowledge_manager` | Owns knowledge drafting, review, publication, retirement, and categorisation without user or platform administration. |
+| `auditor` | Read-only oversight across service, CRM, Work, knowledge, audit, and operational/sales exports. |
 | `readonly` | Read-only cases, contacts, leads, deals, pipelines, Work, and sales reports. |
 
 Role grants are rank-bounded: an administrator cannot assign a role above their

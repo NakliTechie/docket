@@ -7,7 +7,7 @@ class CustomFieldDefinitionPolicy < ApplicationPolicy
   class Scope < Scope
     def resolve
       resources = []
-      resources << "cases" if user&.can?("case_config:manage")
+      resources << "cases" if user&.can?("queue:manage")
       resources << "work_items" if user&.can?("project:manage")
       scope.where(resource_type: resources)
     end
@@ -23,6 +23,6 @@ class CustomFieldDefinitionPolicy < ApplicationPolicy
     end
   end
 
-  def case_manager? = permit?("case_config:manage")
+  def case_manager? = permit?("queue:manage")
   def work_manager? = permit?("project:manage")
 end

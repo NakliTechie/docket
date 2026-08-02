@@ -10,6 +10,7 @@ class CustomFieldReportsController < ApplicationController
     respond_to do |format|
       format.html
       format.csv do
+        authorize @resource_type, :export?, policy_class: CustomFieldReportPolicy
         return head :not_found unless @report
 
         send_data @report.to_csv,

@@ -1,9 +1,9 @@
 class CaseQueuePolicy < ApplicationPolicy
   def index?   = permit?("case:read")
   def show?    = permit?("case:read")
-  def create?  = permit?("case_config:manage")
-  def update?  = permit?("case_config:manage")
-  def destroy? = permit?("case_config:manage")
+  def create?  = permit?("queue:manage")
+  def update?  = permit?("queue:manage")
+  def destroy? = permit?("queue:manage")
 
   class Scope < Scope
     def resolve

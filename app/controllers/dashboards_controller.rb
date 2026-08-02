@@ -18,7 +18,10 @@ class DashboardsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.csv { send_data @overview.to_csv, filename: "docket-dashboard-#{@from}-#{@to}.csv" }
+      format.csv do
+        authorize :dashboard, :export?, policy_class: DashboardPolicy
+        send_data @overview.to_csv, filename: "docket-dashboard-#{@from}-#{@to}.csv"
+      end
     end
   rescue ArgumentError => e
     redirect_to dashboard_path, alert: e.message

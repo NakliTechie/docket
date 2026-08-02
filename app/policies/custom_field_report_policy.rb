@@ -6,4 +6,6 @@ class CustomFieldReportPolicy < ApplicationPolicy
     else false
     end
   end
+
+  def export? = index? && permit?("report:export")
 end

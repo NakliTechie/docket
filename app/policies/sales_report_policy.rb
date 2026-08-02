@@ -3,4 +3,5 @@
 # summarizes.
 class SalesReportPolicy < ApplicationPolicy
   def index? = permit?("report:sales")
+  def export? = index? && permit?("report:export")
 end

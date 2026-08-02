@@ -15,12 +15,23 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "role enum stores the functional roles" do
-    assert_equal %w[super_admin client_admin finance sales customer_service technical readonly],
+    assert_equal %w[super_admin client_admin finance sales customer_service technical readonly
+                    customer_service_supervisor decision_reviewer knowledge_manager auditor],
                  User.roles.keys
   end
 
   test "default role is the least-privilege customer_service" do
     assert_equal "customer_service", User.new.role
+  end
+
+  test "operational ownership scope excludes oversight and specialist personas" do
+    assert_includes User.staff, users(:customer_service_supervisor)
+    assert_includes User.staff, users(:agent_a)
+    assert_not_includes User.staff, users(:finance)
+    assert_not_includes User.staff, users(:decision_reviewer)
+    assert_not_includes User.staff, users(:knowledge_manager)
+    assert_not_includes User.staff, users(:auditor)
+    assert_not_includes User.staff, users(:readonly)
   end
 
   test "sla target priorities mirror case priorities" do

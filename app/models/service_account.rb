@@ -37,8 +37,9 @@ class ServiceAccount < ApplicationRecord
     # config:write sits above cases:write. Without this, endpoints whose policy
     # demands project:manage had NO scope that could express it.
     "work:manage" => %w[project:manage],
-    "config:read" => %w[settings:manage case_config:manage],
-    "config:write" => %w[settings:manage case_config:manage],
+    "config:read" => %w[settings:manage knowledge:read],
+    "config:write" => %w[settings:manage queue:manage routing:manage sla:manage macro:manage
+                          crm_config:manage knowledge:draft knowledge:review knowledge:publish knowledge:admin],
     "audit:read" => %w[audit:read],
     "webhooks:manage" => %w[webhook:manage],
     "connectors:read" => %w[connector:read],

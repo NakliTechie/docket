@@ -2,13 +2,13 @@ require "test_helper"
 
 module Api
   # REST parity for the decisioning review surface. Human-token-only:
-  # invocation:review holders act; operational roles and service accounts cannot.
+  # decision:run holders act; operational roles and service accounts cannot.
   class DecisionsApiTest < ActionDispatch::IntegrationTest
     setup do
       @admin_token = api_token_for(users(:admin))
     end
 
-    test "an invocation:review token runs decisioning and lists the proposals" do
+    test "a decision:run token runs decisioning and lists the proposals" do
       Lead.create!(name: "Hot", email: "h@x.com", phone: "+91990000001",
                    company_name: "Acme", source: :referral, status: :new)
 
@@ -62,7 +62,7 @@ module Api
       assert decision.reload.status_rejected?
     end
 
-    test "an operational role without invocation:review is forbidden" do
+    test "an operational role without decision:run is forbidden" do
       get "/api/v1/decisions", headers: auth_header(api_token_for(users(:sales)))
       assert_response :forbidden
       post "/api/v1/decisions/run", headers: auth_header(api_token_for(users(:sales))), as: :json

@@ -32,10 +32,13 @@ class HomeController < ApplicationController
     case Current.user.role
     when "sales"
       leads_path if feature?("crm") && policy(Lead).index?
-    when "finance", "client_admin", "super_admin"
+    when "finance", "client_admin", "super_admin", "customer_service_supervisor",
+         "decision_reviewer", "auditor"
       dashboard_path if DashboardPolicy.new(Current.user, :dashboard).index?
     when "technical"
       admin_connectors_path if feature?("connectors") && policy(Connector).index?
+    when "knowledge_manager"
+      admin_reference_docs_path if feature?("service_desk.kb") && policy(ReferenceDoc).index?
     end
   end
 

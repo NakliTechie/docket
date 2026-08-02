@@ -504,6 +504,7 @@ en:
     enum:
       status:
         draft: "Draft"
+        under_review: "Under review"
         published: "Published"
         retired: "Retired"
       visibility:
@@ -1597,10 +1598,14 @@ en:
       role:
         super_admin: "Super admin"
         client_admin: "Client admin"
+        customer_service_supervisor: "Customer service supervisor"
         finance: "Finance"
         sales: "Sales"
         customer_service: "Customer service"
         technical: "Technical"
+        decision_reviewer: "Decision reviewer"
+        knowledge_manager: "Knowledge manager"
+        auditor: "Auditor"
         readonly: "Read-only"
 
   macros:

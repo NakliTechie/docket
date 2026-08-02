@@ -117,8 +117,9 @@ it to users:
 3. **Outbound SMTP** — host, port, credentials, from-address. Without this no
    case reply, password reset or sequence email leaves the building.
 4. **Users** — invite real staff and assign functional roles
-   (`super_admin`, `client_admin`, `finance`, `sales`, `customer_service`,
-   `technical`, `readonly`).
+   (`super_admin`, `client_admin`, `customer_service_supervisor`, `finance`,
+   `sales`, `customer_service`, `technical`, `decision_reviewer`,
+   `knowledge_manager`, `auditor`, `readonly`).
 5. **Work module** — one project per team; each seeds its own board columns.
    Set WIP limits/default assignment rules and reusable onboarding templates.
 6. **CRM module** — pipeline/stages, public lead-capture forms and consent text,
@@ -128,7 +129,7 @@ it to users:
 7. **Notifications/CSAT** — choose the SLA risk window and whether notifications
    also send email; enable CSAT only after SMTP is proven.
 
-The exact seven-role inventory, 17 API scopes, daily workflow, and all operator
+The exact 11-role inventory, 17 API scopes, daily workflow, and all operator
 surfaces are in [OPERATOR-GUIDE.md](OPERATOR-GUIDE.md).
 
 Use [GO-LIVE-VALIDATION.md](GO-LIVE-VALIDATION.md) for the production evidence

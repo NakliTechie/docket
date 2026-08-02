@@ -1,7 +1,7 @@
 module Admin
   # The appeal/contest queue for decisions of record: file a customer's appeal,
   # then overturn (reverse the decision) or deny it (the decision stands). All
-  # invocation:review tier — the human-of-record over the deployment's decisions.
+  # appeal:adjudicate tier — the human-of-record over the deployment's decisions.
   class DecisionAppealsController < ApplicationController
     require_feature "decisioning"
     before_action :set_appeal, only: %i[overturn deny]

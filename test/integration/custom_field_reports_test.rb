@@ -9,17 +9,26 @@ class CustomFieldReportsTest < ActionDispatch::IntegrationTest
     cases(:pension_case).save!
   end
 
-  test "staff can inspect and export a reportable field" do
+  test "staff can inspect a reportable field" do
     sign_in_as users(:agent_a)
     get custom_field_report_path, params: { resource_type: "cases", field: "region" }
     assert_response :success
     assert_match "North", response.body
     assert_match "Not set", response.body
+  end
 
+  test "export permission holders can download a reportable field" do
+    sign_in_as users(:admin)
     get custom_field_report_path(format: :csv), params: { resource_type: "cases", field: "region" }
     assert_response :success
     assert_equal "text/csv", response.media_type
     assert_match "resource,field_key,field_label,value,count,total", response.body
+  end
+
+  test "staff without export permission cannot download a reportable field" do
+    sign_in_as users(:agent_a)
+    get custom_field_report_path(format: :csv), params: { resource_type: "cases", field: "region" }
+    assert_response :forbidden
   end
 
   test "non-reportable fields cannot be queried" do

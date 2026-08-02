@@ -76,7 +76,7 @@ class KnowledgeBaseTest < ActionDispatch::IntegrationTest
     assert_equal categories(:pension_delay), doc.category
   end
 
-  test "lifecycle controls are gated on reference_doc:manage" do
+  test "lifecycle controls are gated on knowledge publication authority" do
     sign_in_as users(:customer_service)
     doc = ReferenceDoc.create!(title: "Guarded", body: "x")
     post toggle_published_admin_reference_doc_path(doc)

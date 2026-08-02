@@ -1,13 +1,13 @@
 # Acting on a maker-checker request is the human-of-record activity — same tier
-# as the decision-appeal queue and effector approvals (invocation:review).
+# as the effector approval queue.
 class ApprovalRequestPolicy < ApplicationPolicy
-  def index?   = permit?("invocation:review")
-  def approve? = permit?("invocation:review")
-  def reject?  = permit?("invocation:review")
+  def index?   = permit?("approval:review")
+  def approve? = permit?("approval:review")
+  def reject?  = permit?("approval:review")
 
   class Scope < Scope
     def resolve
-      permit?("invocation:review") ? scope.all : scope.none
+      permit?("approval:review") ? scope.all : scope.none
     end
   end
 end
