@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docket Operations"
+  short_description: "Operate Docket through governed MCP workflows"
+  default_prompt: "Use $docket to triage a case and recommend the next governed action."

@@ -1,0 +1,49 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <div>
+    <h1><%= t(".title") %></h1>
+    <p class="muted"><%= t(".intro") %></p>
+  </div>
+  <%= link_to t(".service_accounts"), admin_service_accounts_path, class: "btn" %>
+</div>
+
+<% if @oauth_clients.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t(".columns.client") %></th>
+          <th><%= t(".columns.redirects") %></th>
+          <th><%= t(".columns.authorization") %></th>
+          <th><%= t(".columns.status") %></th>
+          <th class="actions"><%= t("tables.actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @oauth_clients.each do |client| %>
+          <tr>
+            <td><strong><%= client.client_name %></strong><div class="table-meta mono"><%= client.client_id %></div></td>
+            <td><% client.redirect_uris.each do |uri| %><div class="mono text-sm"><%= uri %></div><% end %></td>
+            <td><%= client.token_endpoint_auth_method %><div class="table-meta"><%= client.grant_types.join(", ") %></div></td>
+            <td>
+              <% if client.active? %>
+                <span class="badge badge-sla sla-ok"><%= t(".active_badge") %></span>
+              <% else %>
+                <span class="badge badge-sla sla-breached"><%= t(".inactive_badge") %></span>
+              <% end %>
+            </td>
+            <td class="actions">
+              <% if client.active? %>
+                <%= button_to t(".deactivate"), admin_oauth_client_path(client), method: :delete,
+                      class: "btn btn-sm btn-danger", form: { class: "inline-form",
+                        data: { turbo_confirm: t(".confirm_deactivate") } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+<% end %>

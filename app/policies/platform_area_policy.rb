@@ -8,6 +8,7 @@ class PlatformAreaPolicy < ApplicationPolicy
   PERMISSION = {
     settings: "settings:manage",
     service_accounts: "service_account:manage",
+    oauth_clients: "service_account:manage",
     api_tokens: "api_token:manage",
     webhooks: "webhook:manage"
   }.freeze

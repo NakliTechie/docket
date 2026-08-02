@@ -2,6 +2,7 @@
 <div class="page-header">
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
+    <%= link_to t(".connected_apps"), admin_oauth_clients_path, class: "btn" %>
     <%= link_to new_admin_service_account_path, class: "btn btn-primary" do %>
       <%= icon "plus" %><%= t(".new_account") %>
     <% end %>

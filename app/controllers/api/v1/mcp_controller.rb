@@ -24,6 +24,13 @@ module Api
 
       private
 
+      def authenticate!
+        super
+        return unless performed? && response.status == 401
+
+        response.set_header("WWW-Authenticate", Oauth::Metadata.challenge(scope: Oauth::Metadata.authorization_scopes.join(" ")))
+      end
+
       def parse_body
         JSON.parse(request.raw_post)
       rescue JSON::ParserError
@@ -38,9 +45,14 @@ module Api
         result =
           case message["method"]
           when "initialize"      then initialize_result
-          when "tools/list"      then { "tools" => Mcp::Catalog.tools }
-          when "tools/call"      then tool_call_result(message)
-          when "ping"            then {}
+          when "tools/list"     then { "tools" => Mcp::Catalog.tools }
+          when "tools/call"     then tool_call_result(message)
+          when "prompts/list"   then { "prompts" => Mcp::Workflows.list }
+          when "prompts/get"    then Mcp::Workflows.get(message.dig("params", "name"),
+                                                        message.dig("params", "arguments") || {})
+          when "resources/list" then { "resources" => Mcp::Resources.list }
+          when "resources/read" then Mcp::Resources.read(message.dig("params", "uri"))
+          when "ping"           then {}
           else
             return id.nil? ? nil : error(id, -32601, "method not found: #{message["method"]}")
           end
@@ -53,7 +65,11 @@ module Api
       def initialize_result
         {
           "protocolVersion" => PROTOCOL_VERSION,
-          "capabilities" => { "tools" => { "listChanged" => false } },
+          "capabilities" => {
+            "tools" => { "listChanged" => false },
+            "prompts" => { "listChanged" => false },
+            "resources" => { "subscribe" => false, "listChanged" => false }
+          },
           "serverInfo" => { "name" => "docket", "version" => Docket::VERSION }
         }
       end

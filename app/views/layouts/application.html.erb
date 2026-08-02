@@ -145,7 +145,7 @@
             <% if policy(User).index? || settings_policy.index? || policy(Connector).index? ||
                   webhook_policy.index? || service_accounts_policy.index? %>
               <%= nav_group t("layout.nav.administration"),
-                    active: %w[setup users roles tenants activity audit security_events service_accounts api_tokens shared_credentials settings connectors webhook_endpoints].include?(controller_name) do %>
+                    active: %w[setup users roles tenants activity audit security_events service_accounts oauth_clients api_tokens shared_credentials settings connectors webhook_endpoints].include?(controller_name) do %>
                 <% if settings_policy.index? %>
                   <%= nav_section t("layout.nav.workspace_section") %>
                   <%= nav_link t("layout.nav.setup"), setup_path, active: controller_name == "setup" %>
@@ -166,7 +166,7 @@
                 <% end %>
                 <% if service_accounts_policy.index? %>
                   <%= nav_link t("layout.nav.api_access"), admin_service_accounts_path,
-                        active: %w[service_accounts api_tokens].include?(controller_name) %>
+                        active: %w[service_accounts oauth_clients api_tokens].include?(controller_name) %>
                 <% end %>
                 <% if policy(Connector).index? %>
                   <%= nav_link t("layout.nav.connectors"), admin_connectors_path, active: controller_name == "connectors" %>

@@ -34,6 +34,9 @@ class User < ApplicationRecord
   def self.role_rank(role) = ROLE_RANK.fetch(role.to_s, -1)
 
   has_many :sessions, dependent: :destroy
+  has_many :oauth_access_tokens, dependent: :delete_all
+  has_many :oauth_authorization_codes, dependent: :delete_all
+  has_many :oauth_refresh_tokens, dependent: :delete_all
   has_many :queue_memberships, dependent: :destroy
   has_many :queues, through: :queue_memberships, source: :queue
   has_many :assigned_cases, class_name: "Case", foreign_key: :assignee_id, dependent: nil, inverse_of: :assignee
@@ -103,6 +106,9 @@ class User < ApplicationRecord
     transaction do
       update!(active: false)
       sessions.delete_all
+      oauth_access_tokens.delete_all
+      oauth_authorization_codes.delete_all
+      oauth_refresh_tokens.delete_all
     end
   end
 

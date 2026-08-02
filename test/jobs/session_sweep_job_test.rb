@@ -28,4 +28,24 @@ class SessionSweepJobTest < ActiveSupport::TestCase
     assert OauthAccessToken.exists?(live.id)
     assert_not OauthAccessToken.exists?(expired.id)
   end
+
+  test "purges expired OAuth codes and refresh tokens" do
+    client = OauthClient.create!(tenant: tenants(:primary), client_name: "Sweep client",
+                                 redirect_uris: [ "https://client.example/callback" ],
+                                 grant_types: %w[authorization_code refresh_token], response_types: [ "code" ],
+                                 token_endpoint_auth_method: "none")
+    code = OauthAuthorizationCode.issue!(oauth_client: client, user: users(:admin),
+                                          redirect_uri: client.redirect_uris.first,
+                                          code_challenge: "a" * 43, scopes: %w[cases:read],
+                                          resource: Oauth::Metadata.resource)
+    refresh = OauthRefreshToken.issue!(oauth_client: client, user: users(:admin), scopes: %w[cases:read],
+                                       resource: Oauth::Metadata.resource)
+    code.update_columns(expires_at: 1.minute.ago)
+    refresh.update_columns(expires_at: 1.minute.ago)
+
+    SessionSweepJob.perform_now
+
+    assert_not OauthAuthorizationCode.exists?(code.id)
+    assert_not OauthRefreshToken.exists?(refresh.id)
+  end
 end

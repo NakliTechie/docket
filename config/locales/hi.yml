@@ -1,4 +1,32 @@
 hi:
+  oauth:
+    authorizations:
+      eyebrow: "कनेक्टेड ऐप"
+      title: "Docket पहुँच अधिकृत करें"
+      intro: "%{client} Docket के MCP सर्वर के माध्यम से काम करने की अनुमति माँगता है।"
+      permissions: "अनुमतियाँ चुनें"
+      role_limit: "पहुँच %{user} की Docket भूमिका और टेनेंट एंटाइटलमेंट तक सीमित रहती है।"
+      allow: "पहुँच दें"
+      deny: "अस्वीकार करें"
+    scopes:
+      cases_read: "मामले और उनका इतिहास पढ़ें।"
+      cases_write: "मामले बनाएँ और अपडेट करें।"
+      contacts_read: "संपर्क पढ़ें।"
+      contacts_write: "संपर्क बनाएँ और अपडेट करें।"
+      organisations_read: "संगठन पढ़ें।"
+      organisations_write: "संगठन बनाएँ और अपडेट करें।"
+      crm_read: "लीड, डील, पाइपलाइन और गतिविधियाँ पढ़ें।"
+      crm_write: "CRM रिकॉर्ड बनाएँ और अपडेट करें।"
+      work_read: "प्रोजेक्ट और कार्य आइटम पढ़ें।"
+      work_write: "कार्य आइटम बनाएँ और अपडेट करें।"
+      work_manage: "प्रोजेक्ट कॉन्फ़िगरेशन प्रबंधित करें।"
+      config_read: "परिचालन कॉन्फ़िगरेशन और ज्ञान पढ़ें।"
+      config_write: "परिचालन कॉन्फ़िगरेशन और ज्ञान प्रबंधित करें।"
+      audit_read: "ऑडिट और सुरक्षा इतिहास पढ़ें।"
+      webhooks_manage: "वेबहुक एंडपॉइंट प्रबंधित करें।"
+      connectors_read: "कनेक्टर कॉन्फ़िगरेशन पढ़ें।"
+      connectors_invoke: "स्पष्ट रूप से अनुमत कनेक्टर क्रियाएँ चलाएँ।"
+      offline_access: "रोटेटिंग रिफ़्रेश टोकन से पहुँच बनाए रखें।"
   layout:
     product_name: "डॉकेट"
     skip_to_content: "मुख्य सामग्री पर जाएँ"
@@ -2442,6 +2470,7 @@ hi:
         action_budget_window: "प्रति विंडो (मिनट)"
       index:
         title: "सेवा खाते"
+        connected_apps: "कनेक्टेड ऐप"
         new_account: "नया सेवा खाता"
         intro: "आपकी अपनी प्रणालियों (नेटबैंकिंग, सीआरएम, आईवीआर) हेतु मशीन-से-मशीन क्रेडेंशियल। ये /api/v1/oauth/token पर क्लाइंट क्रेडेंशियल देकर स्कोप्ड बियरर टोकन पाते हैं।"
         secret_title: "क्लाइंट सीक्रेट — अभी कॉपी करें"
@@ -2471,6 +2500,25 @@ hi:
         deleted: "सेवा खाता हटाया गया।"
       rotate_secret:
         rotated: "सीक्रेट बदला गया। नया मान अभी कॉपी करें।"
+    oauth_clients:
+      index:
+        title: "कनेक्टेड OAuth ऐप"
+        intro: "स्टाफ द्वारा सौंपी गई पहुँच के लिए पंजीकृत MCP क्लाइंट। निष्क्रिय करने पर इनके कोड, एक्सेस टोकन और रिफ़्रेश टोकन निरस्त हो जाते हैं।"
+        service_accounts: "सेवा खाते"
+        active_badge: "सक्रिय"
+        inactive_badge: "निष्क्रिय"
+        deactivate: "निष्क्रिय करें"
+        confirm_deactivate: "यह ऐप निष्क्रिय करें? इसके सभी सर्वर-साइड टोकन तुरंत निरस्त हो जाएँगे।"
+        columns:
+          client: "क्लाइंट"
+          redirects: "रीडायरेक्ट URI"
+          authorization: "अधिकरण"
+          status: "स्थिति"
+        empty:
+          title: "कोई कनेक्टेड ऐप नहीं"
+          hint: "डायनामिक OAuth पंजीकरण के बाद ऐप यहाँ दिखाई देते हैं।"
+      destroy:
+        deactivated: "कनेक्टेड ऐप निष्क्रिय किया गया और उसके टोकन निरस्त किए गए।"
     webhook_endpoints:
       fields:
         name: "नाम"

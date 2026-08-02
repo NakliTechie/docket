@@ -8,6 +8,8 @@ class JsonColumnTypesTest < ActiveSupport::TestCase
     connectors: %i[auto_approve_actions config enabled_actions field_mapping],
     decisions: %i[action_params],
     messages: %i[metadata], oauth_access_tokens: %i[scopes],
+    oauth_clients: %i[redirect_uris grant_types response_types],
+    oauth_authorization_codes: %i[scopes], oauth_refresh_tokens: %i[scopes],
     security_events: %i[metadata], sequence_deliveries: %i[payload],
     service_accounts: %i[scopes], settings: %i[value],
     sprints: %i[rolled_out_item_ids], tenants: %i[entitlements],
