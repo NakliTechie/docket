@@ -12,7 +12,10 @@ class Connectors::InvokeTest < ActiveSupport::TestCase
   end
 
   def agent(scopes: %w[connectors:invoke])
-    ServiceAccount.create!(name: "Triage agent", scopes: scopes)
+    account = ServiceAccount.create!(name: "Triage agent", scopes: scopes)
+    conn = Connector.order(:id).last
+    account.grant_connector_actions!(conn) if conn && account.scope?("connectors:invoke") && conn.enabled_actions.any?
+    account
   end
 
   def staff(role: :client_admin)

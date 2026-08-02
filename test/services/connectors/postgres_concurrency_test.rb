@@ -19,6 +19,7 @@ class Connectors::PostgresConcurrencyTest < ActiveSupport::TestCase
         field_mapping: { "external_id" => "id" }, enabled_actions: %w[post_json]
       )
       @agent = ServiceAccount.create!(name: "Concurrency agent", scopes: %w[connectors:invoke])
+      @agent.grant_connector_actions!(@connector)
       @reviewers = 2.times.map do
         User.create!(name: "Reviewer", email_address: "review-#{SecureRandom.hex(6)}@x.test",
                      password: "password123", role: :client_admin)

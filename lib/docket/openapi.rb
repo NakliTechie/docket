@@ -189,6 +189,7 @@ module Docket
                                          last_error: :string, delivered_at: :datetime, created_at: :datetime),
           ServiceAccount: object_schema(id: :integer, name: :string, description: :string, client_id: :string,
                                         scopes: { type: "array", items: enum(ServiceAccount::SCOPES) },
+                                        connector_grants: { type: "array", items: { type: "object" } },
                                         active: :boolean, created_at: :datetime, updated_at: :datetime),
           ApiToken: object_schema(id: :integer, user_id: :integer, name: :string,
                                   last_used_at: :datetime, revoked_at: :datetime, created_at: :datetime),

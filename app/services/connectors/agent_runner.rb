@@ -69,8 +69,11 @@ module Connectors
     def authorized_tools
       return [] unless agent.respond_to?(:scope?) && agent.scope?("connectors:invoke")
 
-      Connector.active.flat_map do |connector|
-        connector.enabled_actions.filter_map do |action_key|
+      agent.connector_grants.ordered.flat_map do |grant|
+        connector = grant.connector
+        next [] unless connector.operational?
+
+        (connector.enabled_actions & grant.actions).filter_map do |action_key|
           action = connector.provider_action(action_key)
           next unless action
           { name: tool_name(connector.id, action_key), connector: connector, action_key: action_key,

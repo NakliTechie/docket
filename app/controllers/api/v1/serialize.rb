@@ -403,8 +403,12 @@ module Api
       end
 
       def service_account(s)
+        grants = s.connector_grants.includes(:connector).map do |grant|
+          { connector_id: grant.connector_id, connector_name: grant.connector.name, actions: grant.actions }
+        end
         { id: s.id, name: s.name, description: s.description, client_id: s.client_id,
-          scopes: s.scopes, active: s.active, created_at: s.created_at, updated_at: s.updated_at }
+          scopes: s.scopes, connector_grants: grants, active: s.active,
+          created_at: s.created_at, updated_at: s.updated_at }
       end
 
       def api_token(t)

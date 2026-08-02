@@ -19,7 +19,9 @@ class Connectors::DecisionClassTest < ActiveSupport::TestCase
   end
 
   def agent
-    ServiceAccount.create!(name: "A", scopes: %w[connectors:invoke])
+    account = ServiceAccount.create!(name: "A", scopes: %w[connectors:invoke])
+    account.grant_connector_actions!(Connector.order(:id).last)
+    account
   end
 
   def staff

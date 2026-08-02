@@ -6,7 +6,10 @@ class Connectors::AgentRunnerJobTest < ActiveJob::TestCase
   end
 
   def agent
-    ServiceAccount.create!(name: "Case agent", scopes: %w[connectors:invoke], active: true)
+    account = ServiceAccount.create!(name: "Case agent", scopes: %w[connectors:invoke], active: true)
+    conn = Connector.order(:id).last
+    account.grant_connector_actions!(conn) if conn
+    account
   end
 
   def connector

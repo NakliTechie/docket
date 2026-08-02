@@ -12,7 +12,9 @@ class Connectors::DelegationTest < ActiveSupport::TestCase
   end
 
   def agent
-    ServiceAccount.create!(name: "Agent", scopes: %w[connectors:invoke])
+    account = ServiceAccount.create!(name: "Agent", scopes: %w[connectors:invoke])
+    account.grant_connector_actions!(Connector.order(:id).last)
+    account
   end
 
   # --- capturing network stub ---

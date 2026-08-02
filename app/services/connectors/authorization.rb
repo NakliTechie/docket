@@ -20,6 +20,9 @@ module Connectors
       unless may_invoke?(principal)
         raise Forbidden, "#{principal.class.name} is not permitted to invoke connector actions"
       end
+      unless action_granted?(principal, connector, action)
+        raise Forbidden, "#{principal.class.name} is not granted action '#{action.key}' on connector #{connector.id}"
+      end
       true
     end
 
@@ -34,6 +37,14 @@ module Connectors
       case principal
       when ServiceAccount then principal.scope?("connectors:invoke")
       when User           then principal.can?("connector:invoke")
+      else false
+      end
+    end
+
+    def action_granted?(principal, connector, action)
+      case principal
+      when ServiceAccount then principal.connector_action_granted?(connector, action.key)
+      when User           then true
       else false
       end
     end

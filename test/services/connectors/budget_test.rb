@@ -12,8 +12,10 @@ class Connectors::BudgetTest < ActiveSupport::TestCase
   end
 
   def agent(budget: nil, window: nil)
-    ServiceAccount.create!(name: "Agent", scopes: %w[connectors:invoke],
+    account = ServiceAccount.create!(name: "Agent", scopes: %w[connectors:invoke],
       action_budget: budget, action_budget_window_minutes: window)
+    account.grant_connector_actions!(Connector.order(:id).last)
+    account
   end
 
   # Parks as :proposed (write, not auto-approved) — no network needed.
