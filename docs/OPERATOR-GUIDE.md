@@ -87,6 +87,10 @@ account also needs an explicit connector/action grant selected in Admin →
 Service accounts. Removing the scope or disabling an action makes that action
 undiscoverable and non-invokable for the account.
 
+Mutating Work custom-field configuration requires `work:manage` alongside
+`config:write`. This keeps workspace administration separate from service-desk
+and CRM configuration authority.
+
 ## Governed custom fields
 
 Admin → Custom fields manages typed fields for cases, contacts, leads, deals,

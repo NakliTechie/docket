@@ -86,5 +86,20 @@ module Api
       } }, headers: write_headers, as: :json
       assert_response :created
     end
+
+    test "Work definitions require workspace authority alongside config authority" do
+      config_headers = auth_header(service_token_for(%w[config:write]))
+      payload = { custom_field: {
+        resource_type: "work_items", key: "delivery_region", label: "Delivery region",
+        field_type: "short_text"
+      } }
+
+      post "/api/v1/custom_fields", params: payload, headers: config_headers, as: :json
+      assert_response :forbidden
+
+      managed_headers = auth_header(service_token_for(%w[config:write work:manage]))
+      post "/api/v1/custom_fields", params: payload, headers: managed_headers, as: :json
+      assert_response :created
+    end
   end
 end
