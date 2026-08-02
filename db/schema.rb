@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_161000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_170000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -390,6 +390,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_161000) do
     t.datetime "erased_at"
     t.string "erasure_token"
     t.string "external_id"
+    t.json "labels", default: [], null: false
     t.string "name", null: false
     t.text "notes"
     t.integer "organisation_id"
@@ -557,6 +558,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_161000) do
     t.index ["appellant_id"], name: "index_decision_appeals_on_appellant_id"
     t.index ["decision_id"], name: "index_decision_appeals_on_decision_id"
     t.index ["reviewed_by_id"], name: "index_decision_appeals_on_reviewed_by_id"
+    t.index ["tenant_id", "decision_id"], name: "idx_decision_appeals_one_pending", unique: true, where: "status = 0"
     t.index ["tenant_id"], name: "index_decision_appeals_on_tenant_id"
   end
 

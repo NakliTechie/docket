@@ -1,0 +1,47 @@
+<% page_title t(".title") %>
+<div class="page-header">
+  <h1><%= t(".title") %></h1>
+</div>
+
+<p class="muted"><%= t(".intro") %></p>
+
+<% if @decisions.any? %>
+  <div class="stack">
+    <% @decisions.each do |decision| %>
+      <% latest_appeal = decision.appeals.recent_first.first %>
+      <article class="panel">
+        <h2 class="panel-title"><%= decision.subject_label.presence || decision.subject_type %></h2>
+        <dl class="meta-list">
+          <dt><%= t(".rule") %></dt>
+          <dd><%= t("decisioning.rules.#{decision.rule}", default: decision.rule.humanize) %></dd>
+          <dt><%= t(".decision") %></dt><dd><%= decision.recommendation.presence || decision.signal.humanize %></dd>
+          <dt><%= t(".reason") %></dt><dd><%= decision.decision_reason.presence || t(".reason_unavailable") %></dd>
+          <dt><%= t(".decided_on") %></dt><dd><%= l(decision.decided_at || decision.updated_at, format: :long) %></dd>
+        </dl>
+
+        <% if latest_appeal %>
+          <div class="panel panel-muted">
+            <strong><%= t(".appeal_status.#{latest_appeal.status}") %></strong>
+            <p><%= latest_appeal.grounds %></p>
+            <% if latest_appeal.resolution.present? %>
+              <p><%= t(".resolution", resolution: latest_appeal.resolution) %></p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if decision.appealable? && decision.open_appeal.nil? %>
+          <%= form_with url: appeal_portal_decision_path(decision), class: "form" do |form| %>
+            <div class="form-row">
+              <%= form.label :grounds, t(".grounds") %>
+              <%= form.text_area :grounds, required: true, maxlength: 5000,
+                    placeholder: t(".grounds_placeholder") %>
+            </div>
+            <%= form.submit t(".file"), class: "btn" %>
+          <% end %>
+        <% end %>
+      </article>
+    <% end %>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t(".empty.title"), hint: t(".empty.hint") %>
+<% end %>

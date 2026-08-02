@@ -69,6 +69,17 @@ module Decisioning
         if subject.respond_to?(:queue_id=) && decision.action_params&.key?("previous_queue_id")
           subject.update!(queue_id: decision.action_params["previous_queue_id"])
         end
+      when "apply_routing_rule"
+        previous = decision.action_params || {}
+        if subject.is_a?(Case) && previous.key?("previous_routed_by_rule_id")
+          subject.update!(
+            queue_id: previous["previous_queue_id"],
+            category_id: previous["previous_category_id"],
+            priority: previous["previous_priority"],
+            assignee_id: previous["previous_assignee_id"],
+            routed_by_rule_id: previous["previous_routed_by_rule_id"]
+          )
+        end
       when "open_work_item"
         # Overturning removes the work the agent opened. Soft-delete, so the
         # audit trail of what it did survives the reversal.
@@ -109,6 +120,8 @@ module Decisioning
           decision.update_column(:action_params,
                                  (decision.action_params || {}).merge("work_item_id" => result.work_item.id))
         end
+      when "apply_routing_rule"
+        apply_routing_rule!(decision, subject)
       else # "label" — attach the reversible segment tag (the default)
         subject&.try(:add_label, decision.signal)
       end
@@ -141,8 +154,14 @@ module Decisioning
     # appellant's case; appellant is the contesting customer (optional — staff
     # may record it on their behalf).
     def file_appeal!(decision, grounds:, appellant: nil)
-      raise Decisioning::Error, "only an applied decision of record can be appealed" unless decision.appealable?
-      decision.appeals.create!(grounds: grounds, appellant: appellant)
+      decision.with_lock do
+        raise Decisioning::Error, "only an applied decision of record can be appealed" unless decision.appealable?
+        raise Decisioning::Error, "an appeal is already pending" if decision.open_appeal
+
+        decision.appeals.create!(grounds: grounds, appellant: appellant)
+      end
+    rescue ActiveRecord::RecordNotUnique
+      raise Decisioning::Error, "an appeal is already pending"
     end
 
     # Overturn (grant) an appeal: reverse the decision's effect and dismiss it.
@@ -181,7 +200,32 @@ module Decisioning
       when "WorkItem", "Project", "Sprint" then "work"
       end
     end
+
+    def apply_routing_rule!(decision, subject)
+      raise Decisioning::Error, "routing suggestions require an open case" unless subject.is_a?(Case)
+
+      subject.with_lock do
+        raise Decisioning::Error, "routing suggestion no longer applies to this case" unless subject.open?
+
+        rule = RoutingRule.active.intake.find_by(id: decision.action_params&.dig("routing_rule_id"))
+        unless rule&.matches?(subject)
+          raise Decisioning::Error, "routing rule is inactive, missing, or no longer matches"
+        end
+
+        previous = {
+          "previous_queue_id" => subject.queue_id,
+          "previous_category_id" => subject.category_id,
+          "previous_priority" => subject.priority,
+          "previous_assignee_id" => subject.assignee_id,
+          "previous_routed_by_rule_id" => subject.routed_by_rule_id
+        }
+        decision.update_column(:action_params, (decision.action_params || {}).merge(previous))
+        CaseRouting.apply_rule(subject, rule, complete_triage: false)
+      end
+    end
+
     private_class_method :owner_feature_for_subject
+    private_class_method :apply_routing_rule!
     private_class_method :apply_locked!
   end
 end

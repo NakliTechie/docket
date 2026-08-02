@@ -73,7 +73,7 @@ module Api
           preferred_language: c.preferred_language, notes: c.notes,
           sms_consent: c.sms_consent, email_consent: c.email_consent,
           email_unsubscribed_at: c.email_unsubscribed_at,
-          custom_fields: c.custom_fields,
+          labels: c.labels, custom_fields: c.custom_fields,
           created_at: c.created_at, updated_at: c.updated_at
         }
       end

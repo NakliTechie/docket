@@ -21,6 +21,7 @@ class AdminDecisionAppealsTest < ActionDispatch::IntegrationTest
 
     get admin_decision_appeals_path
     assert_response :success
+    assert_match "mistaken call", response.body
   end
 
   test "non-reviewers cannot reach the appeals queue" do

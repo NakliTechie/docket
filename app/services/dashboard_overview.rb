@@ -35,6 +35,12 @@ class DashboardOverview
     @pending_confirmations ||= Decision.awaiting_confirmation.recent_first.to_a
   end
 
+  def decision_quality
+    return [] unless Features.enabled?("decisioning")
+
+    @decision_quality ||= DecisionQualityReport.new(from: from, to: to).rows
+  end
+
   # Headline KPIs across the four planes, one row each. All cells are fixed
   # labels or numbers (no user-supplied text), so no formula-injection guard is
   # needed here.
@@ -84,6 +90,16 @@ class DashboardOverview
     csv << row("effector", "actions_succeeded", auto[:succeeded])
     csv << row("effector", "autonomy_rate_pct", auto[:autonomy_rate])
     csv << row("effector", "rejected", auto[:rejected])
+    decision_quality.each do |quality|
+      section = "decision_rule:#{quality.rule}"
+      csv << row(section, "proposed", quality.proposed_count)
+      csv << row(section, "approved", quality.approved_count)
+      csv << row(section, "rejected", quality.rejected_count)
+      csv << row(section, "overturned", quality.overturned_count)
+      csv << row(section, "approval_rate_pct", quality.approval_rate)
+      csv << row(section, "rejection_rate_pct", quality.rejection_rate)
+      csv << row(section, "override_rate_pct", quality.override_rate)
+    end
   end
 
   def row(section, metric, value)
