@@ -1,0 +1,53 @@
+<% content_for :title, t("entitlements.index.title") %>
+
+<div class="page-header">
+  <div>
+    <h1><%= t("entitlements.index.title") %></h1>
+    <p class="page-subtitle"><%= t("entitlements.index.subtitle") %></p>
+  </div>
+  <% if policy(Entitlement).create? %>
+    <%= link_to t("entitlements.index.new"), new_entitlement_path, class: "btn btn-primary" %>
+  <% end %>
+</div>
+
+<% if @entitlements.any? %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><%= t("entitlements.fields.name") %></th>
+          <th><%= t("entitlements.fields.holder") %></th>
+          <th><%= t("entitlements.fields.sla_policy") %></th>
+          <th><%= t("entitlements.fields.coverage") %></th>
+          <th><span class="sr-only"><%= t("tables.actions") %></span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @entitlements.each do |entitlement| %>
+          <tr>
+            <td><strong><%= entitlement.name %></strong></td>
+            <td><%= entitlement.holder_label %></td>
+            <td><%= entitlement.sla_policy.name %></td>
+            <td><%= l(entitlement.starts_at, format: :short) %> – <%= entitlement.ends_at ? l(entitlement.ends_at, format: :short) : t("entitlements.index.no_end") %></td>
+            <td>
+              <div class="form-actions">
+                <% if policy(entitlement).update? %>
+                  <%= link_to t("actions.edit"), edit_entitlement_path(entitlement), class: "btn btn-sm" %>
+                <% end %>
+                <% if policy(entitlement).destroy? %>
+                  <%= button_to t("actions.delete"), entitlement_path(entitlement), method: :delete,
+                                class: "btn btn-sm btn-danger",
+                                form: { data: { turbo_confirm: t("entitlements.index.confirm_delete") } } %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "shared/empty_state", title: t("entitlements.index.empty.title"),
+        hint: t("entitlements.index.empty.hint"),
+        action: policy(Entitlement).create? ? link_to(t("entitlements.index.new"), new_entitlement_path, class: "btn btn-primary") : nil %>
+<% end %>

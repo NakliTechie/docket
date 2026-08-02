@@ -13,6 +13,7 @@ class Organisation < ApplicationRecord
   has_many :contacts, dependent: nil
   has_many :cases, through: :contacts
   has_many :deals, dependent: :nullify
+  has_many :entitlements, dependent: nil
   # PG9 — account hierarchy (self-referential).
   belongs_to :parent, -> { with_deleted }, class_name: "Organisation", optional: true
   has_many :children, class_name: "Organisation", foreign_key: :parent_id, dependent: :nullify,

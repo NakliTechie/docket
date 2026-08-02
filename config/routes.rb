@@ -44,6 +44,7 @@ Rails.application.routes.draw do
     end
   end
   resources :sla_policies, except: :show
+  resources :entitlements, except: :show
   resources :business_calendars, except: :show
   resources :macros, except: :show
   resources :routing_rules, except: :show do

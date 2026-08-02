@@ -35,6 +35,7 @@ en:
       queues: "Queues"
       categories: "Categories"
       sla_policies: "SLA policies"
+      entitlements: "Entitlements"
       business_calendars: "Business calendars"
       macros: "Macros"
       routing_rules: "Routing rules"
@@ -1384,6 +1385,41 @@ en:
       updated: "SLA policy updated."
     destroy:
       deleted: "SLA policy deleted."
+
+  entitlements:
+    fields:
+      name: "Contract name"
+      holder: "Applies to"
+      organisation: "Organisation"
+      contact: "Contact"
+      sla_policy: "SLA policy"
+      starts_at: "Coverage starts"
+      ends_at: "Coverage ends"
+      coverage: "Coverage window"
+    form:
+      holder_hint: "Choose one organisation or one contact. Contact contracts take precedence over organisation contracts."
+      choose_policy: "Choose an SLA policy"
+      no_organisation: "No organisation"
+      no_contact: "No contact"
+    index:
+      title: "Entitlements"
+      subtitle: "Apply SLA service contracts to organisations or individual contacts."
+      new: "New entitlement"
+      no_end: "No end date"
+      confirm_delete: "Delete this entitlement?"
+      empty:
+        title: "No entitlements yet"
+        hint: "Entitlements apply an SLA policy before the tenant default."
+    new:
+      title: "New entitlement"
+    edit:
+      title: "Edit entitlement %{name}"
+    create:
+      created: "Entitlement created."
+    update:
+      updated: "Entitlement updated."
+    destroy:
+      deleted: "Entitlement deleted."
 
   business_calendars:
     fields:
@@ -2986,6 +3022,8 @@ en:
     errors:
       messages:
         cross_tenant: "belongs to another organisation"
+        exactly_one_entitlement_holder: "must select exactly one organisation or contact"
+        after_start: "must be after the coverage start"
       models:
         work_item:
           attributes:

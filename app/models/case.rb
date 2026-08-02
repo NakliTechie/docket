@@ -226,6 +226,7 @@ class Case < ApplicationRecord
   end
 
   def apply_default_sla_policy
+    self.sla_policy ||= Entitlement.policy_for(contact, at: created_at || Time.current)
     self.sla_policy ||= SlaPolicy.default
   end
 

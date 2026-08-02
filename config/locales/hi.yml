@@ -35,6 +35,7 @@ hi:
       queues: "कतारें"
       categories: "श्रेणियाँ"
       sla_policies: "एसएलए नीतियाँ"
+      entitlements: "सेवा अधिकार"
       business_calendars: "कार्य कैलेंडर"
       macros: "मैक्रो"
       routing_rules: "रूटिंग नियम"
@@ -1384,6 +1385,41 @@ hi:
       updated: "एसएलए नीति अद्यतन की गई।"
     destroy:
       deleted: "एसएलए नीति हटाई गई।"
+
+  entitlements:
+    fields:
+      name: "अनुबंध का नाम"
+      holder: "किस पर लागू"
+      organisation: "संगठन"
+      contact: "संपर्क"
+      sla_policy: "एसएलए नीति"
+      starts_at: "कवरेज प्रारंभ"
+      ends_at: "कवरेज समाप्त"
+      coverage: "कवरेज अवधि"
+    form:
+      holder_hint: "एक संगठन या एक संपर्क चुनें। संपर्क अनुबंध को संगठन अनुबंध पर प्राथमिकता मिलती है।"
+      choose_policy: "एसएलए नीति चुनें"
+      no_organisation: "कोई संगठन नहीं"
+      no_contact: "कोई संपर्क नहीं"
+    index:
+      title: "सेवा अधिकार"
+      subtitle: "संगठनों या व्यक्तिगत संपर्कों पर एसएलए सेवा अनुबंध लागू करें।"
+      new: "नया सेवा अधिकार"
+      no_end: "कोई समाप्ति तिथि नहीं"
+      confirm_delete: "यह सेवा अधिकार हटाएँ?"
+      empty:
+        title: "अभी कोई सेवा अधिकार नहीं"
+        hint: "सेवा अधिकार टेनेंट डिफ़ॉल्ट से पहले एसएलए नीति लागू करते हैं।"
+    new:
+      title: "नया सेवा अधिकार"
+    edit:
+      title: "%{name} सेवा अधिकार संपादित करें"
+    create:
+      created: "सेवा अधिकार बनाया गया।"
+    update:
+      updated: "सेवा अधिकार अद्यतन किया गया।"
+    destroy:
+      deleted: "सेवा अधिकार हटाया गया।"
 
   business_calendars:
     fields:
@@ -2986,6 +3022,8 @@ hi:
     errors:
       messages:
         cross_tenant: "किसी अन्य संगठन का है"
+        exactly_one_entitlement_holder: "ठीक एक संगठन या संपर्क चुनना आवश्यक है"
+        after_start: "कवरेज प्रारंभ के बाद होना चाहिए"
       models:
         work_item:
           attributes:

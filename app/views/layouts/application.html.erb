@@ -97,11 +97,12 @@
             <% if policy(CaseQueue).create? || policy(ReferenceDoc).index? ||
                   policy(ConnectorInvocation).index? %>
               <%= nav_group t("layout.nav.knowledge_automation"),
-                    active: %w[case_queues categories sla_policies business_calendars macros routing_rules escalation_rules custom_field_definitions approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
+                    active: %w[case_queues categories sla_policies entitlements business_calendars macros routing_rules escalation_rules custom_field_definitions approval_processes reference_docs connector_invocations decision_appeals approval_requests].include?(controller_name) do %>
                 <% if policy(CaseQueue).create? %>
                   <%= nav_link t("layout.nav.queues"), case_queues_path, active: controller_name == "case_queues" %>
                   <%= nav_link t("layout.nav.categories"), categories_path, active: controller_name == "categories" %>
                   <%= nav_link t("layout.nav.sla_policies"), sla_policies_path, active: controller_name == "sla_policies" %>
+                  <%= nav_link t("layout.nav.entitlements"), entitlements_path, active: controller_name == "entitlements" %>
                   <%= nav_link t("layout.nav.business_calendars"), business_calendars_path, active: controller_name == "business_calendars" %>
                   <%= nav_link t("layout.nav.macros"), macros_path, active: controller_name == "macros" %>
                 <% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_150000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -584,6 +584,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_140000) do
     t.index ["tenant_id", "deal_id"], name: "index_deliverables_on_tenant_id_and_deal_id"
     t.index ["tenant_id", "status"], name: "index_deliverables_on_tenant_id_and_status"
     t.index ["tenant_id"], name: "index_deliverables_on_tenant_id"
+  end
+
+  create_table "entitlements", force: :cascade do |t|
+    t.integer "contact_id"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.datetime "ends_at"
+    t.string "name", null: false
+    t.integer "organisation_id"
+    t.integer "sla_policy_id", null: false
+    t.datetime "starts_at", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_id"], name: "index_entitlements_on_contact_id"
+    t.index ["deleted_at"], name: "index_entitlements_on_deleted_at"
+    t.index ["organisation_id"], name: "index_entitlements_on_organisation_id"
+    t.index ["sla_policy_id"], name: "index_entitlements_on_sla_policy_id"
+    t.index ["tenant_id", "contact_id", "starts_at"], name: "index_live_entitlements_on_contact_coverage", where: "deleted_at IS NULL"
+    t.index ["tenant_id", "name"], name: "index_live_entitlements_on_tenant_and_name", unique: true, where: "deleted_at IS NULL"
+    t.index ["tenant_id", "organisation_id", "starts_at"], name: "index_live_entitlements_on_org_coverage", where: "deleted_at IS NULL"
+    t.index ["tenant_id"], name: "index_entitlements_on_tenant_id"
+    t.check_constraint "((contact_id IS NOT NULL AND organisation_id IS NULL) OR (contact_id IS NULL AND organisation_id IS NOT NULL))", name: "entitlements_exactly_one_holder"
+    t.check_constraint "ends_at IS NULL OR ends_at > starts_at", name: "entitlements_valid_coverage_window"
   end
 
   create_table "escalation_executions", force: :cascade do |t|
@@ -1716,6 +1739,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_140000) do
   add_foreign_key "deliverables", "tenants", on_delete: :cascade
   add_foreign_key "deliverables", "users", column: "approved_by_id", on_delete: :nullify
   add_foreign_key "deliverables", "users", column: "submitted_by_id", on_delete: :nullify
+  add_foreign_key "entitlements", "contacts"
+  add_foreign_key "entitlements", "organisations"
+  add_foreign_key "entitlements", "sla_policies"
+  add_foreign_key "entitlements", "tenants"
   add_foreign_key "escalation_executions", "cases", on_delete: :cascade
   add_foreign_key "escalation_executions", "escalation_levels", on_delete: :cascade
   add_foreign_key "escalation_executions", "tenants", on_delete: :cascade
