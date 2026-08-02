@@ -48,6 +48,7 @@ class Connector < ApplicationRecord
   validates :action_budget_window_minutes, numericality: { greater_than: 0 }, allow_nil: true
   validate :provider_is_known
   validate :sync_mapping_is_complete
+  validate :field_mapping_targets_are_known
   validate :enabled_actions_are_known
   validate :auto_approve_within_enabled
 
@@ -205,5 +206,14 @@ class Connector < ApplicationRecord
     Array(rules[:config]).each do |key|
       errors.add(:config, :missing_default) if config_value(key).blank?
     end
+  end
+
+  def field_mapping_targets_are_known
+    return unless provider_syncs?
+
+    custom_fields = CustomFieldDefinition.for_resource(target).pluck(:key).map { |key| "custom_fields.#{key}" }
+    allowed = Connectors::Sync::MAPPABLE_FIELDS.fetch(target, []) + custom_fields
+    unknown = (field_mapping || {}).keys.map(&:to_s) - allowed
+    errors.add(:field_mapping, "contains unknown Docket fields: #{unknown.join(', ')}") if unknown.any?
   end
 end

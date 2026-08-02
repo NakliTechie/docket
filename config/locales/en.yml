@@ -504,6 +504,7 @@ en:
     enum:
       status:
         draft: "Draft"
+        under_review: "Under review"
         published: "Published"
         retired: "Retired"
       visibility:
@@ -1597,10 +1598,14 @@ en:
       role:
         super_admin: "Super admin"
         client_admin: "Client admin"
+        customer_service_supervisor: "Customer service supervisor"
         finance: "Finance"
         sales: "Sales"
         customer_service: "Customer service"
         technical: "Technical"
+        decision_reviewer: "Decision reviewer"
+        knowledge_manager: "Knowledge manager"
+        auditor: "Auditor"
         readonly: "Read-only"
 
   macros:
@@ -2176,6 +2181,7 @@ en:
         email: "Email ←"
         name: "Name ←"
         phone: "Phone ←"
+        custom_field: "%{label} (custom) ←"
       targets:
         contacts: "Contacts"
         leads: "Leads"
@@ -2379,6 +2385,9 @@ en:
         description: "Description"
         scopes: "Scopes"
         scopes_hint: "Grant only what the integration needs. cases:write + contacts:write enables filing cases on behalf of customers."
+        connector_grants: "Connector action grants"
+        connector_grants_hint: "Select the exact enabled actions this identity may use. The connectors:invoke scope is also required."
+        connector_grants_empty: "No connector actions are currently enabled for delegation."
         active: "Active"
         budget: "Effector budget"
         budget_hint: "Caps how many connector actions an AI agent may take in a rolling window. Blank = unlimited. Bounds the agent's blast radius."
@@ -3105,8 +3114,11 @@ en:
       inactive: "Inactive"
     index:
       title: "Custom fields"
-      intro: "Add typed, governed fields to cases and work items. Deactivate fields to preserve historical values."
+      intro: "Add typed, governed fields to cases, contacts, leads, deals, and work items. Deactivate fields to preserve historical values."
       cases: "Cases"
+      contacts: "Contacts"
+      leads: "Leads"
+      deals: "Deals"
       work_items: "Work items"
       new_field: "New field"
       report: "View report"

@@ -10,6 +10,7 @@ class CsatReportsController < ApplicationController
     respond_to do |format|
       format.html
       format.csv do
+        authorize :csat_report, :export?, policy_class: CsatReportPolicy
         send_data @report.to_csv, filename: "docket-csat-#{@from}-#{@to}.csv"
       end
     end

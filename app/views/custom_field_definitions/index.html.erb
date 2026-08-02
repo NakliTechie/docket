@@ -5,10 +5,13 @@
     <% if CustomFieldReportPolicy.new(Current.user, @resource_type).index? %>
       <%= link_to t("custom_fields.index.report"), custom_field_report_path(resource_type: @resource_type), class: "btn" %>
     <% end %>
-    <%= link_to t(".cases"), custom_fields_path(resource_type: "cases"),
-                class: "btn #{'btn-primary' if @resource_type == 'cases'}" %>
-    <%= link_to t(".work_items"), custom_fields_path(resource_type: "work_items"),
-                class: "btn #{'btn-primary' if @resource_type == 'work_items'}" %>
+    <% CustomFieldDefinition::RESOURCE_TYPES.each do |resource_type| %>
+      <% candidate = CustomFieldDefinition.new(resource_type: resource_type) %>
+      <% if policy(candidate).show? %>
+        <%= link_to t(".#{resource_type}"), custom_fields_path(resource_type: resource_type),
+                    class: "btn #{'btn-primary' if @resource_type == resource_type}" %>
+      <% end %>
+    <% end %>
     <% candidate = CustomFieldDefinition.new(resource_type: @resource_type) %>
     <% if policy(candidate).create? %>
       <%= link_to t(".new_field"), new_custom_field_path(resource_type: @resource_type), class: "btn btn-primary" %>

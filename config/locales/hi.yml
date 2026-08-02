@@ -504,6 +504,7 @@ hi:
     enum:
       status:
         draft: "मसौदा"
+        under_review: "समीक्षाधीन"
         published: "प्रकाशित"
         retired: "सेवानिवृत्त"
       visibility:
@@ -1597,10 +1598,14 @@ hi:
       role:
         super_admin: "सुपर प्रशासक"
         client_admin: "क्लाइंट प्रशासक"
+        customer_service_supervisor: "ग्राहक सेवा पर्यवेक्षक"
         finance: "वित्त"
         sales: "बिक्री"
         customer_service: "ग्राहक सेवा"
         technical: "तकनीकी"
+        decision_reviewer: "निर्णय समीक्षक"
+        knowledge_manager: "ज्ञान प्रबंधक"
+        auditor: "लेखा परीक्षक"
         readonly: "केवल-पठन"
 
   macros:
@@ -2176,6 +2181,7 @@ hi:
         email: "ईमेल ←"
         name: "नाम ←"
         phone: "फ़ोन ←"
+        custom_field: "%{label} (कस्टम) ←"
       targets:
         contacts: "संपर्क"
         leads: "लीड"
@@ -2379,6 +2385,9 @@ hi:
         description: "विवरण"
         scopes: "स्कोप"
         scopes_hint: "केवल वही दें जो एकीकरण को चाहिए। cases:write + contacts:write से ग्राहकों की ओर से मामले दर्ज करना सक्षम होता है।"
+        connector_grants: "कनेक्टर कार्रवाई अनुमतियाँ"
+        connector_grants_hint: "इस पहचान के लिए केवल आवश्यक सक्रिय कार्रवाइयाँ चुनें। connectors:invoke स्कोप भी आवश्यक है।"
+        connector_grants_empty: "प्रतिनिधि उपयोग के लिए अभी कोई कनेक्टर कार्रवाई सक्रिय नहीं है।"
         active: "सक्रिय"
         budget: "एफेक्टर बजट"
         budget_hint: "एक रोलिंग विंडो में AI एजेंट कितनी कनेक्टर कार्रवाइयाँ कर सकता है, इसकी सीमा। रिक्त = असीमित। एजेंट के प्रभाव-क्षेत्र को सीमित करता है।"
@@ -3105,8 +3114,11 @@ hi:
       inactive: "निष्क्रिय"
     index:
       title: "कस्टम फ़ील्ड"
-      intro: "मामलों और कार्य आइटमों में प्रकार-आधारित, नियंत्रित फ़ील्ड जोड़ें। पुराने मान सुरक्षित रखने के लिए फ़ील्ड निष्क्रिय करें।"
+      intro: "मामलों, संपर्कों, लीड, डील और कार्य आइटमों में प्रकार-आधारित, नियंत्रित फ़ील्ड जोड़ें। पुराने मान सुरक्षित रखने के लिए फ़ील्ड निष्क्रिय करें।"
       cases: "मामले"
+      contacts: "संपर्क"
+      leads: "लीड"
+      deals: "डील"
       work_items: "कार्य आइटम"
       new_field: "नया फ़ील्ड"
       report: "रिपोर्ट देखें"

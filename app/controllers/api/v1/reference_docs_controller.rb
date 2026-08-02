@@ -15,8 +15,10 @@ module Api
       end
 
       def create
-        authorize_api!(ReferenceDoc.new, :create?, scope: "config:write")
-        doc = ReferenceDoc.new(doc_params)
+        attributes = doc_params
+        attributes[:status] ||= "draft"
+        doc = ReferenceDoc.new(attributes)
+        authorize_api!(doc, policy_query_for(doc, create: true), scope: "config:write")
         if doc.save
           render json: { data: Serialize.reference_doc(doc) }, status: :created
         else
@@ -25,8 +27,9 @@ module Api
       end
 
       def update
-        authorize_api!(@reference_doc, :update?, scope: "config:write")
-        if @reference_doc.update(doc_params)
+        @reference_doc.assign_attributes(doc_params)
+        authorize_api!(@reference_doc, policy_query_for(@reference_doc), scope: "config:write")
+        if @reference_doc.save
           render json: { data: Serialize.reference_doc(@reference_doc) }
         else
           render_validation_errors(@reference_doc)
@@ -66,12 +69,22 @@ module Api
       end
 
       def change_status!(status)
-        authorize_api!(@reference_doc, :update?, scope: "config:write")
+        query = status == :published ? :publish? : :retire?
+        authorize_api!(@reference_doc, query, scope: "config:write")
         if @reference_doc.update(status: status)
           render json: { data: Serialize.reference_doc(@reference_doc) }
         else
           render_validation_errors(@reference_doc)
         end
+      end
+
+
+      def policy_query_for(doc, create: false)
+        return :publish? if doc.status_published?
+        return :review? if doc.status_under_review?
+        return :retire? if doc.status_retired?
+
+        create ? :create? : :update?
       end
     end
   end

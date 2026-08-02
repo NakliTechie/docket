@@ -48,8 +48,9 @@ Jira/Freshdesk mapping files have this shape:
 
 Jira status targets are exact Docket workflow-state names. Freshdesk status
 targets are Docket case-status keys. Role targets must be one of
-`super_admin`, `client_admin`, `finance`, `sales`, `customer_service`,
-`technical`, or `readonly`. Do not map an external administrator to
+`super_admin`, `client_admin`, `customer_service_supervisor`, `finance`,
+`sales`, `customer_service`, `technical`, `decision_reviewer`,
+`knowledge_manager`, `auditor`, or `readonly`. Do not map an external administrator to
 `super_admin` unless that person is genuinely a cross-tenant platform operator.
 
 Salesforce uses explicit object-specific maps:
@@ -60,7 +61,12 @@ Salesforce uses explicit object-specific maps:
   "case_statuses": { "New": "new", "Working": "in_progress", "Closed": "closed" },
   "lead_statuses": { "Open - Not Contacted": "new", "Working - Contacted": "working" },
   "lead_sources": { "Web": "web_form", "Partner Referral": "referral" },
-  "opportunity_stages": { "Prospecting": "Sales/New", "Closed Won": "Sales/Won" }
+  "opportunity_stages": { "Prospecting": "Sales/New", "Closed Won": "Sales/Won" },
+  "custom_fields": {
+    "contacts": { "account_tier": "Account_Tier__c" },
+    "leads": { "industry_segment": "Industry_Segment__c" },
+    "deals": { "procurement_route": "Procurement_Route__c" }
+  }
 }
 ```
 
@@ -74,7 +80,8 @@ source vocabularies:
   "mapping": {
     "name": "Full Name",
     "email": "Email Address",
-    "phone": "Mobile"
+    "phone": "Mobile",
+    "custom_fields.account_tier": "Legacy Account Tier"
   },
   "value_maps": {},
   "defaults": { "preferred_language": "en" }
@@ -83,7 +90,9 @@ source vocabularies:
 
 Supported CSV entities are `organisations`, `contacts`, `users`, `cases`,
 `work_items`, `leads`, and `deals`. Preview rejects unsupported target fields,
-missing headers, missing required mappings, and unmapped enum values.
+missing headers, missing required mappings, unmapped enum values, and undefined
+custom-field targets. Custom-field mappings are supported for cases, contacts,
+leads, deals, and work items.
 
 ## File dry run and apply
 

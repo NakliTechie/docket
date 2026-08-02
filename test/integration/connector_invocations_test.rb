@@ -11,7 +11,9 @@ class ConnectorInvocationsTest < ActionDispatch::IntegrationTest
   end
 
   def agent
-    ServiceAccount.create!(name: "Triage agent", scopes: %w[connectors:invoke])
+    account = ServiceAccount.create!(name: "Triage agent", scopes: %w[connectors:invoke])
+    account.grant_connector_actions!(Connector.order(:id).last)
+    account
   end
 
   def propose(on_behalf_of: "case:1")

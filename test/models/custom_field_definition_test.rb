@@ -23,12 +23,14 @@ class CustomFieldDefinitionTest < ActiveSupport::TestCase
     assert field.errors.of_kind?(:key, :immutable)
   end
 
-  test "fields are unique within a resource but reusable across resources" do
+  test "fields are unique within a resource but reusable across all resources" do
     create_field(key: "region", label: "Region")
     duplicate = build_field(key: "region", label: "Other label")
     refute duplicate.valid?
 
-    assert build_field(resource_type: "work_items", key: "region", label: "Region").valid?
+    (CustomFieldDefinition::RESOURCE_TYPES - [ "cases" ]).each do |resource_type|
+      assert build_field(resource_type: resource_type, key: "region", label: "Region").valid?, resource_type
+    end
   end
 
   private

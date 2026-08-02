@@ -56,7 +56,8 @@ module Api
       end
 
       def account_params
-        params.require(:service_account).permit(:name, :description, :active, scopes: [])
+        params.require(:service_account).permit(:name, :description, :active,
+                                                scopes: [], connector_grant_selection: {})
       end
     end
   end

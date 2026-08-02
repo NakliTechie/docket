@@ -2,7 +2,9 @@
 <div class="page-header">
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
-    <%= link_to t(".export_csv"), admin_activity_path(format: :csv, from: @from, to: @to), class: "btn" %>
+    <% if AdminAreaPolicy.new(Current.user, :activity).export? %>
+      <%= link_to t(".export_csv"), admin_activity_path(format: :csv, from: @from, to: @to), class: "btn" %>
+    <% end %>
   </div>
 </div>
 

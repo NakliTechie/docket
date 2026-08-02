@@ -41,7 +41,7 @@ class EscalationRulesTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "a user without case_config:manage is forbidden" do
+  test "a user without sla:manage is forbidden" do
     sign_in_as users(:sales)
     get escalation_rules_path
     assert_response :forbidden

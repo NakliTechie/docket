@@ -11,7 +11,10 @@ module Admin
 
       respond_to do |format|
         format.html
-        format.csv { send_data @report.to_csv, filename: "docket-activity-#{@from}-#{@to}.csv" }
+        format.csv do
+          authorize :activity, :export?, policy_class: AdminAreaPolicy
+          send_data @report.to_csv, filename: "docket-activity-#{@from}-#{@to}.csv"
+        end
       end
     end
 

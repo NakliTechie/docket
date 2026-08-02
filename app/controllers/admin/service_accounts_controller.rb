@@ -1,6 +1,7 @@
 module Admin
   class ServiceAccountsController < ApplicationController
     before_action :set_account, only: %i[edit update destroy rotate_secret]
+    before_action :set_grantable_connectors, only: %i[new create edit update]
 
     def index
       authorize :service_accounts, policy_class: PlatformAreaPolicy
@@ -58,11 +59,16 @@ module Admin
 
     def account_params
       permitted = params.require(:service_account).permit(:name, :description, :active,
-                                                          :action_budget, :action_budget_window_minutes, scopes: [])
+                                                          :action_budget, :action_budget_window_minutes,
+                                                          scopes: [], connector_grant_selection: {})
       # Drop the empty-string companion (and any blanks) so an all-unchecked
       # submission becomes [] and trips the "at least one scope" validation.
       permitted[:scopes] = Array(permitted[:scopes]).reject(&:blank?) if permitted.key?(:scopes)
       permitted
+    end
+
+    def set_grantable_connectors
+      @grantable_connectors = Connector.order(:name).select { |connector| connector.enabled_actions.any? }
     end
   end
 end

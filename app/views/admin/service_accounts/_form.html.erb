@@ -28,6 +28,31 @@
   </fieldset>
 
   <fieldset>
+    <legend><%= t("admin.service_accounts.fields.connector_grants") %></legend>
+    <p class="form-hint"><%= t("admin.service_accounts.fields.connector_grants_hint") %></p>
+    <% if @grantable_connectors.any? %>
+      <% selection = service_account.connector_grant_selection %>
+      <% @grantable_connectors.each do |connector| %>
+        <div class="panel">
+          <strong><%= connector.name %></strong>
+          <div class="table-meta"><%= connector.provider_descriptor&.label || connector.provider.humanize %></div>
+          <%= hidden_field_tag "service_account[connector_grant_selection][#{connector.id}][]", "" %>
+          <% connector.enabled_actions.each do |action_key| %>
+            <% input_id = "connector_grant_#{connector.id}_#{action_key.parameterize}" %>
+            <div class="checkbox-row">
+              <%= check_box_tag "service_account[connector_grant_selection][#{connector.id}][]", action_key,
+                    Array(selection[connector.id.to_s]).include?(action_key), id: input_id %>
+              <%= label_tag input_id, action_key, class: "mono" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="muted"><%= t("admin.service_accounts.fields.connector_grants_empty") %></p>
+    <% end %>
+  </fieldset>
+
+  <fieldset>
     <legend><%= t("admin.service_accounts.fields.budget") %></legend>
     <p class="form-hint"><%= t("admin.service_accounts.fields.budget_hint") %></p>
     <div class="form-row">

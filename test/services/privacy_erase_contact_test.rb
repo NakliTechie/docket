@@ -15,11 +15,16 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
 
   test "pseudonymizes the contact graph, removes files and direct content, and keeps audit valid" do
     marker = "unique-private-marker-73f9"
+    %w[contacts cases leads deals].each do |resource_type|
+      CustomFieldDefinition.create!(resource_type: resource_type, key: "private_email",
+                                    label: "Private email", field_type: :short_text)
+    end
     contact = Contact.create!(name: "Private Person", email: "private-73f9@example.test",
                               phone: "+9199999973", external_id: "CIF-PRIVATE-73F9",
-                              notes: marker)
+                              notes: marker,
+                              custom_fields: { private_email: "private-73f9@example.test" })
     kase = Case.create!(subject: "Request #{marker}", description: "Description #{marker}",
-                        contact: contact)
+                        contact: contact, custom_fields: { private_email: "private-73f9@example.test" })
     message = kase.messages.create!(body: "Message #{marker}", kind: :internal_note,
                                     author: users(:agent_a), direction: :outbound)
     message.files.attach(io: StringIO.new(marker), filename: "private.txt",
@@ -41,8 +46,11 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     attributed_lead = Lead.create!(
       name: "Private lead", email: "private-lead-73f9@example.test", contact: contact,
       first_touch_campaign: campaign, first_touch_utm_campaign: "private-campaign",
-      first_touch_landing_page: "https://example.test/?customer=#{marker}"
+      first_touch_landing_page: "https://example.test/?customer=#{marker}",
+      custom_fields: { private_email: "private-73f9@example.test" }
     )
+    deal = Deal.create!(name: "Private deal", pipeline: pipelines(:sales), contact: contact,
+                        custom_fields: { private_email: "private-73f9@example.test" })
 
     result = Privacy::EraseContact.call(contact: contact)
 
@@ -57,6 +65,10 @@ class PrivacyEraseContactTest < ActiveSupport::TestCase
     assert_nil delivery.reload.tracking_token
     assert_nil attributed_lead.reload.first_touch_landing_page
     assert_nil attributed_lead.first_touch_utm_campaign
+    assert_empty contact.custom_fields
+    assert_empty kase.custom_fields
+    assert_empty attributed_lead.custom_fields
+    assert_empty deal.reload.custom_fields
     assert_not ActiveStorage::Blob.exists?(blob_id)
     assert result.request.status_completed?
     assert Privacy::ResidueScanner.call(

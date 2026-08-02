@@ -72,6 +72,8 @@
     </div>
   <% end %>
 
+  <%= render "shared/custom_fields", record: deal, resource_type: "deals" %>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), deals_path, class: "btn" %>

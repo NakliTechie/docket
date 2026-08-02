@@ -31,20 +31,21 @@ module Features
   # service_account:manage, api_token:manage, webhook:manage, and the
   # contact:*/report:operational/finance:* set shared by every module.
   REGISTRY = {
-    "service_desk" => %w[case:read case:write case:delete case_config:manage],
-    "service_desk.kb" => %w[reference_doc:manage],
+    "service_desk" => %w[case:read case:write case:delete case:collaborate
+                         queue:manage routing:manage sla:manage macro:manage],
+    "service_desk.kb" => %w[knowledge:read knowledge:draft knowledge:review knowledge:publish knowledge:admin],
     "service_desk.portal" => [],
 
-    "approvals" => %w[invocation:review],
+    "approvals" => %w[approval:review],
 
     "crm" => %w[lead:read lead:write lead:delete deal:read deal:write deal:delete
-                pipeline:read pipeline:manage report:sales],
+                pipeline:read pipeline:manage crm_config:manage report:sales],
     "crm.sequences" => %w[sequence:enroll],
 
     "work" => %w[work:read work:write project:manage],
     "work.sprints" => [],
 
-    "decisioning" => %w[ai:autonomy],
+    "decisioning" => %w[ai:autonomy appeal:adjudicate decision:run],
     "connectors" => %w[connector:read connector:operate connector:manage connector:invoke],
     "mcp" => []
   }.freeze
@@ -116,10 +117,12 @@ module Features
   # Is this api/v1 path available to the tenant in scope?
   def api_path_enabled?(path)
     normalized_path = path.to_s.delete_prefix("/")
-    return enabled?("service_desk") || enabled?("work") if normalized_path.start_with?("reports/custom_fields")
+    if normalized_path.start_with?("reports/custom_fields")
+      return enabled?("service_desk") || enabled?("crm") || enabled?("work")
+    end
 
     resource = normalized_path.split("/").first.to_s
-    return enabled?("service_desk") || enabled?("work") if resource == "custom_fields"
+    return enabled?("service_desk") || enabled?("crm") || enabled?("work") if resource == "custom_fields"
 
     owner = owner_of_api_path(path)
     owner.nil? || enabled?(owner)

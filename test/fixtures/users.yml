@@ -97,3 +97,35 @@ technical:
   password_digest: <%= password_digest %>
   role: technical
   active: true
+
+customer_service_supervisor:
+  tenant: primary
+  name: Nisha Service Supervisor
+  email_address: service.supervisor@example.com
+  password_digest: <%= password_digest %>
+  role: customer_service_supervisor
+  active: true
+
+decision_reviewer:
+  tenant: primary
+  name: Dev Decision Reviewer
+  email_address: decision.reviewer@example.com
+  password_digest: <%= password_digest %>
+  role: decision_reviewer
+  active: true
+
+knowledge_manager:
+  tenant: primary
+  name: Kavita Knowledge Manager
+  email_address: knowledge.manager@example.com
+  password_digest: <%= password_digest %>
+  role: knowledge_manager
+  active: true
+
+auditor:
+  tenant: primary
+  name: Arun Auditor
+  email_address: auditor@example.com
+  password_digest: <%= password_digest %>
+  role: auditor
+  active: true

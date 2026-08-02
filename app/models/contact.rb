@@ -5,6 +5,9 @@ class Contact < ApplicationRecord
   acts_as_tenant(:tenant)
   include SoftDeletable
   include Audited
+  include HasCustomFields
+
+  has_custom_fields_for :contacts
 
   LANGUAGES = %w[en hi].freeze
 

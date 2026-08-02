@@ -25,6 +25,15 @@ class ConnectorTest < ActiveSupport::TestCase
     assert c.errors[:field_mapping].any?
   end
 
+  test "mapping rejects undefined custom-field targets" do
+    connector = build_connector(field_mapping: {
+      "external_id" => "id", "custom_fields.undefined_tier" => "tier"
+    })
+
+    assert_not connector.valid?
+    assert connector.errors[:field_mapping].any? { |message| message.include?("undefined_tier") }
+  end
+
   test "enabled_actions must be actions the provider exposes" do
     assert build_connector(enabled_actions: %w[post_json]).valid?, "post_json is a real http_json action"
     c = build_connector(enabled_actions: %w[post_json nonsense])

@@ -36,6 +36,27 @@ class AdminManagementTest < ActionDispatch::IntegrationTest
     assert_not ServiceAccount.exists?(account.id)
   end
 
+  test "admin can grant and revoke selected connector actions" do
+    sign_in_as users(:admin)
+    connector = Connector.create!(name: "CRM", provider: "http_json", target: "contacts",
+                                  config: { "action_url" => "https://api.example.test/do" },
+                                  field_mapping: { "external_id" => "id" },
+                                  enabled_actions: %w[post_json])
+
+    post admin_service_accounts_path, params: { service_account: {
+      name: "Scoped agent", scopes: %w[connectors:invoke],
+      connector_grant_selection: { connector.id.to_s => %w[post_json] }
+    } }
+    account = ServiceAccount.order(:id).last
+    assert_equal %w[post_json], account.connector_grants.find_by!(connector: connector).actions
+
+    patch admin_service_account_path(account), params: { service_account: {
+      name: account.name, scopes: %w[connectors:invoke],
+      connector_grant_selection: { connector.id.to_s => [ "" ] }
+    } }
+    assert_empty account.connector_grants.reload
+  end
+
   test "admin can create, view deliveries for, and destroy a webhook endpoint" do
     sign_in_as users(:admin)
 

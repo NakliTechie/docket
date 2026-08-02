@@ -2,7 +2,9 @@
 <% data = @report.as_json %>
 <div class="page-header">
   <h1><%= t(".title") %></h1>
-  <%= link_to t(".export_csv"), csat_report_path(format: :csv, from: @from, to: @to), class: "btn" %>
+  <% if CsatReportPolicy.new(Current.user, :csat_report).export? %>
+    <%= link_to t(".export_csv"), csat_report_path(format: :csv, from: @from, to: @to), class: "btn" %>
+  <% end %>
 </div>
 <%= form_with url: csat_report_path, method: :get, class: "filter-bar" do |f| %>
   <div class="form-row"><%= f.label :from, t(".from") %><%= f.date_field :from, value: @from %></div>

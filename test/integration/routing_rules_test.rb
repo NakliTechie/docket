@@ -47,7 +47,7 @@ class RoutingRulesTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "agents without case_config:manage are forbidden" do
+  test "agents without routing:manage are forbidden" do
     sign_in_as users(:customer_service)
     get routing_rules_path
     assert_response :forbidden

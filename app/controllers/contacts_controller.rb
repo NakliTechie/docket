@@ -38,7 +38,11 @@ class ContactsController < ApplicationController
 
   def update
     authorize @contact
-    if @contact.update(contact_update_params)
+    attributes = contact_update_params
+    custom_fields = attributes.delete(:custom_fields)
+    @contact.assign_attributes(attributes)
+    @contact.assign_custom_fields(custom_fields) if custom_fields
+    if @contact.save
       redirect_to @contact, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity
@@ -75,13 +79,13 @@ class ContactsController < ApplicationController
   ].freeze
 
   def contact_params
-    params.require(:contact).permit(*EDITABLE_ATTRS, :external_id)
+    params.require(:contact).permit(*EDITABLE_ATTRS, :external_id, custom_fields: {})
   end
 
   # external_id is the SSO-linkage key: settable when first creating a
   # contact, but not rewritable through the edit form (would let staff
   # re-point a contact onto another customer's verified identity).
   def contact_update_params
-    params.require(:contact).permit(*EDITABLE_ATTRS)
+    params.require(:contact).permit(*EDITABLE_ATTRS, custom_fields: {})
   end
 end

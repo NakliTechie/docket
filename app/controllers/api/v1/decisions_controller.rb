@@ -3,7 +3,7 @@ module Api
     # REST parity for the decisioning review surface (the console
     # DecisionsController controls). Human-token-only by design: approving a
     # decision is an accountable, human-of-record action (maker-checker needs a
-    # distinct human, and DecisionPolicy gates on invocation:review, not an M2M
+    # distinct human, and DecisionPolicy gates on decision:run, not an M2M
     # scope), so service-account bearers have no reach here.
     class DecisionsController < BaseController
       require_feature "decisioning"

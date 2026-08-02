@@ -6,4 +6,5 @@
 class AdminAreaPolicy < ApplicationPolicy
   def index? = permit?("audit:read")
   def show?  = permit?("audit:read")
+  def export? = index? && permit?("report:export")
 end

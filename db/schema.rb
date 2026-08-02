@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_02_153300) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_161000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -382,6 +382,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_153300) do
 
   create_table "contacts", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.string "email"
     t.boolean "email_consent", default: false, null: false
@@ -499,6 +500,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_153300) do
     t.integer "contact_id"
     t.datetime "created_at", null: false
     t.string "currency", default: "INR", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.date "expected_close_on"
     t.string "external_id"
@@ -831,6 +833,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_153300) do
     t.datetime "converted_at"
     t.integer "converted_deal_id"
     t.datetime "created_at", null: false
+    t.json "custom_fields", default: {}, null: false
     t.datetime "deleted_at"
     t.string "email"
     t.boolean "email_consent", default: false, null: false
@@ -1462,6 +1465,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_153300) do
     t.index ["tenant_id"], name: "index_sequences_on_tenant_id"
   end
 
+  create_table "service_account_connector_grants", force: :cascade do |t|
+    t.json "actions", default: [], null: false
+    t.integer "connector_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "service_account_id", null: false
+    t.integer "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["connector_id"], name: "index_service_account_connector_grants_on_connector_id"
+    t.index ["service_account_id"], name: "index_service_account_connector_grants_on_service_account_id"
+    t.index ["tenant_id", "service_account_id", "connector_id"], name: "index_service_account_connector_grants_uniqueness", unique: true
+    t.index ["tenant_id"], name: "index_service_account_connector_grants_on_tenant_id"
+  end
+
   create_table "service_accounts", force: :cascade do |t|
     t.integer "action_budget"
     t.integer "action_budget_window_minutes"
@@ -1971,6 +1987,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_02_153300) do
   add_foreign_key "sequences", "business_calendars"
   add_foreign_key "sequences", "tenants"
   add_foreign_key "sequences", "users", column: "owner_id"
+  add_foreign_key "service_account_connector_grants", "connectors", on_delete: :cascade
+  add_foreign_key "service_account_connector_grants", "service_accounts", on_delete: :cascade
+  add_foreign_key "service_account_connector_grants", "tenants", on_delete: :cascade
   add_foreign_key "service_accounts", "tenants"
   add_foreign_key "sessions", "users"
   add_foreign_key "shared_credentials", "tenants"

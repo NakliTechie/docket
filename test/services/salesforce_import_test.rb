@@ -10,7 +10,7 @@ class SalesforceImportTest < ActiveSupport::TestCase
       } ],
       "Contact" => [ {
         "Id" => "C1", "AccountId" => "A1", "Name" => "Ravi SF",
-        "Email" => "ravi.sf@example.test"
+        "Email" => "ravi.sf@example.test", "Account_Tier__c" => "Gold"
       } ],
       "Case" => [ {
         "Id" => "K1", "ContactId" => "C1", "OwnerId" => "U1",
@@ -43,6 +43,21 @@ class SalesforceImportTest < ActiveSupport::TestCase
     assert_equal "asha.sf@example.test", kase.assignee.email_address
     assert_equal "Northwind Salesforce", kase.contact.organisation.name
     assert_includes result.serialized_unmapped["dropped.Case"], "Mystery_Field__c"
+  end
+
+  test "maps governed CRM custom fields without reporting their source columns as dropped" do
+    CustomFieldDefinition.create!(resource_type: "contacts", key: "account_tier", label: "Account tier",
+                                  field_type: :single_select, options: %w[Gold Silver])
+    result = Imports::Salesforce.call(
+      payload: payload,
+      role_map: { "Support Agent" => "customer_service" },
+      status_map: { "Working" => "in_progress" },
+      custom_field_maps: { contacts: { account_tier: "Account_Tier__c" } }
+    )
+
+    assert_empty result.errors
+    assert_equal "Gold", Contact.find_by!(email: "ravi.sf@example.test").custom_fields.fetch("account_tier")
+    refute_includes Array(result.serialized_unmapped["dropped.Contact"]), "Account_Tier__c"
   end
 
   test "source deletions tombstone previously imported records" do

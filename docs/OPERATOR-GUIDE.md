@@ -31,16 +31,20 @@ permission it did not already have.
 ## Roles
 
 Admin → Roles & permissions renders the exact matrix from the application. The
-seven fixed roles are:
+11 fixed roles are:
 
 | Role | Intended use and principal authority |
 |---|---|
 | `super_admin` | Cross-tenant platform operator; every permission. Grant only to the hosting/operator team. |
-| `client_admin` | Tenant administrator; manages users and service/CRM/Work configuration and records, reports, approvals, audit, and connector invocation, but not platform settings, connector administration, or machine credentials. |
-| `finance` | Read access across cases, contacts, CRM, and Work; operational/sales reports and finance read/write. |
+| `client_admin` | Tenant administrator; manages users, service/CRM/Work configuration, knowledge lifecycles, records, reports, approvals, audit, and connector invocation, but not platform settings, connector administration, or machine credentials. |
+| `customer_service_supervisor` | Support team lead; manages queues, routing, SLAs, macros, cases, contacts, operational exports, and approved connector invocation. |
+| `finance` | Read access across cases, contacts, CRM, and Work; operational/sales exports and finance read/write. |
 | `sales` | Contact, lead, and deal work; pipeline read, sequence enrollment, sales reporting, plus read access to cases and Work. |
 | `customer_service` | Case and contact operations, Work read/write, operational reports, and approved connector invocation. |
-| `technical` | Case/contact read, Work read/write, operational reports, knowledge, webhook management, and connector read/operate. |
+| `technical` | Case/contact read, Work read/write, operational reports, knowledge read, webhook management, and connector read/operate. |
+| `decision_reviewer` | Maker-checker reviewer; reviews connector approvals and appeals, runs decisions, and reads supporting records and audit history. |
+| `knowledge_manager` | Owns knowledge drafting, review, publication, retirement, and categorisation without user or platform administration. |
+| `auditor` | Read-only oversight across service, CRM, Work, knowledge, audit, and operational/sales exports. |
 | `readonly` | Read-only cases, contacts, leads, deals, pipelines, Work, and sales reports. |
 
 Role grants are rank-bounded: an administrator cannot assign a role above their
@@ -66,7 +70,7 @@ tokens (`dkts_…`) must carry one or more of these exact scopes:
 | `crm:read`, `crm:write` | CRM records, capture-form configuration, catalog, deal products/competitors, and sales operations. |
 | `work:read`, `work:write` | Work items, comments, and relations. |
 | `work:manage` | Projects, templates, sprints, and Work configuration. |
-| `config:read`, `config:write` | Service-desk/settings configuration endpoints as allowed by the endpoint policy. |
+| `config:read`, `config:write` | Service-desk, CRM, Work, knowledge, and settings configuration endpoints as allowed by the endpoint policy. |
 | `audit:read` | Audit verification and reporting endpoints. |
 | `webhooks:manage` | Webhook endpoint and delivery administration. |
 | `connectors:read`, `connectors:invoke` | Inspect connectors or invoke enabled connector actions. |
@@ -77,6 +81,29 @@ tokens, and service accounts—is deliberately unavailable to service accounts.
 Use `/api/v1/openapi.json` for the complete route and schema inventory. The MCP
 catalog is derived from the same document and removes operations disabled by
 the tenant's features; MCP creates no additional authority.
+
+`connectors:invoke` is a coarse prerequisite, not an action grant. Each service
+account also needs an explicit connector/action grant selected in Admin →
+Service accounts. Removing the scope or disabling an action makes that action
+undiscoverable and non-invokable for the account.
+
+Mutating Work custom-field configuration requires `work:manage` alongside
+`config:write`. This keeps workspace administration separate from service-desk
+and CRM configuration authority.
+
+## Governed custom fields
+
+Admin → Custom fields manages typed fields for cases, contacts, leads, deals,
+and work items. Service-desk supervisors manage case fields. Client admins
+manage CRM and Work fields. Keys are immutable API contracts; deactivate a
+field to retain historical values without offering it on new forms.
+
+Fields support short or long text, integers, decimals, booleans, dates, and
+single- or multi-select vocabularies. Required fields validate every write path.
+Reportable fields appear in the distribution report and its CSV export when the
+actor holds both resource-read and report-export authority. Console forms, REST
+payloads, generic CSV imports, and Salesforce mappings share the same coercion
+and validation rules. Record changes retain actor-attributed audit entries.
 
 ## Business calendars and SLA
 
@@ -115,7 +142,7 @@ links, and lineage; old merged URLs resolve to the canonical case.
 
 ## Knowledge lifecycle
 
-Knowledge articles have `draft`, `published`, and `retired` states plus
+Knowledge articles have `draft`, `under_review`, `published`, and `retired` states plus
 `internal` or `public` visibility. Only published articles ground the agent.
 Published public articles also appear in the customer portal. Retiring an
 article removes it from both surfaces without deleting its history.
@@ -184,8 +211,10 @@ a completed authorization-code connection. `paused`, `error`, and `draft` are
 traffic kill switches in every direction.
 
 Pull connectors map into contacts, leads, deals, or cases using an explicit
-identity field and target-specific required fields. Scheduled sync runs every
-five minutes and selects only connectors whose configured interval is due.
+identity field and target-specific required fields. Active governed custom
+fields appear in the connector mapping form and use the same typed validation
+as console, API, and import writes. Scheduled sync runs every five minutes and
+selects only connectors whose configured interval is due.
 Inbound messaging connectors verify their provider signature before creating
 or threading a case. Outbound Docket webhooks use `whsec_…` HMAC-SHA256 secrets,
 publish no internal notes, and retain delivery attempts with retry history.

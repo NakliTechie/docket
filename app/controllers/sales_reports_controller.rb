@@ -11,7 +11,10 @@ class SalesReportsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.csv { send_data @report.to_csv, filename: "docket-sales-#{@from}-#{@to}.csv" }
+      format.csv do
+        authorize :sales_report, :export?, policy_class: SalesReportPolicy
+        send_data @report.to_csv, filename: "docket-sales-#{@from}-#{@to}.csv"
+      end
     end
   end
 

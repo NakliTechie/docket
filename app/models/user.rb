@@ -15,7 +15,9 @@ class User < ApplicationRecord
   # cutover.) See plan/rbac-research-2026-06-13.md.
   enum :role, {
     super_admin: 4, client_admin: 5, finance: 6, sales: 7,
-    customer_service: 8, technical: 9, readonly: 3
+    customer_service: 8, technical: 9, readonly: 3,
+    customer_service_supervisor: 10, decision_reviewer: 11,
+    knowledge_manager: 12, auditor: 13
   }, default: :customer_service, prefix: true
 
   # Authority ordering for "who may grant which role" (C2) — NOT the enum's
@@ -23,8 +25,10 @@ class User < ApplicationRecord
   # only be granted by an actor of equal-or-higher rank. Also the SSO claim→role
   # precedence (highest wins).
   ROLE_RANK = {
-    "super_admin" => 6, "client_admin" => 5, "finance" => 4, "technical" => 3,
-    "sales" => 2, "customer_service" => 1, "readonly" => 0
+    "super_admin" => 10, "client_admin" => 9, "customer_service_supervisor" => 8,
+    "finance" => 7, "technical" => 6, "decision_reviewer" => 5,
+    "knowledge_manager" => 4, "sales" => 3, "customer_service" => 2,
+    "auditor" => 1, "readonly" => 0
   }.freeze
 
   def self.role_rank(role) = ROLE_RANK.fetch(role.to_s, -1)
@@ -53,11 +57,14 @@ class User < ApplicationRecord
   validate :role_within_assigner_authority, if: -> { new_record? || will_save_change_to_role? }
 
   scope :active, -> { where(active: true) }
-  # Operational staff who can own records / staff queues — everyone except
-  # readonly. (Was [admin, supervisor, agent]; equivalent now that the legacy
-  # roles are the only other non-readonly roles, and it extends to the new
-  # functional roles for free.)
-  scope :staff, -> { where.not(role: :readonly) }
+  # People who can own operational records. Oversight, finance, knowledge-only,
+  # and read-only personas stay out of assignment pickers even though they are
+  # authenticated staff.
+  scope :staff, -> {
+    ownership_permissions = %w[case:write contact:write lead:write deal:write work:write sequence:enroll]
+    capable = roles.keys.select { |role| (Authz.permissions_for(role) & ownership_permissions).any? }
+    active.where(role: capable)
+  }
   scope :case_assignees, -> {
     capable = roles.keys.select { |role| Authz.permissions_for(role).include?("case:write") }
     active.where(role: capable)

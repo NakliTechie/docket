@@ -6,7 +6,9 @@
 <div class="page-header">
   <h1><%= t(".title") %></h1>
   <div class="page-actions">
-    <%= link_to t(".export_csv"), dashboard_path(format: :csv, from: @from, to: @to), class: "btn" %>
+    <% if DashboardPolicy.new(Current.user, :dashboard).export? %>
+      <%= link_to t(".export_csv"), dashboard_path(format: :csv, from: @from, to: @to), class: "btn" %>
+    <% end %>
   </div>
 </div>
 

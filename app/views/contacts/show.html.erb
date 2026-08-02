@@ -43,6 +43,7 @@
           <dt><%= t("contacts.fields.notes") %></dt><dd><%= @contact.notes %></dd>
         <% end %>
       </dl>
+      <%= render "shared/custom_field_values", record: @contact, resource_type: "contacts" %>
     </div>
   </aside>
 </div>

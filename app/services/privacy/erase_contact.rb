@@ -110,11 +110,11 @@ module Privacy
         name: "Erased contact #{@token.first(8)}", email: nil, phone: nil,
         external_id: "erased-#{@token}", notes: nil, sms_consent: false,
         organisation_id: nil, source_connector_id: nil, erased_at: Time.current,
-        erasure_token: @token, deleted_at: Time.current
+        erasure_token: @token, custom_fields: {}, deleted_at: Time.current
       )
       Case.with_deleted.where(id: graph.fetch("Case")).find_each do |kase|
         kase.update_columns(subject: "Erased request #{kase.tracking_id}", description: nil,
-                            external_id: nil)
+                            external_id: nil, custom_fields: {})
       end
       Message.with_deleted.where(id: graph.fetch("Message")).update_all(
         body: "[Erased for privacy]", subject: nil, metadata: nil,
@@ -124,6 +124,7 @@ module Privacy
       Deal.with_deleted.where(id: graph.fetch("Deal")).find_each do |deal|
         deal.update_columns(
           name: "Erased opportunity #{deal.id}", external_id: nil, labels: nil,
+          custom_fields: {},
           first_touch_utm_source: nil, first_touch_utm_medium: nil,
           first_touch_utm_campaign: nil, first_touch_utm_term: nil,
           first_touch_utm_content: nil, first_touch_landing_page: nil,
@@ -133,13 +134,15 @@ module Privacy
       Lead.with_deleted.where(id: graph.fetch("Lead")).find_each do |lead|
         lead.update_columns(name: "Erased lead #{lead.id}", email: nil, phone: nil,
                             company_name: nil, notes: nil, external_id: nil, labels: nil,
+                            custom_fields: {},
                             first_touch_utm_source: nil, first_touch_utm_medium: nil,
                             first_touch_utm_campaign: nil, first_touch_utm_term: nil,
                             first_touch_utm_content: nil, first_touch_landing_page: nil,
                             first_touch_referrer: nil)
       end
       WorkItem.with_deleted.where(id: graph.fetch("WorkItem")).find_each do |item|
-        item.update_columns(title: "Erased linked work #{item.reference}", description: nil)
+        item.update_columns(title: "Erased linked work #{item.reference}", description: nil,
+                            custom_fields: {})
       end
       WorkComment.with_deleted.where(id: graph.fetch("WorkComment")).update_all(
         body: "[Erased for privacy]", source_author_name: "Erased source"

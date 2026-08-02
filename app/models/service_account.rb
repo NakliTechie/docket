@@ -37,8 +37,9 @@ class ServiceAccount < ApplicationRecord
     # config:write sits above cases:write. Without this, endpoints whose policy
     # demands project:manage had NO scope that could express it.
     "work:manage" => %w[project:manage],
-    "config:read" => %w[settings:manage case_config:manage],
-    "config:write" => %w[settings:manage case_config:manage],
+    "config:read" => %w[settings:manage queue:manage crm_config:manage knowledge:read],
+    "config:write" => %w[settings:manage queue:manage routing:manage sla:manage macro:manage
+                          crm_config:manage knowledge:draft knowledge:review knowledge:publish knowledge:admin],
     "audit:read" => %w[audit:read],
     "webhooks:manage" => %w[webhook:manage],
     "connectors:read" => %w[connector:read],
@@ -46,6 +47,7 @@ class ServiceAccount < ApplicationRecord
   }.freeze
 
   has_many :oauth_access_tokens, dependent: :delete_all
+  has_many :connector_grants, class_name: "ServiceAccountConnectorGrant", dependent: :destroy
 
   # Default rolling window for the effector action budget when an agent sets
   # a budget but no window (see Connectors::Budget).
@@ -58,6 +60,7 @@ class ServiceAccount < ApplicationRecord
   validates :client_id, presence: true, uniqueness: true
   validates :scopes, presence: true
   validate :scopes_are_known
+  validate :connector_grant_selection_is_valid, if: :connector_grant_selection_assigned?
   validates :action_budget, numericality: { greater_than: 0 }, allow_nil: true
   validates :action_budget_window_minutes, numericality: { greater_than: 0 }, allow_nil: true
 
@@ -68,6 +71,8 @@ class ServiceAccount < ApplicationRecord
   # 1h access tokens carrying the old, broader scopes — revoke them so the
   # integration re-issues at the new scope set.
   after_update :revoke_tokens_on_scope_change
+  after_save :persist_connector_grant_selection, if: :connector_grant_selection_assigned?
+  after_update :revoke_connector_grants_without_scope, if: :saved_change_to_scopes?
 
   scope :active, -> { where(active: true) }
 
@@ -94,6 +99,36 @@ class ServiceAccount < ApplicationRecord
     scopes.include?(scope.to_s)
   end
 
+  def connector_action_granted?(connector, action)
+    return false unless scope?("connectors:invoke")
+
+    connector_grants.find_by(connector_id: connector.id)&.grants?(action) || false
+  end
+
+  def grant_connector_actions!(connector, actions = connector.enabled_actions)
+    grant = connector_grants.find_or_initialize_by(connector: connector)
+    grant.tenant = tenant
+    grant.actions = actions
+    grant.save!
+    grant
+  end
+
+  def connector_grant_selection
+    return @connector_grant_selection if connector_grant_selection_assigned?
+
+    connector_grants.each_with_object({}) do |grant, selection|
+      selection[grant.connector_id.to_s] = grant.actions
+    end
+  end
+
+  def connector_grant_selection=(raw_selection)
+    @connector_grant_selection_assigned = true
+    @connector_grant_selection = raw_selection.to_h.each_with_object({}) do |(connector_id, actions), selection|
+      selected = Array(actions).map(&:to_s).reject(&:blank?).uniq
+      selection[connector_id.to_s] = selected if selected.any?
+    end
+  end
+
   # Effector budgeted autonomy: nil budget = unlimited.
   def effector_budgeted?
     action_budget.present?
@@ -111,6 +146,48 @@ class ServiceAccount < ApplicationRecord
   end
 
   private
+
+  def connector_grant_selection_assigned?
+    @connector_grant_selection_assigned == true
+  end
+
+  def persist_connector_grant_selection
+    desired = scope?("connectors:invoke") ? @connector_grant_selection : {}
+    connectors = Connector.where(id: desired.keys).index_by { |connector| connector.id.to_s }
+
+    retained_ids = connectors.values.map(&:id)
+    retained_ids.any? ? connector_grants.where.not(connector_id: retained_ids).destroy_all : connector_grants.destroy_all
+    desired.each do |connector_id, actions|
+      connector = connectors.fetch(connector_id)
+      grant = connector_grants.find_or_initialize_by(connector: connector)
+      grant.tenant = tenant
+      grant.actions = actions
+      grant.save!
+    end
+  end
+
+  def revoke_connector_grants_without_scope
+    connector_grants.destroy_all unless scope?("connectors:invoke")
+  end
+
+  def connector_grant_selection_is_valid
+    return unless scope?("connectors:invoke")
+
+    connectors = Connector.where(id: @connector_grant_selection.keys).index_by { |connector| connector.id.to_s }
+    unknown_ids = @connector_grant_selection.keys - connectors.keys
+    errors.add(:connector_grant_selection, :invalid_connector) if unknown_ids.any?
+
+    @connector_grant_selection.each do |connector_id, actions|
+      connector = connectors[connector_id]
+      next unless connector
+
+      unknown_actions = actions - connector.enabled_actions.map(&:to_s)
+      if unknown_actions.any?
+        errors.add(:connector_grant_selection, :invalid_actions,
+                   connector: connector.name, actions: unknown_actions.join(", "))
+      end
+    end
+  end
 
   def generate_credentials
     self.client_id ||= "svc_#{SecureRandom.alphanumeric(20)}"

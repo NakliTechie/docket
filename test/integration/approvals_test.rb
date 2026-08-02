@@ -96,7 +96,7 @@ class ApprovalsTest < ActionDispatch::IntegrationTest
     assert kase.reload.status_triaged?, "no process guards :triaged → normal transition"
   end
 
-  # --- the checker queue (invocation:review) ---
+  # --- the checker queue (approval:review) ---
 
   test "the approver queue lists pending requests for reviewers" do
     closure_process

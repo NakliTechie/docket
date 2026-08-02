@@ -31,7 +31,11 @@ module Api
 
       def update
         authorize_api!(@lead, :update?, scope: "crm:write")
-        if @lead.update(lead_params)
+        attributes = lead_params
+        custom_fields = attributes.delete(:custom_fields)
+        @lead.assign_attributes(attributes)
+        @lead.assign_custom_fields(custom_fields) if custom_fields
+        if @lead.save
           render json: { data: Serialize.lead(@lead) }
         else
           render_validation_errors(@lead)
@@ -69,7 +73,8 @@ module Api
       def lead_params
         params.require(:lead).permit(:name, :email, :phone, :company_name,
                                      :source, :owner_id, :value_estimate_cents, :notes,
-                                     :sms_consent, :email_consent, :first_touch_campaign_id)
+                                     :sms_consent, :email_consent, :first_touch_campaign_id,
+                                     custom_fields: {})
       end
     end
   end

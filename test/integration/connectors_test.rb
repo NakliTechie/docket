@@ -15,12 +15,15 @@ class ConnectorsTest < ActionDispatch::IntegrationTest
 
   test "admin can list, create, view, and run a connector" do
     sign_in_as users(:admin)
+    CustomFieldDefinition.create!(resource_type: "contacts", key: "account_tier",
+                                  label: "Account tier", field_type: :short_text)
 
     get admin_connectors_path
     assert_response :success
 
     get new_admin_connector_path(provider: "http_json")
     assert_response :success
+    assert_select "input[name='connector[field_mapping][custom_fields.account_tier]']", count: 1
 
     assert_difference "Connector.count", 1 do
       post admin_connectors_path, params: { connector: {

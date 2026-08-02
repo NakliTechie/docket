@@ -6,8 +6,8 @@ class AdminDecisionAppealsTest < ActionDispatch::IntegrationTest
                      decision_class: "of_record", status: :applied)
   end
 
-  test "the invocation:review tier files, overturns, and views appeals" do
-    sign_in_as users(:client_admin) # holds invocation:review
+  test "the appeal adjudication tier files, overturns, and views appeals" do
+    sign_in_as users(:client_admin) # holds appeal:adjudicate
     decision = applied_of_record(contacts(:asha))
 
     assert_difference "DecisionAppeal.count", 1 do

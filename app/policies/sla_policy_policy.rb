@@ -1,9 +1,9 @@
 class SlaPolicyPolicy < ApplicationPolicy
   def index?   = permit?("case:read")
   def show?    = permit?("case:read")
-  def create?  = permit?("case_config:manage")
-  def update?  = permit?("case_config:manage")
-  def destroy? = permit?("case_config:manage")
+  def create?  = permit?("sla:manage")
+  def update?  = permit?("sla:manage")
+  def destroy? = permit?("sla:manage")
 
   class Scope < Scope
     def resolve

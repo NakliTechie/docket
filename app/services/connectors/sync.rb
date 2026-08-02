@@ -141,6 +141,7 @@ module Connectors
 
       fields = { name: attrs[:name].presence || attrs[:external_id] }
       fields[:value] = attrs[:value] if attrs[:value].present? # virtual setter → value_cents
+      fields[:custom_fields] = attrs[:custom_fields] if attrs[:custom_fields].present?
 
       deal = Deal.find_by(external_id: attrs[:external_id])
       if deal
@@ -163,11 +164,14 @@ module Connectors
 
       kase = Case.find_by(external_id: attrs[:external_id])
       if kase
-        kase.update!(stamp(connector, { subject: attrs[:subject] }, kase))
+        fields = { subject: attrs[:subject] }
+        fields[:custom_fields] = attrs[:custom_fields] if attrs[:custom_fields].present?
+        kase.update!(stamp(connector, fields, kase))
         :updated
       else
         Case.create!(external_id: attrs[:external_id], subject: attrs[:subject],
-                     contact: resolve_contact(attrs[:contact_email]), source_connector_id: connector.id)
+                     contact: resolve_contact(attrs[:contact_email]), custom_fields: attrs[:custom_fields] || {},
+                     source_connector_id: connector.id)
         :created
       end
     end
@@ -177,20 +181,45 @@ module Connectors
     # field_mapping: { docket_field => external_field }
     def map(connector, raw, target)
       mapping = connector.field_mapping || {}
-      MAPPABLE_FIELDS.fetch(target).each_with_object({}) do |field, acc|
+      attributes = MAPPABLE_FIELDS.fetch(target).each_with_object({}) do |field, acc|
         source = mapping[field].to_s
         next if source.blank?
         value = raw.is_a?(Hash) ? raw[source] : nil
         acc[field.to_sym] = value.to_s.strip.presence
       end
+      custom_fields = mapped_custom_fields(mapping, raw, target)
+      attributes[:custom_fields] = custom_fields if custom_fields.any?
+      attributes
     end
 
     # Add provenance to a save only when the record isn't already attributed —
     # keeps the first connector that sourced a record.
     def stamp(connector, save_attrs, record)
       save_attrs = save_attrs.dup
+      if save_attrs[:custom_fields]
+        save_attrs[:custom_fields] = record.custom_fields.to_h.merge(save_attrs[:custom_fields])
+      end
       save_attrs[:source_connector_id] = connector.id if record.source_connector_id.nil?
       save_attrs
+    end
+
+    def mapped_custom_fields(mapping, raw, target)
+      definitions = CustomFieldDefinition.for_resource(target).index_by(&:key)
+      mapping.each_with_object({}) do |(docket_field, source), values|
+        next unless docket_field.to_s.start_with?("custom_fields.")
+
+        key = docket_field.to_s.delete_prefix("custom_fields.")
+        definition = definitions[key]
+        raise Connectors::Error, "connector custom field #{key.inspect} is not defined for #{target}" unless definition
+        next unless definition.active?
+
+        value = raw.is_a?(Hash) ? raw[source.to_s] : nil
+        result = CustomFields::Type.coerce(definition, value)
+        unless result.valid?
+          raise Connectors::Error, "connector custom field #{key.inspect} is invalid: #{result.error}"
+        end
+        values[key] = result.value
+      end
     end
 
     def find_by_external_or_email(model, attrs)

@@ -36,6 +36,12 @@ class DashboardsTest < ActionDispatch::IntegrationTest
     assert_match "effector,autonomy_rate_pct", response.body
   end
 
+  test "a viewer without report export authority cannot download dashboard data" do
+    sign_in_as users(:customer_service)
+    get dashboard_path(format: :csv)
+    assert_response :forbidden
+  end
+
   test "the nav links admin/supervisor to the dashboard but not an agent" do
     sign_in_as users(:admin)
     get cases_path

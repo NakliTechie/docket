@@ -12,7 +12,8 @@ class ReferenceDoc < ApplicationRecord
   # Article lifecycle (PG3). Only published docs ground the AI or show anywhere;
   # only published + public reach the customer portal. Internal+published is the
   # private knowledge base (grounds the agent, invisible to customers).
-  enum :status, { draft: 0, published: 1, retired: 2 }, default: :published, prefix: :status
+  enum :status, { draft: 0, published: 1, retired: 2, under_review: 3 },
+       default: :published, prefix: :status
   # `public` collides with Module#public, so the enum predicates are prefixed.
   enum :visibility, { internal: 0, public: 1 }, default: :internal, prefix: :visibility
 

@@ -31,18 +31,33 @@ class AuthzMatrixTest < ActiveSupport::TestCase
   # Representative granted/denied cells per functional role — the discriminating
   # ones. A wrong matrix edit flips one of these.
   EXPECTED = {
-    "client_admin" => { grant: %w[user:manage audit:read case:delete invocation:review pipeline:manage],
+    "client_admin" => { grant: %w[user:manage audit:read case:delete approval:review pipeline:manage
+                                   knowledge:admin crm_config:manage report:export],
                         deny: %w[settings:manage connector:manage ai:autonomy] },
-    "finance" => { grant: %w[finance:read finance:write report:operational case:read],
+    "customer_service_supervisor" => {
+      grant: %w[case:delete queue:manage routing:manage sla:manage macro:manage report:export],
+      deny: %w[user:manage approval:review knowledge:draft crm_config:manage]
+    },
+    "finance" => { grant: %w[finance:read finance:write report:operational report:export case:read],
                    deny: %w[case:write contact:write connector:invoke user:manage] },
     "sales" => { grant: %w[lead:write deal:write contact:write report:sales],
-                 deny: %w[report:operational case:write connector:invoke lead:delete] },
+                 deny: %w[report:operational report:export case:write connector:invoke lead:delete] },
     "customer_service" => { grant: %w[case:write contact:write report:operational connector:invoke],
-                            deny: %w[case:delete lead:read deal:read pipeline:read report:sales] },
-    "technical" => { grant: %w[connector:read connector:operate webhook:manage reference_doc:manage],
-                     deny: %w[connector:manage case:write contact:write invocation:review] },
+                            deny: %w[case:delete lead:read deal:read pipeline:read report:sales report:export] },
+    "technical" => { grant: %w[connector:read connector:operate webhook:manage knowledge:read],
+                     deny: %w[connector:manage case:write contact:write approval:review knowledge:draft] },
+    "decision_reviewer" => {
+      grant: %w[approval:review appeal:adjudicate decision:run audit:read],
+      deny: %w[case:write connector:invoke knowledge:publish report:export]
+    },
+    "knowledge_manager" => {
+      grant: %w[knowledge:draft knowledge:review knowledge:publish knowledge:admin],
+      deny: %w[case:write approval:review user:manage report:export]
+    },
+    "auditor" => { grant: %w[audit:read report:operational report:sales report:export],
+                   deny: %w[case:write contact:write approval:review finance:write] },
     "readonly" => { grant: %w[case:read contact:read lead:read deal:read pipeline:read report:sales],
-                    deny: %w[case:write contact:write report:operational] }
+                    deny: %w[case:write contact:write report:operational report:export] }
   }.freeze
 
   test "each functional role grants and denies exactly as designed" do
@@ -58,6 +73,23 @@ class AuthzMatrixTest < ActiveSupport::TestCase
     refute u.can?("nonsense:action")
     refute u.can?(nil)
     refute u.can?("")
+  end
+
+  test "the retired coarse permissions are absent" do
+    assert_empty Authz::PERMISSIONS & %w[case_config:manage reference_doc:manage invocation:review]
+  end
+
+  test "separation-of-duty permissions have intentional holders" do
+    expected = {
+      "queue:manage" => %w[super_admin client_admin customer_service_supervisor],
+      "approval:review" => %w[super_admin client_admin decision_reviewer],
+      "knowledge:publish" => %w[super_admin client_admin knowledge_manager],
+      "crm_config:manage" => %w[super_admin client_admin]
+    }
+    expected.each do |permission, roles|
+      holders = Authz::ASSIGNABLE_ROLES.select { |role| Authz.permissions_for(role).include?(permission) }
+      assert_equal roles, holders, "unexpected holders for #{permission}"
+    end
   end
 
   test "every User.roles key has an SSO rank" do

@@ -2,7 +2,7 @@ class CustomFieldReportsController < ApplicationController
   def index
     @resource_type = normalized_resource_type
     authorize @resource_type, :index?, policy_class: CustomFieldReportPolicy
-    ensure_feature!(@resource_type == "cases" ? "service_desk" : "work")
+    ensure_feature!(CustomFieldDefinition.feature_for(@resource_type))
     @definitions = CustomFieldDefinition.for_resource(@resource_type).reportable.ordered
     @definition = selected_definition
     @report = CustomFieldReport.new(definition: @definition, scope: report_scope) if @definition
@@ -10,6 +10,7 @@ class CustomFieldReportsController < ApplicationController
     respond_to do |format|
       format.html
       format.csv do
+        authorize @resource_type, :export?, policy_class: CustomFieldReportPolicy
         return head :not_found unless @report
 
         send_data @report.to_csv,
@@ -34,6 +35,6 @@ class CustomFieldReportsController < ApplicationController
   end
 
   def report_scope
-    @resource_type == "cases" ? policy_scope(Case) : policy_scope(WorkItem)
+    policy_scope(CustomFieldDefinition.model_for(@resource_type))
   end
 end

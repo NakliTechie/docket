@@ -46,5 +46,60 @@ module Api
       assert_response :success
       assert_equal "Production", response.parsed_body.dig("data", "rows", 0, "label")
     end
+
+    test "CRM definitions values and reports have API parity" do
+      post "/api/v1/custom_fields", params: { custom_field: {
+        resource_type: "leads", key: "account_tier", label: "Account tier",
+        field_type: "single_select", options: %w[Gold Silver], reportable: true
+      } }, headers: @headers, as: :json
+      assert_response :created
+
+      post "/api/v1/leads", params: { lead: {
+        name: "API governed lead", email: "api-governed-lead@example.test",
+        custom_fields: { account_tier: "Gold" }
+      } }, headers: @headers, as: :json
+      assert_response :created
+      assert_equal "Gold", response.parsed_body.dig("data", "custom_fields", "account_tier")
+
+      get "/api/v1/reports/custom_fields",
+          params: { resource_type: "leads", field: "account_tier" }, headers: @headers
+      assert_response :success
+      assert_equal "Gold", response.parsed_body.dig("data", "rows", 0, "label")
+    end
+
+    test "service-account config scopes separate definition reads from writes" do
+      CustomFieldDefinition.create!(resource_type: "deals", key: "route", label: "Route",
+                                    field_type: :short_text)
+      read_headers = auth_header(service_token_for(%w[config:read crm:read]))
+      get "/api/v1/custom_fields", params: { resource_type: "deals" }, headers: read_headers
+      assert_response :success
+      assert_equal [ "route" ], response.parsed_body.fetch("data").map { |field| field.fetch("key") }
+
+      post "/api/v1/custom_fields", params: { custom_field: {
+        resource_type: "deals", key: "blocked", label: "Blocked", field_type: "short_text"
+      } }, headers: read_headers, as: :json
+      assert_response :forbidden
+
+      write_headers = auth_header(service_token_for(%w[config:write]))
+      post "/api/v1/custom_fields", params: { custom_field: {
+        resource_type: "deals", key: "approved", label: "Approved", field_type: "short_text"
+      } }, headers: write_headers, as: :json
+      assert_response :created
+    end
+
+    test "Work definitions require workspace authority alongside config authority" do
+      config_headers = auth_header(service_token_for(%w[config:write]))
+      payload = { custom_field: {
+        resource_type: "work_items", key: "delivery_region", label: "Delivery region",
+        field_type: "short_text"
+      } }
+
+      post "/api/v1/custom_fields", params: payload, headers: config_headers, as: :json
+      assert_response :forbidden
+
+      managed_headers = auth_header(service_token_for(%w[config:write work:manage]))
+      post "/api/v1/custom_fields", params: payload, headers: managed_headers, as: :json
+      assert_response :created
+    end
   end
 end

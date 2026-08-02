@@ -1,7 +1,7 @@
 module Admin
   # The checker's queue (PG4): pending maker-checker requests, approved with a
   # reasoned order (which performs the guarded action) or rejected (it's
-  # blocked). invocation:review tier — the human of record.
+  # blocked). approval:review tier — the human of record.
   class ApprovalRequestsController < ApplicationController
     require_feature "approvals"
     before_action :set_request, only: %i[approve reject]

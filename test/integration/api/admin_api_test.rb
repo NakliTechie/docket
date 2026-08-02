@@ -38,12 +38,19 @@ module Api
     end
 
     test "service account lifecycle over the api" do
+      connector = Connector.create!(name: "API effector", provider: "http_json", target: "contacts",
+                                    config: { "action_url" => "https://api.example.test/do" },
+                                    field_mapping: { "external_id" => "id" },
+                                    enabled_actions: %w[post_json])
       post "/api/v1/service_accounts", params: {
-        service_account: { name: "API SA", scopes: [ "cases:read" ] }
+        service_account: { name: "API SA", scopes: %w[cases:read connectors:invoke],
+                           connector_grant_selection: { connector.id.to_s => %w[post_json] } }
       }, headers: auth_header(@admin_token), as: :json
       assert_response :created
       body = response.parsed_body["data"]
       assert body["client_secret"].present?
+      assert_equal [ { "connector_id" => connector.id, "connector_name" => connector.name,
+                       "actions" => [ "post_json" ] } ], body["connector_grants"]
 
       post "/api/v1/service_accounts/#{body["id"]}/rotate_secret", headers: auth_header(@admin_token)
       assert_response :success

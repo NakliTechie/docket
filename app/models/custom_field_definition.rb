@@ -2,7 +2,27 @@ class CustomFieldDefinition < ApplicationRecord
   acts_as_tenant(:tenant)
   include Audited
 
-  RESOURCE_TYPES = %w[cases work_items].freeze
+  RESOURCE_TYPES = %w[cases contacts leads deals work_items].freeze
+  RESOURCE_FEATURES = {
+    "cases" => "service_desk", "contacts" => "crm", "leads" => "crm",
+    "deals" => "crm", "work_items" => "work"
+  }.freeze
+  MANAGE_PERMISSIONS = {
+    "cases" => "queue:manage", "contacts" => "crm_config:manage", "leads" => "crm_config:manage",
+    "deals" => "crm_config:manage", "work_items" => "project:manage"
+  }.freeze
+  READ_PERMISSIONS = {
+    "cases" => "case:read", "contacts" => "contact:read", "leads" => "lead:read",
+    "deals" => "deal:read", "work_items" => "work:read"
+  }.freeze
+  API_READ_SCOPES = {
+    "cases" => "cases:read", "contacts" => "contacts:read", "leads" => "crm:read",
+    "deals" => "crm:read", "work_items" => "work:read"
+  }.freeze
+  MODEL_NAMES = {
+    "cases" => "Case", "contacts" => "Contact", "leads" => "Lead",
+    "deals" => "Deal", "work_items" => "WorkItem"
+  }.freeze
   FIELD_TYPES = %w[short_text long_text integer decimal boolean date single_select multi_select].freeze
   SELECT_TYPES = %w[single_select multi_select].freeze
 
@@ -28,6 +48,12 @@ class CustomFieldDefinition < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :reportable, -> { where(reportable: true) }
   scope :ordered, -> { order(:position, :id) }
+
+  def self.feature_for(resource_type) = RESOURCE_FEATURES.fetch(resource_type.to_s)
+  def self.manage_permission_for(resource_type) = MANAGE_PERMISSIONS.fetch(resource_type.to_s)
+  def self.read_permission_for(resource_type) = READ_PERMISSIONS.fetch(resource_type.to_s)
+  def self.api_read_scope_for(resource_type) = API_READ_SCOPES.fetch(resource_type.to_s)
+  def self.model_for(resource_type) = MODEL_NAMES.fetch(resource_type.to_s).constantize
 
   def select_type? = SELECT_TYPES.include?(field_type)
 

@@ -4,6 +4,9 @@ module Imports
   # stages are caller-supplied mappings; unknown values are reported and the
   # affected record is skipped.
   class Salesforce
+    RESOURCE_TYPES = {
+      "Contact" => "contacts", "Case" => "cases", "Lead" => "leads", "Opportunity" => "deals"
+    }.freeze
     ACCOUNT_FIELDS = %w[Id Name Type CreatedDate LastModifiedDate IsDeleted].freeze
     CONTACT_FIELDS = %w[
       Id AccountId Name FirstName LastName Email Phone MobilePhone CreatedDate
@@ -40,6 +43,7 @@ module Imports
 
     def initialize(payload: nil, file: nil, source: nil, role_map: {}, status_map: {},
                    stage_map: {}, lead_status_map: {}, lead_source_map: {},
+                   custom_field_maps: {},
                    dry_run: false, source_instance: "default", resume_token: nil,
                    batch_size: 200)
       @result = Result.new
@@ -49,6 +53,16 @@ module Imports
       @stage_map = stage_map.stringify_keys
       @lead_status_map = lead_status_map.stringify_keys
       @lead_source_map = lead_source_map.stringify_keys
+      @custom_field_mappings = custom_field_maps.to_h.stringify_keys.each_with_object({}) do |(resource_type, mapping), result|
+        unless CustomFieldDefinition::RESOURCE_TYPES.include?(resource_type)
+          @result.error!("custom-field resource #{resource_type.inspect} is not supported by Salesforce import")
+          next
+        end
+
+        result[resource_type] = CustomFields::ImportMapping.new(
+          resource_type: resource_type, mapping: mapping, result: @result
+        )
+      end
       @dry_run = dry_run
       @source_instance = source_instance
       @resume_token = resume_token
@@ -204,6 +218,7 @@ module Imports
       }.compact
       attrs["organisation_id"] = organisation.id if organisation
       @session.result.unmapped!("AccountId", row["AccountId"]) if row["AccountId"].present? && organisation.nil?
+      apply_custom_fields(attrs, "contacts", row, existing)
       add_times(attrs, row)
       @session.sync(source_type: "Contact", external_id: id, kind: "contacts",
                     attributes: attrs, source_updated_at: row["LastModifiedDate"],
@@ -248,6 +263,7 @@ module Imports
       attrs["first_responded_at"] = parse_time(row["First_Response__c"]) if row.key?("First_Response__c")
       attrs["first_response_due_at"] = parse_time(row["First_Response_Due__c"]) if row.key?("First_Response_Due__c")
       attrs["resolution_due_at"] = parse_time(row["Resolution_Due__c"]) if row.key?("Resolution_Due__c")
+      apply_custom_fields(attrs, "cases", row, existing)
       @session.sync(source_type: "Case", external_id: id, kind: "cases",
                     attributes: attrs, source_updated_at: row["LastModifiedDate"],
                     existing: existing) { Case.new }
@@ -276,6 +292,7 @@ module Imports
         "phone" => row["Phone"], "notes" => row["Description"],
         "status" => status, "source" => source, "owner_id" => owner&.id
       }.compact
+      apply_custom_fields(attrs, "leads", row, existing)
       add_times(attrs, row)
       @session.sync(source_type: "Lead", external_id: id, kind: "leads",
                     attributes: attrs, source_updated_at: row["LastModifiedDate"],
@@ -306,6 +323,7 @@ module Imports
         "expected_close_on" => parse_date(row["CloseDate"])
       }.compact
       attrs["closed_at"] = parse_time(row["LastModifiedDate"]) if row["IsClosed"] == true
+      apply_custom_fields(attrs, "deals", row, existing)
       add_times(attrs, row)
       @session.sync(source_type: "Opportunity", external_id: id, kind: "deals",
                     attributes: attrs, source_updated_at: row["LastModifiedDate"],
@@ -338,7 +356,7 @@ module Imports
     def preview_entity(entity, fields, limit)
       @input.rows(entity, optional: true).first(limit).each do |row|
         next unless row.is_a?(Hash)
-        FieldContract.new(@result, entity, fields).inspect!(row)
+        FieldContract.new(@result, entity, fields + consumed_custom_field_sources(entity)).inspect!(row)
         yield row
       end
     end
@@ -365,7 +383,19 @@ module Imports
     end
 
     def inspect_fields(row, entity, fields)
-      FieldContract.new(@session.result, entity, fields).inspect!(row)
+      FieldContract.new(@session.result, entity, fields + consumed_custom_field_sources(entity)).inspect!(row)
+    end
+
+    def apply_custom_fields(attrs, resource_type, row, existing)
+      values = @custom_field_mappings[resource_type]&.values(row).to_h
+      return if values.empty?
+
+      attrs["custom_fields"] = existing&.custom_fields.to_h.merge(values)
+    end
+
+    def consumed_custom_field_sources(entity)
+      resource_type = RESOURCE_TYPES[entity]
+      @custom_field_mappings[resource_type]&.consumed_sources || []
     end
 
     def add_times(attrs, row)

@@ -19,6 +19,7 @@ module Api
       def create
         definition = CustomFieldDefinition.new(definition_params)
         authorize_api!(definition, :create?, scope: "config:write")
+        authorize_work_management_scope!(definition)
         if definition.save
           render json: { data: Serialize.custom_field_definition(definition) }, status: :created
         else
@@ -28,6 +29,7 @@ module Api
 
       def update
         authorize_api!(@definition, :update?, scope: "config:write")
+        authorize_work_management_scope!(@definition)
         if @definition.update(definition_params.except(:resource_type, :key))
           render json: { data: Serialize.custom_field_definition(@definition.reload) }
         else
@@ -51,7 +53,7 @@ module Api
 
       def ensure_resource_feature!
         resource_type = normalized_resource_type
-        ensure_feature!(resource_type == "cases" ? "service_desk" : "work")
+        ensure_feature!(CustomFieldDefinition.feature_for(resource_type))
       end
 
       def definition_params
@@ -59,6 +61,12 @@ module Api
           :resource_type, :key, :label, :field_type, :required, :active, :reportable, :position,
           options: []
         )
+      end
+
+      def authorize_work_management_scope!(definition)
+        return unless service_account && definition.resource_type == "work_items"
+
+        authorize_api!(definition, nil, scope: "work:manage")
       end
     end
   end

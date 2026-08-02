@@ -69,6 +69,7 @@
       <dt><%= t("leads.fields.notes") %></dt><dd><%= @lead.notes %></dd>
     <% end %>
   </dl>
+  <%= render "shared/custom_field_values", record: @lead, resource_type: "leads" %>
 </div>
 
 <% active_sequences = Sequence.active.order(:name) %>

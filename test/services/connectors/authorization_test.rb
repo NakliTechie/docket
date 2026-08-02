@@ -16,4 +16,17 @@ class Connectors::AuthorizationTest < ActiveSupport::TestCase
     assert Connectors::Authorization.may_invoke?(ServiceAccount.new(scopes: %w[connectors:invoke]))
     refute Connectors::Authorization.may_invoke?(ServiceAccount.new(scopes: %w[cases:read]))
   end
+
+  test "service accounts require an action grant in addition to the coarse scope" do
+    connector = Connector.create!(name: "Effector", provider: "http_json", target: "contacts",
+                                  config: { "action_url" => "https://api.example.test/do" },
+                                  field_mapping: { "external_id" => "id" },
+                                  enabled_actions: %w[post_json])
+    action = connector.provider_action("post_json")
+    account = ServiceAccount.create!(name: "Agent", scopes: %w[connectors:invoke])
+
+    refute Connectors::Authorization.action_granted?(account, connector, action)
+    account.grant_connector_actions!(connector, %w[post_json])
+    assert Connectors::Authorization.action_granted?(account, connector, action)
+  end
 end

@@ -59,6 +59,7 @@ class ApplicationController < ActionController::Base
     respond_to do |format|
       format.html { render "errors/forbidden", status: :forbidden }
       format.json { render json: { error: "forbidden" }, status: :forbidden }
+      format.any  { head :forbidden }
     end
   end
 

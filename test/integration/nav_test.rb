@@ -25,7 +25,7 @@ class NavTest < ActionDispatch::IntegrationTest
     assert_no_match(%r{/admin/users}, response.body)
   end
 
-  # The invocation:review tier (client_admin) is the human-of-record for
+  # The approval:review tier (client_admin) is the human-of-record for
   # `of_record` agent actions, so the approval queue remains reachable.
   test "a client_admin reaches the agent-actions approval queue via automation" do
     sign_in_as users(:client_admin)
@@ -35,7 +35,7 @@ class NavTest < ActionDispatch::IntegrationTest
     assert_match(%r{/admin/connector_invocations}, response.body)
   end
 
-  test "a role without invocation:review cannot see the approval queue" do
+  test "a role without approval:review cannot see the approval queue" do
     sign_in_as users(:customer_service)
     get cases_path
     assert_response :success
