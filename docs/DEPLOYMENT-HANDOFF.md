@@ -131,6 +131,10 @@ it to users:
    Create active campaign records before publishing UTM-tagged inquiry links.
 7. **Notifications/CSAT** — choose the SLA risk window and whether notifications
    also send email; enable CSAT only after SMTP is proven.
+8. **Optional BI** — provision a separately secured read replica of the primary
+   database for self-hosted Metabase or Superset. Do not attach BI to the
+   writable primary. Shared deployments need database-enforced tenant isolation
+   or separate per-tenant extracts; dashboard filters are not isolation.
 
 The exact 11-role inventory, 17 API scopes, daily workflow, and all operator
 surfaces are in [OPERATOR-GUIDE.md](OPERATOR-GUIDE.md).
