@@ -47,23 +47,31 @@ class CasesController < ApplicationController
     @call_records = @case.call_records.includes(:connector).order(:created_at)
     @message = Message.new(kind: params[:note] ? :internal_note : :public_reply,
                            body: flash[:compose_body]) # preserved after a failed save (M30)
-    @contact_cases = @case.contact.cases.where.not(id: @case.id).order(created_at: :desc).limit(10)
+    @contact_cases = policy_scope(Case).where(contact: @case.contact).where.not(id: @case.id)
+                                      .order(created_at: :desc).limit(10)
     @macros = Macro.order(:name)
     @next_case = next_open_case
     @merge_candidates = policy_scope(Case).canonical.where(contact: @case.contact).where.not(id: @case.id)
                                     .order(created_at: :desc).limit(100)
+    @linked_work_items = if feature?("work") && policy(WorkItem).index?
+      policy_scope(WorkItem).where(id: @case.work_items.select(:id)).includes(:project, :workflow_state)
+    else
+      WorkItem.none
+    end
   end
 
   def new
-    @case = Case.new(contact_id: params[:contact_id], channel: :staff)
-    @inline_contact = Contact.new(preferred_language: I18n.locale)
+    @case = Case.new(contact_id: params[:contact_id], channel: :staff, owner: Current.user)
+    @inline_contact = Contact.new(preferred_language: I18n.locale, owner: Current.user)
     authorize @case
   end
 
   def create
     @case = Case.new(case_params)
     @case.channel = :staff
-    @inline_contact = Contact.new(inline_contact_params.merge(preferred_language: I18n.locale))
+    @case.owner ||= Current.user
+    @inline_contact = Contact.new(inline_contact_params.merge(preferred_language: I18n.locale,
+                                                               owner: Current.user))
     authorize @case
     if inline_contact_requested?
       authorize @inline_contact
@@ -178,7 +186,7 @@ class CasesController < ApplicationController
   # Next-case hotkey target: oldest open case in the same queue, else
   # oldest open case anywhere.
   def next_open_case
-    base = Case.open_cases.where.not(id: @case.id)
+    base = policy_scope(Case).open_cases.where.not(id: @case.id)
     (@case.queue_id && base.where(queue_id: @case.queue_id).order(:created_at).first) ||
       base.order(:created_at).first
   end
@@ -189,7 +197,7 @@ class CasesController < ApplicationController
 
   def case_params
     params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                 :queue_id, :assignee_id, :contact_id, :sla_policy_id,
+                                 :queue_id, :assignee_id, :owner_id, :contact_id, :sla_policy_id,
                                  custom_fields: {})
   end
 
@@ -221,7 +229,7 @@ class CasesController < ApplicationController
   # so the submitted (possibly stale) value drives optimistic-lock detection.
   def case_update_params
     params.require(:case).permit(:subject, :description, :priority, :category_id,
-                                 :queue_id, :assignee_id, :sla_policy_id, :lock_version,
+                                 :queue_id, :assignee_id, :owner_id, :sla_policy_id, :lock_version,
                                  custom_fields: {})
   end
 

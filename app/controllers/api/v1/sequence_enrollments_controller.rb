@@ -12,7 +12,7 @@ module Api
       end
 
       def show
-        authorize_api!(@enrollment.sequence, :show?, scope: "crm:read")
+        authorize_api!(@enrollment, :show?, scope: "crm:read")
         render json: { data: Serialize.sequence_enrollment(@enrollment) }
       end
 
@@ -27,7 +27,7 @@ module Api
       end
 
       def cancel
-        authorize_api!(@enrollment.sequence, :enroll?, scope: "crm:write")
+        authorize_api!(@enrollment, :cancel?, scope: "crm:write")
         @enrollment.cancel!
         render json: { data: Serialize.sequence_enrollment(@enrollment) }
       end
@@ -40,9 +40,15 @@ module Api
 
       def find_enrollable
         case params[:enrollable_type]
-        when "Lead"    then Lead.find_by(id: params[:enrollable_id])
-        when "Contact" then Contact.find_by(id: params[:enrollable_id])
+        when "Lead"    then enrollable_scope(Lead).find_by(id: params[:enrollable_id])
+        when "Contact" then enrollable_scope(Contact).find_by(id: params[:enrollable_id])
         end
+      end
+
+      def enrollable_scope(model)
+        return model.all unless current_user
+
+        RecordVisibility.resolve(current_user, model.all, access: :write)
       end
     end
   end

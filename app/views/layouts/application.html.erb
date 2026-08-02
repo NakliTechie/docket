@@ -155,6 +155,7 @@
                 <% if policy(User).index? %>
                   <%= nav_section t("layout.nav.people_access") %>
                   <%= nav_link t("layout.nav.users"), admin_users_path, active: controller_name == "users" %>
+                  <%= nav_link t("layout.nav.teams"), admin_teams_path, active: controller_name == "teams" %>
                   <%= nav_link t("layout.nav.roles"), admin_roles_path, active: controller_name == "roles" %>
                   <% if policy(Tenant).index? %>
                     <%= nav_link t("layout.nav.tenants"), admin_tenants_path, active: controller_name == "tenants" %>

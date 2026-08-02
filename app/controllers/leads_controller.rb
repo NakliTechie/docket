@@ -17,17 +17,24 @@ class LeadsController < ApplicationController
     visible_types = [ "Lead" ]
     visible_types << "Contact" if policy(Contact).index?
     visible_types << "Deal" if policy(Deal).index?
-    @conversation = CrmConversation.call(@lead, case_scope: case_scope, visible_types: visible_types)
+    @conversation = CrmConversation.call(
+      @lead, case_scope: case_scope,
+      contact_scope: policy(Contact).index? ? policy_scope(Contact) : Contact.none,
+      lead_scope: policy_scope(Lead),
+      deal_scope: policy(Deal).index? ? policy_scope(Deal) : Deal.none,
+      visible_types: visible_types
+    )
     @crm_bcc_address = CrmMailboxAddress.address_for(@lead)
   end
 
   def new
-    @lead = Lead.new
+    @lead = Lead.new(owner: Current.user)
     authorize @lead
   end
 
   def create
     @lead = Lead.new(lead_params)
+    @lead.owner ||= Current.user
     authorize @lead
     if @lead.save
       redirect_to @lead, notice: t(".created")

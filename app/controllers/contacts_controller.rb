@@ -21,18 +21,25 @@ class ContactsController < ApplicationController
       visible_types = [ "Contact" ]
       visible_types << "Lead" if policy(Lead).index?
       visible_types << "Deal" if policy(Deal).index?
-      @conversation = CrmConversation.call(@contact, case_scope: case_scope, visible_types: visible_types)
+      @conversation = CrmConversation.call(
+        @contact, case_scope: case_scope,
+        contact_scope: policy_scope(Contact),
+        lead_scope: policy(Lead).index? ? policy_scope(Lead) : Lead.none,
+        deal_scope: policy(Deal).index? ? policy_scope(Deal) : Deal.none,
+        visible_types: visible_types
+      )
       @crm_bcc_address = CrmMailboxAddress.address_for(@contact)
     end
   end
 
   def new
-    @contact = Contact.new
+    @contact = Contact.new(owner: Current.user)
     authorize @contact
   end
 
   def create
     @contact = Contact.new(contact_params)
+    @contact.owner ||= Current.user
     authorize @contact
     if @contact.save
       redirect_to @contact, notice: t(".created")
@@ -91,7 +98,7 @@ class ContactsController < ApplicationController
 
   EDITABLE_ATTRS = %i[
     name email phone job_title whatsapp_handle telegram_handle organisation_id preferred_language
-    notes sms_consent email_consent
+    owner_id notes sms_consent email_consent
   ].freeze
 
   def contact_params

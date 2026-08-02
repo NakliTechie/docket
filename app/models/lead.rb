@@ -135,7 +135,7 @@ class Lead < ApplicationRecord
     existing ||= phone && Contact.find_by(phone: phone)
     return existing if existing
 
-    Contact.create!(name: name, email: email, phone: phone,
+    Contact.create!(name: name, email: email, phone: phone, owner: owner,
                     job_title: job_title, whatsapp_handle: whatsapp_handle,
                     telegram_handle: telegram_handle,
                     email_consent: email_consent, email_unsubscribed_at: email_unsubscribed_at,
@@ -144,7 +144,10 @@ class Lead < ApplicationRecord
 
   def resolve_organisation
     return nil if company_name.blank?
-    Organisation.find_or_create_by!(name: company_name) { |o| o.kind = "company" }
+    Organisation.find_or_create_by!(name: company_name) do |organisation|
+      organisation.kind = "company"
+      organisation.owner = owner
+    end
   end
 
   # Open a Deal for the converted lead in the default pipeline's first

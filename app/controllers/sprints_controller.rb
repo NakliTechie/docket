@@ -9,9 +9,12 @@ class SprintsController < ApplicationController
   def index
     authorize Sprint
     @sprints = policy_scope(Sprint).where(project: @project).ordered
-    @counts = WorkItem.where(sprint: @sprints).group(:sprint_id).count
+    @counts = policy_scope(WorkItem).where(sprint: @sprints).group(:sprint_id).count
     @backlog_count = policy_scope(WorkItem).where(project: @project, sprint: nil).open.count
-    @report = Sprints::Velocity.call(project: @project)
+    @report = Sprints::Velocity.call(
+      project: @project,
+      item_scope: RecordVisibility.resolve(Current.user, WorkItem.with_deleted)
+    )
   end
 
   def new

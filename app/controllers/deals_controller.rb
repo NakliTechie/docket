@@ -37,23 +37,30 @@ class DealsController < ApplicationController
     @deal_competitor = DealCompetitor.new(deal: @deal)
     @available_competitors = policy_scope(Competitor).where.not(id: @deal.competitor_ids).order(:name)
     @deal_contact_role = DealContactRole.new(deal: @deal)
-    @available_role_contacts = Contact.where.not(id: @deal.role_contacts.select(:id)).order(:name)
+    @available_role_contacts = policy_scope(Contact).where.not(id: @deal.role_contacts.select(:id)).order(:name)
     case_scope = feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none
     visible_types = [ "Deal" ]
     visible_types << "Contact" if policy(Contact).index?
     visible_types << "Lead" if policy(Lead).index?
-    @conversation = CrmConversation.call(@deal, case_scope: case_scope, visible_types: visible_types)
+    @conversation = CrmConversation.call(
+      @deal, case_scope: case_scope,
+      contact_scope: policy(Contact).index? ? policy_scope(Contact) : Contact.none,
+      lead_scope: policy(Lead).index? ? policy_scope(Lead) : Lead.none,
+      deal_scope: policy_scope(Deal),
+      visible_types: visible_types
+    )
     @crm_bcc_address = CrmMailboxAddress.address_for(@deal)
   end
 
   def new
-    @deal = Deal.new(pipeline: Pipeline.default)
+    @deal = Deal.new(pipeline: Pipeline.default, owner: Current.user)
     @deal.pipeline_stage = @deal.pipeline&.first_stage
     authorize @deal
   end
 
   def create
     @deal = Deal.new(deal_params)
+    @deal.owner ||= Current.user
     authorize @deal
     if @deal.save
       redirect_to @deal, notice: t(".created")
@@ -97,7 +104,7 @@ class DealsController < ApplicationController
   end
 
   def onboard
-    authorize @deal
+    authorize @deal, :onboard?
     raise Pundit::NotAuthorizedError unless feature?("work")
 
     template = policy_scope(ProjectTemplate).active.find(params.require(:project_template_id))
@@ -109,7 +116,7 @@ class DealsController < ApplicationController
 
   # Start an engagement project (pre-quote studies) from an OPEN deal.
   def engage
-    authorize @deal
+    authorize @deal, :engage?
     raise Pundit::NotAuthorizedError unless feature?("work")
 
     template = policy_scope(ProjectTemplate).active.find(params.require(:project_template_id))

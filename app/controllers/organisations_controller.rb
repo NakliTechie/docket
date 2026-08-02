@@ -7,7 +7,10 @@ class OrganisationsController < ApplicationController
 
   def show
     authorize @organisation
-    @pagy, @contacts = pagy(@organisation.contacts.order(:name))
+    visible_organisations = policy_scope(Organisation)
+    @parent = visible_organisations.find_by(id: @organisation.parent_id)
+    @children = visible_organisations.where(parent: @organisation).order(:name)
+    @pagy, @contacts = pagy(policy_scope(Contact).where(organisation: @organisation).order(:name))
     result = Customer360.new(
       subject: @organisation,
       case_scope: feature?("service_desk") && policy(Case).index? ? policy_scope(Case) : Case.none,
@@ -26,12 +29,13 @@ class OrganisationsController < ApplicationController
   end
 
   def new
-    @organisation = Organisation.new
+    @organisation = Organisation.new(owner: Current.user)
     authorize @organisation
   end
 
   def create
     @organisation = Organisation.new(organisation_params)
+    @organisation.owner ||= Current.user
     authorize @organisation
     if @organisation.save
       redirect_to @organisation, notice: t(".created")
@@ -72,6 +76,6 @@ class OrganisationsController < ApplicationController
   end
 
   def organisation_params
-    params.require(:organisation).permit(:name, :kind, :external_ref, :notes, :parent_id)
+    params.require(:organisation).permit(:name, :kind, :external_ref, :notes, :parent_id, :owner_id)
   end
 end

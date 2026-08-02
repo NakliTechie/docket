@@ -9,9 +9,10 @@ class DecisionQualityReport
 
   attr_reader :from, :to
 
-  def initialize(from:, to:)
+  def initialize(from:, to:, decision_scope: Decision.all)
     @from = from.to_date
     @to = to.to_date
+    @decision_scope = decision_scope
     raise ArgumentError, "from must be on or before to" if @from > @to
   end
 
@@ -38,7 +39,7 @@ class DecisionQualityReport
   private
 
   def decisions
-    Decision.where(created_at: from.beginning_of_day..to.end_of_day).includes(:appeals).to_a
+    @decision_scope.where(created_at: from.beginning_of_day..to.end_of_day).includes(:appeals).to_a
   end
 
   def percentage(numerator, denominator)

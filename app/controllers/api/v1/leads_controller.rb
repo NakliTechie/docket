@@ -22,6 +22,7 @@ module Api
         attrs = lead_params
         lead = Lead.new(attrs)
         lead.source = :api unless attrs.key?(:source) # API-sourced unless stated
+        lead.owner ||= current_user
         if lead.save
           render json: { data: Serialize.lead(lead) }, status: :created
         else

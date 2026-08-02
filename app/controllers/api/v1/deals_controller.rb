@@ -20,6 +20,7 @@ module Api
       def create
         authorize_api!(Deal.new, :create?, scope: "crm:write")
         deal = Deal.new(deal_params)
+        deal.owner ||= current_user
         if deal.save
           render json: { data: Serialize.deal(deal) }, status: :created
         else

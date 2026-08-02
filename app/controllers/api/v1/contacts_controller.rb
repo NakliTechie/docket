@@ -19,6 +19,7 @@ module Api
       def create
         authorize_api!(Contact.new, :create?, scope: "contacts:write")
         contact = Contact.new(contact_params)
+        contact.owner ||= current_user
         if contact.save
           render json: { data: Serialize.contact(contact) }, status: :created
         else
@@ -59,7 +60,7 @@ module Api
       end
 
       EDITABLE_ATTRS = %i[
-        name email phone job_title whatsapp_handle telegram_handle organisation_id preferred_language
+        name email phone job_title whatsapp_handle telegram_handle organisation_id owner_id preferred_language
         notes sms_consent email_consent
       ].freeze
 

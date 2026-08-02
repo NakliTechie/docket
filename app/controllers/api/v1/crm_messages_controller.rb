@@ -7,6 +7,9 @@ module Api
         subject = find_subject
         authorize_api!(subject, :show?, scope: read_scope(subject))
         entries = CrmConversation.call(subject, case_scope: readable_case_scope,
+                                        contact_scope: readable_record_scope(Contact, scope: "contacts:read"),
+                                        lead_scope: readable_record_scope(Lead, scope: "crm:read"),
+                                        deal_scope: readable_record_scope(Deal, scope: "crm:read"),
                                         visible_types: readable_crm_types)
         render json: { data: entries.map { |entry| Serialize.crm_conversation_entry(entry) } }
       end
@@ -42,6 +45,12 @@ module Api
         return policy(Case).index? ? policy_scope(Case) : Case.none if current_user
 
         current_access_token.scope?("cases:read") ? Case.all : Case.none
+      end
+
+      def readable_record_scope(model, scope:)
+        return policy(model).index? ? policy_scope(model) : model.none if current_user
+
+        current_access_token.scope?(scope) ? model.all : model.none
       end
 
       def readable_crm_types

@@ -1,13 +1,13 @@
 class WorkItemPolicy < ApplicationPolicy
   def index?      = permit?("work:read")
-  def show?       = permit?("work:read") && project_visible?
+  def show?       = permit?("work:read") && project_visible? && record_in_scope?(:read)
   def create?     = permit?("work:write") && project_visible?
-  def update?     = permit?("work:write") && project_visible?
-  def transition? = permit?("work:write") && project_visible?
-  def watch?      = permit?("work:read") && project_visible?
+  def update?     = permit?("work:write") && project_visible? && record_in_scope?(:write)
+  def transition? = update?
+  def watch?      = show?
   # No work:delete in the vocabulary — removing work is a workspace-config act,
   # same call as archiving a project.
-  def destroy?    = permit?("project:manage") && project_visible?
+  def destroy?    = permit?("project:manage") && project_visible? && record_in_scope?(:write)
 
   private
 
@@ -15,7 +15,7 @@ class WorkItemPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      permit?("work:read") ? scope.visible_to(user) : scope.none
+      permit?("work:read") ? record_scope.merge(scope.visible_to(user)) : scope.none
     end
   end
 end

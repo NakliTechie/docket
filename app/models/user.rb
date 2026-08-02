@@ -20,6 +20,12 @@ class User < ApplicationRecord
     knowledge_manager: 12, auditor: 13
   }, default: :customer_service, prefix: true
 
+  RECORD_SCOPES = {
+    owned: 0, assigned: 1, queue: 2, team: 3, account: 4, global: 5
+  }.freeze
+  enum :record_read_scope, RECORD_SCOPES, default: :global, prefix: true
+  enum :record_write_scope, RECORD_SCOPES, default: :global, prefix: true
+
   # Authority ordering for "who may grant which role" (C2) — NOT the enum's
   # storage integers. super_admin is the cross-tenant platform tier; a role can
   # only be granted by an actor of equal-or-higher rank. Also the SSO claim→role
@@ -39,6 +45,10 @@ class User < ApplicationRecord
   has_many :oauth_refresh_tokens, dependent: :delete_all
   has_many :queue_memberships, dependent: :destroy
   has_many :queues, through: :queue_memberships, source: :queue
+  has_many :team_memberships, dependent: :destroy
+  has_many :teams, through: :team_memberships
+  has_many :account_memberships, dependent: :destroy
+  has_many :scoped_accounts, through: :account_memberships, source: :organisation
   has_many :assigned_cases, class_name: "Case", foreign_key: :assignee_id, dependent: nil, inverse_of: :assignee
   has_many :notifications, dependent: :destroy
   has_many :saved_views, dependent: :destroy
@@ -100,6 +110,10 @@ class User < ApplicationRecord
 
   def case_assignee?
     active? && !deleted? && can?("case:write")
+  end
+
+  def record_scope_for(access)
+    public_send("record_#{access}_scope")
   end
 
   def deactivate!

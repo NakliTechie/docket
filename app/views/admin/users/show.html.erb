@@ -44,6 +44,10 @@
         <dt><%= t("admin.users.fields.email") %></dt><dd><%= @user.email_address %></dd>
         <dt><%= t("admin.users.fields.role") %></dt><dd><%= role_badge(@user) %></dd>
         <dt><%= t("admin.users.fields.queues") %></dt><dd><%= @user.queues.map(&:name).join(", ").presence || "—" %></dd>
+        <dt><%= t("admin.users.fields.record_read_scope") %></dt><dd><%= t("admin.users.record_scopes.#{@user.record_read_scope}") %></dd>
+        <dt><%= t("admin.users.fields.record_write_scope") %></dt><dd><%= t("admin.users.record_scopes.#{@user.record_write_scope}") %></dd>
+        <dt><%= t("admin.users.fields.teams") %></dt><dd><%= @user.teams.map(&:name).join(", ").presence || "—" %></dd>
+        <dt><%= t("admin.users.fields.scoped_accounts") %></dt><dd><%= @user.scoped_accounts.map(&:name).join(", ").presence || "—" %></dd>
         <dt><%= t(".member_since") %></dt><dd><%= l @user.created_at, format: :long %></dd>
       </dl>
     </div>

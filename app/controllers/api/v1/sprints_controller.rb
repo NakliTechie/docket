@@ -19,7 +19,10 @@ module Api
       def report
         project = api_scope(Project, scope: "work:read").find(params[:project_id])
         authorize_api!(project, :show?, scope: "work:read")
-        render json: { data: Sprints::Velocity.call(project: project).merge(project_id: project.id) }
+        items = current_user ? RecordVisibility.resolve(current_user, WorkItem.with_deleted) : WorkItem.with_deleted
+        render json: {
+          data: Sprints::Velocity.call(project: project, item_scope: items).merge(project_id: project.id)
+        }
       end
 
       def create

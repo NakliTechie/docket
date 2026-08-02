@@ -6,9 +6,10 @@ module Sprints
   class Velocity
     def self.call(...) = new(...).call
 
-    def initialize(project:, limit: 8)
+    def initialize(project:, limit: 8, item_scope: WorkItem.with_deleted)
       @project = project
       @limit = limit
+      @item_scope = item_scope
     end
 
     def call
@@ -23,8 +24,8 @@ module Sprints
       # sprint committed to — counting only what remains made every closed
       # sprint report 100% delivery against commitment, which is the one number
       # this report exists to contradict.
-      items = WorkItem.with_deleted.where(sprint_id: sprint.id)
-                      .or(WorkItem.with_deleted.where(id: sprint.rolled_out_item_ids))
+      items = @item_scope.where(sprint_id: sprint.id)
+                      .or(@item_scope.where(id: sprint.rolled_out_item_ids))
                       .includes(:workflow_state).to_a
       done = items.select(&:done?)
       {
@@ -43,7 +44,7 @@ module Sprints
     # Median, not mean: one item that sat open for six months would drag a mean
     # into uselessness.
     def cycle_time_days
-      spans = @project.work_items.where.not(closed_at: nil)
+      spans = @item_scope.where(project: @project).where.not(closed_at: nil)
                       .pluck(:created_at, :closed_at)
                       .map { |created, closed| ((closed - created) / 1.day).round(1) }
       return nil if spans.empty?

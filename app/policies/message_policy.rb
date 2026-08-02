@@ -5,7 +5,10 @@ class MessagePolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      permit?("case:read") ? scope.all : scope.none
+      return scope.none unless permit?("case:read")
+
+      visible_cases = RecordVisibility.resolve(user, Case.all, access: :read)
+      scope.where(case_id: visible_cases.select(:id))
     end
   end
 end

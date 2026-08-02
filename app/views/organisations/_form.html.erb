@@ -32,6 +32,12 @@
     <%= f.text_area :notes %>
   </div>
 
+  <div class="form-row">
+    <%= f.label :owner_id, t("organisations.fields.owner") %>
+    <%= f.collection_select :owner_id, User.active.staff.order(:name), :id, :name,
+          include_blank: t("forms.none") %>
+  </div>
+
   <div class="form-actions">
     <%= f.submit class: "btn btn-primary" %>
     <%= link_to t("actions.cancel"), organisations_path, class: "btn" %>

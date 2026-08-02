@@ -10,7 +10,13 @@ class CrmMessageTest < ActiveSupport::TestCase
       recipient_email: contacts(:asha).email, subject_line: "Proposal", body: "Attached proposal"
     )
 
-    entries = CrmConversation.call(contacts(:asha), visible_types: %w[Contact Lead Deal])
+    entries = CrmConversation.call(
+      contacts(:asha),
+      contact_scope: Contact.all,
+      lead_scope: Lead.all,
+      deal_scope: Deal.all,
+      visible_types: %w[Contact Lead Deal]
+    )
 
     assert_includes entries.map(&:record), message
     assert_equal "Deal: Asha deal", entries.find { |entry| entry.record == message }.context

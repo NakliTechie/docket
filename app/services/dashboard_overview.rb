@@ -5,12 +5,21 @@
 class DashboardOverview
   attr_reader :from, :to, :sales, :activity, :operational
 
-  def initialize(from:, to:)
+  def initialize(from:, to:, deal_scope: Deal.with_deleted, lead_scope: Lead.with_deleted,
+                 case_scope: Case.with_deleted, contact_scope: Contact.all,
+                 message_scope: Message.with_deleted, decision_scope: Decision.all)
     @from = from
     @to = to
-    @sales = SalesReport.new(from: from, to: to) if Features.enabled?("crm")
-    @activity = ActivityReport.new(from: from, to: to) if Features.enabled?("service_desk")
-    @operational = OperationalReport.new(from: from, to: to)
+    @decision_scope = decision_scope
+    if Features.enabled?("crm")
+      @sales = SalesReport.new(from: from, to: to, deal_scope: deal_scope, lead_scope: lead_scope)
+    end
+    if Features.enabled?("service_desk")
+      @activity = ActivityReport.new(from: from, to: to, case_scope: case_scope,
+                                     message_scope: message_scope)
+    end
+    @operational = OperationalReport.new(from: from, to: to, case_scope: case_scope,
+                                         contact_scope: contact_scope)
   end
 
   # Persisted decisioning history (the rule engine writes here when "run"; see
@@ -19,26 +28,27 @@ class DashboardOverview
   def decisions
     return [] unless Features.enabled?("decisioning")
 
-    @decisions ||= Decision.recent_first.limit(15).to_a
+    @decisions ||= @decision_scope.recent_first.limit(15).to_a
   end
 
   def decision_summary
     return {} unless Features.enabled?("decisioning")
 
-    @decision_summary ||= Decision.group(:status).count
+    @decision_summary ||= @decision_scope.group(:status).count
                                   .transform_keys { |k| k.is_a?(Integer) ? Decision.statuses.key(k) : k.to_s }
   end
 
   def pending_confirmations
     return [] unless Features.enabled?("decisioning")
 
-    @pending_confirmations ||= Decision.awaiting_confirmation.recent_first.to_a
+    @pending_confirmations ||= @decision_scope.awaiting_confirmation.recent_first.to_a
   end
 
   def decision_quality
     return [] unless Features.enabled?("decisioning")
 
-    @decision_quality ||= DecisionQualityReport.new(from: from, to: to).rows
+    @decision_quality ||= DecisionQualityReport.new(from: from, to: to,
+                                                    decision_scope: @decision_scope).rows
   end
 
   # Headline KPIs across the four planes, one row each. All cells are fixed

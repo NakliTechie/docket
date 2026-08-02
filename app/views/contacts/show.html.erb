@@ -49,6 +49,8 @@
         <% end %>
         <dt><%= t("contacts.fields.preferred_language") %></dt>
         <dd><%= t("locales.#{@contact.preferred_language}") %></dd>
+        <dt><%= t("contacts.fields.owner") %></dt>
+        <dd><%= @contact.owner&.name || t("forms.none") %></dd>
         <% if @contact.organisation %>
           <dt><%= t("contacts.fields.organisation") %></dt>
           <dd><%= link_to @contact.organisation.name, organisation_path(@contact.organisation) %></dd>

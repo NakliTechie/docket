@@ -11,9 +11,11 @@
 class SalesReport
   attr_reader :from, :to
 
-  def initialize(from:, to:)
+  def initialize(from:, to:, deal_scope: Deal.with_deleted, lead_scope: Lead.with_deleted)
     @from = from
     @to = to
+    @deals = deal_scope
+    @leads = lead_scope
   end
 
   def range
@@ -25,8 +27,8 @@ class SalesReport
   # derives the deal away from `open`, so this is exactly the active funnel.
   def pipeline_by_stage
     @pipeline_by_stage ||= begin
-      counts = Deal.open_deals.group(:pipeline_stage_id, :currency).count
-      values = Deal.open_deals.group(:pipeline_stage_id, :currency).sum(:value_cents)
+      counts = open_deals.group(:pipeline_stage_id, :currency).count
+      values = open_deals.group(:pipeline_stage_id, :currency).sum(:value_cents)
       stages = PipelineStage.with_deleted.where(id: counts.keys.map(&:first)).index_by(&:id)
       counts.keys.map do |sid, currency|
         { stage: stages[sid], currency: currency, count: counts[[ sid, currency ]],
@@ -48,17 +50,17 @@ class SalesReport
 
   def stats
     @stats ||= begin
-      closed = Deal.with_deleted.where(closed_at: range)
+      closed = @deals.where(closed_at: range)
       won_count  = closed.status_won.count
       lost_count = closed.status_lost.count
       decided    = won_count + lost_count
-      created    = Deal.with_deleted.where(created_at: range)
-      lead_cohort = Lead.with_deleted.where(created_at: range)
+      created    = @deals.where(created_at: range)
+      lead_cohort = @leads.where(created_at: range)
       leads_created = lead_cohort.count
       leads_converted = lead_cohort.where(converted_at: range).count
       {
-        open_deals: Deal.open_deals.count,
-        open_values_by_currency: currency_sums(Deal.open_deals),
+        open_deals: open_deals.count,
+        open_values_by_currency: currency_sums(open_deals),
         weighted_values_by_currency: weighted_pipeline_by_currency,
         deals_created: created.count,
         deals_created_values_by_currency: currency_sums(created),
@@ -78,7 +80,7 @@ class SalesReport
   # common first. Only losses that recorded a reason are included.
   def loss_reasons
     @loss_reasons ||= begin
-      lost = Deal.with_deleted.status_lost.where(closed_at: range).where.not(lost_reason: nil)
+      lost = @deals.status_lost.where(closed_at: range).where.not(lost_reason: nil)
       counts = lost.group(:lost_reason, :currency).count
       values = lost.group(:lost_reason, :currency).sum(:value_cents)
       counts.map do |(reason, currency), count|
@@ -93,6 +95,7 @@ class SalesReport
     @competitor_losses ||= begin
       links = DealCompetitor.disposition_lost_to.joins(:deal)
                             .where(deals: { status: Deal.statuses.fetch("lost"), closed_at: range })
+                            .where(deal_id: @deals.select(:id))
       counts = links.group(:competitor_id, "deals.currency").count
       values = links.group(:competitor_id, "deals.currency").sum("deals.value_cents")
       competitors = Competitor.with_deleted.where(id: counts.keys.map(&:first)).index_by(&:id)
@@ -107,9 +110,9 @@ class SalesReport
   # won revenue is windowed by closed_at, matching the report's headline totals.
   def campaign_attribution
     @campaign_attribution ||= begin
-      lead_counts = Lead.with_deleted.where(created_at: range).group(:first_touch_campaign_id).count
-      deal_counts = Deal.with_deleted.where(created_at: range).group(:first_touch_campaign_id).count
-      won = Deal.with_deleted.status_won.where(closed_at: range)
+      lead_counts = @leads.where(created_at: range).group(:first_touch_campaign_id).count
+      deal_counts = @deals.where(created_at: range).group(:first_touch_campaign_id).count
+      won = @deals.status_won.where(closed_at: range)
       won_counts = won.group(:first_touch_campaign_id).count
       won_values = won.group(:first_touch_campaign_id, :currency).sum(:value_cents)
       ids = (lead_counts.keys + deal_counts.keys + won_counts.keys).uniq
@@ -134,8 +137,8 @@ class SalesReport
   # per owner, biggest contributor first.
   def by_owner
     @by_owner ||= begin
-      open_value = Deal.open_deals.where.not(owner_id: nil).group(:owner_id, :currency).sum(:value_cents)
-      won_value  = Deal.with_deleted.status_won.where(closed_at: range)
+      open_value = open_deals.where.not(owner_id: nil).group(:owner_id, :currency).sum(:value_cents)
+      won_value  = @deals.status_won.where(closed_at: range)
                        .where.not(owner_id: nil).group(:owner_id, :currency).sum(:value_cents)
       keys = (open_value.keys + won_value.keys).uniq
       owner_ids = keys.map(&:first).uniq
@@ -156,7 +159,7 @@ class SalesReport
   # path if won-deal counts grow large.
   def velocity
     @velocity ||= begin
-      won = Deal.with_deleted.status_won.where(closed_at: range).to_a
+      won = @deals.status_won.where(closed_at: range).to_a
       to_win = won.filter_map { |d| (d.closed_at - d.created_at).to_f if d.closed_at && d.created_at }
 
       dwell = Hash.new { |h, k| h[k] = [] }
@@ -235,6 +238,10 @@ class SalesReport
   end
 
   private
+
+  def open_deals
+    @open_deals ||= @deals.where(deleted_at: nil).open_deals
+  end
 
   def decimal_value(cents)
     (cents || 0) / 100.0

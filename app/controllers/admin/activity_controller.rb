@@ -7,7 +7,14 @@ module Admin
       authorize :activity, policy_class: AdminAreaPolicy
       @from = parse_date(params[:from]) || 30.days.ago.to_date
       @to = parse_date(params[:to]) || Date.current
-      @report = ActivityReport.new(from: @from, to: @to, viewer: Current.user)
+      cases = RecordVisibility.resolve(Current.user, Case.with_deleted)
+      @report = ActivityReport.new(
+        from: @from,
+        to: @to,
+        viewer: Current.user,
+        case_scope: cases,
+        message_scope: Message.with_deleted.where(case_id: cases.select(:id))
+      )
 
       respond_to do |format|
         format.html

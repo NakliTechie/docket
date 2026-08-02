@@ -43,6 +43,7 @@ class Case < ApplicationRecord
   belongs_to :contact, -> { with_deleted }
   belongs_to :queue, -> { with_deleted }, class_name: "CaseQueue", optional: true
   belongs_to :assignee, -> { with_deleted }, class_name: "User", optional: true
+  belongs_to :owner, -> { with_deleted }, class_name: "User", optional: true
   belongs_to :category, -> { with_deleted }, optional: true
   belongs_to :sla_policy, -> { with_deleted }, optional: true
   # Which connector ingested this case (nil for portal/email/manual/API).

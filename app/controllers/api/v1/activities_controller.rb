@@ -21,8 +21,8 @@ module Api
       end
 
       def create
-        authorize_api!(Activity.new, :create?, scope: "crm:write")
         activity = Activity.new(activity_params)
+        authorize_api!(activity, :create?, scope: "crm:write")
         if activity.save
           render json: { data: Serialize.activity(activity) }, status: :created
         else

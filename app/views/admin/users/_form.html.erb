@@ -28,6 +28,40 @@
     <%= f.select :role, (Authz::ASSIGNABLE_ROLES | [ user.role ]).compact.map { |r| [ t("users.enum.role.#{r}"), r ] } %>
   </div>
 
+  <% scope_editable = user.new_record? || policy(user).update_scope? %>
+  <fieldset>
+    <legend><%= t("admin.users.fields.record_scope") %></legend>
+    <p class="form-hint"><%= t("admin.users.form.record_scope_hint") %></p>
+    <% if scope_editable %>
+      <div class="form-row">
+        <%= f.label :record_read_scope, t("admin.users.fields.record_read_scope") %>
+        <%= f.select :record_read_scope,
+              User.record_read_scopes.keys.map { |scope| [ t("admin.users.record_scopes.#{scope}"), scope ] } %>
+      </div>
+      <div class="form-row">
+        <%= f.label :record_write_scope, t("admin.users.fields.record_write_scope") %>
+        <%= f.select :record_write_scope,
+              User.record_write_scopes.keys.map { |scope| [ t("admin.users.record_scopes.#{scope}"), scope ] } %>
+      </div>
+
+      <fieldset>
+        <legend><%= t("admin.users.fields.teams") %></legend>
+        <%= f.collection_check_boxes :team_ids, Team.order(:name), :id, :name do |b| %>
+          <div class="checkbox-row"><%= b.check_box %><%= b.label %></div>
+        <% end %>
+      </fieldset>
+
+      <fieldset>
+        <legend><%= t("admin.users.fields.scoped_accounts") %></legend>
+        <%= f.collection_check_boxes :scoped_account_ids, Organisation.order(:name), :id, :name do |b| %>
+          <div class="checkbox-row"><%= b.check_box %><%= b.label %></div>
+        <% end %>
+      </fieldset>
+    <% else %>
+      <p><%= t("admin.users.form.scope_self_managed") %></p>
+    <% end %>
+  </fieldset>
+
   <div class="form-row">
     <%= f.label :locale, t("admin.users.fields.locale") %>
     <%= f.select :locale, I18n.available_locales.map { |l| [ t("locales.#{l}"), l.to_s ] },

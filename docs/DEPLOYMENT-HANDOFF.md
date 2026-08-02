@@ -116,10 +116,14 @@ it to users:
 2. **Branding** — brand name, so the product doesn't say "Docket" to their users.
 3. **Outbound SMTP** — host, port, credentials, from-address. Without this no
    case reply, password reset or sequence email leaves the building.
-4. **Users** — invite real staff and assign functional roles
+4. **Users and record scope** — invite real staff and assign functional roles
    (`super_admin`, `client_admin`, `customer_service_supervisor`, `finance`,
    `sales`, `customer_service`, `technical`, `decision_reviewer`,
-   `knowledge_manager`, `auditor`, `readonly`).
+   `knowledge_manager`, `auditor`, `readonly`). Create explicit teams before
+   selecting team scope. Assign independent read and write scopes to each user.
+   Assign account roots for account-scoped staff. Keep break-glass operators on
+   the default global scope. One administrator cannot change their own scope
+   relationships, so retain a second administrator for recovery.
 5. **Work module** — one project per team; each seeds its own board columns.
    Set WIP limits/default assignment rules and reusable onboarding templates.
 6. **CRM module** — pipeline/stages, public lead-capture forms and consent text,

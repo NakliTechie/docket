@@ -5,14 +5,14 @@ class CampaignsController < ApplicationController
   def index
     authorize Campaign
     @campaigns = policy_scope(Campaign).order(created_at: :desc)
-    @lead_counts = Lead.group(:first_touch_campaign_id).count
-    @deal_counts = Deal.group(:first_touch_campaign_id).count
+    @lead_counts = policy_scope(Lead).group(:first_touch_campaign_id).count
+    @deal_counts = policy_scope(Deal).group(:first_touch_campaign_id).count
   end
 
   def show
     authorize @campaign
-    @leads = @campaign.attributed_leads.order(created_at: :desc).limit(20)
-    @deals = @campaign.attributed_deals.order(created_at: :desc).limit(20)
+    @leads = policy_scope(Lead).where(first_touch_campaign: @campaign).order(created_at: :desc).limit(20)
+    @deals = policy_scope(Deal).where(first_touch_campaign: @campaign).order(created_at: :desc).limit(20)
   end
 
   def new

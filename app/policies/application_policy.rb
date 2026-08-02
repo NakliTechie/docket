@@ -24,6 +24,10 @@ class ApplicationPolicy
   # predicates and would have raised if called.)
   def permit?(permission) = user&.can?(permission)
 
+  def record_in_scope?(access)
+    RecordVisibility.allowed?(user, record, access: access)
+  end
+
   class Scope
     attr_reader :user, :scope
 
@@ -39,5 +43,9 @@ class ApplicationPolicy
     private
 
     def permit?(permission) = user&.can?(permission)
+
+    def record_scope(access: :read)
+      RecordVisibility.resolve(user, scope, access: access)
+    end
   end
 end

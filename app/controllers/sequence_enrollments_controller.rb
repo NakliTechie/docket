@@ -15,7 +15,7 @@ class SequenceEnrollmentsController < ApplicationController
   end
 
   def cancel
-    authorize @enrollment.sequence, :enroll?
+    authorize @enrollment, :cancel?
     @enrollment.cancel!
     redirect_back fallback_location: sequence_path(@enrollment.sequence), notice: t(".cancelled")
   end
@@ -23,13 +23,17 @@ class SequenceEnrollmentsController < ApplicationController
   private
 
   def set_enrollment
-    @enrollment = SequenceEnrollment.find(params[:id])
+    @enrollment = policy_scope(SequenceEnrollment).find(params[:id])
   end
 
   def find_enrollable
     case params[:enrollable_type]
-    when "Lead"    then Lead.find_by(id: params[:enrollable_id])
-    when "Contact" then Contact.find_by(id: params[:enrollable_id])
+    when "Lead"    then writable_scope(Lead).find_by(id: params[:enrollable_id])
+    when "Contact" then writable_scope(Contact).find_by(id: params[:enrollable_id])
     end
+  end
+
+  def writable_scope(model)
+    RecordVisibility.resolve(Current.user, model.all, access: :write)
   end
 end

@@ -10,16 +10,18 @@ class DecisionsController < ApplicationController
   end
 
   def approve
-    authorize :decision, policy_class: DecisionPolicy
-    Decisioning::Dispatcher.approve!(Decision.find(params[:id]), approver: Current.user, reason: params[:reason])
+    decision = Decision.find(params[:id])
+    authorize decision, :approve?
+    Decisioning::Dispatcher.approve!(decision, approver: Current.user, reason: params[:reason])
     redirect_to dashboard_path, notice: t(".approved")
   rescue Decisioning::Error => e
     redirect_to dashboard_path, alert: e.message
   end
 
   def reject
-    authorize :decision, policy_class: DecisionPolicy
-    Decisioning::Dispatcher.reject!(Decision.find(params[:id]), approver: Current.user)
+    decision = Decision.find(params[:id])
+    authorize decision, :reject?
+    Decisioning::Dispatcher.reject!(decision, approver: Current.user)
     redirect_to dashboard_path, notice: t(".rejected")
   rescue Decisioning::Error => e
     redirect_to dashboard_path, alert: e.message

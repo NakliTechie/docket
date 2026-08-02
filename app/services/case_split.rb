@@ -22,7 +22,7 @@ class CaseSplit
         created = Case.create!(
           subject: @subject, description: I18n.t("case_split.description", source: @source.tracking_id),
           contact: @source.contact, queue: @source.queue, category: @source.category,
-          assignee: @source.assignee, sla_policy: @source.sla_policy,
+          assignee: @source.assignee, owner: @source.owner, sla_policy: @source.sla_policy,
           priority: @source.priority, channel: :staff
         )
         messages.each { |message| message.update!(case: created) }
