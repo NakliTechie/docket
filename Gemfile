@@ -42,7 +42,7 @@ gem "rails-i18n", "~> 8.0"
 gem "csv"
 
 # PDF text extraction for AI grounding reference docs (pure ruby)
-gem "pdf-reader", "~> 2.12"
+gem "pdf-reader", "~> 2.16"
 
 # PDF generation for quote documents (pure ruby, no native/network deps —
 # sovereignty-safe; chosen over a headless-browser renderer for that reason).
