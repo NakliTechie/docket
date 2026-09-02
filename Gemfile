@@ -33,7 +33,7 @@ gem "rack-attack", "~> 6.7"
 gem "rack-timeout", "~> 0.7", require: "rack/timeout/base"
 
 # Pagination — dependency-free
-gem "pagy", "~> 9.4"
+gem "pagy", "~> 43.6"
 
 # Locale data (Hindi base translations for AR errors, dates, numbers)
 gem "rails-i18n", "~> 8.0"
